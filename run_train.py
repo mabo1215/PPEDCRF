@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 import torch
 import torch.nn as nn
@@ -26,20 +26,12 @@ class TrainConfig:
     clip_len: int = 8
     resize_hw: Tuple[int, int] = (384, 640)
 
-    # If you have ground-truth masks, set this folder structure:
-    # root_masks/{split}/{clip_id}/{frame_idx:06d}.png (0/255)
     mask_root: Optional[str] = None
 
 
 class SensitiveRegionNet(nn.Module):
-    """
-    A lightweight segmentation-style network producing unary logits (B,1,H,W).
-    Replace with your preferred architecture (UNet/DeepLab/etc.).
-    """
-
     def __init__(self):
         super().__init__()
-        # very small CNN encoder-decoder (placeholder)
         self.enc = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(inplace=True),
             nn.Conv2d(32, 32, 3, padding=1), nn.ReLU(inplace=True),
@@ -57,12 +49,11 @@ class SensitiveRegionNet(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x: (B,3,H,W) float in [0,255] or [0,1]
         if x.max() > 1.5:
             x = x / 255.0
         f = self.enc(x)
         y = self.dec(f)
-        return y  # logits (B,1,H,W)
+        return y  # (B,1,H,W) logits
 
 
 def _ensure_dir(p: str) -> None:
@@ -70,10 +61,6 @@ def _ensure_dir(p: str) -> None:
 
 
 def _load_frame_masks(mask_root: str, split: str, clip_id: str, indices: list, device: torch.device) -> torch.Tensor:
-    """
-    Load GT masks for a clip, return (T,1,H,W) float {0,1}.
-    You can replace this loader to match your annotation format.
-    """
     import cv2
     masks = []
     for idx in indices:
@@ -81,7 +68,7 @@ def _load_frame_masks(mask_root: str, split: str, clip_id: str, indices: list, d
         m = cv2.imread(mp, cv2.IMREAD_GRAYSCALE)
         if m is None:
             raise FileNotFoundError(f"Mask not found: {mp}")
-        t = torch.from_numpy(m).unsqueeze(0).float() / 255.0  # (1,H,W)
+        t = torch.from_numpy(m).unsqueeze(0).float() / 255.0
         masks.append(t)
     return torch.stack(masks, dim=0).to(device)  # (T,1,H,W)
 
@@ -104,7 +91,7 @@ def train(cfg: TrainConfig) -> str:
         shuffle=True,
         num_workers=cfg.num_workers,
         pin_memory=True,
-        collate_fn=lambda batch: batch,  # keep ClipSample objects
+        collate_fn=lambda batch: batch,
     )
 
     model = SensitiveRegionNet().to(dev)
@@ -116,31 +103,26 @@ def train(cfg: TrainConfig) -> str:
 
     for epoch in range(cfg.epochs):
         for batch in dl:
-            # batch: list[ClipSample]
-            # We train frame-wise (flatten T into batch dimension)
             frames_list = []
             masks_list = []
 
             for sample in batch:
-                frames = sample.frames.to(dev)  # (T,3,H,W) [0,255]
+                frames = sample.frames.to(dev)  # (T,3,H,W)
                 T = frames.size(0)
                 frames_list.append(frames)
 
                 if cfg.mask_root is None:
-                    # No GT available: create a dummy mask (all zeros) -> training won't learn anything
-                    # Replace this with pseudo-label generation if you do weak supervision.
                     masks = torch.zeros((T, 1, frames.size(2), frames.size(3)), device=dev)
                 else:
                     masks = _load_frame_masks(cfg.mask_root, "train", sample.clip_id, sample.indices, dev)
-                    # Resize mask if needed to match frames
                     if masks.shape[-2:] != frames.shape[-2:]:
                         masks = F.interpolate(masks, size=frames.shape[-2:], mode="nearest")
                 masks_list.append(masks)
 
-            frames_b = torch.cat(frames_list, dim=0)  # (B*T,3,H,W)
-            masks_b = torch.cat(masks_list, dim=0)    # (B*T,1,H,W)
+            frames_b = torch.cat(frames_list, dim=0)
+            masks_b = torch.cat(masks_list, dim=0)
 
-            logits = model(frames_b)                  # (B*T,1,H,W)
+            logits = model(frames_b)
             loss = bce(logits, masks_b)
 
             opt.zero_grad(set_to_none=True)
@@ -151,7 +133,6 @@ def train(cfg: TrainConfig) -> str:
             if global_step % 50 == 0:
                 print(f"[epoch {epoch+1}/{cfg.epochs}] step={global_step} loss={loss.item():.6f}")
 
-        # save each epoch
         ckpt_path = os.path.join(cfg.out_dir, f"sensnet_epoch_{epoch+1}.pt")
         torch.save({"model": model.state_dict(), "cfg": cfg.__dict__}, ckpt_path)
         print(f"Saved checkpoint: {ckpt_path}")
@@ -162,7 +143,35 @@ def train(cfg: TrainConfig) -> str:
     return final_path
 
 
+def train_from_cfg_dict(cfg_dict: Dict[str, Any]) -> str:
+    """
+    Build TrainConfig from the unified YAML config dict.
+    Expected keys:
+      data.root, data.resize_hw, data.clip_len
+      train.out_dir, train.epochs, train.batch_size, train.num_workers, train.lr, train.mask_root
+      project.device
+    """
+    data_root = cfg_dict["data"]["root"]
+    resize_hw = tuple(cfg_dict["data"]["resize_hw"])
+    clip_len = int(cfg_dict["data"]["clip_len"])
+
+    tc = TrainConfig(
+        data_root=data_root,
+        out_dir=str(cfg_dict["train"].get("out_dir", "outputs")),
+        device=str(cfg_dict["project"].get("device", "cuda")),
+        epochs=int(cfg_dict["train"].get("epochs", 5)),
+        batch_size=int(cfg_dict["train"].get("batch_size", 2)),
+        num_workers=int(cfg_dict["train"].get("num_workers", 2)),
+        lr=float(cfg_dict["train"].get("lr", 1e-4)),
+        clip_len=clip_len,
+        resize_hw=(int(resize_hw[0]), int(resize_hw[1])),
+        mask_root=cfg_dict["train"].get("mask_root", None),
+    )
+    return train(tc)
+
+
 if __name__ == "__main__":
-    # Minimal CLI-free run
-    cfg = TrainConfig(data_root="data/driving", out_dir="outputs", mask_root=None)
-    train(cfg)
+    # Optional: local direct run using YAML (no CLI).
+    from ppedcrf.utils.config import load_yaml
+    cfg = load_yaml("config/config.yaml")
+    train_from_cfg_dict(cfg)
