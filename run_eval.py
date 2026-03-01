@@ -26,6 +26,7 @@ def process_clip(
     foreground_masks: Optional[List[torch.Tensor]] = None,  # list of (B,1,H,W), 1=foreground
 ) -> List[torch.Tensor]:
     device = frames[0].device
+    print(f"[process_clip] num_frames={len(frames)} device={device}")
 
     sens_net = DummySensitiveRegionNet().to(device).eval()
     crf = DynamicCRF(DynamicCRFConfig(n_iters=5, spatial_weight=2.0, temporal_weight=2.0))
@@ -36,8 +37,14 @@ def process_clip(
     protected_frames: List[torch.Tensor] = []
 
     for t, frame in enumerate(frames):
+        print(f"[process_clip] t={t}, frame_shape={tuple(frame.shape)}")
         unary_logit = sens_net(frame)  # (B,1,H,W)
         refined_prob, prev_prob = crf.refine(unary_logit, prev_prob=prev_prob, flow=None)
+        print(
+            "[process_clip] "
+            f"t={t}, prob_min={refined_prob.min().item():.4f}, "
+            f"prob_max={refined_prob.max().item():.4f}"
+        )
 
         # Use refined_prob as sensitivity map (you can swap with a richer sensitivity definition)
         strength = ncp.allocate(refined_prob)
@@ -52,4 +59,14 @@ def process_clip(
         )
         protected_frames.append(protected)
 
+    print(f"[process_clip] done, protected {len(protected_frames)} frames")
     return protected_frames
+
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    T, B, H, W = 4, 1, 384, 640
+    frames = [torch.rand(B, 3, H, W, device=device) * 255.0 for _ in range(T)]
+    print("[run_eval] running process_clip on random demo clip...")
+    out = process_clip(frames)
+    print(f"[run_eval] got {len(out)} protected frames, first frame shape={tuple(out[0].shape)}")

@@ -66,12 +66,10 @@ The repository accepts two clip formats (configured via `data.root` in `config/c
 
   data/driving/
     train/
-      clip_0001/
-        000001.jpg
-    000002.jpg
-    ...
-  val/
-    test/
+      000001.jpg
+      000002.jpg
+      ...
+    val/
 
 - Option B — Video files
 
@@ -79,8 +77,7 @@ The repository accepts two clip formats (configured via `data.root` in `config/c
     train/
       clip_0001.mp4
       clip_0002.mp4
-  val/
-  test/
+    val/
 
 The loader automatically detects frame folders or video files.
 
@@ -110,7 +107,9 @@ python main.py --config config/config.yaml attack
 - Protect clips (PPEDCRF pipeline) and compute quick utility metric
 
 ```bash
-python main.py --config config/config.yaml protect --checkpoint outputs/sensnet_final.pt
+python main.py --config config\config.yaml protect ^
+  --data_root "C:/work/dataset/driving" ^
+  --checkpoint "outputs/sensnet_final.pt"
 ```
 
 Outputs
