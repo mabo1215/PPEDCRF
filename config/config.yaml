@@ -6,7 +6,7 @@ project:
   device: "cuda"   # "cuda" or "cpu"
 
 data:
-  root: "data/driving"
+  root: "C:/work/dataset/driving"
   resize_hw: [384, 640]
   clip_len: 8
   stride: 1

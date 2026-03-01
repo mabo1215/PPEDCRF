@@ -13,6 +13,10 @@ from torch.utils.data import DataLoader
 from datasets.driving_clip_dataset import DrivingClipDataset
 
 
+def _identity_collate(batch):
+    return batch
+
+
 @dataclass
 class TrainConfig:
     data_root: str
@@ -91,7 +95,7 @@ def train(cfg: TrainConfig) -> str:
         shuffle=True,
         num_workers=cfg.num_workers,
         pin_memory=True,
-        collate_fn=lambda batch: batch,
+        collate_fn=_identity_collate,
     )
 
     model = SensitiveRegionNet().to(dev)

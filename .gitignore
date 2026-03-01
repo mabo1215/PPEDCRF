@@ -4,3 +4,5 @@
 .cursorignore
 *.log
 .gitkeep
+
+outputs/
