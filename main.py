@@ -81,30 +81,45 @@ def cmd_attack(cfg: Dict[str, Any]) -> None:
     resize_hw = tuple(cfg["data"]["resize_hw"])
     attack_cfg = cfg["attack"]
 
+    print(f"[attack] device={device}, data_root={data_root}")
+
+    print("[attack] building gallery dataset...")
     ds_g = DrivingClipDataset(
         data_root, split=attack_cfg.get("gallery_split", "train"),
         clip_len=clip_len, sample_mode="uniform",
         resize_hw=(int(resize_hw[0]), int(resize_hw[1])),
         max_clips=int(attack_cfg.get("max_gallery", 200)),
     )
+    print(f"[attack] gallery dataset size={len(ds_g)}")
+
+    print("[attack] building query dataset...")
     ds_q = DrivingClipDataset(
         data_root, split=attack_cfg.get("query_split", "val"),
         clip_len=clip_len, sample_mode="uniform",
         resize_hw=(int(resize_hw[0]), int(resize_hw[1])),
         max_clips=int(attack_cfg.get("max_query", 50)),
     )
+    print(f"[attack] query dataset size={len(ds_q)}")
 
     gallery_imgs, gallery_ids = [], []
-    for s in ds_g:
+    print("[attack] sampling gallery images...")
+    for idx, s in enumerate(ds_g):
         gallery_imgs.append(s.frames[0])
         gallery_ids.append(s.clip_id)
+        if (idx + 1) % 10 == 0 or idx == 0:
+            print(f"[attack]  gallery clip {idx+1}/{len(ds_g)} id={s.clip_id}")
     gallery_imgs = torch.stack(gallery_imgs, dim=0)
+    print(f"[attack] gallery tensor shape={tuple(gallery_imgs.shape)}")
 
     query_imgs, query_ids = [], []
-    for s in ds_q:
+    print("[attack] sampling query images...")
+    for idx, s in enumerate(ds_q):
         query_imgs.append(s.frames[0])
         query_ids.append(s.clip_id)
+        if (idx + 1) % 10 == 0 or idx == 0:
+            print(f"[attack]  query clip {idx+1}/{len(ds_q)} id={s.clip_id}")
     query_imgs = torch.stack(query_imgs, dim=0)
+    print(f"[attack] query tensor shape={tuple(query_imgs.shape)}")
 
     rcfg = RetrievalConfig(
         backbone=str(attack_cfg.get("backbone", "resnet18")),
@@ -114,8 +129,14 @@ def cmd_attack(cfg: Dict[str, Any]) -> None:
         topk=tuple(attack_cfg.get("topk", [1, 5, 10])),
     )
 
+    print(f"[attack] building embedder backbone={rcfg.backbone}")
     embedder = make_default_embedder(rcfg)
+
+    print("[attack] computing gallery embeddings...")
     gallery_emb = build_gallery_embeddings(rcfg, embedder, gallery_imgs)
+    print(f"[attack] gallery embedding shape={tuple(gallery_emb.shape)}")
+
+    print("[attack] running retrieval on queries...")
     res = query_topk(rcfg, query_imgs, query_ids, gallery_emb, gallery_ids, embedder)
 
     print("Retrieval results:")
