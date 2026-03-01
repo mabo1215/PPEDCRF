@@ -1,1 +1,5 @@
 .idea/
+
+.cursor/
+.cursorignore
+*.log

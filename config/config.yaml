@@ -1,0 +1,54 @@
+# config/config.yaml
+
+project:
+  name: "PPEDCRF"
+  seed: 1234
+  device: "cuda"   # "cuda" or "cpu"
+
+data:
+  root: "data/driving"
+  resize_hw: [384, 640]
+  clip_len: 8
+  stride: 1
+  sample_mode: "uniform"   # "uniform" or "random"
+
+train:
+  out_dir: "outputs"
+  epochs: 5
+  batch_size: 2
+  num_workers: 2
+  lr: 0.0001
+  mask_root: null   # e.g. "data/masks" if you have GT masks
+
+ppedcrf:
+  dynamic_crf:
+    n_iters: 5
+    spatial_weight: 2.0
+    temporal_weight: 2.0
+    smooth_kernel: 3
+
+  ncp:
+    alpha: 1.0
+    class_sensitivity: {}   # example: {0: 0.2, 1: 1.0}
+
+  noise:
+    mode: "wiener"          # "gaussian" | "wiener"
+    sigma: 8.0
+    clamp_min: 0.0
+    clamp_max: 255.0
+    seed: 1234
+
+attack:
+  backbone: "resnet18"      # baseline
+  input_size: 224
+  normalize: true
+  topk: [1, 5, 10]
+  gallery_split: "train"
+  query_split: "val"
+  max_gallery: 200
+  max_query: 50
+
+protect:
+  split: "val"
+  checkpoint: "outputs/sensnet_final.pt"
+  max_clips: 20
