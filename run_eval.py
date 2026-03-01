@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import List, Optional
 import torch
 
-from ppedcrf.models.dynamic_crf import DynamicCRF, DynamicCRFConfig
-from ppedcrf.privacy.ncp import NCPAllocator, NCPConfig
-from ppedcrf.privacy.noise_injector import NoiseInjector, NoiseConfig
+from models.dynamic_crf import DynamicCRF, DynamicCRFConfig
+from privacy.NCP import NCPAllocator, NCPConfig
+from privacy.noise_injector import NoiseInjector, NoiseConfig
 
 
 class DummySensitiveRegionNet(torch.nn.Module):

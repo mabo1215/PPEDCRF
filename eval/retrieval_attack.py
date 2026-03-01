@@ -12,7 +12,7 @@ import torchvision
 
 @dataclass
 class RetrievalConfig:
-    backbone: str = "resnet18"   # "resnet18" | "resnet50"
+    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "yolox_s" | "yolox_tiny" ...
     device: str = "cuda"
     normalize: bool = True       # L2 normalize embeddings
     input_size: int = 224        # embedding network input resolution
@@ -41,6 +41,41 @@ class ImageEmbedder(nn.Module):
         # x: (B,3,H,W) in [0,1] recommended
         f = self.features(x).flatten(1)  # (B,dim)
         return f
+
+
+class YOLOXEmbedder(nn.Module):
+    """
+    Use YOLOX backbone (e.g. yolox_s) as an image feature extractor.
+    The output is a global pooled concatenation of FPN feature maps.
+    """
+
+    def __init__(self, name: str = "yolox_s"):
+        super().__init__()
+        try:
+            from yolox.exp import get_exp  # type: ignore
+        except ImportError as e:
+            raise ImportError(
+                "YOLOX is not installed. Please run `pip install yolox` to use YOLOX backbone."
+            ) from e
+
+        self.exp_name = name
+        exp = get_exp(None, name)
+        model = exp.get_model()
+        model.eval()
+        self.backbone = model.backbone
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: (B,3,H,W) in [0,255] or [0,1]
+        if x.max() > 1.5:
+            x = x / 255.0
+
+        feats = self.backbone(x)
+        if not isinstance(feats, (list, tuple)):
+            feats = [feats]
+
+        pooled = [F.adaptive_avg_pool2d(f, (1, 1)).flatten(1) for f in feats]
+        emb = torch.cat(pooled, dim=1)
+        return emb
 
 
 def preprocess_for_embed(x: torch.Tensor, input_size: int = 224) -> torch.Tensor:
@@ -124,4 +159,6 @@ def query_topk(
 
 
 def make_default_embedder(cfg: RetrievalConfig) -> nn.Module:
+    if cfg.backbone.lower().startswith("yolox"):
+        return YOLOXEmbedder(cfg.backbone)
     return ImageEmbedder(cfg.backbone)

@@ -39,13 +39,13 @@ ppedcrf:
     seed: 1234
 
 attack:
-  backbone: "resnet18"      # baseline
+  backbone: "yolox_s"
   input_size: 224
   normalize: true
   topk: [1, 5, 10]
   gallery_split: "train"
-  query_split: "val"
-  max_gallery: 200
+  query_split: "train"
+  max_gallery: 50
   max_query: 50
 
 protect:

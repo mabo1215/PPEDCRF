@@ -3,3 +3,4 @@
 .cursor/
 .cursorignore
 *.log
+.gitkeep

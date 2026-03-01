@@ -131,6 +131,13 @@ class DrivingClipDataset(Dataset):
                 if ext in VID_EXTS:
                     sources.append(("video", full))
 
+        # Also支持你这种“train 下面全是 PNG”的情况：
+        # 如果没找到任何子文件夹 / 视频，但 split_dir 里直接有图片，就把整个 split_dir 当成 1 个 clip。
+        if len(sources) == 0:
+            flat_frames = _list_frame_files(split_dir)
+            if len(flat_frames) >= 1:
+                sources.append(("frames", split_dir))
+
         if max_clips is not None:
             sources = sources[: int(max_clips)]
         self.sources = sources

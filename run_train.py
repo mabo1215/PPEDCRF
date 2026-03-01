@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from ppedcrf.datasets.driving_clip_dataset import DrivingClipDataset
+from datasets.driving_clip_dataset import DrivingClipDataset
 
 
 @dataclass
@@ -172,6 +172,6 @@ def train_from_cfg_dict(cfg_dict: Dict[str, Any]) -> str:
 
 if __name__ == "__main__":
     # Optional: local direct run using YAML (no CLI).
-    from ppedcrf.utils.config import load_yaml
+    from utils.config import load_yaml
     cfg = load_yaml("config/config.yaml")
     train_from_cfg_dict(cfg)

@@ -6,15 +6,15 @@ from typing import Any, Dict, List
 
 import torch
 
-from ppedcrf.datasets.driving_clip_dataset import DrivingClipDataset
-from ppedcrf.eval.retrieval_attack import (
+from datasets.driving_clip_dataset import DrivingClipDataset
+from eval.retrieval_attack import (
     RetrievalConfig, make_default_embedder, build_gallery_embeddings, query_topk
 )
-from ppedcrf.eval.metrics import psnr_torch
-from ppedcrf.models.dynamic_crf import DynamicCRF, DynamicCRFConfig
-from ppedcrf.privacy.ncp import NCPAllocator, NCPConfig
-from ppedcrf.privacy.noise_injector import NoiseInjector, NoiseConfig
-from ppedcrf.utils.config import load_yaml, maybe_override
+from eval.metrics import psnr_torch
+from models.dynamic_crf import DynamicCRF, DynamicCRFConfig
+from privacy.NCP import NCPAllocator, NCPConfig
+from privacy.noise_injector import NoiseInjector, NoiseConfig
+from utils.config import load_yaml, maybe_override
 
 
 def load_sensnet_checkpoint(ckpt_path: str, device: torch.device):
