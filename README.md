@@ -1,9 +1,11 @@
 # PPEDCRF — Research Codebase
 
 PPEDCRF implements a research scaffold for privacy-preserving video perturbation using
-dynamic Conditional Random Fields (CRF) and normalized control penalty (NCP).
+dynamic Conditional Random Fields (CRF) and normalized control penalty (NCP).  
+**Paper:** [arXiv:2603.01593](https://arxiv.org/abs/2603.01593) | [Hugging Face](https://huggingface.co/papers/2603.01593)  
+**Pre-trained model:** [mabo1215/ppedcrf-sensnet](https://huggingface.co/mabo1215/ppedcrf-sensnet) on the Hub.
 
-Key features
+## Key features
 - Dynamic-CRF refinement for temporal + spatial smoothing of sensitive background regions
 - NCP (Normalized Control Penalty) for allocating perturbation intensity
 - Background-targeted noise injection (Gaussian / Wiener-style)
@@ -104,15 +106,19 @@ python main.py --config config/config.yaml train --epochs 20 --batch_size 4 --lr
 python main.py --config config/config.yaml attack
 ```
 
-- Protect clips (PPEDCRF pipeline) and compute quick utility metric
+- Protect clips (PPEDCRF pipeline) and compute quick utility metric (use local checkpoint or the pre-trained model from the Hub):
 
 ```bash
+# Local checkpoint
 python main.py --config config/config.yaml protect --checkpoint outputs/sensnet_final.pt
+# Pre-trained model on Hugging Face
+python main.py --config config/config.yaml protect --checkpoint mabo1215/ppedcrf-sensnet
 ```
 
 Outputs
 - Checkpoints are saved to `train.out_dir` (default `outputs/`)
 - Final sensitive-region predictor (example): `outputs/sensnet_final.pt`
+- **Pre-trained on Hub:** [mabo1215/ppedcrf-sensnet](https://huggingface.co/mabo1215/ppedcrf-sensnet)
 
 Pipeline steps performed by `protect`
 - Sensitive-region inference (unary logits)
@@ -166,5 +172,26 @@ Notes & extension points
 - The training loop uses a placeholder mask if `train.mask_root` is null. For meaningful training without GT masks, implement pseudo-labels (for example, saliency from retrieval gradients).
 - The codebase is intentionally modular — you can swap the sensitive-region model, embedder, or threat model.
 
-License
-This repository is a research scaffold. Add your preferred license (e.g., MIT, Apache-2.0).
+## License
+
+This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+---
+
+## Citation
+
+If you use this code or the paper in your work, please cite:
+
+**PPEDCRF: Privacy-Preserving Enhanced Dynamic CRF for Location-Privacy Protection for Sequence Videos with Minimal Detection Degradation**  
+Bo Ma, Jinsong Wu, Weiqi Yan, Catherine Shi, Minh Nguyen. *arXiv:2603.01593*, 2026.
+
+- **arXiv:** [https://arxiv.org/abs/2603.01593](https://arxiv.org/abs/2603.01593)
+
+```bibtex
+@article{ma2026ppedcrf,
+  title={PPEDCRF: Privacy-Preserving Enhanced Dynamic CRF for Location-Privacy Protection for Sequence Videos with Minimal Detection Degradation},
+  author={Ma, Bo and Wu, Jinsong and Yan, Weiqi and Shi, Catherine and Nguyen, Minh},
+  journal={arXiv preprint arXiv:2603.01593},
+  year={2026}
+}
+```

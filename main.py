@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from typing import Any, Dict, List
 
 import torch
@@ -19,9 +20,13 @@ from utils.config import load_yaml, maybe_override
 
 def load_sensnet_checkpoint(ckpt_path: str, device: torch.device):
     from run_train import SensitiveRegionNet
-    model = SensitiveRegionNet().to(device)
-    ckpt = torch.load(ckpt_path, map_location=device)
-    model.load_state_dict(ckpt["model"], strict=True)
+    # Support Hugging Face Hub repo id (e.g. "mabo1215/ppedcrf-sensnet"); requires pip install huggingface_hub
+    if "/" in ckpt_path and not os.path.exists(ckpt_path) and hasattr(SensitiveRegionNet, "from_pretrained"):
+        model = SensitiveRegionNet.from_pretrained(ckpt_path, map_location=device)
+    else:
+        model = SensitiveRegionNet().to(device)
+        ckpt = torch.load(ckpt_path, map_location=device)
+        model.load_state_dict(ckpt["model"], strict=True)
     model.eval()
     return model
 

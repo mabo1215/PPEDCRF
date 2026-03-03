@@ -6,3 +6,12 @@
 .gitkeep
 
 outputs/
+
+# Python bytecode
+*.pyc
+__pycache__/
+
+# LaTeX / BibTeX
+*.tex
+*.bib
+*.cls

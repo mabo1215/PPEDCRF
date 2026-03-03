@@ -12,6 +12,12 @@ from torch.utils.data import DataLoader
 
 from datasets.driving_clip_dataset import DrivingClipDataset
 
+try:
+    from huggingface_hub import PyTorchModelHubMixin
+    _HF_MIXIN = (PyTorchModelHubMixin,)
+except ImportError:
+    _HF_MIXIN = ()
+
 
 def _identity_collate(batch):
     return batch
@@ -33,7 +39,26 @@ class TrainConfig:
     mask_root: Optional[str] = None
 
 
-class SensitiveRegionNet(nn.Module):
+class SensitiveRegionNet(nn.Module, *_HF_MIXIN):
+    """
+    Sensitive-region predictor (unary logits for PPEDCRF).
+    When huggingface_hub is installed, supports save_pretrained / from_pretrained / push_to_hub.
+    """
+    def _save_pretrained(self, save_directory):
+        import pathlib
+        p = pathlib.Path(save_directory)
+        p.mkdir(parents=True, exist_ok=True)
+        torch.save(self.state_dict(), p / "pytorch_model.bin")
+
+    @classmethod
+    def _from_pretrained(cls, model_id, revision=None, force_download=False, token=None, cache_dir=None, local_files_only=False, **model_kwargs):
+        from huggingface_hub import hf_hub_download
+        map_location = model_kwargs.pop("map_location", "cpu")
+        path = hf_hub_download(repo_id=model_id, filename="pytorch_model.bin", revision=revision, force_download=force_download, token=token, cache_dir=cache_dir, local_files_only=local_files_only)
+        model = cls()
+        model.load_state_dict(torch.load(path, map_location=map_location, weights_only=True))
+        return model
+
     def __init__(self):
         super().__init__()
         self.enc = nn.Sequential(
