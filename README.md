@@ -118,7 +118,7 @@ python main.py --config config/config.yaml protect --checkpoint mabo1215/ppedcrf
 Outputs
 - Checkpoints are saved to `train.out_dir` (default `outputs/`)
 - Final sensitive-region predictor (example): `outputs/sensnet_final.pt`
-- **Pre-trained on Hub:** [mabo1215/ppedcrf-sensnet](https://huggingface.co/mabo1215/ppedcrf-sensnet)
+- **Pre-trained on HuggingFace Hub:** [mabo1215/ppedcrf-sensnet](https://huggingface.co/mabo1215/ppedcrf-sensnet)
 
 Pipeline steps performed by `protect`
 - Sensitive-region inference (unary logits)
@@ -183,8 +183,6 @@ This project is licensed under the [Apache License 2.0](https://www.apache.org/l
 If you use this code or the paper in your work, please cite:
 
 **PPEDCRF: Privacy-Preserving Enhanced Dynamic CRF for Location-Privacy Protection for Sequence Videos with Minimal Detection Degradation**  
-Bo Ma, Jinsong Wu, Weiqi Yan, Catherine Shi, Minh Nguyen. *arXiv:2603.01593*, 2026.
-
 - **arXiv:** [https://arxiv.org/abs/2603.01593](https://arxiv.org/abs/2603.01593)
 
 ```bibtex
