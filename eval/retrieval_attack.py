@@ -12,7 +12,7 @@ import torchvision
 
 @dataclass
 class RetrievalConfig:
-    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "yolox_s" | "yolox_tiny" ...
+    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "yolox_s" | "yolov11n" | "yolov11s" ...
     device: str = "cuda"
     normalize: bool = True       # L2 normalize embeddings
     input_size: int = 224        # embedding network input resolution
@@ -76,6 +76,64 @@ class YOLOXEmbedder(nn.Module):
         pooled = [F.adaptive_avg_pool2d(f, (1, 1)).flatten(1) for f in feats]
         emb = torch.cat(pooled, dim=1)
         return emb
+
+
+class YOLOv11Embedder(nn.Module):
+    """
+    Use Ultralytics YOLOv11 as an image feature extractor.
+    Loads yolo11n-cls.pt / yolo11s-cls.pt etc. (224 input) and uses features before the classifier.
+    Only the backbone is kept as a submodule so that .eval() does not trigger Ultralytics trainer/dataset.
+    """
+
+    def __init__(self, name: str = "yolov11n"):
+        super().__init__()
+        try:
+            from ultralytics import YOLO  # type: ignore
+        except ImportError as e:
+            raise ImportError(
+                "Ultralytics is not installed. Please run `pip install ultralytics` to use YOLOv11 backbone."
+            ) from e
+
+        # Map config name to Ultralytics classification weight: yolov11n -> yolo11n-cls.pt
+        suffix = name.lower().replace("yolo11", "").replace("yolov11", "").strip("_") or "n"
+        if suffix not in ("n", "s", "m", "l", "x"):
+            suffix = "n"
+        weight = f"yolo11{suffix}-cls.pt"
+        yolo = YOLO(weight)
+        model = yolo.model
+
+        # Get backbone (all but classification head). Structure varies by ultralytics version.
+        backbone = None
+        if hasattr(model, "model"):
+            inner = getattr(model, "model")
+            if isinstance(inner, nn.Sequential):
+                layers = list(inner.children())
+                if layers:
+                    backbone = nn.Sequential(*layers[:-1])
+            elif hasattr(inner, "children"):
+                layers = list(inner.children())
+                if len(layers) > 1:
+                    backbone = nn.Sequential(*layers[:-1])
+        if backbone is None and hasattr(model, "children"):
+            layers = list(model.children())
+            if len(layers) > 1:
+                backbone = nn.Sequential(*layers[:-1])
+        if backbone is None:
+            backbone = nn.Sequential(*list(model.children())[:-1]) if len(list(model.children())) > 1 else model
+
+        backbone.eval()
+        with torch.no_grad():
+            out = backbone(torch.zeros(1, 3, 224, 224))
+            out_dim = out.flatten(1).size(1)
+
+        # Register only backbone so embedder.eval() does not call Ultralytics model.eval() (which starts trainer/dataset)
+        self.backbone = backbone
+        self.out_dim = out_dim
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.max() > 1.5:
+            x = x / 255.0
+        return self.backbone(x).flatten(1)
 
 
 def preprocess_for_embed(x: torch.Tensor, input_size: int = 224) -> torch.Tensor:
@@ -159,6 +217,9 @@ def query_topk(
 
 
 def make_default_embedder(cfg: RetrievalConfig) -> nn.Module:
-    if cfg.backbone.lower().startswith("yolox"):
+    b = cfg.backbone.lower()
+    if b.startswith("yolov11") or (b.startswith("yolo11") and "cls" not in b):
+        return YOLOv11Embedder(cfg.backbone)
+    if b.startswith("yolox"):
         return YOLOXEmbedder(cfg.backbone)
     return ImageEmbedder(cfg.backbone)

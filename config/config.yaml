@@ -39,7 +39,7 @@ ppedcrf:
     seed: 1234
 
 attack:
-  backbone: "yolox_s"
+  backbone: "yolov11n"
   input_size: 224
   normalize: true
   topk: [1, 5, 10]

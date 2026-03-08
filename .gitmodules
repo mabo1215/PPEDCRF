@@ -1,0 +1,4 @@
+[submodule "doc"]
+	path = doc
+	url = https://github.com/mabo1215/ppedcrf-core-private.git
+	branch = main
