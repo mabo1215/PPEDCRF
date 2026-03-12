@@ -1,0 +1,56 @@
+TETCI-2023-0496
+Privacy Enhanced Dynamic Conditional Random Field For Sequence Images Segmentation and Detection
+
+Dear Dr. Bo Ma:
+
+I regret to inform you that based on the recommendation received from the associated editor your paper cannot be accepted for publication in the IEEE Transactions on Emerging Topics in Computational Intelligence. Please find review comments below that should help explain the reasoning behind this decision. I hope you find them useful. If the referees have attached a review file, you will need to retrieve it from your 'Author Center' at the IEEE Transactions on Emerging Topics in Computational Intelligence ScholarOne Manuscripts website; https://mc.manuscriptcentral.com/tetci-ieee. Check the 'Author Center' for more information when appropriate.
+
+
+Based on the referee reports, and the Associate Editor's recommendation, I must reject your manuscript. However, you are encouraged to undertake a thorough and comprehensive revision of the manuscript according to the reviewers' comments, and resubmit it within 120 days through "create a resubmission" in the ScholarOne Manuscripts system. If you do decide to resubmit a significantly revised manuscript, please explain how you addressed the reviewers' comments clearly and also indicate the current manuscript number. 
+
+Thank you for your interest in the IEEE Transactions on Emerging Topics in Computational Intelligence.
+
+
+Sincerely,
+Prof. Yiu-ming Cheung
+ieeetetci.hk@gmail.com, ymcheung1@yahoo.com
+Editor-in-Chief, IEEE Transactions on Emerging Topics in Computational Intelligence
+
+
+*************** Reviews ***************
+
+Referee: 1
+
+Comments to the Author
+The authors proposed a solution called PREDCRF to protect the location privacy for sequence images. Combining with the existing object detection solution, the experimental results proved its effectiveness in improving privacy protection. The way the authors comb the related work is clear, which intuitively states the limitation of existing solutions and motivation. However, there are some shortcomings to be corrected.
+1. “PREDCRF” is the given name of proposed solution that can be put in title, which is more intuitive.
+2. The labels in Figure 1 are not clear. It is suggested to improve the clarity of figures in the full text. For example, the subfigures in Figure 3 and Figure 7 are too small to recognize the caption.
+3. There are a large number of formulas in the full text. It would be better to number each formula.
+4. It is noticed that there are some formatting issues.
+1) In many places, the left quotation mark and the right quotation mark do not match. For example, in page 8 line 53, page 10 line 35, and page 12 paragraph 3, the relevant contents are quoted by two closing tokens. Please check and correct them carefully.
+2) In page 11 line 22, the punctuation after “KL divergence” is supposed to be a full stop rather than a comma.
+3) In page 11 line 48, there is a missing full stop between “tree” and “The”.
+
+
+Referee: 2
+
+Comments to the Author
+After carefully reviewing the research presented in this paper, I think the innovative contributions of this research provide valuable insights and can serve as a reference for further advancements in the field, highlighting the significance of this paper's research contribution.
+
+In order to make the paper clearer and the verification work more sufficient, I hope the author can improve the content of the following parts:
+
+In Section II.D.(the theory part), the author explains the concept of building sensitive class relationships using the utility matrix. Additionally, the author mentions the establishment of a hierarchical tree within the utility matrix. I suggest that the author provides a more detailed description of this aspect, including the process of generating a hierarchical tree structure within the utility matrix and how it contributes to the construction, labeling, and tracking of sensitive class features. This additional information would help clarify the association between privacy classes and provide a clearer connection between this specific research component and the overall model.
+
+In the Empirical Evaluation section, the author has chosen appropriate Benchmark Datasets and created a suitable Experimental Setup. They have also provided Statistical Significance by comparing their approach with other privacy protection methods. To further enhance the paper, the author can consider adding more comparisons with state-of-the-art works in the same field for a comprehensive analysis. Additionally, the author's work involves generating privacy noise, and it would be beneficial to compare the impact of several similar privacy protection methods on statistical aspects such as PSNR (Peak Signal to Noise Ratio), SSIM (Structural Similarity Index), MSE (Mean Square Error), and other statistical measures. This would help validate the privacy at a statistical level, as mentioned in Section I.D., “when privacy budget $\epsilon ->0 $ and $\epsilon ≥ 1$”.
+
+There are a few sentences that need proofreading, such as “If the predictions deviate beyond the ground, loss or cost values will increase.” can improve as “If the predictions deviate significantly from the ground truth, the loss or cost values will increase.”,etc.
+
+
+Referee: 3
+
+Comments to the Author
+The main problem of this paper is the unclear motivation. According to the abstract, the main motivation is to preserve the privacy of the image uploaded to the cloud. In this case, the encryption could be the promising method.
+
+The second problem of this paper is unclear on the privacy preservation level. In particular, there is no image comparison for the privacy preservation level.
+
+The third problem of this paper is the poor presentation. There exist many typos. For example, " Convolutional Neural Network(CNN)" -->" Convolutional Neural Network (CNN)".

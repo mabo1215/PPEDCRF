@@ -1,7 +1,3 @@
-[submodule "doc"]
-	path = doc
-	url = https://github.com/mabo1215/ppedcrf-core-private.git
-	branch = main
 [submodule "paper"]
 	path = paper
 	url = https://github.com/mabo1215/PPEDCRF_overleaf.git
