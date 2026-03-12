@@ -56,11 +56,13 @@ def mean_nearest_neighbor_distance(emb: torch.Tensor, normalize: bool = True) ->
 def main():
     p = argparse.ArgumentParser(description="Compute d0, d1 for privacy-to-privacy NN distance")
     p.add_argument("--config", type=str, default="config/config.yaml")
+    p.add_argument("--backbone", type=str, default=None, help="Override embedder backbone (e.g. resnet18) to avoid optional deps")
     p.add_argument("--data_root", type=str, default=None)
     p.add_argument("--checkpoint", type=str, default="outputs/sensnet_final.pt")
     p.add_argument("--max_clips", type=int, default=50)
     p.add_argument("--split", type=str, default="test", help="Dataset split: test, val, or train (default: test)")
-    p.add_argument("--update-tex", action="store_true", help="Replace \\texttt{<d0>} and \\texttt{<d1>} (and optionally $N_{\\max}$, $N_{\\min}$) in doc/main.tex")
+    p.add_argument("--update-tex", action="store_true", help="Replace \\texttt{<d0>} and \\texttt{<d1>} (and optionally $N_{\\max}$, $N_{\\min}$) in the given .tex file")
+    p.add_argument("--tex", type=str, default=None, help="Path to main.tex (default: paper/main.tex)")
     p.add_argument("--N_max", type=int, default=None, help="Largest class sample count for main.tex $N_{\\max}$ (use with --update-tex)")
     p.add_argument("--N_min", type=int, default=None, help="Smallest class sample count for main.tex $N_{\\min}$ (use with --update-tex)")
     args = p.parse_args()
@@ -73,8 +75,9 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     attack_cfg = cfg.get("attack", {})
+    backbone = args.backbone if args.backbone is not None else str(attack_cfg.get("backbone", "resnet18"))
     rcfg = RetrievalConfig(
-        backbone=str(attack_cfg.get("backbone", "resnet18")),
+        backbone=backbone,
         device=str(device),
         normalize=bool(attack_cfg.get("normalize", True)),
         input_size=int(attack_cfg.get("input_size", 224)),
@@ -153,7 +156,11 @@ def main():
 
     if args.update_tex:
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        main_tex = os.path.join(root, "doc", "main.tex")
+        main_tex = args.tex
+        if main_tex is None:
+            main_tex = os.path.join(root, "paper", "main.tex")
+        if not os.path.isabs(main_tex):
+            main_tex = os.path.join(root, main_tex)
         if not os.path.isfile(main_tex):
             print(f"Warning: {main_tex} not found")
         else:
