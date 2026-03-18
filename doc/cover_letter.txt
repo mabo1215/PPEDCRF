@@ -1,0 +1,12 @@
+Cover Letter
+
+Description of Contribution
+
+In order to effectively protect location privacy when publishing time-series video for surveillance or vehicle systems, we propose a solution named Privacy-preserving Enhanced Dynamic Conditional Random Field (PPEDCRF). Our solution is designed to improve privacy protection when combined with existing object detection solutions for autonomous vehicles. This research aims to improve both detection performance and privacy for autonomous driving systems by using machine learning and cloud-based processing.
+
+Related Papers Summary
+
+In general object detection tasks, two-stage detectors have been widely adopted with the advancement of region-based CNN (RCNN) and Faster R-CNN. For privacy-preserving object detection with Faster R-CNN, Ren et al. proposed an anonymization method that modifies raw video frames to remove privacy- or sensitive parts in the target frames of a video stream. Later, Liu et al. proposed a new method based on Faster R-CNN to remove sensitive information in medical images; however, this can negatively impact retraining on the modified data. To address this limitation, Zhou et al. proposed a privacy-protection method that uses MTCNN to locate sensitive regions and adjust affinities with noise resistance, rather than removing the sensitive information entirely. In addition, Wang et al. noted that videos with low resolution and fast motion remain challenging, because CNN backbones can suffer from poor performance when input quality is low and pixel information is nearly identical across regions; current CNN models struggle to fit such low-quality images effectively.
+
+After reviewing the scope of your journal, I believe this paper matches the journal’s areas of interest. I kindly request that you consider this manuscript for review.
+
