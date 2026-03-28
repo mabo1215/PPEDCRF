@@ -18,3 +18,8 @@ __pycache__/
 *.cls
 
 *.pt
+
+AGENTS.md
+README_Codex.md
+src/AGENTS.md
+.codex/*
