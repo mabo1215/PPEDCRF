@@ -1,15 +1,15 @@
 """
-Update placeholders in doc/main.tex: \\texttt{<d0>}, \\texttt{<d1>}, $N_{\\max}$, $N_{\\min}$.
+Update placeholders in paper/main.tex: \\texttt{<d0>}, \\texttt{<d1>}, $N_{\\max}$, $N_{\\min}$.
 
 Usage:
   # Update only N_max, N_min from command line (e.g. from MOT16 class distribution):
-  python scripts/update_tex_placeholders.py --N_max 1200 --N_min 50
+  python src/scripts/update_tex_placeholders.py --N_max 1200 --N_min 50
 
   # Update N_max, N_min from a per-class count file (one count per line, or CSV with a count column):
-  python scripts/update_tex_placeholders.py --counts_file path/to/counts.csv --update-tex
+  python src/scripts/update_tex_placeholders.py --counts_file path/to/counts.csv --update-tex
 
   # Update d0, d1 from command line (e.g. after computing elsewhere):
-  python scripts/update_tex_placeholders.py --d0 0.45 --d1 0.62 --update-tex
+  python src/scripts/update_tex_placeholders.py --d0 0.45 --d1 0.62 --update-tex
 """
 from __future__ import annotations
 
@@ -19,18 +19,19 @@ import os
 import sys
 
 def main():
-    p = argparse.ArgumentParser(description="Update placeholders in doc/main.tex")
+    p = argparse.ArgumentParser(description="Update placeholders in paper/main.tex")
     p.add_argument("--d0", type=float, default=None)
     p.add_argument("--d1", type=float, default=None)
     p.add_argument("--N_max", type=int, default=None)
     p.add_argument("--N_min", type=int, default=None)
     p.add_argument("--counts_file", type=str, default=None,
                    help="CSV or text file with per-class counts (one per line or column 'count' / 'n')")
-    p.add_argument("--update-tex", action="store_true", help="Write changes to doc/main.tex")
+    p.add_argument("--update-tex", action="store_true", help="Write changes to paper/main.tex")
     args = p.parse_args()
 
-    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    main_tex = os.path.join(root, "doc", "main.tex")
+    src_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(src_root)
+    main_tex = os.path.join(project_root, "paper", "main.tex")
     if not os.path.isfile(main_tex):
         print(f"Not found: {main_tex}")
         sys.exit(1)

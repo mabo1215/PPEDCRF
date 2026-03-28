@@ -2,9 +2,9 @@
 Compute PSNR, SSIM, MSE between original and PPEDCRF-protected frames for Table (tab:quality).
 Also computes baselines: Global noise (Gaussian on full frame) and White-noise mask (Gaussian on sensitive mask only).
 Usage:
-  python scripts/compute_quality_table.py
-  python scripts/compute_quality_table.py --data_root C:/work/dataset/driving
-  python scripts/compute_quality_table.py --update-tex   # update doc/main.tex with all three method rows
+  python src/scripts/compute_quality_table.py
+  python src/scripts/compute_quality_table.py --data_root C:/work/dataset/driving
+  python src/scripts/compute_quality_table.py --update-tex   # update paper/main.tex with all three method rows
 Output: mean PSNR, SSIM, MSE for each method.
 """
 from __future__ import annotations
@@ -14,8 +14,10 @@ import os
 import re
 import sys
 
-# project root
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# src root
+SRC_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(SRC_ROOT)
+sys.path.insert(0, SRC_ROOT)
 
 import torch
 import numpy as np
@@ -67,12 +69,12 @@ def protect_white_noise_mask(
 
 def main():
     p = argparse.ArgumentParser(description="Compute PSNR/SSIM/MSE for quality table")
-    p.add_argument("--config", type=str, default="config/config.yaml")
+    p.add_argument("--config", type=str, default="src/config/config.yaml")
     p.add_argument("--data_root", type=str, default=None, help="e.g. C:/source/REAEDP/data or C:/work/dataset/driving")
-    p.add_argument("--checkpoint", type=str, default="outputs/sensnet_final.pt")
+    p.add_argument("--checkpoint", type=str, default="src/outputs/sensnet_final.pt")
     p.add_argument("--split", type=str, default="test", help="Dataset split: test, val, or train")
     p.add_argument("--max_clips", type=int, default=20)
-    p.add_argument("--update-tex", action="store_true", help="Update doc/main.tex Table tab:quality PPEDCRF row with computed values")
+    p.add_argument("--update-tex", action="store_true", help="Update paper/main.tex Table tab:quality rows with computed values")
     args = p.parse_args()
 
     cfg = load_yaml(args.config)
@@ -150,8 +152,7 @@ def main():
     print(f"  White-noise mask & {w_psnr:.2f} & {w_ssim:.4f} & {w_mse:.2f} \\\\\\\\")
 
     if args.update_tex:
-        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        main_tex = os.path.join(root, "doc", "main.tex")
+        main_tex = os.path.join(PROJECT_ROOT, "paper", "main.tex")
         if not os.path.isfile(main_tex):
             print(f"Warning: {main_tex} not found, skipping --update-tex")
         else:

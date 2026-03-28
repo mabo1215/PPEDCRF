@@ -21,7 +21,14 @@ from utils.config import load_yaml, maybe_override
 def load_sensnet_checkpoint(ckpt_path: str, device: torch.device):
     from run_train import SensitiveRegionNet
     # Support Hugging Face Hub repo id (e.g. "mabo1215/ppedcrf-sensnet"); requires pip install huggingface_hub
-    if "/" in ckpt_path and not os.path.exists(ckpt_path) and hasattr(SensitiveRegionNet, "from_pretrained"):
+    is_hf_repo = (
+        "/" in ckpt_path
+        and "\\" not in ckpt_path
+        and not ckpt_path.lower().endswith((".pt", ".pth", ".bin", ".ckpt"))
+        and not os.path.exists(ckpt_path)
+        and hasattr(SensitiveRegionNet, "from_pretrained")
+    )
+    if is_hf_repo:
         model = SensitiveRegionNet.from_pretrained(ckpt_path, map_location=device)
     else:
         model = SensitiveRegionNet().to(device)
@@ -185,7 +192,7 @@ def cmd_protect(cfg: Dict[str, Any]) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser("PPEDCRF entrypoint")
-    p.add_argument("--config", type=str, default="config/config.yaml", help="Path to YAML config")
+    p.add_argument("--config", type=str, default="src/config/config.yaml", help="Path to YAML config")
 
     sub = p.add_subparsers(dest="cmd", required=True)
 

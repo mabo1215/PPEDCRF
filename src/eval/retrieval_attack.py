@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import torch
@@ -98,7 +99,9 @@ class YOLOv11Embedder(nn.Module):
         suffix = name.lower().replace("yolo11", "").replace("yolov11", "").strip("_") or "n"
         if suffix not in ("n", "s", "m", "l", "x"):
             suffix = "n"
-        weight = f"yolo11{suffix}-cls.pt"
+        weight_name = f"yolo11{suffix}-cls.pt"
+        local_weight = Path(__file__).resolve().parents[1] / weight_name
+        weight = str(local_weight) if local_weight.exists() else weight_name
         yolo = YOLO(weight)
         model = yolo.model
 

@@ -3,8 +3,8 @@
 与 DrivingClipDataset 一致：train/ 下每项为子目录（帧序列）或视频文件，视为一个 clip。
 
 Usage:
-  python scripts/split_train_val.py
-  python scripts/split_train_val.py --data_root C:/work/dataset/driving --ratio 0.2 --dry_run
+  python src/scripts/split_train_val.py
+  python src/scripts/split_train_val.py --data_root C:/work/dataset/driving --ratio 0.2 --dry_run
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from utils.config import load_yaml
 
 def main():
     p = argparse.ArgumentParser(description="Split 20% of train into val")
-    p.add_argument("--config", type=str, default="config/config.yaml")
+    p.add_argument("--config", type=str, default="src/config/config.yaml")
     p.add_argument("--data_root", type=str, default=None)
     p.add_argument("--ratio", type=float, default=0.2, help="Fraction of train to use as val (default 0.2 = 20%%)")
     p.add_argument("--seed", type=int, default=42)

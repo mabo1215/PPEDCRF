@@ -9,8 +9,8 @@ d1 = mean over protected embeddings. So d1 > d0 indicates that after protection
 samples are more spread out (harder to retrieve).
 
 Usage:
-  python scripts/compute_privacy_neighbor_distances.py
-  python scripts/compute_privacy_neighbor_distances.py --update-tex
+  python src/scripts/compute_privacy_neighbor_distances.py
+  python src/scripts/compute_privacy_neighbor_distances.py --update-tex
 """
 from __future__ import annotations
 
@@ -19,7 +19,9 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SRC_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(SRC_ROOT)
+sys.path.insert(0, SRC_ROOT)
 
 import torch
 import torch.nn.functional as F
@@ -55,10 +57,10 @@ def mean_nearest_neighbor_distance(emb: torch.Tensor, normalize: bool = True) ->
 
 def main():
     p = argparse.ArgumentParser(description="Compute d0, d1 for privacy-to-privacy NN distance")
-    p.add_argument("--config", type=str, default="config/config.yaml")
+    p.add_argument("--config", type=str, default="src/config/config.yaml")
     p.add_argument("--backbone", type=str, default=None, help="Override embedder backbone (e.g. resnet18) to avoid optional deps")
     p.add_argument("--data_root", type=str, default=None)
-    p.add_argument("--checkpoint", type=str, default="outputs/sensnet_final.pt")
+    p.add_argument("--checkpoint", type=str, default="src/outputs/sensnet_final.pt")
     p.add_argument("--max_clips", type=int, default=50)
     p.add_argument("--split", type=str, default="test", help="Dataset split: test, val, or train (default: test)")
     p.add_argument("--update-tex", action="store_true", help="Replace \\texttt{<d0>} and \\texttt{<d1>} (and optionally $N_{\\max}$, $N_{\\min}$) in the given .tex file")
@@ -155,12 +157,11 @@ def main():
     print("For main.tex: replace \\texttt{<d0>} with", f"{d0:.3f}", "and \\texttt{<d1>} with", f"{d1:.3f}")
 
     if args.update_tex:
-        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         main_tex = args.tex
         if main_tex is None:
-            main_tex = os.path.join(root, "paper", "main.tex")
+            main_tex = os.path.join(PROJECT_ROOT, "paper", "main.tex")
         if not os.path.isabs(main_tex):
-            main_tex = os.path.join(root, main_tex)
+            main_tex = os.path.join(PROJECT_ROOT, main_tex)
         if not os.path.isfile(main_tex):
             print(f"Warning: {main_tex} not found")
         else:

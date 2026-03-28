@@ -3,8 +3,8 @@ Run retrieval attack with PPEDCRF protection under multiple noise seeds and repo
 for Top-k metrics (R@1, R@5, R@10) over 3 seeds, for reproducibility (paper: "we report mean ± std").
 
 Usage:
-  python scripts/run_attack_multiseed.py [--config config/config.yaml] [--seeds 1234 1235 1236] [--update-tex]
-  python scripts/run_attack_multiseed.py --backbone resnet18   # if default backbone needs cv2/ultralytics
+  python src/scripts/run_attack_multiseed.py [--config src/config/config.yaml] [--seeds 1234 1235 1236] [--update-tex]
+  python src/scripts/run_attack_multiseed.py --backbone resnet18   # if default backbone needs cv2/ultralytics
 
 Output: mean ± std for R@1, R@5, R@10. With --update-tex, updates paper/main.tex placeholders
   \\texttt{<R1>}, \\texttt{<R5>}, \\texttt{<R10>} and \\texttt{<R1std>}, \\texttt{<R5std>}, \\texttt{<R10std>}.
@@ -16,7 +16,9 @@ import copy
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SRC_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(SRC_ROOT)
+sys.path.insert(0, SRC_ROOT)
 
 import torch
 
@@ -61,10 +63,10 @@ def run_one_seed(
 
 def main():
     p = argparse.ArgumentParser(description="Run retrieval attack with 3 seeds, report mean ± std")
-    p.add_argument("--config", type=str, default="config/config.yaml")
+    p.add_argument("--config", type=str, default="src/config/config.yaml")
     p.add_argument("--data_root", type=str, default=None)
     p.add_argument("--backbone", type=str, default=None)
-    p.add_argument("--checkpoint", type=str, default="outputs/sensnet_final.pt")
+    p.add_argument("--checkpoint", type=str, default="src/outputs/sensnet_final.pt")
     p.add_argument("--seeds", type=int, nargs="+", default=[1234, 1235, 1236])
     p.add_argument("--max_gallery", type=int, default=None)
     p.add_argument("--max_query", type=int, default=None)
@@ -154,12 +156,11 @@ def main():
         print(f"  {k}: {means[k]:.4f} ± {stds[k]:.4f}")
 
     if args.update_tex:
-        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         main_tex = args.tex
         if main_tex is None:
-            main_tex = os.path.join(root, "paper", "main.tex")
+            main_tex = os.path.join(PROJECT_ROOT, "paper", "main.tex")
         if not os.path.isabs(main_tex):
-            main_tex = os.path.join(root, main_tex)
+            main_tex = os.path.join(PROJECT_ROOT, main_tex)
         if not os.path.isfile(main_tex):
             print(f"Warning: {main_tex} not found")
         else:

@@ -202,5 +202,5 @@ def train_from_cfg_dict(cfg_dict: Dict[str, Any]) -> str:
 if __name__ == "__main__":
     # Optional: local direct run using YAML (no CLI).
     from utils.config import load_yaml
-    cfg = load_yaml("config/config.yaml")
+    cfg = load_yaml("src/config/config.yaml")
     train_from_cfg_dict(cfg)

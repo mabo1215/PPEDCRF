@@ -11,10 +11,10 @@ The paper (`paper/main.tex`) uses placeholders that are filled by running the fo
 ```bash
 # Install deps if needed: opencv-python, torch, torchvision. Config default backbone is yolov11n (needs ultralytics).
 # To avoid ultralytics/cv2 in embedder, use resnet18:
-python scripts/compute_privacy_neighbor_distances.py --backbone resnet18 --max_clips 20
+python src/scripts/compute_privacy_neighbor_distances.py --backbone resnet18 --max_clips 20
 
 # Update paper (paper/main.tex) with computed d0, d1:
-python scripts/compute_privacy_neighbor_distances.py --backbone resnet18 --update-tex
+python src/scripts/compute_privacy_neighbor_distances.py --backbone resnet18 --update-tex
 ```
 
 Optional: `--tex paper/main.tex` (default), `--N_max`, `--N_min` for class counts.
@@ -29,13 +29,13 @@ Runs the retrieval attack on *protected* query frames under 3 noise seeds and re
 
 ```bash
 # Run with default config (needs data root, checkpoint, and dataset with train/val splits):
-python scripts/run_attack_multiseed.py
+python src/scripts/run_attack_multiseed.py
 
 # If your config uses a backbone that requires ultralytics (e.g. yolov11n), use resnet18:
-python scripts/run_attack_multiseed.py --backbone resnet18
+python src/scripts/run_attack_multiseed.py --backbone resnet18
 
 # Write mean ± std into paper/main.tex:
-python scripts/run_attack_multiseed.py --update-tex
+python src/scripts/run_attack_multiseed.py --update-tex
 ```
 
 Optional: `--seeds 1234 1235 1236`, `--tex paper/main.tex`, `--max_query`, `--max_gallery`.
