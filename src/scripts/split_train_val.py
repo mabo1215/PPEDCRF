@@ -1,6 +1,9 @@
 """
-从 train 中分出 20% 作为 val：在数据根目录下创建 val/，并将 train 中 20% 的 clip 移入 val。
-与 DrivingClipDataset 一致：train/ 下每项为子目录（帧序列）或视频文件，视为一个 clip。
+Split 20% of the training set into a validation set.
+
+The script creates `val/` under the dataset root and moves a subset of clips from
+`train/` into it. Each subdirectory of frames or each video file under `train/`
+is treated as one clip, consistent with `DrivingClipDataset`.
 
 Usage:
   python src/scripts/split_train_val.py
@@ -46,7 +49,8 @@ def main():
             items.append(p)
         elif os.path.isfile(full) and p.lower().endswith(clip_ext):
             items.append(p)
-    # 若没有子目录/视频，则按「直接放在 train 下的图片」处理：20% 的图片移到 val
+    # Fallback: if train/ contains loose images instead of clips, move 20% of
+    # the images into val/.
     if not items:
         for p in entries:
             full = os.path.join(train_dir, p)

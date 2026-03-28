@@ -1,8 +1,10 @@
-# 驾驶片段数据目录
+# Driving Clip Dataset Layout
 
-把数据按以下结构放在本目录下（与 `src/config/config.yaml` 中 `data.root: "src/data/driving"` 对应）：
+Place the dataset under this directory using one of the following layouts. The
+default configuration expects `data.root: "src/data/driving"` in
+`src/config/config.yaml`.
 
-## 方式 A：按帧的图片文件夹
+## Option A: frame folders
 
 ```
 src/data/driving/
@@ -18,7 +20,7 @@ src/data/driving/
       ...
 ```
 
-## 方式 B：视频文件
+## Option B: video files
 
 ```
 src/data/driving/
@@ -30,6 +32,6 @@ src/data/driving/
     ...
 ```
 
-- 运行 `attack` 会用到 `train`（gallery）和 `val`（query）。
-- 至少放一些片段到 `train/` 和 `val/` 后再执行：
+- Running `attack` uses `train` as the gallery split and `val` as the query split.
+- Put at least a few clips into both `train/` and `val/` before running:
   `python src/main.py --config src/config/config.yaml attack`
