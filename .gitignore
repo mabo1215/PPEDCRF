@@ -24,6 +24,7 @@ README_Codex.md
 src/AGENTS.md
 .codex/*
 CLAUDE.md
-USAGE_CLAUDE.md
+USAGE_claude.md
+USAGE_codex.md
 .claude/*
 .github/agents/*
