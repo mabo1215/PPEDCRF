@@ -13,7 +13,6 @@ src/outputs/
 __pycache__/
 
 # LaTeX / BibTeX
-*.tex
 *.bib
 *.cls
 

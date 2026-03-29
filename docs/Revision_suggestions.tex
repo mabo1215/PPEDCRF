@@ -1,0 +1,184 @@
+﻿\section*{ACM TOMM-Style Review of the Manuscript}
+
+\subsection*{Manuscript}
+\textbf{Title:} PPEDCRF: Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences
+
+\subsection*{Overall Assessment}
+This manuscript studies \emph{background-based location privacy} in released dashcam video frames and proposes PPEDCRF, a selective perturbation pipeline that combines a unary sensitivity predictor, a dynamic CRF refinement stage, an NCP-based control map, and image-space Gaussian perturbation. The revised manuscript has made substantial progress in problem clarification: it now clearly states that the protected object is the \emph{released frame}, the attacker is a \emph{retrieval attacker}, and the privacy claim is \emph{DP-style calibration} rather than a strict end-to-end differential privacy guarantee. These clarifications significantly improve the paper's internal consistency and reduce the ambiguity present in earlier drafts. The paper also adds a controlled paired-scene retrieval benchmark to evaluate the intended privacy threat more directly. These are meaningful improvements. \cite{mainpdf,appendixpdf}
+
+However, under the quality bar expected for \emph{ACM Transactions on Multimedia Computing, Communications, and Applications (TOMM)}, the manuscript is still \textbf{not yet fully convincing as a journal-ready paper}. The main issue is no longer scope mismatch; rather, it is that the experimental evidence still does not sufficiently support the method's claimed contribution at journal level. In particular, the newly added support-aware baselines are stronger in privacy reduction than PPEDCRF on the proposed benchmark, the DCRF and NCP ablations do not yet demonstrate strong necessity, and the benchmark itself is explicitly a proxy benchmark rather than a realistic large-scale geo-localization evaluation. As a result, the paper is currently better characterized as a \emph{substantially improved but still borderline TOMM submission}. \cite{mainpdf,appendixpdf}
+
+\subsection*{Recommendation}
+\textbf{Current recommendation: Major Revision before submission to ACM TOMM.}
+
+\subsection*{Summary of Strengths}
+\begin{itemize}
+    \item The manuscript now has a much clearer and more coherent problem formulation. The introduction, method, and conclusion consistently describe the attacker as a gallery-based retrieval model and the defense as a release-side visual sanitization mechanism. \cite{mainpdf}
+    \item The paper no longer overclaims strict differential privacy. Instead, it explicitly frames the privacy mechanism as a DP-style calibration rule, which is a more accurate and defensible positioning. \cite{mainpdf}
+    \item The method pipeline is now implementation-aligned, and the appendix helps reconcile the manuscript with the released code by clarifying that the sanitizer perturbs the released image rather than a latent feature tensor. \cite{appendixpdf}
+    \item The controlled paired-scene retrieval benchmark is a useful addition. Even though it is limited, it is still a meaningful step forward because it finally evaluates the method against the intended retrieval-based threat model rather than relying only on legacy detector utility curves. \cite{mainpdf,appendixpdf}
+    \item The manuscript is transparent about limitations, especially attacker sensitivity, benchmark scope, and the fact that stronger support-aware obfuscation baselines can achieve lower Top-1 retrieval on the current proxy benchmark. This honesty improves credibility. \cite{mainpdf}
+\end{itemize}
+
+\subsection*{Major Concerns}
+
+\subsubsection*{1. The strongest baselines outperform PPEDCRF on the main privacy benchmark}
+This is the most serious issue for TOMM-level review. On the controlled paired-scene benchmark, PPEDCRF reduces ResNet18 Top-1 retrieval from 0.833 to 0.722 at $\sigma_0=8$, while mask-guided blur reduces it further to 0.583 and mask-guided mosaic further to 0.417. In other words, the manuscript's strongest privacy evidence does not show that PPEDCRF is the best-performing defense. Instead, the paper's current conclusion is more modest: PPEDCRF occupies a milder privacy--utility operating point than blur or mosaic. \cite{mainpdf}
+
+This is a difficult position for a journal paper because reviewers may ask:
+\begin{itemize}
+    \item Why is a more complex DCRF+NCP mechanism preferable if simpler support-aware blur or mosaic already achieve stronger privacy?
+    \item Is the contribution truly a new method, or primarily a trade-off interpretation around selective perturbation?
+    \item What concrete application setting requires PPEDCRF rather than stronger support-aware obfuscation?
+\end{itemize}
+
+At present, the manuscript does not answer these questions strongly enough.
+
+\paragraph{Required revision.}
+The paper should be reframed more explicitly as a \textbf{trade-off optimization paper} rather than a best-privacy paper. In addition, the experimental section should add:
+\begin{itemize}
+    \item a \textbf{matched-utility comparison}, where all methods are compared at approximately matched PSNR or SSIM;
+    \item a \textbf{matched-privacy comparison}, where all methods are compared at similar Top-1 attack reduction;
+    \item a clear discussion of the exact operating regime where PPEDCRF is preferable to blur/mosaic.
+\end{itemize}
+Without this, reviewers may conclude that the method is dominated by simpler support-aware baselines.
+
+\subsubsection*{2. DCRF and NCP are not yet empirically justified as essential components}
+The current ablation results show that removing temporal consistency or replacing NCP with a fixed control map changes Top-1 retrieval only marginally on the proxy benchmark. This directly weakens the paper's method-level contribution because the two named components in the title and method description do not yet create a strong measurable gain in the main evaluation. \cite{mainpdf}
+
+This is especially problematic for TOMM because journal reviewers tend to ask whether each proposed component is both:
+\begin{enumerate}
+    \item conceptually justified, and
+    \item empirically necessary.
+\end{enumerate}
+At the moment, the manuscript argues the former better than the latter.
+
+\paragraph{Required revision.}
+The authors should add experiments specifically designed to reveal the benefit of DCRF and NCP:
+\begin{itemize}
+    \item longer and more dynamic video sequences where temporal smoothing should matter more;
+    \item frame-to-frame mask consistency metrics, such as temporal IoU consistency, flicker score, or perturbation stability over time;
+    \item sensitivity analysis of NCP across multiple noise budgets and multiple motion scenarios;
+    \item qualitative comparisons of masks and sanitized outputs with and without DCRF/NCP under difficult motion and viewpoint changes.
+\end{itemize}
+Without such evidence, DCRF and NCP risk appearing as weakly justified engineering additions rather than core contributions.
+
+\subsubsection*{3. The new retrieval benchmark is useful but still too weak as the main journal-level evidence}
+The appendix explicitly states that the added benchmark is a \emph{controlled paired-scene proxy benchmark}, not a substitute for full geo-localization evaluation. It is constructed by mining visually similar pairs from local monitoring sequences using a fixed ResNet18 attacker, then adding hard distractors. This benchmark is reproducible and useful, but it is still limited in realism, scale, and external validity. \cite{appendixpdf}
+
+TOMM reviewers are likely to question:
+\begin{itemize}
+    \item whether the results generalize beyond this mined proxy setting;
+    \item whether the benchmark is biased toward the anchor ResNet18 used in the pair-construction process;
+    \item whether a method validated mainly on a small proxy benchmark can support journal-level claims about background-based location privacy.
+\end{itemize}
+
+\paragraph{Required revision.}
+At least one stronger evaluation track should be added before TOMM submission. Possible directions include:
+\begin{itemize}
+    \item a larger gallery with substantially more distractors;
+    \item more paired locations and more diverse environmental conditions;
+    \item longer video clips with greater temporal variation;
+    \item a more standard place-recognition or geo-localization style evaluation protocol if feasible;
+    \item multiple gallery-construction strategies to show that the reported privacy gain is not an artifact of one mined pairing rule.
+\end{itemize}
+If a public geo-localization benchmark is not available locally, then the authors should substantially scale up the current proxy benchmark and defend its design more rigorously.
+
+\subsubsection*{4. Attacker generalization remains weak}
+The attacker-sensitivity analysis is valuable, but it also reveals an important weakness: under ResNet50, the privacy improvement narrows and even slightly reverses. The manuscript is transparent about this and correctly avoids overclaiming attacker-agnostic privacy. However, for a TOMM paper, this still leaves the method vulnerable to the criticism that it may be too attacker-specific. \cite{mainpdf}
+
+\paragraph{Required revision.}
+The attacker suite should be expanded beyond the current ResNet18/ResNet50 comparison. At minimum:
+\begin{itemize}
+    \item include more than one architecture family;
+    \item clarify whether the benchmark construction using ResNet18 introduces evaluation bias in favor of that backbone;
+    \item discuss attacker transfer more systematically rather than only as a limitation paragraph.
+\end{itemize}
+A stronger attacker-transfer section would materially improve the paper.
+
+\subsubsection*{5. Legacy downstream utility evidence is not yet fully aligned with the new threat model}
+The manuscript still relies partly on legacy detector-training outputs on MOT16/17, Cityscapes, KITTI, and VOC2008 as downstream utility evidence. The paper explicitly states that these are retained as \emph{utility evidence}, not as direct proof of location privacy. This is a reasonable transitional design, but it also means that a large portion of the utility discussion is inherited from an older evaluation pipeline rather than tightly integrated with the new retrieval-based privacy story. \cite{mainpdf}
+
+\paragraph{Required revision.}
+The paper would be stronger if it added at least one \textbf{fixed downstream task evaluation on sanitized frames} that is directly tied to the new retrieval benchmark setting. For example:
+\begin{itemize}
+    \item fixed detector inference on sanitized frames;
+    \item semantic segmentation on sanitized frames under the same image-space perturbation pipeline;
+    \item a downstream readability or scene-understanding metric matched to the release-side task.
+\end{itemize}
+This would connect the privacy result and the utility result more tightly.
+
+\subsubsection*{6. The current narrative is coherent but still somewhat defensive}
+A notable improvement in this revision is that the paper is now much more honest and internally consistent. However, journal papers are not judged only on coherence; they are judged on whether the evidence supports a compelling new conclusion. At present, the manuscript often reads as if it is explaining why its current evidence should be interpreted cautiously. While this honesty is appreciated, it also makes the paper feel more like a repaired revision than a definitive TOMM contribution. \cite{mainpdf,appendixpdf}
+
+\paragraph{Required revision.}
+The paper needs a sharper positive claim that remains true under the actual evidence. A better positioning would be:
+\begin{quote}
+PPEDCRF is a calibrated selective perturbation framework that yields a favorable privacy--utility operating curve under retrieval-based location attacks, particularly compared with indiscriminate perturbation, while highlighting the remaining gap to stronger support-aware obfuscation baselines.
+\end{quote}
+This framing is more defensible than implying stronger privacy superiority.
+
+\subsection*{Minor Concerns}
+
+\subsubsection*{1. Related work remains somewhat thin for a journal paper}
+The related work section is cleaner now, but it is still brief for a TOMM submission. The current references establish foreground anonymization, privacy-aware perception, retrieval privacy, and differential privacy calibration, but the review could still better situate this work in:
+\begin{itemize}
+    \item place recognition and geo-localization literature;
+    \item multimedia privacy mechanisms for scene-level information leakage;
+    \item stronger retrieval-aware sanitization or adversarial obfuscation methods.
+\end{itemize}
+
+\subsubsection*{2. Figure 2 is still conceptually useful but visually dated}
+The pipeline figure is acceptable, but its visual design still appears closer to an earlier conceptual diagram than a polished journal figure. Since this is a TOMM submission, the central method figure should look more concise, modern, and tightly aligned with the actual release-side implementation.
+
+\subsubsection*{3. The contribution list should be more restrained}
+The current contribution list is much improved, but it would still benefit from more precise wording. In particular, the wording around DCRF/NCP should not sound stronger than the present ablation evidence supports.
+
+\subsubsection*{4. The conclusion is honest but may leave too much of the novelty unresolved}
+The conclusion appropriately acknowledges limitations, but it currently ends by emphasizing the unresolved challenge of beating stronger support-aware baselines. This is scientifically honest, but rhetorically it weakens the final impression. The conclusion should still acknowledge limitations, but it should finish by reinforcing the most defensible positive contribution of the work.
+
+\subsection*{Detailed Revision Checklist for ACM TOMM Standard}
+
+\subsubsection*{A. Must-add experiments before submission}
+\begin{itemize}
+    \item Matched-utility comparison across PPEDCRF, blur, mosaic, random mask, and global Gaussian noise.
+    \item Matched-privacy comparison across the same methods.
+    \item Stronger temporal validation on longer and more dynamic sequences.
+    \item Expanded attacker suite beyond ResNet18/ResNet50.
+    \item At least one downstream fixed-task evaluation on sanitized frames aligned with the new release-side setting.
+\end{itemize}
+
+\subsubsection*{B. Must-strengthen analysis}
+\begin{itemize}
+    \item Explain why the benchmark was constructed with ResNet18 and how this may affect fairness.
+    \item Analyze whether the main gain comes from support localization, perturbation type, or both.
+    \item Separate clearly the roles of DCRF, NCP, and the selective support mask.
+    \item Discuss benchmark saturation more deeply, especially the Top-10 saturation issue.
+\end{itemize}
+
+\subsubsection*{C. Must-improve writing}
+\begin{itemize}
+    \item Reframe the paper as a calibrated privacy--utility trade-off method, not as the strongest privacy defense.
+    \item Tighten the abstract so that it leads with the most defensible conclusion.
+    \item Revise the contributions to align exactly with the empirical evidence.
+    \item End the conclusion with the strongest validated takeaway rather than the largest unresolved gap.
+\end{itemize}
+
+\subsection*{Suggested Decision Wording}
+\textbf{Decision: Major Revision / Not yet ready for ACM TOMM submission in its current form.}
+
+\textbf{Rationale:} The paper is now topically appropriate for ACM TOMM and has made meaningful progress in problem clarification and evaluation design. However, the strongest current evidence still does not fully support a journal-level acceptance case because: (i) stronger support-aware baselines outperform the proposed method on the main proxy benchmark; (ii) DCRF and NCP are not yet strongly validated as essential components; and (iii) the benchmark remains a limited proxy rather than a more externally valid retrieval evaluation. With substantial additional experiments and more precise positioning, the paper could become a much stronger TOMM candidate.
+
+\section*{Actionable Author Revision Plan}
+
+\subsection*{Highest-Priority Changes}
+\begin{enumerate}
+    \item Add matched-operating-point experiments.
+    \item Add stronger temporal-consistency experiments.
+    \item Add broader attacker-generalization experiments.
+    \item Add one downstream fixed-task evaluation aligned with the new setting.
+    \item Reposition the paper around calibrated privacy--utility trade-off rather than implicit superiority.
+\end{enumerate}
+
+\subsection*{Expected Impact of Revision}
+If the above revisions are completed successfully, the manuscript would move from a borderline TOMM submission toward a substantially more defensible journal paper. The current version has a coherent story, but the next version must show stronger evidence that the proposed method is both necessary and meaningfully competitive under a more rigorous evaluation regime.
