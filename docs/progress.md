@@ -10,7 +10,7 @@
 修改说明：在 threat model、受控 benchmark 协议和附录中明确说明查询端使用短序列估计时序平滑 mask，但 retrieval 指标是在 sanitized middle frame 上计算，避免 frame-level 与 sequence-level 攻击定义混淆。
 
 4. 已补充受控 paired-scene retrieval 实验并生成论文图表。
-修改说明：新增 `src/datasets/monitoring_clip_dataset.py` 与 `src/scripts/run_controlled_retrieval_benchmark.py`，基于 `F:\work\datasets\monitoring\images` 构建可复现实验，输出了 `paper/images/privacy_utility_tradeoff.pdf`、`paper/images/retrieval_robustness_topk.pdf` 以及 `src/outputs/controlled_retrieval/` 下的 CSV 和摘要文件。
+修改说明：新增 `src/datasets/monitoring_clip_dataset.py` 与 `src/scripts/run_controlled_retrieval_benchmark.py`，基于 `F:\work\datasets\monitoring\images` 构建可复现实验，输出了 `paper/figs/privacy_utility_tradeoff.pdf`、`paper/figs/retrieval_robustness_topk.pdf` 以及 `src/outputs/controlled_retrieval/` 下的 CSV 和摘要文件。
 
 5. 已补充更强的 task-aligned baselines 并更新主结果分析。
 修改说明：在受控 benchmark 中新增了 mask-guided blur 与 mask-guided mosaic baselines，重新生成了实验汇总文件，并在正文默认消融分析中如实写明这两类 support-aware baseline 在短 proxy benchmark 上都强于 PPEDCRF，从而把结论收束为“PPEDCRF 优于 random mask 与 global Gaussian noise，但仍未超过强 support-aware blur/mosaic baselines”。
@@ -23,6 +23,12 @@
 
 8. 已清理 `src/` 与 `paper/` 下残留的中文内容。
 修改说明：将 `src/scripts/split_train_val.py`、`src/data/driving/README.md` 等位置改为英文说明，并通过 `rg -n "[\p{Han}]" src paper` 复查确认无中文残留。
+
+9. 已将论文图像引用目录从 `images/` 统一切换为 `figs/`。
+修改说明：更新了 `paper/main.tex` 与 `paper/main_010324.tex` 中全部图像路径前缀，并同步修正本文档里图表输出目录的旧路径描述，避免目录改名后出现失效引用。
+
+10. 已修复 `paper/build.bat` 的独立编译与 PDF 回拷流程。
+修改说明：将构建输出统一写入 `paper/build/`，保留 `latexmk` 优先策略并在其不可用时自动回退到 `pdflatex`/`bibtex`，同时确保 `main.pdf` 和 `appendix.pdf` 成功复制回 `paper/` 根目录，`latexmk` 失败日志单独保存为 `paper/build/*.latexmk.log`。
 
 # 未修改或部分修改
 
