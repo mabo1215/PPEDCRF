@@ -42,6 +42,6 @@ Optional: `--seeds 1234 1235 1236`, `--tex paper/main.tex`, `--max_query`, `--ma
 
 ## 3. Figure path
 
-The architecture figure path in `paper/main.tex` is set to `images/architecture_of_solution.png`.  
-A copy of the original file was created as `paper/images/architecture_of_solution.png`.  
+The architecture figure path in `paper/main.tex` is set to `figs/architecture_of_solution.png`.  
+A copy of the original file was created as `paper/figs/architecture_of_solution.png`.  
 If you only have `artecture of solution.png`, copy it to `architecture_of_solution.png` in the same folder.

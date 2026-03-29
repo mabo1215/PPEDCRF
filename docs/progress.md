@@ -30,6 +30,12 @@
 10. 已修复 `paper/build.bat` 的独立编译与 PDF 回拷流程。
 修改说明：将构建输出统一写入 `paper/build/`，保留 `latexmk` 优先策略并在其不可用时自动回退到 `pdflatex`/`bibtex`，同时确保 `main.pdf` 和 `appendix.pdf` 成功复制回 `paper/` 根目录，`latexmk` 失败日志单独保存为 `paper/build/*.latexmk.log`。
 
+11. 已补强受控 retrieval benchmark 的构造说明与导出工件一致性。
+修改说明：在 `paper/main.tex` 与 `paper/appendix.tex` 中加入了配对相似度和 hard distractor 难度统计，恢复 `paper/main.tex` 中的 `Catherine Shi` 作者条目，并将 `src/scripts/run_controlled_retrieval_benchmark.py` 的默认参数与论文当前设置对齐，新增 `selection.json`/`summary.md` 中的 benchmark hardness 统计后重新生成了 `src/outputs/controlled_retrieval/` 与 `paper/figs/` 下的结果。
+
+12. 已清理主文参考文献字段并消除主文 BibTeX warning。
+修改说明：补全了 `paper/ref.bib` 中当前主文实际引用条目的期刊卷页和会议 publisher/address 字段，重新编译后 `paper/build/main.blg` 的 `warning$` 已降为 0，同时同步修正了 `src/scripts/README_NUMBERS.md` 中残留的旧图目录描述。
+
 # 未修改或部分修改
 
 1. 跨攻击骨干网络的隐私稳健性仅部分补强。
@@ -47,7 +53,7 @@
 未全部修改原因：当前仍缺 segmentation-guided masking、retrieval-aware adversarial perturbation、inpainting 等更强或更接近投稿审稿要求的 baseline。
 后续准备如何修改：继续在同一 benchmark 上补 1--2 个更强 baseline，并在条件允许时迁移到更接近真实 geo-localization 的数据设置。
 
-4. 参考文献字段与少量排版警告仍未完全清零。
-修改说明：本轮已完成主文与附录稳定编译，并清除了图像描述缺失警告。
-未修改原因：`paper/ref.bib` 中仍存在个别条目字段不完整，以及少量字体替代、版面松紧或附录长路径引起的 warning，这些问题不影响当前论证链条但仍影响投稿级整洁度。
-后续准备如何修改：逐条检查 `paper/ref.bib` 的字段完整性，继续压缩局部排版 warning，并按最终投稿模板要求做一次终稿清理。
+4. 少量模板级与排版 warning 仍未完全清零。
+修改说明：本轮已完成主文与附录稳定编译，主文 `paper/build/main.blg` 的 BibTeX warning 已清零，附录长路径导致的 overfull 已缓解为 underfull，剩余主要是字体替代、`IEEEtran` 附录模板与 `caption` 的兼容提示以及少量松紧度 warning。
+未修改原因：这些 warning 主要来自当前 standalone appendix 模板与字号/断行策略，本轮未重构附录模板或整体版式，因此尚未全部清除。
+后续准备如何修改：后续如进入终稿清理阶段，将进一步压缩附录中的长 `\texttt{}` 片段、评估是否替换或精简附录模板选项，并继续收敛局部排版 warning。

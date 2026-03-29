@@ -54,17 +54,17 @@ def parse_args() -> argparse.Namespace:
         help="Directory that stores monitoring frames named as <clip_id>_frame<number>.jpg",
     )
     parser.add_argument("--checkpoint", type=str, default="src/outputs/sensnet_final.pt")
-    parser.add_argument("--num_queries", type=int, default=20)
-    parser.add_argument("--max_gallery", type=int, default=80)
+    parser.add_argument("--num_queries", type=int, default=12)
+    parser.add_argument("--max_gallery", type=int, default=48)
     parser.add_argument("--pair_pool_size", type=int, default=240)
-    parser.add_argument("--gallery_sizes", type=int, nargs="+", default=[20, 50, 80])
+    parser.add_argument("--gallery_sizes", type=int, nargs="+", default=[12, 24, 48])
     parser.add_argument("--clip_len", type=int, default=4)
     parser.add_argument("--resize_h", type=int, default=192)
     parser.add_argument("--resize_w", type=int, default=320)
     parser.add_argument("--min_frames", type=int, default=6)
     parser.add_argument("--seeds", type=int, nargs="+", default=[1234, 1235, 1236])
     parser.add_argument("--backbones", type=str, nargs="+", default=["resnet18", "resnet50"])
-    parser.add_argument("--frontier_sigmas", type=float, nargs="+", default=[2.0, 4.0, 8.0, 12.0])
+    parser.add_argument("--frontier_sigmas", type=float, nargs="+", default=[8.0, 16.0, 24.0])
     parser.add_argument("--output_dir", type=str, default="src/outputs/controlled_retrieval")
     return parser.parse_args()
 
@@ -325,7 +325,7 @@ def discover_paired_locations(
     min_frames: int,
     pair_pool_size: int,
     device: torch.device,
-) -> Tuple[List[dict], List[str]]:
+) -> Tuple[List[dict], List[str], List[dict]]:
     """
     Build a harder benchmark by pairing different but visually similar sequences.
 
@@ -405,9 +405,10 @@ def discover_paired_locations(
             continue
         clip_index = clip_to_index[clip_id]
         hardness = float(sim[clip_index, used_indices].max().item()) if used_indices else 0.0
-        hard_distractors.append((hardness, clip_id))
-    hard_distractors.sort(reverse=True)
-    distractor_ids = [clip_id for _, clip_id in hard_distractors[:distractor_needed]]
+        hard_distractors.append({"clip_id": clip_id, "hardness": hardness})
+    hard_distractors.sort(key=lambda item: item["hardness"], reverse=True)
+    selected_hard_distractors = hard_distractors[:distractor_needed]
+    distractor_ids = [item["clip_id"] for item in selected_hard_distractors]
 
     if len(distractor_ids) < distractor_needed:
         existing = set(distractor_ids)
@@ -419,7 +420,7 @@ def discover_paired_locations(
             f"Needed {distractor_needed} distractor sequences, but only found {len(distractor_ids)}."
         )
 
-    return pairs, distractor_ids
+    return pairs, distractor_ids, selected_hard_distractors
 
 
 def main() -> None:
@@ -427,12 +428,12 @@ def main() -> None:
     cfg = load_yaml(args.config)
 
     ensure_dir(args.output_dir)
-    paper_image_dir = os.path.join(PROJECT_ROOT, "paper", "images")
+    paper_image_dir = os.path.join(PROJECT_ROOT, "paper", "figs")
     ensure_dir(paper_image_dir)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     resize_hw = (int(args.resize_h), int(args.resize_w))
-    paired_locations, distractor_clip_ids = discover_paired_locations(
+    paired_locations, distractor_clip_ids, hard_distractor_meta = discover_paired_locations(
         root=args.monitoring_root,
         resize_hw=resize_hw,
         num_queries=args.num_queries,
@@ -441,6 +442,21 @@ def main() -> None:
         pair_pool_size=args.pair_pool_size,
         device=device,
     )
+    pair_similarities = [float(item["pair_similarity"]) for item in paired_locations]
+    distractor_hardness = [float(item["hardness"]) for item in hard_distractor_meta]
+    paired_count = len(paired_locations)
+    distractor_hardness_by_gallery = {}
+    for gallery_size in sorted(args.gallery_sizes):
+        num_distractors = max(0, int(gallery_size) - paired_count)
+        if num_distractors == 0:
+            continue
+        selected = distractor_hardness[:num_distractors]
+        distractor_hardness_by_gallery[str(gallery_size)] = {
+            "count": num_distractors,
+            "mean": float(np.mean(selected)),
+            "min": float(np.min(selected)),
+            "max": float(np.max(selected)),
+        }
     query_ids = [item["location_id"] for item in paired_locations]
     query_clip_ids = [item["query_clip_id"] for item in paired_locations]
     gallery_positive_clip_ids = [item["gallery_clip_id"] for item in paired_locations]
@@ -458,6 +474,18 @@ def main() -> None:
             "gallery_positive_clip_ids": gallery_positive_clip_ids,
             "distractor_ids": distractor_ids,
             "distractor_clip_ids": distractor_clip_ids,
+            "hard_distractors": hard_distractor_meta,
+            "pair_similarity_stats": {
+                "mean": float(np.mean(pair_similarities)),
+                "min": float(np.min(pair_similarities)),
+                "max": float(np.max(pair_similarities)),
+            },
+            "distractor_hardness_stats": {
+                "mean": float(np.mean(distractor_hardness)),
+                "min": float(np.min(distractor_hardness)),
+                "max": float(np.max(distractor_hardness)),
+            },
+            "distractor_hardness_stats_by_gallery": distractor_hardness_by_gallery,
             "resize_hw": list(resize_hw),
             "clip_len": args.clip_len,
             "seeds": args.seeds,
@@ -796,6 +824,23 @@ def main() -> None:
         handle.write(f"- Backbones: {args.backbones}\n")
         handle.write(f"- Seeds: {args.seeds}\n")
         handle.write(f"- Resize: {resize_hw}\n")
+        handle.write(
+            "- Pair similarity (ResNet18 cosine): "
+            f"mean={np.mean(pair_similarities):.4f}, min={np.min(pair_similarities):.4f}, max={np.max(pair_similarities):.4f}\n"
+        )
+        handle.write(
+            "- Hard distractor max-similarity to paired locations: "
+            f"mean={np.mean(distractor_hardness):.4f}, min={np.min(distractor_hardness):.4f}, max={np.max(distractor_hardness):.4f}\n"
+        )
+        for gallery_size in sorted(args.gallery_sizes):
+            num_distractors = max(0, int(gallery_size) - len(query_ids))
+            if num_distractors == 0:
+                continue
+            selected = distractor_hardness[:num_distractors]
+            handle.write(
+                f"- Gallery {gallery_size}: first {num_distractors} distractors have "
+                f"mean max-similarity {np.mean(selected):.4f}, min {np.min(selected):.4f}, max {np.max(selected):.4f}\n"
+            )
         handle.write("\n## Default ablation setting\n\n")
         handle.write(f"- Backbone: `{default_backbone}`\n")
         handle.write(f"- Gallery size: `{default_gallery_size}`\n")
