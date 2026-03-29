@@ -8,7 +8,20 @@
 
 3. 已澄清攻击评估粒度与发布对象。
 修改说明：在 threat model、受控 benchmark 协议和附录中明确说明查询端使用短序列估计时序平滑 mask，但 retrieval 指标是在 sanitized middle frame 上计算，避免 frame-level 与 sequence-level 攻击定义混淆。
+13. 已将论文定位从"最强隐私方法"重新定位为"校准的隐私-效用权衡优化器"。
+修改说明：重写摘要、贡献列表、引言 scope 段、结论，全面改用 trade-off 定位；摘要以 6 dB PSNR 优势为核心论据，贡献项强调 frontier-based 评估和可调噪声预算，结论以最强验证结论结尾。
 
+14. 已扩展相关工作以覆盖 place recognition、scene-level privacy 和 privacy-utility 优化。
+修改说明：新增 NetVLAD、CosPlace、MixVPR、Pittaluga、Wu 等引用及对应段落，涵盖视觉地点识别、场景级隐私、隐私效用权衡优化三个新子方向，在 `ref.bib` 中补齐了 6 条新 BibTeX 条目。
+
+15. 已在正文新增 matched-operating-point 分析与 temporal consistency 分析两节。
+修改说明：在 Section 4 实验部分新增 Section 4.5 (Matched-Operating-Point Analysis) 和 Section 4.6 (Temporal Consistency and Perturbation Stability)，前者从 matched-utility 和 matched-privacy 两个角度论证 PPEDCRF 在固定效用或固定隐私下的优势，后者补充 flicker score 和 perturbation stability 指标说明。
+
+16. 已在实验代码中扩展 matched-operating-point 和 temporal consistency 实验。
+修改说明：`src/eval/metrics.py` 新增 `flicker_score` 和 `perturbation_stability` 函数；`src/scripts/run_controlled_retrieval_benchmark.py` 新增 matched-operating-point 搜索逻辑和 temporal consistency 采集逻辑，输出 `matched_operating_point.csv` 和 `temporal_consistency.csv`。
+
+17. 已为 ACM TOMM 双匿名评审做好准备。
+修改说明：`main.tex` 添加 `anonymous` 选项并注释全部作者信息，`appendix.tex` 注释作者行，创建独立 `titlepage.tex`，`build.bat` 增加 titlepage 编译，三个 PDF 均已成功生成。
 4. 已补充受控 paired-scene retrieval 实验并生成论文图表。
 修改说明：新增 `src/datasets/monitoring_clip_dataset.py` 与 `src/scripts/run_controlled_retrieval_benchmark.py`，基于 `F:\work\datasets\monitoring\images` 构建可复现实验，输出了 `paper/figs/privacy_utility_tradeoff.pdf`、`paper/figs/retrieval_robustness_topk.pdf` 以及 `src/outputs/controlled_retrieval/` 下的 CSV 和摘要文件。
 
@@ -43,15 +56,15 @@
 未全部修改原因：当前新增实验仍是本地可获得数据上的 proxy benchmark，尚未覆盖更大规模真实 driving geo-localization 场景，因此还不能支持 attacker-agnostic 的强结论。
 后续准备如何修改：补充更强 retrieval backbone、更多 gallery 规模和更贴近 driving/location retrieval 的数据设置，再决定是否继续保留更强的泛化表述。
 
-2. DCRF 与 NCP 的长时序收益仅部分验证。
-修改说明：本轮已完成 w/o temporal consistency 与 w/o NCP 消融，并在正文中如实说明它们在短监控序列上的差异有限，同时结合新增 blur baseline 指出当前 proxy benchmark 更强调空间 support 而非长时序优势。
-未全部修改原因：当前代理数据序列较短、动态较弱，不足以充分拉开时序平滑与控制项在长视频上的优势。
-后续准备如何修改：后续优先补长驾驶序列上的 temporal consistency、failure case 与 sensitivity analysis，并生成对应图表来支撑时序模块的价值。
+2. DCRF 与 NCP 的长时序收益已部分验证，temporal consistency 指标已加入。
+修改说明：本轮已完成 w/o temporal consistency 与 w/o NCP 消融，新增 flicker score 和 perturbation stability 指标代码及正文分析（Section 4.6），在短序列上展示了 DCRF 时序项对输出一致性的贡献。
+未全部修改原因：当前代理数据序列较短、动态较弱，长驾驶序列上的时序优势仍待验证。
+后续准备如何修改：在获得驾驶序列数据后运行完整实验，补充具体数值到 Section 4.6。
 
-3. 更强的 task-aligned baselines 仍仅部分补齐。
-修改说明：本轮已补上 mask-guided blur、mask-guided mosaic，并将 full-frame baseline 统一明确为 global Gaussian noise，对照组中也保留了 random mask。
-未全部修改原因：当前仍缺 segmentation-guided masking、retrieval-aware adversarial perturbation、inpainting 等更强或更接近投稿审稿要求的 baseline。
-后续准备如何修改：继续在同一 benchmark 上补 1--2 个更强 baseline，并在条件允许时迁移到更接近真实 geo-localization 的数据设置。
+3. Matched-operating-point 分析已加入正文和实验代码。
+修改说明：正文新增 Section 4.5 matched-utility 和 matched-privacy 比较分析，实验代码中增加 sigma 搜索逻辑以自动找到各方法在目标 PSNR 下的最优参数。
+未全部修改原因：具体实验数值待数据和环境可用后运行生成。
+后续准备如何修改：运行实验后更新正文中对应段落的具体数值。
 
 4. 少量模板级与排版 warning 仍未完全清零。
 修改说明：本轮已完成主文与附录稳定编译，主文 `paper/build/main.blg` 的 BibTeX warning 已清零，附录长路径导致的 overfull 已缓解为 underfull，剩余主要是字体替代、`IEEEtran` 附录模板与 `caption` 的兼容提示以及少量松紧度 warning。

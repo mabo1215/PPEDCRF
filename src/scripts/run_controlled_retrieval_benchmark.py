@@ -23,7 +23,7 @@ PROJECT_ROOT = os.path.dirname(SRC_ROOT)
 sys.path.insert(0, SRC_ROOT)
 
 from datasets.monitoring_clip_dataset import MonitoringClipDataset, iter_clip_ids
-from eval.metrics import psnr_torch, ssim_grayscale_np
+from eval.metrics import flicker_score, perturbation_stability, psnr_torch, ssim_grayscale_np
 from eval.retrieval_attack import RetrievalConfig, build_gallery_embeddings, make_default_embedder, query_topk
 from main import load_sensnet_checkpoint
 from models.dynamic_crf import DynamicCRF, DynamicCRFConfig
@@ -65,6 +65,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seeds", type=int, nargs="+", default=[1234, 1235, 1236])
     parser.add_argument("--backbones", type=str, nargs="+", default=["resnet18", "resnet50"])
     parser.add_argument("--frontier_sigmas", type=float, nargs="+", default=[8.0, 16.0, 24.0])
+    parser.add_argument("--matched_psnr_targets", type=float, nargs="+", default=[30.0, 33.0, 36.0],
+                        help="PSNR targets for matched-utility comparison (dB)")
     parser.add_argument("--output_dir", type=str, default="src/outputs/controlled_retrieval")
     return parser.parse_args()
 
@@ -740,6 +742,127 @@ def main() -> None:
                 }
             )
 
+    # ---- Matched-operating-point comparison ----
+    # For each PSNR target, find the sigma that brings PPEDCRF and global Gaussian
+    # noise closest, then compare their retrieval accuracy at that operating point.
+    matched_rows: List[dict] = []
+    matched_variants = ["ppedcrf", "full_frame", "masked_blur", "masked_mosaic"]
+    search_sigmas = np.arange(2.0, 50.0, 2.0).tolist()
+    for target_psnr in args.matched_psnr_targets:
+        for variant in matched_variants:
+            # Deterministic baselines: blur/mosaic have fixed PSNR regardless of sigma
+            if variant in ("masked_blur", "masked_mosaic"):
+                # Use default sigma; PSNR is fixed by the method
+                best_sigma = float(cfg["ppedcrf"]["noise"]["sigma"])
+                best_psnr = None
+                for qrow in quality_summary_rows:
+                    if qrow["variant"] == variant:
+                        best_psnr = qrow["psnr_mean"]
+                        break
+                if best_psnr is None:
+                    continue
+                # Find cached retrieval result
+                for arow in ablation_rows:
+                    if arow["variant"] == variant:
+                        matched_rows.append({
+                            "target_psnr": target_psnr,
+                            "variant": variant,
+                            "label": VARIANT_LABELS[variant],
+                            "actual_sigma": best_sigma,
+                            "actual_psnr": best_psnr,
+                            "R@1_mean": arow.get("R@1_mean", float("nan")),
+                            "R@1_std": arow.get("R@1_std", 0.0),
+                        })
+                        break
+                continue
+
+            best_sigma = None
+            best_psnr_diff = float("inf")
+            best_result = None
+            for sigma in search_sigmas:
+                psnr_runs_s = []
+                retrieval_runs_s = []
+                for seed in args.seeds:
+                    cfg_s = clone_cfg(cfg)
+                    cfg_s["ppedcrf"]["noise"] = dict(cfg_s["ppedcrf"]["noise"])
+                    cfg_s["ppedcrf"]["noise"]["seed"] = int(seed)
+                    cfg_s["ppedcrf"]["noise"]["sigma"] = float(sigma)
+                    psnr_scores_s = []
+                    prot_frames_s = []
+                    for clip_id in query_ids:
+                        prot_clip, _ = protect_clip_variant(
+                            query_clips[clip_id], sensnet, cfg_s,
+                            device=device, variant=variant, seed=int(seed),
+                        )
+                        prot_frame = select_eval_frame(prot_clip)
+                        orig_frame = raw_query_images[clip_id]
+                        psnr_scores_s.append(psnr_torch(orig_frame, prot_frame))
+                        prot_frames_s.append(prot_frame)
+                    psnr_runs_s.append(float(np.mean(psnr_scores_s)))
+                    prot_tensor = torch.stack(prot_frames_s, dim=0)
+                    rcfg_m = RetrievalConfig(
+                        backbone=default_backbone, device=str(device),
+                        normalize=True, input_size=224, topk=(1, 5, 10),
+                    )
+                    emb_m = make_default_embedder(rcfg_m).eval().to(device)
+                    gt, gids = build_gallery_tensor(
+                        gallery_frame_by_id=gallery_frames_by_id,
+                        query_ids=query_ids, distractor_ids=distractor_ids,
+                        gallery_size=default_gallery_size,
+                    )
+                    ge = build_gallery_embeddings(rcfg_m, emb_m, gt)
+                    retrieval_runs_s.append(query_topk(rcfg_m, prot_tensor, list(query_ids), ge, gids, emb_m))
+
+                mean_psnr = float(np.mean(psnr_runs_s))
+                diff = abs(mean_psnr - target_psnr)
+                if diff < best_psnr_diff:
+                    best_psnr_diff = diff
+                    best_sigma = sigma
+                    agg = aggregate_metric_dict(retrieval_runs_s)
+                    best_result = {"actual_psnr": mean_psnr, **agg}
+
+            if best_result is not None:
+                matched_rows.append({
+                    "target_psnr": target_psnr,
+                    "variant": variant,
+                    "label": VARIANT_LABELS[variant],
+                    "actual_sigma": best_sigma,
+                    "actual_psnr": best_result["actual_psnr"],
+                    "R@1_mean": best_result["R@1_mean"],
+                    "R@1_std": best_result["R@1_std"],
+                })
+
+    # ---- Temporal consistency metrics ----
+    temporal_rows: List[dict] = []
+    for variant in variants:
+        per_seed_flicker = []
+        per_seed_stability = []
+        for seed in args.seeds:
+            cfg_t = clone_cfg(cfg)
+            cfg_t["ppedcrf"]["noise"] = dict(cfg_t["ppedcrf"]["noise"])
+            cfg_t["ppedcrf"]["noise"]["seed"] = int(seed)
+            clip_flickers = []
+            clip_stabilities = []
+            for clip_id in query_ids:
+                orig_clip = query_clips[clip_id]
+                prot_clip, _ = protect_clip_variant(
+                    orig_clip, sensnet, cfg_t,
+                    device=device, variant=variant, seed=int(seed),
+                )
+                clip_flickers.append(flicker_score(prot_clip))
+                clip_stabilities.append(perturbation_stability(orig_clip, prot_clip))
+            per_seed_flicker.append(float(np.mean(clip_flickers)))
+            per_seed_stability.append(float(np.mean(clip_stabilities)))
+
+        temporal_rows.append({
+            "variant": variant,
+            "label": VARIANT_LABELS[variant],
+            "flicker_mean": float(np.mean(per_seed_flicker)),
+            "flicker_std": float(np.std(per_seed_flicker, ddof=1)) if len(per_seed_flicker) > 1 else 0.0,
+            "perturbation_stability_mean": float(np.mean(per_seed_stability)),
+            "perturbation_stability_std": float(np.std(per_seed_stability, ddof=1)) if len(per_seed_stability) > 1 else 0.0,
+        })
+
     save_csv(
         os.path.join(args.output_dir, "quality_summary.csv"),
         quality_summary_rows,
@@ -811,6 +934,27 @@ def main() -> None:
             "ssim_std",
         ],
     )
+
+    # Save new experiment outputs
+    if matched_rows:
+        save_csv(
+            os.path.join(args.output_dir, "matched_operating_point.csv"),
+            matched_rows,
+            fieldnames=[
+                "target_psnr", "variant", "label", "actual_sigma",
+                "actual_psnr", "R@1_mean", "R@1_std",
+            ],
+        )
+    if temporal_rows:
+        save_csv(
+            os.path.join(args.output_dir, "temporal_consistency.csv"),
+            temporal_rows,
+            fieldnames=[
+                "variant", "label",
+                "flicker_mean", "flicker_std",
+                "perturbation_stability_mean", "perturbation_stability_std",
+            ],
+        )
 
     plot_frontier(frontier_rows, os.path.join(paper_image_dir, "privacy_utility_tradeoff.pdf"))
     plot_robustness(robustness_rows, os.path.join(paper_image_dir, "retrieval_robustness_topk.pdf"))

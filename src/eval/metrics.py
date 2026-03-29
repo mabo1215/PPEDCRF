@@ -43,3 +43,39 @@ def ssim_grayscale_np(img1: np.ndarray, img2: np.ndarray) -> float:
 
     score = ssim(img1g, img2g, data_range=255)
     return float(score)
+
+
+def flicker_score(frames: torch.Tensor) -> float:
+    """
+    Temporal flicker metric: mean absolute difference between consecutive
+    sanitized frames, normalized to [0, 255].
+
+    Args:
+        frames: (T, 3, H, W) tensor in [0, 255].
+
+    Returns:
+        Mean absolute frame-to-frame difference (lower is smoother).
+    """
+    if frames.size(0) < 2:
+        return 0.0
+    diffs = (frames[1:] - frames[:-1]).abs().mean(dim=(1, 2, 3))
+    return float(diffs.mean().item())
+
+
+def perturbation_stability(
+    orig_frames: torch.Tensor,
+    prot_frames: torch.Tensor,
+) -> float:
+    """
+    Perturbation stability: how consistent is the perturbation magnitude
+    across consecutive frames. Measures std of per-frame perturbation energy.
+
+    Args:
+        orig_frames: (T, 3, H, W) original frames.
+        prot_frames: (T, 3, H, W) sanitized frames.
+
+    Returns:
+        Standard deviation of per-frame mean perturbation energy (lower is more stable).
+    """
+    diff = (prot_frames - orig_frames).abs().mean(dim=(1, 2, 3))
+    return float(diff.std().item()) if diff.numel() > 1 else 0.0
