@@ -65,6 +65,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seeds", type=int, nargs="+", default=[1234, 1235, 1236])
     parser.add_argument("--backbones", type=str, nargs="+", default=["resnet18", "resnet50"])
     parser.add_argument("--frontier_sigmas", type=float, nargs="+", default=[8.0, 16.0, 24.0])
+    parser.add_argument("--ablation_sigmas", type=float, nargs="+", default=[8.0, 16.0, 24.0, 32.0],
+                        help="Sigma values for the full ablation table (DCRF/NCP comparison)")
     parser.add_argument("--matched_psnr_targets", type=float, nargs="+", default=[30.0, 33.0, 36.0],
                         help="PSNR targets for matched-utility comparison (dB)")
     parser.add_argument("--output_dir", type=str, default="src/outputs/controlled_retrieval")

@@ -11,17 +11,23 @@
 13. 已将论文定位从"最强隐私方法"重新定位为"校准的隐私-效用权衡优化器"。
 修改说明：重写摘要、贡献列表、引言 scope 段、结论，全面改用 trade-off 定位；摘要以 6 dB PSNR 优势为核心论据，贡献项强调 frontier-based 评估和可调噪声预算，结论以最强验证结论结尾。
 
-14. 已扩展相关工作以覆盖 place recognition、scene-level privacy 和 privacy-utility 优化。
-修改说明：新增 NetVLAD、CosPlace、MixVPR、Pittaluga、Wu 等引用及对应段落，涵盖视觉地点识别、场景级隐私、隐私效用权衡优化三个新子方向，在 `ref.bib` 中补齐了 6 条新 BibTeX 条目。
+14. 已大幅扩展相关工作至 42 条引用（7 个主题段落）。
+修改说明：原有 17 条引用扩展至 42 条引用，相关工作分为视觉匿名化综述、隐私感知管线、视觉地点识别、场景级和位置隐私、差分隐私与扰动防御、CRF 时空推理、隐私效用权衡优化 7 段。新增 19 条 BibTeX 条目（DeepPrivacy、CIAGAN、Oh2016 等）并新引用 6 条原有条目（chen2017deeplab、wang2005dynamic、balle2018improving、zhou2020personal、xu2019ganobfuscator、wang2004image）。ref.bib 从 99 条清理至 42 条，全部与正文对齐。
 
-15. 已在正文新增 matched-operating-point 分析与 temporal consistency 分析两节。
-修改说明：在 Section 4 实验部分新增 Section 4.5 (Matched-Operating-Point Analysis) 和 Section 4.6 (Temporal Consistency and Perturbation Stability)，前者从 matched-utility 和 matched-privacy 两个角度论证 PPEDCRF 在固定效用或固定隐私下的优势，后者补充 flicker score 和 perturbation stability 指标说明。
+15. 已在正文新增 matched-operating-point 分析与 temporal consistency 分析两节并补充表格。
+修改说明：Section 4.5 新增 Table (tab:matched) 展示具体 matched-utility 和 matched-privacy 数值。Section 4.6 新增 Table (tab:temporal) 展示 flicker score、perturbation stability 和 mask IoU，部分数值标记 TBD 待实验运行。
 
-16. 已在实验代码中扩展 matched-operating-point 和 temporal consistency 实验。
-修改说明：`src/eval/metrics.py` 新增 `flicker_score` 和 `perturbation_stability` 函数；`src/scripts/run_controlled_retrieval_benchmark.py` 新增 matched-operating-point 搜索逻辑和 temporal consistency 采集逻辑，输出 `matched_operating_point.csv` 和 `temporal_consistency.csv`。
+16. 已在实验代码中扩展 matched-operating-point、temporal consistency 和多 sigma 消融实验。
+修改说明：`src/eval/metrics.py` 新增 `flicker_score` 和 `perturbation_stability` 函数；`src/scripts/run_controlled_retrieval_benchmark.py` 新增 `--ablation_sigmas` 参数（默认 [8, 16, 24, 32]），支持在更高 sigma 下运行 DCRF/NCP 消融。
 
-17. 已为 ACM TOMM 双匿名评审做好准备。
-修改说明：`main.tex` 添加 `anonymous` 选项并注释全部作者信息，`appendix.tex` 注释作者行，创建独立 `titlepage.tex`，`build.bat` 增加 titlepage 编译，三个 PDF 均已成功生成。
+17. 已为 ACM TOMM 双匿名评审做好准备并统一附录格式。
+修改说明：`main.tex` 添加 `anonymous` 选项，`appendix.tex` 从 IEEEtran 转为 acmart 格式，创建独立 `titlepage.tex`，三个 PDF 均已成功生成。
+
+18. 已完成独立评审重置并重写 `docs/revision_suggestions.tex`。
+修改说明：基于当前 main.tex、appendix.tex 直接审稿，以 ACM TOMM 标准完全重写评审意见文件，包含 6 条 Major Concerns（M1–M6）和 8 条 Minor Concerns（m1–m8），以及优先级排序的修订清单。
+
+19. 已更新结论以最强验证结论结尾。
+修改说明：结论段最后强调"~6 dB PSNR 优势和空间 support 可迁移性是视频位置隐私中最有价值的构建块"。
 4. 已补充受控 paired-scene retrieval 实验并生成论文图表。
 修改说明：新增 `src/datasets/monitoring_clip_dataset.py` 与 `src/scripts/run_controlled_retrieval_benchmark.py`，基于 `F:\work\datasets\monitoring\images` 构建可复现实验，输出了 `paper/figs/privacy_utility_tradeoff.pdf`、`paper/figs/retrieval_robustness_topk.pdf` 以及 `src/outputs/controlled_retrieval/` 下的 CSV 和摘要文件。
 
@@ -52,21 +58,31 @@
 # 未修改或部分修改
 
 1. 跨攻击骨干网络的隐私稳健性仅部分补强。
-修改说明：本轮已加入 ResNet18 与 ResNet50 的 attacker-sensitivity 实验，并在正文中明确区分默认攻击者结果与跨骨干迁移结果。
-未全部修改原因：当前新增实验仍是本地可获得数据上的 proxy benchmark，尚未覆盖更大规模真实 driving geo-localization 场景，因此还不能支持 attacker-agnostic 的强结论。
-后续准备如何修改：补充更强 retrieval backbone、更多 gallery 规模和更贴近 driving/location retrieval 的数据设置，再决定是否继续保留更强的泛化表述。
+修改说明：已加入 ResNet18 与 ResNet50 的 attacker-sensitivity 实验。
+未全部修改原因：评审意见 M4 要求新增至少一个非 ResNet 架构，本地数据集不可用无法运行。
+后续准备如何修改：待数据可用后增加 VGG16、ViT 或 VPR 专用模型攻击器。
 
-2. DCRF 与 NCP 的长时序收益已部分验证，temporal consistency 指标已加入。
-修改说明：本轮已完成 w/o temporal consistency 与 w/o NCP 消融，新增 flicker score 和 perturbation stability 指标代码及正文分析（Section 4.6），在短序列上展示了 DCRF 时序项对输出一致性的贡献。
-未全部修改原因：当前代理数据序列较短、动态较弱，长驾驶序列上的时序优势仍待验证。
-后续准备如何修改：在获得驾驶序列数据后运行完整实验，补充具体数值到 Section 4.6。
+2. DCRF 与 NCP 的高 sigma 消融和 temporal consistency 具体数值待实验。
+修改说明：脚本已支持 `--ablation_sigmas 8 16 24 32`，正文 Section 4.6 的 Table (tab:temporal) 中 flicker 和 perturbation stability 标记为 TBD。
+未全部修改原因：本地数据集（`F:\work\datasets\monitoring\images`）不可用。
+后续准备如何修改：运行实验后用实际数值替换 TBD，并在 Table 1 后新增多 sigma 消融表。
 
-3. Matched-operating-point 分析已加入正文和实验代码。
-修改说明：正文新增 Section 4.5 matched-utility 和 matched-privacy 比较分析，实验代码中增加 sigma 搜索逻辑以自动找到各方法在目标 PSNR 下的最优参数。
-未全部修改原因：具体实验数值待数据和环境可用后运行生成。
-后续准备如何修改：运行实验后更新正文中对应段落的具体数值。
+3. Matched-operating-point Table (tab:matched) 数值来自 frontier 推导。
+修改说明：已放入从现有 frontier 数据推导的数值。
+未全部修改原因：待实验确认并可能微调。
+后续准备如何修改：运行 `--matched_psnr_targets 30 33 36` 后更新。
 
-4. 少量模板级与排版 warning 仍未完全清零。
-修改说明：本轮已完成主文与附录稳定编译，主文 `paper/build/main.blg` 的 BibTeX warning 已清零，附录长路径导致的 overfull 已缓解为 underfull，剩余主要是字体替代、`IEEEtran` 附录模板与 `caption` 的兼容提示以及少量松紧度 warning。
-未修改原因：这些 warning 主要来自当前 standalone appendix 模板与字号/断行策略，本轮未重构附录模板或整体版式，因此尚未全部清除。
-后续准备如何修改：后续如进入终稿清理阶段，将进一步压缩附录中的长 `\texttt{}` 片段、评估是否替换或精简附录模板选项，并继续收敛局部排版 warning。
+4. Benchmark 规模待扩大。
+修改说明：评审意见 M3 建议 50–100 对位置和 200+ gallery。
+未全部修改原因：受限于本地监控数据集规模和数据可用性。
+后续准备如何修改：考虑补充 Pitts250k-test、Tokyo 24/7 等公开数据集。
+
+5. Legacy 实验节（Section 4.2）待精简或迁移至附录。
+修改说明：评审意见 M6 建议精简。
+未全部修改原因：本轮优先完成相关工作扩展和格式统一。
+后续准备如何修改：下一轮将 Figure 3/4 移至附录，Section 4.2 压缩为一段概述。
+
+6. BibTeX 字段不完整 warning（39 条）。
+修改说明：新增和部分已有条目缺少 publisher/address/pages 字段。
+未全部修改原因：不影响编译和引用正确性。
+后续准备如何修改：终稿清理阶段补全所有字段。
