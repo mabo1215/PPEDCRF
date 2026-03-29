@@ -26,3 +26,4 @@ src/AGENTS.md
 CLAUDE.md
 USAGE_CLAUDE.md
 .claude/*
+.github/agents/*
