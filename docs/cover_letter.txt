@@ -1,12 +1,27 @@
-Cover Letter
+﻿Cover Letter
 
-Description of Contribution
+Dear Editor,
 
-In order to effectively protect location privacy when publishing time-series video for surveillance or vehicle systems, we propose a solution named Privacy-preserving Enhanced Dynamic Conditional Random Field (PPEDCRF). Our solution is designed to improve privacy protection when combined with existing object detection solutions for autonomous vehicles. This research aims to improve both detection performance and privacy for autonomous driving systems by using machine learning and cloud-based processing.
+We are pleased to submit our manuscript entitled "PPEDCRF: Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences" for your consideration.
 
-Related Papers Summary
+Dashcam videos from autonomous and assisted-driving systems are increasingly shared for safety auditing and model improvement. Even after explicit GPS metadata are stripped, an attacker can still infer the recording location by matching background visual cues -- buildings, road layouts, signage, skylines -- against geo-tagged street-view imagery. Existing visual anonymization techniques focus on removing foreground identities (faces, license plates) and do not directly address this background-based location leakage.
 
-In general object detection tasks, two-stage detectors have been widely adopted with the advancement of region-based CNN (RCNN) and Faster R-CNN. For privacy-preserving object detection with Faster R-CNN, Ren et al. proposed an anonymization method that modifies raw video frames to remove privacy- or sensitive parts in the target frames of a video stream. Later, Liu et al. proposed a new method based on Faster R-CNN to remove sensitive information in medical images; however, this can negatively impact retraining on the modified data. To address this limitation, Zhou et al. proposed a privacy-protection method that uses MTCNN to locate sensitive regions and adjust affinities with noise resistance, rather than removing the sensitive information entirely. In addition, Wang et al. noted that videos with low resolution and fast motion remain challenging, because CNN backbones can suffer from poor performance when input quality is low and pixel information is nearly identical across regions; current CNN models struggle to fit such low-quality images effectively.
+Our manuscript proposes PPEDCRF, a selective perturbation framework that addresses this gap through three tightly integrated components: (1) a dynamic conditional random field (DCRF) that estimates location-sensitive background regions with temporal smoothing across frames, (2) a normalized control penalty (NCP) that rescales perturbation strength per pixel according to the inferred sensitivity, and (3) a calibrated Gaussian noise injection mechanism that perturbs only the inferred regions while preserving the visual quality needed for downstream perception tasks.
 
-After reviewing the scope of your journal, I believe this paper matches the journal’s areas of interest. I kindly request that you consider this manuscript for review.
+The key contributions of this work are:
 
+- A unified computational pipeline for location-sensitive background sanitization with implementation-consistent notation and clearly defined inputs and outputs.
+- A DP-style calibration mechanism that maps a user-chosen privacy budget to a base noise scale, with an explicit scope clarification distinguishing it from formal end-to-end differential privacy guarantees.
+- A reproducible controlled paired-scene retrieval benchmark, together with ablation studies, privacy-utility frontier analysis, and attacker-sensitivity experiments that complement legacy driving-dataset utility results.
+
+On the paired-scene benchmark, PPEDCRF reduces ResNet18 Top-1 retrieval accuracy from 0.833 to 0.722 while preserving 36.18 dB PSNR. Support-aware baselines operating on the same inferred spatial masks push privacy further (mask-guided blur: 0.583 Top-1 at 30.61 dB; mask-guided mosaic: 0.417 Top-1 at 26.07 dB), demonstrating that the spatial support inferred by the DCRF module is itself a valuable contribution to privacy-preserving video release.
+
+This manuscript has not been published previously, is not under consideration elsewhere, and all authors have approved the submission. The source code and benchmark scripts are publicly available to support reproducibility.
+
+We believe this work is well suited for your readership given its focus on privacy-preserving multimedia processing, visual content protection, and the intersection of computer vision with security.
+
+Thank you for your time and consideration. We look forward to hearing from you.
+
+Sincerely,
+
+Bo Ma
