@@ -58,6 +58,27 @@
 20. 已按评审意见 M6 将 Legacy 实验节从主文迁移到附录。
 修改说明：`paper/main.tex` 将原 Section 4.2 压缩为一段 Appendix summary，删除主文中的 legacy 大图；`paper/appendix.tex` 新增完整 Legacy detector/segmentation 小节并承接原 Figure 3/4 内容，使主文聚焦 retrieval threat model。
 
+21. 已按 m5 重构摘要，首句直接给出问题-方案对。
+修改说明：将摘要首句从 motivation 改为 "We propose PPEDCRF, a calibrated selective perturbation framework..."，同时压缩第二段并明确提及 blur/mosaic 对比。
+
+22. 已按 m6 在结论中显式提及 blur/mosaic 对比。
+修改说明：结论段新增对 support-aware 确定性基线（blur/mosaic）的显式比较和 ResNet50 迁移限制说明，避免 6 dB 优势被孤立解读。
+
+23. 已按 m8 更新 CCS 概念和关键词。
+修改说明：新增 `Security and privacy~Privacy-preserving protocols` CCS 描述符和 `video anonymization` 关键词。
+
+24. 已按 m3 清理 `paper/figs/` 中未引用的图像文件。
+修改说明：将 33 个未被 main.tex 或 appendix.tex 引用的遗留图像移至 `paper/figs/legacy/`，figs 根目录仅保留 10 个被引用的文件。
+
+25. 已按 m7 在 benchmark 脚本中新增 blur/mosaic 参数扫描功能。
+修改说明：`run_controlled_retrieval_benchmark.py` 新增 `--blur_kernel_sizes` 和 `--mosaic_block_sizes` 参数，扫描结果同时加入 frontier 图和 `baseline_sweep.csv`。正文 Section 4.5 末尾提及该可复现扫描。
+
+26. 已按 m2 / BibTeX warning 大幅补全参考文献字段。
+修改说明：修复 22 条条目的 publisher/address/pages 字段，balle2018improving 升级为 ICML 正式引用，dwork2014algorithmic 修复 volume/number 冲突，BibTeX 警告从 39 条降至 4 条。
+
+27. 已重构 Section 4.5 (tab:matched) 解决数据-叙述不一致问题。
+修改说明：将原先重复的 matched-utility/matched-privacy 两子表合并为 Panel A（同 σ₀ 对比）和 Panel B（同 PSNR 对比），修正文本中与表格数值不符的描述，诚实呈现 ~30 dB 匹配效用下两种噪声方法隐私效果相当的事实，突出 PPEDCRF 在高质量操作区间（36 dB）的独特优势。
+
 # 未修改或部分修改
 
 1. 跨攻击骨干网络的隐私稳健性仅部分补强。
@@ -70,17 +91,20 @@
 未全部修改原因：原监控序列路径（`F:\work\datasets\monitoring\images`）仍不可用，且同样受 checkpoint 缺失限制。
 后续准备如何修改：补齐 checkpoint 后，用新增的 COCO（`C:\work\datasets\Coco`）与 Digica（`C:\work\datasets\digica\digica_v4.3`）扩展干扰图库，并在可用监控序列上运行高 sigma 与 temporal 指标实验替换 TBD。
 
-3. Matched-operating-point Table (tab:matched) 数值来自 frontier 推导。
-修改说明：已放入从现有 frontier 数据推导的数值。
-未全部修改原因：待实验确认并可能微调。
-后续准备如何修改：运行 `--matched_psnr_targets 30 33 36` 后更新。
+3. Matched-operating-point Table (tab:matched) 已重构为 Equal-noise-level 与 Equal-utility 两面板。
+修改说明：修正了原表中 matched-utility 与 matched-privacy 行重复的问题，现在 Panel A 展示同 σ₀=8 下 PPEDCRF 与 Global 的 6 dB PSNR 差距，Panel B 展示 ~30 dB 匹配效用下各方法对比（含 blur/mosaic）。文本叙述已与表格数据一致。
+未全部修改原因：表格数值基于已有 frontier 数据点，尚需更细粒度 sigma 搜索确认。
+后续准备如何修改：运行 `--matched_psnr_targets 30 33 36` 后微调数值。
 
 4. Benchmark 规模待扩大。
 修改说明：评审意见 M3 建议 50–100 对位置和 200+ gallery。
 未全部修改原因：当前脚本已接入本地 COCO 与 Digica 作为可选外部干扰图库来源，但尚未完成一次带新数据源的大规模重跑（仍受 checkpoint 缺失影响）。
 后续准备如何修改：在补齐 checkpoint 后以 `--max_gallery 200+`、`--coco_root`、`--digica_root` 运行并更新主文规模化结果。
 
-6. BibTeX 字段不完整 warning（39 条）。
-修改说明：新增和部分已有条目缺少 publisher/address/pages 字段。
-未全部修改原因：不影响编译和引用正确性。
-后续准备如何修改：终稿清理阶段补全所有字段。
+5. Blur/mosaic 参数扫描已在代码中实现，待运行生成结果。
+修改说明：`run_controlled_retrieval_benchmark.py` 新增 `--blur_kernel_sizes` 和 `--mosaic_block_sizes` 参数，支持对 blur kernel size（默认 [5, 11, 21, 31]）和 mosaic block size（默认 [4, 8, 12, 20]）进行参数扫描，结果自动加入 frontier 图和 `baseline_sweep.csv`。正文 Section 4.5 已提及该扫描功能。
+未全部修改原因：同样受 checkpoint 缺失影响，无法运行。
+后续准备如何修改：补齐 checkpoint 后运行扫描并将 frontier 图更新到论文中。
+
+6. BibTeX 字段已大幅补全（warning 从 39 条降至 4 条）。
+修改说明：补全了 20+ 条 @inproceedings 条目的 publisher/address 字段，将 balle2018improving 从 arXiv 转为 ICML 正式引用，修复 dwork2014algorithmic 的 volume/number 冲突。剩余 4 条 warning 来自 ICLR 论文（无传统页码）和 arXiv 预印本，属正常范围。

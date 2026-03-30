@@ -88,6 +88,10 @@ def parse_args() -> argparse.Namespace:
                         help="Sigma values for the full ablation table (DCRF/NCP comparison)")
     parser.add_argument("--matched_psnr_targets", type=float, nargs="+", default=[30.0, 33.0, 36.0],
                         help="PSNR targets for matched-utility comparison (dB)")
+    parser.add_argument("--blur_kernel_sizes", type=int, nargs="+", default=[5, 11, 21, 31],
+                        help="Kernel sizes for blur parameter sweep (m7)")
+    parser.add_argument("--mosaic_block_sizes", type=int, nargs="+", default=[4, 8, 12, 20],
+                        help="Block sizes for mosaic parameter sweep (m7)")
     parser.add_argument("--output_dir", type=str, default="src/outputs/controlled_retrieval")
     return parser.parse_args()
 
@@ -816,6 +820,129 @@ def main() -> None:
                 }
             )
 
+    # ---- Blur/mosaic parameter sweep (m7) ----
+    # Sweep blur kernel sizes and mosaic block sizes to build comparable frontiers.
+    baseline_sweep_rows: List[dict] = []
+    for ks in args.blur_kernel_sizes:
+        psnr_scores_bk = []
+        ssim_scores_bk = []
+        prot_frames_bk = []
+        for clip_id in query_ids:
+            clip = query_clips[clip_id]
+            prot_clip_frames = []
+            for t in range(clip.size(0)):
+                frame = clip[t:t+1].to(device)
+                unary = sensnet(frame)
+                refined_prob, _ = DynamicCRF(
+                    DynamicCRFConfig(
+                        n_iters=int(cfg["ppedcrf"]["dynamic_crf"]["n_iters"]),
+                        spatial_weight=float(cfg["ppedcrf"]["dynamic_crf"]["spatial_weight"]),
+                        temporal_weight=float(cfg["ppedcrf"]["dynamic_crf"]["temporal_weight"]),
+                        smooth_kernel=int(cfg["ppedcrf"]["dynamic_crf"]["smooth_kernel"]),
+                    )
+                ).refine(unary, prev_prob=None, flow=None)
+                prot_f = apply_mask_guided_blur(frame, refined_prob, kernel_size=ks)
+                prot_clip_frames.append(prot_f.squeeze(0).cpu())
+            prot_clip_t = torch.stack(prot_clip_frames, dim=0)
+            eval_frame = select_eval_frame(prot_clip_t)
+            orig_frame = raw_query_images[clip_id]
+            prot_frames_bk.append(eval_frame)
+            psnr_scores_bk.append(psnr_torch(orig_frame, eval_frame))
+            ssim_scores_bk.append(ssim_grayscale_np(
+                tensor_to_uint8_image(orig_frame), tensor_to_uint8_image(eval_frame)))
+        prot_tensor_bk = torch.stack(prot_frames_bk, dim=0)
+        rcfg_bk = RetrievalConfig(
+            backbone=default_backbone, device=str(device),
+            normalize=True, input_size=224, topk=(1, 5, 10))
+        emb_bk = make_default_embedder(rcfg_bk).eval().to(device)
+        gt_bk, gids_bk = build_gallery_tensor(
+            gallery_frame_by_id=gallery_frames_by_id,
+            query_ids=query_ids, distractor_ids=distractor_ids,
+            gallery_size=default_gallery_size)
+        ge_bk = build_gallery_embeddings(rcfg_bk, emb_bk, gt_bk)
+        retr_bk = query_topk(rcfg_bk, prot_tensor_bk, list(query_ids), ge_bk, gids_bk, emb_bk)
+        row_bk = {
+            "variant": "masked_blur",
+            "label": f"blur (k={ks})",
+            "param": ks,
+            **retr_bk,
+            "psnr_mean": float(np.mean(psnr_scores_bk)),
+            "psnr_std": float(np.std(psnr_scores_bk, ddof=1)) if len(psnr_scores_bk) > 1 else 0.0,
+            "ssim_mean": float(np.mean(ssim_scores_bk)),
+            "ssim_std": float(np.std(ssim_scores_bk, ddof=1)) if len(ssim_scores_bk) > 1 else 0.0,
+        }
+        baseline_sweep_rows.append(row_bk)
+        frontier_rows.append({
+            "variant": "masked_blur",
+            "label": f"blur (k={ks})",
+            "sigma": float(ks),
+            **retr_bk,
+            "psnr_mean": row_bk["psnr_mean"],
+            "psnr_std": row_bk["psnr_std"],
+            "ssim_mean": row_bk["ssim_mean"],
+            "ssim_std": row_bk["ssim_std"],
+        })
+
+    for bs in args.mosaic_block_sizes:
+        psnr_scores_ms = []
+        ssim_scores_ms = []
+        prot_frames_ms = []
+        for clip_id in query_ids:
+            clip = query_clips[clip_id]
+            prot_clip_frames = []
+            for t in range(clip.size(0)):
+                frame = clip[t:t+1].to(device)
+                unary = sensnet(frame)
+                refined_prob, _ = DynamicCRF(
+                    DynamicCRFConfig(
+                        n_iters=int(cfg["ppedcrf"]["dynamic_crf"]["n_iters"]),
+                        spatial_weight=float(cfg["ppedcrf"]["dynamic_crf"]["spatial_weight"]),
+                        temporal_weight=float(cfg["ppedcrf"]["dynamic_crf"]["temporal_weight"]),
+                        smooth_kernel=int(cfg["ppedcrf"]["dynamic_crf"]["smooth_kernel"]),
+                    )
+                ).refine(unary, prev_prob=None, flow=None)
+                prot_f = apply_mask_guided_mosaic(frame, refined_prob, block_size=bs)
+                prot_clip_frames.append(prot_f.squeeze(0).cpu())
+            prot_clip_t = torch.stack(prot_clip_frames, dim=0)
+            eval_frame = select_eval_frame(prot_clip_t)
+            orig_frame = raw_query_images[clip_id]
+            prot_frames_ms.append(eval_frame)
+            psnr_scores_ms.append(psnr_torch(orig_frame, eval_frame))
+            ssim_scores_ms.append(ssim_grayscale_np(
+                tensor_to_uint8_image(orig_frame), tensor_to_uint8_image(eval_frame)))
+        prot_tensor_ms = torch.stack(prot_frames_ms, dim=0)
+        rcfg_ms = RetrievalConfig(
+            backbone=default_backbone, device=str(device),
+            normalize=True, input_size=224, topk=(1, 5, 10))
+        emb_ms = make_default_embedder(rcfg_ms).eval().to(device)
+        gt_ms, gids_ms = build_gallery_tensor(
+            gallery_frame_by_id=gallery_frames_by_id,
+            query_ids=query_ids, distractor_ids=distractor_ids,
+            gallery_size=default_gallery_size)
+        ge_ms = build_gallery_embeddings(rcfg_ms, emb_ms, gt_ms)
+        retr_ms = query_topk(rcfg_ms, prot_tensor_ms, list(query_ids), ge_ms, gids_ms, emb_ms)
+        row_ms = {
+            "variant": "masked_mosaic",
+            "label": f"mosaic (b={bs})",
+            "param": bs,
+            **retr_ms,
+            "psnr_mean": float(np.mean(psnr_scores_ms)),
+            "psnr_std": float(np.std(psnr_scores_ms, ddof=1)) if len(psnr_scores_ms) > 1 else 0.0,
+            "ssim_mean": float(np.mean(ssim_scores_ms)),
+            "ssim_std": float(np.std(ssim_scores_ms, ddof=1)) if len(ssim_scores_ms) > 1 else 0.0,
+        }
+        baseline_sweep_rows.append(row_ms)
+        frontier_rows.append({
+            "variant": "masked_mosaic",
+            "label": f"mosaic (b={bs})",
+            "sigma": float(bs),
+            **retr_ms,
+            "psnr_mean": row_ms["psnr_mean"],
+            "psnr_std": row_ms["psnr_std"],
+            "ssim_mean": row_ms["ssim_mean"],
+            "ssim_std": row_ms["ssim_std"],
+        })
+
     # ---- Matched-operating-point comparison ----
     # For each PSNR target, find the sigma that brings PPEDCRF and global Gaussian
     # noise closest, then compare their retrieval accuracy at that operating point.
@@ -1027,6 +1154,17 @@ def main() -> None:
                 "variant", "label",
                 "flicker_mean", "flicker_std",
                 "perturbation_stability_mean", "perturbation_stability_std",
+            ],
+        )
+    if baseline_sweep_rows:
+        save_csv(
+            os.path.join(args.output_dir, "baseline_sweep.csv"),
+            baseline_sweep_rows,
+            fieldnames=[
+                "variant", "label", "param",
+                "R@1_mean", "R@1_std", "R@5_mean", "R@5_std",
+                "R@10_mean", "R@10_std",
+                "psnr_mean", "psnr_std", "ssim_mean", "ssim_std",
             ],
         )
 
