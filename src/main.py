@@ -5,6 +5,7 @@ import argparse
 import os
 from typing import Any, Dict, List
 
+import numpy as np
 import torch
 
 from datasets.driving_clip_dataset import DrivingClipDataset
@@ -77,6 +78,241 @@ def protect_clip(frames: torch.Tensor, sensnet, cfg: Dict[str, Any], device: tor
         out.append(protected.squeeze(0).cpu())
 
     return torch.stack(out, dim=0)
+
+
+@torch.no_grad()
+def compute_refined_sensitivity(
+    frames: torch.Tensor,
+    sensnet,
+    cfg: Dict[str, Any],
+    device: torch.device,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return the refined sensitivity map and NCP strength map for each frame."""
+    dcfg = cfg["ppedcrf"]["dynamic_crf"]
+    ncfg = cfg["ppedcrf"]["ncp"]
+
+    crf = DynamicCRF(DynamicCRFConfig(
+        n_iters=int(dcfg["n_iters"]),
+        spatial_weight=float(dcfg["spatial_weight"]),
+        temporal_weight=float(dcfg["temporal_weight"]),
+        smooth_kernel=int(dcfg["smooth_kernel"]),
+    ))
+
+    ncp = NCPAllocator(NCPConfig(alpha=float(ncfg.get("alpha", 1.0))), class_sensitivity=ncfg.get("class_sensitivity", {}))
+
+    prev_prob = None
+    refined_probs = []
+    strength_maps = []
+
+    for t in range(frames.size(0)):
+        fr = frames[t:t+1].to(device)
+        unary = sensnet(fr)
+        refined_prob, prev_prob = crf.refine(unary, prev_prob=prev_prob, flow=None)
+
+        strength = ncp.allocate(refined_prob)
+        refined_probs.append(refined_prob.cpu())
+        strength_maps.append(strength.cpu())
+
+    return torch.cat(refined_probs, dim=0), torch.cat(strength_maps, dim=0)
+
+
+@torch.no_grad()
+def apply_mask_guided_blur(
+    frame: torch.Tensor,
+    mask: torch.Tensor,
+    kernel_size: int = 15,
+) -> torch.Tensor:
+    """Blur only the sensitive regions defined by mask."""
+    if frame.dim() == 3:
+        frame = frame.unsqueeze(0)
+    if mask.dim() == 3:
+        mask = mask.unsqueeze(1)
+
+    pad = kernel_size // 2
+    blurred = torch.nn.functional.avg_pool2d(
+        torch.nn.functional.pad(frame, (pad, pad, pad, pad), mode="reflect"),
+        kernel_size=kernel_size,
+        stride=1,
+    )
+
+    mask = mask.clamp(0.0, 1.0)
+    out = frame * (1.0 - mask) + blurred * mask
+    return out.clamp(0.0, 255.0)
+
+
+def _load_maskrcnn_model(device: torch.device):
+    import torchvision
+    from torchvision.models.detection import maskrcnn_resnet50_fpn
+    try:
+        from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
+        weights = MaskRCNN_ResNet50_FPN_Weights.DEFAULT
+        model = maskrcnn_resnet50_fpn(weights=weights)
+    except Exception:
+        model = maskrcnn_resnet50_fpn(pretrained=True)
+    model.to(device)
+    model.eval()
+    return model
+
+
+@torch.no_grad()
+def overlay_detection_boxes(
+    frame: torch.Tensor,
+    device: torch.device,
+    threshold: float = 0.7,
+    line_width: int = 3,
+    color: tuple[int, int, int] = (255, 0, 0),
+    alpha: float = 0.0,
+    categories: tuple[int, ...] = (1, 2, 3, 4, 6, 8),
+) -> torch.Tensor:
+    """Draw detection boxes for sensitive objects using a pretrained Mask R-CNN."""
+    if frame.dim() == 3:
+        frame = frame.unsqueeze(0)
+
+    # Convert to [0,1] float for torchvision detector
+    inp = frame[0].clone()
+    if inp.max() > 1.0:
+        inp = inp / 255.0
+    import torchvision.transforms.functional as TF
+    inp = TF.convert_image_dtype(inp, torch.float32)
+
+    model = _load_maskrcnn_model(device)
+    preds = model([inp])[0]
+
+    boxes = preds["boxes"]
+    labels = preds["labels"]
+    scores = preds["scores"]
+    keep = scores >= float(threshold)
+    boxes = boxes[keep]
+    labels = labels[keep]
+    scores = scores[keep]
+
+    if categories is not None:
+        keep_cat = [(int(lbl.item()) in categories) for lbl in labels]
+        if len(keep_cat) > 0:
+            keep_cat = torch.tensor(keep_cat, device=device, dtype=torch.bool)
+            boxes = boxes[keep_cat]
+            labels = labels[keep_cat]
+            scores = scores[keep_cat]
+
+    out = frame.clone()
+    color_t = torch.tensor(color, device=device, dtype=frame.dtype).view(1, 3, 1, 1)
+
+    for i in range(boxes.size(0)):
+        x0, y0, x1, y1 = boxes[i].round().to(torch.int64).tolist()
+        x0 = max(0, min(x0, frame.size(3) - 1))
+        x1 = max(0, min(x1, frame.size(3) - 1))
+        y0 = max(0, min(y0, frame.size(2) - 1))
+        y1 = max(0, min(y1, frame.size(2) - 1))
+        if alpha > 0:
+            out[:, :, y0 : y1 + 1, x0 : x1 + 1] = (
+                out[:, :, y0 : y1 + 1, x0 : x1 + 1] * (1.0 - alpha)
+                + color_t * alpha
+            )
+        out[:, :, y0 : y0 + line_width, x0 : x1 + 1] = color_t
+        out[:, :, y1 - line_width + 1 : y1 + 1, x0 : x1 + 1] = color_t
+        out[:, :, y0 : y1 + 1, x0 : x0 + line_width] = color_t
+        out[:, :, y0 : y1 + 1, x1 - line_width + 1 : x1 + 1] = color_t
+
+    return out.clamp(0.0, 255.0)
+
+
+@torch.no_grad()
+def overlay_detection_and_sensitive_region_boxes(
+    frame: torch.Tensor,
+    mask: torch.Tensor,
+    device: torch.device,
+    det_threshold: float = 0.7,
+    mask_threshold: float = 0.85,
+    line_width: int = 3,
+    color: tuple[int, int, int] = (255, 0, 0),
+    alpha: float = 0.0,
+    min_area: int = 50,
+) -> torch.Tensor:
+    """Overlay both detection boxes and sensitive-region boxes."""
+    detected = overlay_detection_boxes(
+        frame, device=device, threshold=det_threshold,
+        line_width=line_width, color=color, alpha=alpha,
+    )
+    combined = overlay_sensitive_boxes(
+        detected, mask, threshold=mask_threshold,
+        line_width=line_width, color=color, alpha=alpha,
+        min_area=min_area,
+    )
+    return combined
+
+
+@torch.no_grad()
+def overlay_sensitive_boxes(
+    frame: torch.Tensor,
+    mask: torch.Tensor,
+    threshold: float = 0.85,
+    line_width: int = 3,
+    color: tuple[int, int, int] = (255, 0, 0),
+    alpha: float = 0.0,
+    min_area: int = 50,
+) -> torch.Tensor:
+    """Overlay small bounding boxes around sensitive regions."""
+    if frame.dim() == 3:
+        frame = frame.unsqueeze(0)
+    if mask.dim() == 3:
+        mask = mask.unsqueeze(1)
+
+    frame = frame.clone()
+    device = frame.device
+    color_t = torch.tensor(color, device=device, dtype=frame.dtype).view(1, 3, 1, 1)
+
+    sens = mask.squeeze(1)
+    sens_min = float(sens.min().item())
+    sens_max = float(sens.max().item())
+    if sens_max > sens_min:
+        threshold_value = sens_min + threshold * (sens_max - sens_min)
+    else:
+        threshold_value = threshold
+
+    bin_mask = (sens > threshold_value).cpu().numpy().astype(np.uint8)
+    h, w = bin_mask.shape[1:]
+    visited = np.zeros((h, w), dtype=np.bool_)
+    dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    bboxes = []
+
+    for y in range(h):
+        for x in range(w):
+            if bin_mask[0, y, x] == 1 and not visited[y, x]:
+                stack = [(y, x)]
+                visited[y, x] = True
+                coords = []
+                while stack:
+                    cy, cx = stack.pop()
+                    coords.append((cy, cx))
+                    for dy, dx in dirs:
+                        ny, nx = cy + dy, cx + dx
+                        if 0 <= ny < h and 0 <= nx < w and not visited[ny, nx] and bin_mask[0, ny, nx] == 1:
+                            visited[ny, nx] = True
+                            stack.append((ny, nx))
+                if len(coords) >= min_area:
+                    ys = [p[0] for p in coords]
+                    xs = [p[1] for p in coords]
+                    y0, y1 = min(ys), max(ys)
+                    x0, x1 = min(xs), max(xs)
+                    bboxes.append((y0, y1, x0, x1))
+
+    if not bboxes:
+        return frame.clamp(0.0, 255.0)
+
+    for (y0, y1, x0, x1) in bboxes:
+        y1 = min(y1, frame.size(2) - 1)
+        x1 = min(x1, frame.size(3) - 1)
+        if alpha > 0:
+            frame[:, :, y0 : y1 + 1, x0 : x1 + 1] = (
+                frame[:, :, y0 : y1 + 1, x0 : x1 + 1] * (1.0 - alpha)
+                + color_t * alpha
+            )
+        frame[:, :, y0 : y0 + line_width, x0 : x1 + 1] = color_t
+        frame[:, :, y1 - line_width + 1 : y1 + 1, x0 : x1 + 1] = color_t
+        frame[:, :, y0 : y1 + 1, x0 : x0 + line_width] = color_t
+        frame[:, :, y0 : y1 + 1, x1 - line_width + 1 : x1 + 1] = color_t
+
+    return frame.clamp(0.0, 255.0)
 
 
 def cmd_train(cfg: Dict[str, Any]) -> None:
