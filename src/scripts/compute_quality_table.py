@@ -36,8 +36,8 @@ def mse_torch(x: torch.Tensor, y: torch.Tensor) -> float:
 @torch.no_grad()
 def protect_global_noise(frame: torch.Tensor, sigma: float = 8.0, seed: int = 1234) -> torch.Tensor:
     """Baseline: add Gaussian noise to the entire frame. frame: (3,H,W)."""
-    g = torch.Generator(device=frame.device).manual_seed(seed)
-    noise = torch.randn_like(frame, generator=g) * sigma
+    g = torch.Generator(device="cpu").manual_seed(seed)
+    noise = torch.randn(frame.shape, generator=g, dtype=frame.dtype, device="cpu").to(frame.device) * sigma
     return (frame + noise).clamp(0.0, 255.0)
 
 

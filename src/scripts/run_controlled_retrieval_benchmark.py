@@ -136,9 +136,9 @@ def build_variant_modules(cfg: dict, variant: str, device: torch.device, seed: i
 def make_random_mask_like(sens_map: Tensor, seed: int, t_index: int) -> Tensor:
     coverage = float(sens_map.mean().item())
     coverage = max(0.01, min(0.99, coverage))
-    generator = torch.Generator(device=sens_map.device)
+    generator = torch.Generator(device="cpu")
     generator.manual_seed(int(seed) + 9973 * (t_index + 1))
-    rand = torch.rand(sens_map.shape, generator=generator, device=sens_map.device)
+    rand = torch.rand(sens_map.shape, generator=generator, device="cpu").to(sens_map.device)
     return (rand < coverage).float()
 
 

@@ -37,12 +37,16 @@ class NoiseInjector:
     def __init__(self, cfg: NoiseConfig):
         self.cfg = cfg
 
-    def _rng(self, device: torch.device) -> Optional[torch.Generator]:
+    def _rng(self) -> Optional[torch.Generator]:
         if self.cfg.seed is None:
             return None
-        g = torch.Generator(device=device)
+        g = torch.Generator(device="cpu")
         g.manual_seed(self.cfg.seed)
         return g
+
+    def _seeded_randn_like(self, ref: torch.Tensor, g: Optional[torch.Generator]) -> torch.Tensor:
+        noise_cpu = torch.randn(ref.shape, generator=g, dtype=ref.dtype, device="cpu")
+        return noise_cpu.to(ref.device)
 
     @torch.no_grad()
     def apply(
@@ -60,8 +64,7 @@ class NoiseInjector:
         if strength.dim() == 3:
             strength = strength.unsqueeze(1)
 
-        device = frame.device
-        g = self._rng(device)
+        g = self._rng()
 
         # Target mask: sensitive background regions only
         mask = sens_mask.clamp(0.0, 1.0) * strength
@@ -72,14 +75,12 @@ class NoiseInjector:
             mask = mask * (1.0 - foreground_mask.clamp(0.0, 1.0))
 
         if self.cfg.mode == "gaussian":
-            noise = torch.randn_like(frame, generator=g) * float(self.cfg.sigma)
+            noise = self._seeded_randn_like(frame, g) * float(self.cfg.sigma)
 
         elif self.cfg.mode == "wiener":
-            # Minimal reproducible version: seed offset per frame.
-            # You can replace this with a true cumulative Wiener process if needed.
             if g is not None:
                 g.manual_seed(int(self.cfg.seed) + int(t_index))
-            noise = torch.randn_like(frame, generator=g) * float(self.cfg.sigma)
+            noise = self._seeded_randn_like(frame, g) * float(self.cfg.sigma)
 
         else:
             raise ValueError(f"Unknown noise mode: {self.cfg.mode}")

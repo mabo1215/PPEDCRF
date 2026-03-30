@@ -28,3 +28,9 @@ USAGE_claude.md
 USAGE_codex.md
 .claude/*
 .github/agents/*
+
+# Generated / synthetic data
+src/data/driving/train/
+src/data/driving/val/
+src/data/driving/test/
+synthetic_monitoring/
