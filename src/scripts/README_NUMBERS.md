@@ -45,3 +45,23 @@ Optional: `--seeds 1234 1235 1236`, `--tex paper/main.tex`, `--max_query`, `--ma
 The architecture figure path in `paper/main.tex` is set to `figs/architecture_of_solution.png`.  
 A copy of the original file was created as `paper/figs/architecture_of_solution.png`.  
 If you only have `artecture of solution.png`, copy it to `architecture_of_solution.png` in the same folder.
+
+## 4. Controlled retrieval benchmark with local COCO / Digica pools
+
+You can run the controlled benchmark while exposing additional distractor images
+from local COCO and Digica roots. The benchmark still builds paired query/gallery
+locations from monitoring clips, then appends external images as optional hard
+gallery distractors when larger galleries are needed.
+
+```bash
+python src/scripts/run_controlled_retrieval_benchmark.py \
+	--monitoring_root F:\\work\\datasets\\monitoring\\images \
+	--coco_root C:\\work\\datasets\\Coco \
+	--digica_root C:\\work\\datasets\\digica\\digica_v4.3 \
+	--max_gallery 240 \
+	--gallery_sizes 48 96 160 240
+```
+
+Notes:
+- The script requires a SensNet checkpoint (`--checkpoint`, default `src/outputs/sensnet_final.pt`).
+- Dataset source counts and external distractor usage are saved into `selection.json` and `summary.md`.

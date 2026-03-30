@@ -23,6 +23,7 @@ PROJECT_ROOT = os.path.dirname(SRC_ROOT)
 sys.path.insert(0, SRC_ROOT)
 
 from datasets.monitoring_clip_dataset import MonitoringClipDataset, iter_clip_ids
+from datasets.driving_clip_dataset import _read_image, _resize_if_needed
 from eval.metrics import flicker_score, perturbation_stability, psnr_torch, ssim_grayscale_np
 from eval.retrieval_attack import RetrievalConfig, build_gallery_embeddings, make_default_embedder, query_topk
 from main import load_sensnet_checkpoint
@@ -54,6 +55,24 @@ def parse_args() -> argparse.Namespace:
         help="Directory that stores monitoring frames named as <clip_id>_frame<number>.jpg",
     )
     parser.add_argument("--checkpoint", type=str, default="src/outputs/sensnet_final.pt")
+    parser.add_argument(
+        "--coco_root",
+        type=str,
+        default=r"C:\work\datasets\Coco",
+        help="Optional external image pool root (COCO style) used for extra hard distractors.",
+    )
+    parser.add_argument(
+        "--digica_root",
+        type=str,
+        default=r"C:\work\datasets\digica\digica_v4.3",
+        help="Optional external image pool root (Digica style) used for extra hard distractors.",
+    )
+    parser.add_argument(
+        "--max_external_distractors",
+        type=int,
+        default=256,
+        help="Maximum number of external-image distractors to consider from COCO/Digica pools.",
+    )
     parser.add_argument("--num_queries", type=int, default=12)
     parser.add_argument("--max_gallery", type=int, default=48)
     parser.add_argument("--pair_pool_size", type=int, default=240)
@@ -427,6 +446,35 @@ def discover_paired_locations(
     return pairs, distractor_ids, selected_hard_distractors
 
 
+def collect_external_image_paths(root: str) -> List[Path]:
+    root_path = Path(root)
+    if not root_path.is_dir():
+        return []
+
+    exts = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+    image_paths: List[Path] = []
+    for path in root_path.rglob("*"):
+        if path.is_file() and path.suffix.lower() in exts:
+            image_paths.append(path)
+    return sorted(image_paths)
+
+
+def build_external_distractor_frames(
+    image_paths: Sequence[Path],
+    resize_hw: Tuple[int, int],
+    max_items: int,
+) -> Dict[str, Tensor]:
+    frames: Dict[str, Tensor] = {}
+    for idx, path in enumerate(image_paths[: max(0, int(max_items))]):
+        try:
+            frame = _read_image(str(path))
+            frame = _resize_if_needed(frame, resize_hw)
+        except Exception:
+            continue
+        frames[f"ext_{idx:04d}"] = frame
+    return frames
+
+
 def main() -> None:
     args = parse_args()
     cfg = load_yaml(args.config)
@@ -467,6 +515,16 @@ def main() -> None:
     distractor_ids = [f"dist_{idx:03d}" for idx in range(len(distractor_clip_ids))]
     distractor_label_to_clip = {label: clip_id for label, clip_id in zip(distractor_ids, distractor_clip_ids)}
 
+    coco_image_paths = collect_external_image_paths(args.coco_root)
+    digica_image_paths = collect_external_image_paths(args.digica_root)
+    external_paths = coco_image_paths + digica_image_paths
+    external_frames_by_id = build_external_distractor_frames(
+        image_paths=external_paths,
+        resize_hw=resize_hw,
+        max_items=args.max_external_distractors,
+    )
+    external_distractor_ids = list(external_frames_by_id.keys())
+
     selection_path = os.path.join(args.output_dir, "selection.json")
     save_json(
         selection_path,
@@ -478,6 +536,14 @@ def main() -> None:
             "gallery_positive_clip_ids": gallery_positive_clip_ids,
             "distractor_ids": distractor_ids,
             "distractor_clip_ids": distractor_clip_ids,
+            "external_sources": {
+                "coco_root": args.coco_root,
+                "coco_image_count": len(coco_image_paths),
+                "digica_root": args.digica_root,
+                "digica_image_count": len(digica_image_paths),
+                "external_distractors_loaded": len(external_distractor_ids),
+                "max_external_distractors": int(args.max_external_distractors),
+            },
             "hard_distractors": hard_distractor_meta,
             "pair_similarity_stats": {
                 "mean": float(np.mean(pair_similarities)),
@@ -553,6 +619,12 @@ def main() -> None:
 
     for label, clip_id in distractor_label_to_clip.items():
         gallery_frames_by_id[label] = distractor_frames_by_actual_id[clip_id]
+
+    for ext_id, ext_frame in external_frames_by_id.items():
+        gallery_frames_by_id[ext_id] = ext_frame
+
+    # Prefer monitoring hard negatives first, then use external pools to support larger galleries.
+    distractor_ids = distractor_ids + external_distractor_ids
 
     protected_query_images: Dict[str, Dict[int, Tensor]] = {}
     quality_summary_rows: List[dict] = []
@@ -970,6 +1042,11 @@ def main() -> None:
         handle.write(f"- Backbones: {args.backbones}\n")
         handle.write(f"- Seeds: {args.seeds}\n")
         handle.write(f"- Resize: {resize_hw}\n")
+        handle.write(
+            f"- External pools: coco={len(coco_image_paths)} images, "
+            f"digica={len(digica_image_paths)} images, "
+            f"loaded external distractors={len(external_distractor_ids)}\n"
+        )
         handle.write(
             "- Pair similarity (ResNet18 cosine): "
             f"mean={np.mean(pair_similarities):.4f}, min={np.min(pair_similarities):.4f}, max={np.max(pair_similarities):.4f}\n"

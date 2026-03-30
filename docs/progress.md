@@ -55,17 +55,20 @@
 12. 已清理主文参考文献字段并消除主文 BibTeX warning。
 修改说明：补全了 `paper/ref.bib` 中当前主文实际引用条目的期刊卷页和会议 publisher/address 字段，重新编译后 `paper/build/main.blg` 的 `warning$` 已降为 0，同时同步修正了 `src/scripts/README_NUMBERS.md` 中残留的旧图目录描述。
 
+20. 已按评审意见 M6 将 Legacy 实验节从主文迁移到附录。
+修改说明：`paper/main.tex` 将原 Section 4.2 压缩为一段 Appendix summary，删除主文中的 legacy 大图；`paper/appendix.tex` 新增完整 Legacy detector/segmentation 小节并承接原 Figure 3/4 内容，使主文聚焦 retrieval threat model。
+
 # 未修改或部分修改
 
 1. 跨攻击骨干网络的隐私稳健性仅部分补强。
 修改说明：已加入 ResNet18 与 ResNet50 的 attacker-sensitivity 实验。
-未全部修改原因：评审意见 M4 要求新增至少一个非 ResNet 架构，本地数据集不可用无法运行。
-后续准备如何修改：待数据可用后增加 VGG16、ViT 或 VPR 专用模型攻击器。
+未全部修改原因：评审意见 M4 要求新增至少一个非 ResNet 架构，当前缺少可用的 SensNet checkpoint（`src/outputs/sensnet_final.pt` 不存在）导致扩展攻击实验无法直接运行。
+后续准备如何修改：补齐 checkpoint 后在当前 benchmark 上增加 VGG16、ViT 或 VPR 专用模型攻击器。
 
 2. DCRF 与 NCP 的高 sigma 消融和 temporal consistency 具体数值待实验。
 修改说明：脚本已支持 `--ablation_sigmas 8 16 24 32`，正文 Section 4.6 的 Table (tab:temporal) 中 flicker 和 perturbation stability 标记为 TBD。
-未全部修改原因：本地数据集（`F:\work\datasets\monitoring\images`）不可用。
-后续准备如何修改：运行实验后用实际数值替换 TBD，并在 Table 1 后新增多 sigma 消融表。
+未全部修改原因：原监控序列路径（`F:\work\datasets\monitoring\images`）仍不可用，且同样受 checkpoint 缺失限制。
+后续准备如何修改：补齐 checkpoint 后，用新增的 COCO（`C:\work\datasets\Coco`）与 Digica（`C:\work\datasets\digica\digica_v4.3`）扩展干扰图库，并在可用监控序列上运行高 sigma 与 temporal 指标实验替换 TBD。
 
 3. Matched-operating-point Table (tab:matched) 数值来自 frontier 推导。
 修改说明：已放入从现有 frontier 数据推导的数值。
@@ -74,13 +77,8 @@
 
 4. Benchmark 规模待扩大。
 修改说明：评审意见 M3 建议 50–100 对位置和 200+ gallery。
-未全部修改原因：受限于本地监控数据集规模和数据可用性。
-后续准备如何修改：考虑补充 Pitts250k-test、Tokyo 24/7 等公开数据集。
-
-5. Legacy 实验节（Section 4.2）待精简或迁移至附录。
-修改说明：评审意见 M6 建议精简。
-未全部修改原因：本轮优先完成相关工作扩展和格式统一。
-后续准备如何修改：下一轮将 Figure 3/4 移至附录，Section 4.2 压缩为一段概述。
+未全部修改原因：当前脚本已接入本地 COCO 与 Digica 作为可选外部干扰图库来源，但尚未完成一次带新数据源的大规模重跑（仍受 checkpoint 缺失影响）。
+后续准备如何修改：在补齐 checkpoint 后以 `--max_gallery 200+`、`--coco_root`、`--digica_root` 运行并更新主文规模化结果。
 
 6. BibTeX 字段不完整 warning（39 条）。
 修改说明：新增和部分已有条目缺少 publisher/address/pages 字段。
