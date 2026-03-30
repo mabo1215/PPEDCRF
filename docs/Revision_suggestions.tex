@@ -1,342 +1,180 @@
-﻿\section*{Fresh Independent Review: ACM TOMM Evaluation}
-\textit{This review was generated independently from the current manuscript source
-files (main.tex, appendix.tex, ref.bib) without reference to any prior review
-cycle. The evaluation standard is ACM Transactions on Multimedia Computing,
-Communications, and Applications (TOMM).}
+﻿\section*{ACM TOMM Style Review for \textit{PPEDCRF}}
 
-\subsection*{Manuscript Under Review}
-\textbf{Title:} PPEDCRF: Dynamic-CRF-Guided Selective Perturbation for
-Background-Based Location Privacy in Video Sequences
+\subsection*{Overall Recommendation}
+\textbf{Recommendation: Major Revision}
 
-\subsection*{Overall Assessment}
+\subsection*{Summary}
+This manuscript studies background-based location privacy in released video frames and proposes PPEDCRF, a selective perturbation framework combining unary sensitivity prediction, dynamic CRF refinement, normalized control penalty, and Gaussian noise injection on inferred background-sensitive regions. The paper is clearly motivated by a practically relevant threat model: even after removing GPS metadata, a dashcam frame may still reveal location through background visual cues. The revised manuscript is much more implementation-aligned than earlier versions, and it now explicitly avoids overstating a strict end-to-end differential privacy guarantee. The paper also introduces a controlled paired-scene retrieval benchmark and compares PPEDCRF against random masking, global Gaussian noise, and support-aware deterministic baselines such as mask-guided blur and mosaic.
 
-The paper proposes PPEDCRF, a release-side sanitization framework that uses a
-dynamic CRF to infer location-sensitive background regions, a normalized
-control penalty to modulate perturbation strength, and calibrated Gaussian
-noise to selectively perturb released video frames against gallery-based
-retrieval attackers.
+The topic is suitable for ACM TOMM because it concerns multimedia privacy protection, video sanitization, retrieval-based attack evaluation, and privacy--utility trade-off analysis. The paper has several strengths, especially a focused threat model, an implementation-consistent method description, and a more honest interpretation of what the current benchmark can and cannot prove. However, in its current form, the paper still falls short of the level typically expected for acceptance in ACM TOMM. The main issue is not writing quality, but \emph{evidence strength}: the evaluation is still dominated by a small, synthetic, locally mined paired-scene proxy benchmark, while the strongest privacy results are in fact achieved by support-aware deterministic baselines rather than by the proposed stochastic perturbation mechanism itself. As a result, the current paper supports the value of the \emph{support map} more strongly than it supports the superiority of PPEDCRF as a complete method.
 
-The problem is well-motivated and topically relevant to TOMM.  The positioning
-as a calibrated privacy--utility trade-off optimizer is coherent, and the
-manuscript is refreshingly transparent about what it does \emph{not} claim
-(e.g.\ no formal end-to-end DP guarantee).  However, the current evidence base
-falls materially short of what TOMM reviewers would require for publication.
-The gaps are concentrated in five areas:
+\subsection*{Major Strengths}
+\begin{itemize}
+    \item The problem setting is clear and meaningful: protecting location privacy from background-based retrieval attacks in released driving frames is important and insufficiently studied in prior face/license-plate-centric anonymization work.
+    \item The manuscript now states the threat model, released object, and privacy claim boundaries much more clearly. In particular, the paper now explicitly says that the Gaussian calibration is DP-style and does \emph{not} establish formal output-level $(\epsilon,\delta)$-DP for the released video sequence.
+    \item The method section is more implementation-consistent than many privacy papers. The pipeline $I_t \rightarrow u_t \rightarrow p_t \rightarrow \alpha_t \rightarrow I_t'$ is readable, and the role of DCRF, NCP, and selective image-space perturbation is now much clearer.
+    \item The matched-operating-point analysis is a good addition. It makes the comparison with global Gaussian noise fairer than merely fixing a single noise parameter.
+    \item The manuscript is relatively honest about limitations. It acknowledges that attacker transfer is incomplete, that Top-10 retrieval saturates, and that the benchmark is only a paired-scene proxy rather than a full geolocalization benchmark.
+\end{itemize}
 
+\subsection*{Major Weaknesses}
+\begin{itemize}
+    \item The central empirical evidence is still too narrow for a TOMM paper. The controlled paired-scene retrieval benchmark uses only 12 paired locations and 36 hard distractors in the final default setting, which is too limited to substantiate broad claims about location privacy in multimedia release scenarios.
+    \item The strongest privacy results on the main benchmark are achieved by mask-guided blur and especially mask-guided mosaic, not by PPEDCRF itself. This weakens the claimed novelty of the full method and suggests that the true key contribution is the support estimation rather than the stochastic perturbation design.
+    \item The attacker analysis is still too weak. Only ResNet18 and ResNet50 are reported in the main sensitivity study, whereas the paper itself cites much stronger VPR-style attackers such as NetVLAD, Patch-NetVLAD, CosPlace, and MixVPR. Without these, the privacy conclusions remain incomplete.
+    \item Table~6 still contains \textbf{TBD} entries for flicker and perturbation stability. This is a serious issue. A submission to ACM TOMM should not contain unfinished quantitative tables in the main paper.
+    \item The practical meaning of the DP-style calibration is still underdeveloped. Equation~(4) currently functions mainly as a user-facing scaling rule. Without privacy accounting, sensitivity justification, or comparative discussion against alternative calibration rules, it risks appearing mathematically decorative rather than essential.
+    \item Some conclusions are still slightly stronger than the evidence warrants. The current experiments support a useful operating-point mechanism on a controlled proxy benchmark, but not yet a convincing general release-side location privacy solution.
+\end{itemize}
+
+\subsection*{Detailed Comments and Revision Requests}
+
+\subsubsection*{1. Contribution Positioning Must Be Sharpened}
+The paper should explicitly reposition the contribution hierarchy. Based on the current results, the most defensible contribution is:
 \begin{enumerate}
-\item Two analysis sections (4.5 and 4.6) contain \textbf{zero concrete
-      numerical results}---they describe analyses in qualitative terms only.
-\item The titled method components (DCRF, NCP) produce \textbf{no measurable
-      benefit} in the only quantitative ablation table.
-\item The benchmark is extremely small (12 paired locations, 48-way gallery)
-      and Top-10 retreival saturates at 1.0, leaving almost no discrimination
-      power.
-\item The reference list cites only \textbf{17 of 99 bib entries}, far too few
-      for a TOMM journal paper.
-\item The appendix uses \texttt{IEEEtran} instead of \texttt{acmart},
-      violating ACM formatting requirements.
+    \item a temporally stable sensitive-background support estimator,
+    \item a calibrated selective perturbation framework built on that support,
+    \item a controlled proxy benchmark for studying privacy--utility trade-offs.
+\end{enumerate}
+At present, the manuscript still sometimes reads as if PPEDCRF as a full stochastic mechanism is the main winner, but the experiments show that support-aware blur/mosaic outperform it in raw privacy on the proxy benchmark. This means the paper must distinguish more carefully between:
+\begin{itemize}
+    \item \textbf{support quality},
+    \item \textbf{perturbation mechanism quality},
+    \item \textbf{calibration convenience}.
+\end{itemize}
+
+\textbf{Required action:} rewrite the contribution paragraph, abstract, and conclusion so that the manuscript does not overclaim PPEDCRF as the strongest privacy method, but instead frames it as a controllable, high-utility operating-point method whose main transferable asset is accurate support localization.
+
+\subsubsection*{2. The Experimental Evidence Is Not Yet Strong Enough for TOMM}
+The current default benchmark is too small and too synthetic. A TOMM paper normally needs broader empirical support. The paired-scene construction is useful as a controlled proxy, but it cannot remain the dominant evidence.
+
+\textbf{Required action:}
+\begin{itemize}
+    \item Add at least one larger-scale external evaluation or semi-external evaluation. Even if a perfect dashcam-to-street-view benchmark is not locally available, you should construct a more realistic retrieval protocol using a public place-recognition or geolocalization dataset.
+    \item Evaluate whether the support map generalizes beyond the locally mined paired scenes.
+    \item Increase the gallery scale substantially. Current Top-10 saturation shows the ranking task is too easy or too compressed in candidate space.
+\end{itemize}
+
+\textbf{What ACM TOMM reviewers will likely ask:} does the method still work when the gallery is much larger, visually more diverse, and built from a realistic cross-view or cross-condition retrieval distribution?
+
+\subsubsection*{3. Stronger Attackers Are Necessary}
+The paper already discusses stronger VPR attackers in related work, but the actual evaluation remains limited. ResNet18 and ResNet50 are not sufficient proxies for the current state of place-recognition attack capability.
+
+\textbf{Required action:}
+Add attacker-side evaluations with several of the following:
+\begin{itemize}
+    \item NetVLAD,
+    \item Patch-NetVLAD,
+    \item CosPlace,
+    \item MixVPR.
+\end{itemize}
+
+At minimum, one classical VPR descriptor and one modern strong VPR model should be added. If PPEDCRF fails to transfer, that is still publishable, but the manuscript must then reframe itself as a method with attacker-dependent effectiveness rather than implied attacker-agnostic protection.
+
+\subsubsection*{4. Table 6 Cannot Contain TBD Entries}
+A main-paper table with unresolved \texttt{TBD} values is not acceptable for submission.
+
+\textbf{Required action:}
+Fill in all temporal metrics before submission. If these metrics cannot be computed reliably, remove the table from the main paper and move the temporal-consistency claim to a lighter qualitative discussion. Do not leave placeholder results in a journal submission.
+
+\subsubsection*{5. Temporal Consistency Claims Need Better Support}
+The paper claims that DCRF temporal smoothing improves output consistency, but in Table~3 the ablations \emph{w/o temporal consistency} and \emph{w/o NCP} show almost identical Top-1, Top-5, PSNR, and SSIM to PPEDCRF. This makes the temporal component look weak unless Table~6 proves otherwise.
+
+\textbf{Required action:}
+\begin{itemize}
+    \item Quantify temporal improvement with completed flicker and perturbation stability metrics.
+    \item Add a short visual sequence comparison or frame-difference visualization.
+    \item Explain why Mask IoU for ``w/o temporal consistency'' is 1.000 while PPEDCRF is 0.998; without explanation this looks counterintuitive and may confuse reviewers.
+\end{itemize}
+
+\subsubsection*{6. The DP-Style Calibration Still Needs Better Justification}
+The paper does a good job stating that Equation~(4) is \emph{not} a strict DP guarantee. However, after that clarification, the role of the DP formalism becomes weaker.
+
+\textbf{Required action:}
+Strengthen the justification of Equation~(4) in one of two ways:
+\begin{enumerate}
+    \item either treat it explicitly as a heuristic but principled calibration rule and compare it against simpler alternatives, such as linear scaling or variance schedules;
+    \item or provide a more formal discussion of sensitivity, clipping bound $C$, and why this calibration is preferable in practice.
 \end{enumerate}
 
-\subsection*{Recommendation}
-\textbf{Major Revision before ACM TOMM submission.}
+Right now, the equation risks being challenged as unnecessary theory if it does not lead to unique empirical or interpretive value.
 
-%%% ---------------------------------------------------------------
-\subsection*{Strengths}
+\subsubsection*{7. Comparison Baselines Should Be More Comprehensive}
+The current baselines are reasonable but still incomplete for a journal paper. Since the results suggest that support-aware deterministic obfuscation is very competitive, the paper should broaden that family.
+
+\textbf{Required action:}
+Consider adding:
+\begin{itemize}
+    \item stronger blur parameter sweeps,
+    \item adaptive pixelation or region-wise JPEG degradation,
+    \item saliency-guided or segmentation-guided background masking,
+    \item learned adversarial perturbation baselines if feasible.
+\end{itemize}
+
+This is especially important because the current release-side question is essentially about how best to perturb the \emph{right region}. Reviewers will expect broader evidence once the paper itself shows support-aware blur/mosaic are very strong.
+
+\subsubsection*{8. The Utility Story Is Still Slightly Split Across Two Worlds}
+The main paper evaluates retrieval privacy on the new controlled benchmark, while the utility evidence for detector/segmenter preservation is largely legacy and moved to the appendix. This improves focus, but it also creates a gap: the privacy benchmark and the downstream utility benchmark are not tightly coupled.
+
+\textbf{Required action:}
+Provide at least one downstream task experiment on the \emph{same} or closely related sanitized data used in the new release-side benchmark. Otherwise, the privacy--utility trade-off remains partially assembled from different experimental worlds.
+
+\subsubsection*{9. Qualitative Figure Needs Better Journal-Level Design}
+Figure~5 is useful, but currently it still looks more like an internal demonstration figure than a polished journal figure. The red box overlay in particular is somewhat crude for a TOMM submission, and the figure does not explicitly show where privacy-relevant background cues are suppressed relative to location-relevant structures.
+
+\textbf{Required action:}
+Redesign the qualitative figure with:
+\begin{itemize}
+    \item higher-resolution crops,
+    \item zoomed callouts on privacy-relevant background regions,
+    \item side-by-side difference maps or heatmaps,
+    \item clearer legend or color coding.
+\end{itemize}
+
+\subsubsection*{10. Writing-Level Polishing Is Still Needed}
+The manuscript is much improved, but several journal-level polishing issues remain:
+\begin{itemize}
+    \item Some claims in the conclusion are still stronger than the empirical support.
+    \item The benchmark is repeatedly called ``controlled paired-scene'' and ``proxy''; the wording is honest but repetitive. Condense this discussion for readability.
+    \item The appendix contains important implementation-alignment caveats. Some of these should be summarized more directly in the main paper so reviewers do not feel key limitations were moved out of sight.
+\end{itemize}
+
+\subsection*{Publication Outlook}
+At its current stage, the paper is \textbf{not yet ready for ACM TOMM acceptance}. However, it is \textbf{potentially salvageable for TOMM} if the revision substantially strengthens the empirical section, especially:
 \begin{enumerate}
-\item \textbf{Clear, honest problem framing.}  The threat model (gallery-based
-      retrieval attacker on released frames), the defense objective
-      (privacy--utility operating-point selection), and the explicit disclaimer
-      against formal DP are stated upfront and maintained consistently.
-
-\item \textbf{Implementation-aligned method description.}  The notation table,
-      algorithm box, and equation numbering map directly to the released code,
-      eliminating the gap between manuscript claims and implementation that
-      plagued earlier drafts.
-
-\item \textbf{Controlled benchmark with hard negatives.}  The paired-scene
-      retrieval protocol, while small, uses cosine-similarity-mined pairs and
-      distractors rather than random negatives, making the evaluation more
-      stress-testing despite its limited scale.
-
-\item \textbf{Honest reporting of baselines.}  The paper does not hide the fact
-      that mask-guided blur and mosaic outperform PPEDCRF on raw Top-1
-      retrieval.  This candor increases credibility.
-
-\item \textbf{Reproducibility.}  The benchmark is generated by a single
-      released script with deterministic pair selection and three noise seeds.
+    \item removing all unfinished results,
+    \item adding stronger retrieval attackers,
+    \item enlarging or externalizing the benchmark,
+    \item clarifying that the support map is the strongest contribution,
+    \item and tightening the privacy claim to match the actual evidence.
 \end{enumerate}
 
-%%% ---------------------------------------------------------------
-\subsection*{Major Concerns}
+If these issues are not addressed, reviewers may conclude that the paper is better suited to a weaker venue or a workshop-style contribution focused on a controlled benchmark and support-aware sanitization analysis rather than a full journal article.
 
-\subsubsection*{M1. Sections 4.5 and 4.6 are text-only placeholders}
-Section~4.5 (Matched-Operating-Point Analysis) and Section~4.6 (Temporal
-Consistency and Perturbation Stability) contain \textbf{no tables, no figures,
-and no concrete numbers}.  They describe comparisons in purely relational
-language (``PPEDCRF achieves lower Top-1 retrieval accuracy than global
-Gaussian noise'') without ever specifying what those values are.  For a
-journal submission, every analytical claim must be backed by quantitative
-evidence.
-
-\paragraph{Required revision.}
-\begin{itemize}
-\item Run the matched-operating-point experiments already coded in
-      \texttt{run\_controlled\_retrieval\_benchmark.py} and produce a
-      results table for Section~4.5 with columns: method, matched PSNR target,
-      achieved PSNR, $\sigma$ or parameter used, Top-1, Top-5.
-\item Produce a temporal-consistency table for Section~4.6 with columns:
-      method, flicker score, perturbation stability, mask IoU.  The metrics
-      are already implemented in \texttt{src/eval/metrics.py}.
-\item Add at least one figure: a matched-operating-point frontier plot
-      showing all methods at controlled PSNR levels.
-\end{itemize}
-
-\subsubsection*{M2. DCRF and NCP produce no measurable empirical gain}
-Table~1 reports the following for the default setting ($\sigma_0=8$,
-gallery~48):
-\begin{center}
-\begin{tabular}{lcc}
-Variant & Top-1 & PSNR (dB) \\
-\hline
-PPEDCRF            & $0.722\pm0.048$ & $36.18\pm0.01$ \\
-w/o temporal (DCRF)& $0.722\pm0.048$ & $36.17\pm0.01$ \\
-w/o NCP            & $0.722\pm0.048$ & $36.17\pm0.01$ \\
-\end{tabular}
-\end{center}
-The differences are in the \emph{third decimal place of SSIM} and nowhere else.
-The two title-bearing components contribute zero measurable improvement on the
-only quantitative evaluation table.  This is the paper's most critical
-credibility gap: a manuscript named after DCRF cannot afford to show that DCRF
-does not help.
-
-\paragraph{Required revision.}
-\begin{itemize}
-\item Test DCRF and NCP at \emph{higher noise scales} ($\sigma_0=16, 24, 32$)
-      where the dynamic mask should matter more because per-pixel noise energy
-      is larger.
-\item Report temporal metrics (flicker score, perturbation stability) per
-      ablation variant---these are the metrics where DCRF temporal smoothing
-      should shine.  The text in Section~4.6 claims this but provides no
-      numbers.
-\item If DCRF and NCP still show negligible benefit after these experiments,
-      consider whether the title and contribution list overstate their role.
-      Rename or downscope if warranted by evidence.
-\end{itemize}
-
-\subsubsection*{M3. Benchmark is too small and saturated for journal evidence}
-The benchmark has only 12 paired locations and a 48-way gallery.  Top-10
-retrieval saturates at 1.000 for \emph{every} method, including the strongest
-defenses.  This means the benchmark cannot distinguish between a method that
-partially disrupts retrieval and one that is nearly as identifiable as the
-raw query.  The effective discriminative range is limited to Top-1 and Top-5,
-which for 12 query locations gives very coarse-grained signal.
-
-\paragraph{Required revision.}
-\begin{itemize}
-\item Scale the benchmark to at least 50--100 paired locations and a 200+
-      gallery, using all available monitoring sequences.
-\item If the monitoring dataset is too small, supplement with a public
-      dataset such as Pitts250k-test, Tokyo~24/7, or Nordland for a
-      secondary evaluation track.
-\item Report Top-1, Top-5, and Recall@10 on the larger gallery where
-      Top-10 is no longer trivially saturated.
-\end{itemize}
-
-\subsubsection*{M4. PPEDCRF degrades privacy under ResNet50}
-Table~3 shows that under a ResNet50 attacker, PPEDCRF has a \emph{positive}
-$\Delta$ ($+0.028$ to $+0.083$), meaning it \emph{increases} retrieval
-accuracy compared with raw queries.  The paper correctly flags this as an
-attacker-sensitivity issue, but for a TOMM submission the result is still
-alarming: the proposed defense can make things worse under a plausible
-alternative backbone.
-
-\paragraph{Required revision.}
-\begin{itemize}
-\item Investigate why ResNet50 benefits from PPEDCRF perturbation.  Possible
-      hypotheses:\ denoising effect, feature-space smoothing, or
-      benchmark construction bias (pairs mined with ResNet18).
-\item Add at least one non-ResNet attacker (e.g.\ VGG16, a ViT-based
-      backbone, or a dedicated VPR model like NetVLAD/CosPlace) to test
-      whether the negative transfer is ResNet-specific or systematic.
-\item If reconstruction of the pair-mining process with a different anchor
-      backbone changes the paired set, report those results to disentangle
-      benchmark bias from true attacker transfer.
-\end{itemize}
-
-\subsubsection*{M5. Reference list is severely under-populated}
-The manuscript cites only \textbf{17 of the 99 entries} in \texttt{ref.bib}.
-For an ACM TOMM journal paper, 17 references is far below the expected
-density.  This is particularly problematic in Related Work, where each of the
-seven sub-paragraphs cites only 1--4 papers and skips many closely relevant
-works, including:
-\begin{itemize}
-\item recent video anonymization methods (GANobfuscator, action-preserving
-      anonymization, face-swapping pipelines);
-\item adversarial perturbation defenses in multimedia;
-\item CRF-based segmentation and temporal refinement (DeepLab, etc.);
-\item broader DP mechanism design literature beyond the three references cited.
-\end{itemize}
-
-\paragraph{Required revision.}
-\begin{itemize}
-\item Expand Related Work to approximately 40--60 cited references,
-      covering the major ACM/IEEE venues in multimedia privacy, VPR,
-      video anonymization, and perturbation-based defense.
-\item Remove all unused bib entries from \texttt{ref.bib} to keep the
-      file clean.
-\item Add comparative discussion paragraphs that position PPEDCRF relative to
-      the closest recent works, not just broad category summaries.
-\end{itemize}
-
-\subsubsection*{M6. Legacy experiment track is weakly connected}
-Section~4.2 retains detector-training curves on MOT16/17, Cityscapes, KITTI,
-and VOC2008 from an older pipeline.  These results evaluate foreground
-detection/segmentation utility under a different training regime and do not
-measure retrieval privacy \emph{at all}.  The paper acknowledges this, but the
-section still occupies substantial space and two large figures (Figures~3
-and~4) without contributing to the core privacy--utility story.
-
-\paragraph{Required revision.}
-\begin{itemize}
-\item Either (a)~add at least one fixed downstream-task evaluation on the
-      sanitized frames from the \emph{new} benchmark (e.g.\ object detection
-      or semantic segmentation inference on PPEDCRF-sanitized frames) to
-      demonstrate utility preservation under the same pipeline, or
-      (b)~condense the legacy section to a brief paragraph and move the
-      figures to the appendix.
-\item If option~(a) is chosen, report task accuracy vs.\ PSNR jointly with
-      the privacy frontier to give a unified three-axis view (privacy,
-      perceptual quality, task utility).
-\end{itemize}
-
-%%% ---------------------------------------------------------------
-\subsection*{Minor Concerns}
-
-\subsubsection*{m1. Appendix uses IEEEtran instead of acmart}
-ACM TOMM requires all manuscript components to use the \texttt{acmart}
-document class.  The appendix currently uses
-\verb|\documentclass[trans]{IEEEtran}|.
-\paragraph{Fix.} Switch the appendix to \verb|\documentclass[manuscript,screen,review,anonymous]{acmart}| with \verb|\acmJournal{TOMM}| and mirror the main-text preamble.
-
-\subsubsection*{m2. 82 dead bib entries}
-\texttt{ref.bib} contains 99 entries; only 17 are cited.  Dead entries cause
-no compilation error but are a sign of incomplete cleanup and can confuse
-reviewers who inspect the source.
-\paragraph{Fix.} Remove all uncited entries or, if they will be cited in the
-expanded Related Work, add the corresponding \verb|\cite{}| commands.
-
-\subsubsection*{m3. Figures directory contains $\sim$20 unreferenced images}
-\texttt{paper/figs/} has 33 image files, but \texttt{main.tex} references
-roughly 8.  Files such as \texttt{050.png}, \texttt{12.png}--\texttt{19.png},
-\texttt{GAS.PNG}, \texttt{GAUSSI*.PNG}, \texttt{general*.png},
-\texttt{labels*.png}, \texttt{resultsN.png}, \texttt{P\_curve.png},
-\texttt{R\_curve.png}, and \texttt{train\_batch*.jpg} appear to be legacy
-artifacts.
-\paragraph{Fix.} Remove or relocate unreferenced images to reduce repository
-clutter.
-
-\subsubsection*{m4. Pipeline figure file name}
-Figure~2 is sourced from \texttt{architecture\_of\_solution.png}, which sounds
-like a draft placeholder rather than a publication-ready asset name.  The
-figure itself is acceptable in content but could benefit from a visual refresh
-(sharper text, vector graphics, tighter layout) for a TOMM submission.
-
-\subsubsection*{m5. Abstract length and front-loading}
-The abstract is 183 words, which is within TOMM limits but spends its first
-two sentences on motivation before reaching the method name.  For a
-transactions paper, leading with the problem--solution pair in the first
-sentence would improve scanning efficiency.
-
-\subsubsection*{m6. The ``6~dB advantage'' framing is misleading in isolation}
-The abstract and conclusion both highlight a ``6~dB PSNR advantage over
-indiscriminate global Gaussian noise.''  While technically accurate, this
-comparison is against the weakest evaluated baseline.  The more informative
-comparison is against mask-guided blur (which achieves stronger privacy at
-30.61~dB) and mosaic (stronger privacy at 26.07~dB).  Readers may feel misled
-if the strongest result is foregrounded without context.
-\paragraph{Fix.} Acknowledge blur/mosaic comparison immediately after stating
-the 6~dB advantage in both the abstract and the conclusion.
-
-\subsubsection*{m7. No privacy budget sweep for deterministic baselines}
-Blur and mosaic are reported at a single kernel/block size.  Since they use the
-same DCRF spatial support, sweeping their intensity parameter (blur radius,
-block size) and plotting the resulting frontier alongside PPEDCRF's
-$\sigma_0$-sweep would give a fairer multi-method frontier comparison.
-
-\subsubsection*{m8. CCS concepts and keywords}
-The CCS descriptors and keywords are reasonable but could be more specific.
-Consider adding \texttt{Security and privacy~Location privacy} if it exists in
-the ACM CCS tree, and adding ``video anonymization'' or ``visual place
-recognition'' as keywords.
-
-%%% ---------------------------------------------------------------
-\subsection*{Detailed Revision Checklist}
-
-\subsubsection*{A. Must-Run Experiments}
+\subsection*{Actionable Revision Priority List}
 \begin{enumerate}
-\item \textbf{Populate Section 4.5:}  Run matched-operating-point experiments
-      at PSNR targets 30, 33, 36~dB for PPEDCRF and global Gaussian noise.
-      Produce a table and a frontier figure.
-\item \textbf{Populate Section 4.6:}  Run temporal consistency experiments on
-      all ablation variants.  Produce a table with flicker score,
-      perturbation stability, and mask IoU per method.
-\item \textbf{DCRF/NCP ablation at higher $\sigma_0$:}  Repeat the
-      Table~1 ablation at $\sigma_0 \in \{16, 24, 32\}$ to find a regime
-      where DCRF and NCP make a measurable difference.
-\item \textbf{Expand attacker suite:}  Add at least one non-ResNet backbone
-      and one dedicated VPR model.
-\item \textbf{Scale benchmark (if feasible):}  Increase gallery size or paired
-      locations until Top-10 is no longer trivially saturated.
-\item \textbf{Blur/mosaic parameter sweep:}  Sweep blur radius and mosaic
-      block size to build comparable frontiers.
-\item \textbf{Downstream task on new benchmark (optional but recommended):}
-      Run a fixed detector or segmenter on sanitized frames and report mAP
-      or mIoU alongside privacy metrics.
+    \item \textbf{Must fix before submission:} fill Table~6, remove all placeholders, reduce overclaiming in abstract/conclusion.
+    \item \textbf{High priority:} add stronger VPR attackers and larger gallery evaluation.
+    \item \textbf{High priority:} reposition the contribution so that support estimation is central and PPEDCRF is framed as a controllable operating-point method.
+    \item \textbf{High priority:} add at least one more realistic public-data retrieval experiment.
+    \item \textbf{Medium priority:} unify privacy and utility evaluation on more closely matched data.
+    \item \textbf{Medium priority:} improve qualitative figures and temporal-consistency evidence.
+    \item \textbf{Medium priority:} justify DP-style calibration more concretely through ablation or theory-light comparison.
 \end{enumerate}
 
-\subsubsection*{B. Must-Strengthen Manuscript}
-\begin{enumerate}
-\item Expand Related Work to $\geq$40 references with comparative positioning.
-\item Remove all dead bib entries.
-\item Switch appendix to \texttt{acmart} format.
-\item Remove unreferenced figure files from \texttt{paper/figs/}.
-\item If DCRF/NCP remain weak in ablation, adjust the title and contributions
-      to match the actual evidence (e.g.\ emphasize spatial-support
-      localization as the primary contribution rather than DCRF specifically).
-\item Add blur/mosaic context to the abstract and conclusion next to the
-      6~dB claim.
-\item Either integrate or condense the legacy experiment section.
-\end{enumerate}
+\subsection*{Bottom Line}
+The manuscript has improved substantially in clarity, honesty, and implementation consistency. The topic is appropriate for ACM TOMM, and the paper now has a coherent narrative. However, the present empirical evidence still supports a narrower claim than the paper currently wants to make. The strongest result at this stage is that \textbf{accurate, temporally stable support localization is valuable for location-privacy protection}, while the evidence that \textbf{PPEDCRF as a full method} is the best overall solution remains insufficient. A strong revision could make this a credible TOMM submission, but the current version still needs major work.
 
-\subsubsection*{C. Writing Polish}
-\begin{enumerate}
-\item Front-load the abstract with the problem--solution sentence.
-\item Tighten Sections 4.5 and 4.6 once numbers are available---remove the
-      current qualitative prose that functions as a placeholder.
-\item Ensure every table and figure is referenced in the text within two
-      paragraphs of its float position.
-\item Final proofread for consistent notation ($\sigma_0$ vs.\ $\sigma$,
-      PSNR units, $\pm$ formatting).
-\end{enumerate}
 
-%%% ---------------------------------------------------------------
-\section*{Actionable Revision Plan (Priority Order)}
 
+\section*{Summary of Revision Status}
+\textbf{Current status: not yet ready for ACM TOMM submission.}
+
+\textbf{Main reason:} the paper's idea is relevant and the writing has improved, but the evidence base is still too narrow and partially unfinished for a multimedia journal at this level.
+
+\textbf{Three biggest blockers:}
 \begin{enumerate}
-\item \textbf{[Experiment]} Populate Sections 4.5 and 4.6 with concrete
-      numbers, tables, and at least one new figure.
-\item \textbf{[Experiment]} Repeat Table~1 ablation at $\sigma_0=16,24,32$;
-      show DCRF/NCP contribution.
-\item \textbf{[Experiment]} Sweep blur/mosaic parameters and plot unified
-      frontier.
-\item \textbf{[Experiment]} Add at least one non-ResNet attacker backbone.
-\item \textbf{[Writing]} Expand Related Work to 40+ references.
-\item \textbf{[Writing]} Clean ref.bib and figs/ of unused entries and
-      files.
-\item \textbf{[Formatting]} Convert appendix to acmart.
-\item \textbf{[Writing]} Update abstract, contributions, and conclusion to
-      reflect new evidence.
-\item \textbf{[Writing]} Condense or relocate legacy experiment section.
-\item \textbf{[Optional experiment]} Add downstream task evaluation on
-      sanitized benchmark frames.
+    \item Table 6 still contains TBD results.
+    \item The benchmark is too small/proxy-like to support broad claims.
+    \item Stronger privacy is achieved by support-aware blur/mosaic, which means the paper must re-center its novelty claim.
 \end{enumerate}
