@@ -13,7 +13,7 @@ import torchvision
 
 @dataclass
 class RetrievalConfig:
-    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "vgg16" | "vit_b_16" | "yolox_s" | "yolov11n" | ...
+    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "vgg16" | "vit_b_16" | "clip_vitl14" | "dinov2_vitb14" | "yolox_s" | "yolov11n" | ...
     device: str = "cuda"
     normalize: bool = True       # L2 normalize embeddings
     input_size: int = 224        # embedding network input resolution
@@ -49,6 +49,35 @@ class ImageEmbedder(nn.Module):
             self.out_dim = 768
             self._is_vit = True
             return
+        if backbone.startswith("clip_"):
+            import os
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            from transformers import CLIPModel
+            tag = backbone.replace("clip_", "")
+            model_map = {
+                "vitl14": "openai/clip-vit-large-patch14",
+                "vitb32": "openai/clip-vit-base-patch32",
+                "vitb16": "openai/clip-vit-base-patch16",
+            }
+            if tag not in model_map:
+                raise ValueError(f"Unknown CLIP variant '{tag}'. Supported: {list(model_map)}")
+            hf_id = model_map[tag]
+            clip_model = CLIPModel.from_pretrained(hf_id)
+            clip_model.eval()
+            self.clip_vision = clip_model.vision_model
+            self.clip_proj = clip_model.visual_projection
+            self.out_dim = clip_model.config.projection_dim
+            self._is_clip = True
+            return
+        if backbone.startswith("dinov2_"):
+            # e.g. dinov2_vitb14, dinov2_vitl14
+            tag = backbone  # torch.hub name is used directly
+            self.dino = torch.hub.load("facebookresearch/dinov2", tag)
+            self.dino.eval()
+            self.out_dim = self.dino.embed_dim
+            self._is_dino = True
+            return
         else:
             m = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
             dim = 512
@@ -59,6 +88,13 @@ class ImageEmbedder(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (B,3,H,W) in [0,1] recommended
+        if getattr(self, "_is_clip", False):
+            vis_out = self.clip_vision(pixel_values=x)
+            return self.clip_proj(vis_out.pooler_output)
+
+        if getattr(self, "_is_dino", False):
+            return self.dino(x)
+
         if getattr(self, "_is_vit", False):
             # Follow torchvision ViT forward path up to pre-logits features.
             n = x.shape[0]

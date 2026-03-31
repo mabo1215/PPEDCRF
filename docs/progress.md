@@ -112,44 +112,67 @@
 
 ---
 
-## 当前状态（2026-03-31）
+## 本轮修订新增（第 37–44 条）
+
+37. 已运行 v4 综合 benchmark 并将全部主文表格更新至 v4 数据。
+修改说明：使用 `run_controlled_retrieval_benchmark.py` 完成包含 ResNet18/ResNet50/VGG16 三骨干、3 seeds、gallery 12/24/48、sigma sweep 8/16/24/32、matched 30/33/36 dB 的完整 v4 benchmark。所有表格（tab:ablation、tab:robustness、tab:matched、tab:temporal）及正文叙述均替换为 v4 数值，PPEDCRF Top-1 从 0.306 更新为 0.333（v4 重跑值）。
+
+38. 已新增 sigma sweep 消融表（tab:sigma_sweep）。
+修改说明：在 Section 3.3 与 Section 3.4 之间新增 Table，展示 σ₀∈{8,16,24,32} 下 PPEDCRF / w/o temporal / w/o NCP 的 Top-1、Top-5、PSNR、SSIM。数据来源为 `src/outputs/controlled_retrieval_v4/ablation_sigma_sweep.csv`。
+
+39. 已将 matched-operating-point 分析扩展至 3 个 PSNR 目标。
+修改说明：Table~5（tab:matched）从原先 2 个面板扩展为 3 个面板（Panel A ~36 dB, Panel B ~33 dB, Panel C ~30 dB），数据来源为 v4 matched_operating_point.csv。对应叙述同步更新。
+
+40. 已替换定性检查图为 6 面板期刊级图形。
+修改说明：新增 `src/scripts/generate_qualitative_figure.py`，生成包含原始帧、DCRF 热力图叠加、噪声保护帧、差异图、模糊结果、放大裁剪的 2×3 面板图，输出为 `paper/figs/qualitative_figure.pdf`，并在正文 fig:sidebyside 中替换旧 4 面板引用。
+
+41. 已集成 CLIP ViT-B/32 和 CLIP ViT-L/14 作为攻击骨干。
+修改说明：在 `src/eval/retrieval_attack.py` 中将 CLIP 加载后端从 `open_clip` 切换为 `transformers.CLIPModel`（解决公司代理 SSL 证书问题），支持离线模式加载本地缓存的 `openai/clip-vit-base-patch32` 和 `openai/clip-vit-large-patch14`。完成 CLIP benchmark（`src/outputs/controlled_retrieval_clip/`），生成全部 10 个输出文件。
+
+42. 已将 CLIP 结果集成到论文 Table 4（tab:robustness）和正文叙述中。
+修改说明：Table 4 新增 CLIP ViT-B/32 和 CLIP ViT-L/14 各 3 行（gallery 12/24/48）。关键发现：CLIP ViT-B/32 下 PPEDCRF 仍有效（Δ=-0.083 at g48）；CLIP ViT-L/14 暴露失效模式（PPEDCRF Top-1=0.222 > raw 0.167, Δ=+0.056 at g24/g48）。摘要、结论、robustness 分析段落、图注均已更新反映 CLIP 结果。
+
+43. 已重新生成合并 5 骨干的 robustness 图。
+修改说明：新增 `src/scripts/regenerate_combined_figures.py`，合并 v4 和 CLIP 的 robustness_summary.csv 数据，生成包含 ResNet18/ResNet50/VGG16/CLIP ViT-B/32/CLIP ViT-L/14 五个面板的 `paper/figs/retrieval_robustness_topk.jpg`，CLIP ViT-L/14 面板清晰展示失效模式。
+
+44. 已新增 CLIP BibTeX 条目并通过编译验证。
+修改说明：`paper/ref.bib` 新增 `radford2021learning`（ICML 2021）。论文编译 0 LaTeX 错误、0 TBD 残留，BibTeX warning 从 4 增至 5（新增 CLIP 条目的 address 字段已修复为 "Virtual"）。main.pdf 4.3 MB, appendix.pdf 737 KB。
+
+---
+
+## 当前状态（2026-03-31 更新 2）
+
+**已完成项：**
+- 全部 44 项修改已完成
+- 论文编译通过（0 错误）
+- 5 个攻击骨干的完整 robustness 分析
+- CLIP ViT-L/14 失效模式已记录并集成到论文
 
 **阻塞项（无法在本轮完全完成）：**
-- 已完成 `vgg16` 非 ResNet 攻击器与 `220` gallery 扩展重跑，但尚未集成 NetVLAD / CosPlace / MixVPR 等 VPR 专用攻击器（需额外模型权重与适配代码）。
-- 已完成基于本地 COCO + Digica 的大图库干扰扩展，但尚未完成 50–100 paired locations 的更大规模监控场景重建。
+- NetVLAD / CosPlace / MixVPR 等 VPR 专用攻击器：需外部模型权重下载，当前网络环境（公司代理 SSL 证书问题）阻止 HuggingFace Hub 直接下载。已通过本地缓存解决 CLIP，但 VPR 模型无本地缓存。
+- 50–100 paired locations 大规模重建：当前仍为 12 对 paired locations，受限于 monitoring 数据源规模。
 
 **下一步评审循环建议：**
-当前 revision_suggestions.tex 中剩余 high-priority 要求主要集中在 M1（更强 VPR 攻击器）和 M2（更大 paired-scene 规模）。建议下一轮优先：
-1) 在 `src/eval/` 增加 NetVLAD/CosPlace 适配器；
-2) 扩展 monitoring 场景池后将 `num_queries` 提升到 50+；
-3) 用现有已修复脚本直接重跑并更新主文表格与结论。
+当前 revision_suggestions.tex 剩余 high-priority 要求主要集中在：
+1) M2（更大 paired-scene 规模）—— 需扩大 monitoring 场景池
+2) M3（VPR 专用攻击器）—— 已部分被 CLIP 结果覆盖，但 NetVLAD/CosPlace/MixVPR 仍需独立适配
+3) Comment 8（utility story 在 privacy benchmark 同一数据上的下游任务评估）—— 需额外实验设计
 
 # 未修改或部分修改
 
-1. 跨攻击骨干网络稳健性：已新增非 ResNet 攻击骨干，但仍未覆盖 VPR 专用模型。
-修改说明：在 `src/eval/retrieval_attack.py` 中新增 `vgg16` 与 `vit_b_16` 支持，并在 `run_controlled_retrieval_benchmark.py` 实跑 `--backbones resnet18 resnet50 vgg16`。`src/outputs/controlled_retrieval_v3lite/robustness_summary.csv` 已包含 vgg16 在 gallery 48/220 下的结果。
-未全部修改原因：评审意见 M4 更偏向 NetVLAD/CosPlace/MixVPR 等 VPR 专用攻击器，当前仓库尚未集成这些模型与权重。
-后续准备如何修改：在 `src/eval/` 新增 NetVLAD/CosPlace 适配器后，复用同一 benchmark 管线重跑 robustness 表。
+1. 跨攻击骨干网络稳健性：已完成 5 骨干评估（ResNet18/50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14）。
+修改说明：本轮新增 CLIP ViT-B/32 和 CLIP ViT-L/14 攻击骨干。CLIP ViT-L/14 暴露了失效模式（σ₀=8 时 PPEDCRF 无法降低 Top-1），已集成到论文。
+未全部修改原因：NetVLAD/CosPlace/MixVPR 等 VPR 专用模型需额外权重下载，受网络限制阻塞。
+后续准备如何修改：在可访问 HuggingFace 的环境中下载 VPR 模型权重后重跑。
 
-2. DCRF/NCP 高 sigma 消融：已从“仅参数支持”升级为“可直接导出结果”。
-修改说明：修复并扩展 `run_controlled_retrieval_benchmark.py`，新增真实执行的 `ablation_sigma_sweep.csv` 导出；`src/outputs/controlled_retrieval_v3lite/ablation_sigma_sweep.csv` 已包含 σ={8,16,24,32} 下 PPEDCRF / w/o temporal / w/o NCP 的 Top-k、PSNR、SSIM。
-未全部修改原因：主文 `paper/main.tex` 尚未把该新 CSV 的高 sigma 消融表纳入正文展示。
-后续准备如何修改：将 `ablation_sigma_sweep.csv` 汇总为新表（建议放 Section 4.6 或附录），并更新对应分析段落。
+2. DCRF/NCP 高 sigma 消融：**已完成**，新增 tab:sigma_sweep 表。
+修改说明：v4 benchmark 运行 σ={8,16,24,32} 消融，结果作为独立表格纳入主文。
+3. Matched-operating-point：**已完成** 30/33/36 dB 三目标分析。
+修改说明：v4 benchmark 运行 `--matched_psnr_targets 30 33 36`，Table 5 已扩展为 Panel A/B/C。
 
-3. Matched-operating-point：已补细粒度搜索开关并跑通一次。
-修改说明：新增 `--matched_sigma_min/--matched_sigma_max/--matched_sigma_step` 三个参数；`src/outputs/controlled_retrieval_v3lite/matched_operating_point.csv` 已由新搜索逻辑生成（本轮为 target=30 的快速重跑配置）。
-未全部修改原因：为控制时长，本轮大规模重跑仅保留了 target=30，未完整覆盖 30/33/36 的重跑版本。
-后续准备如何修改：使用相同脚本运行 `--matched_psnr_targets 30 33 36 --matched_sigma_step 1.0` 生成最终提交版匹配结果并替换正文数字。
+4. Benchmark 规模：维持 12 paired locations + gallery 48。
+未全部修改原因：`synthetic_monitoring/images` 仅含 720 张图，不足以构建 50+ paired locations。
 
-4. Benchmark 规模：已完成 200+ gallery 实跑。
-修改说明：已在 `C:\work\datasets\Coco` 和 `C:\work\datasets\digica\digica_v4.3` 上完成扩展运行，`src/outputs/controlled_retrieval_v3lite/selection.json` 显示 `max_gallery=220`、`external_distractors_loaded=220`。同时修复了“监控序列 distractor 不足时直接报错”的逻辑，改为允许外部图库补齐。
-未全部修改原因：当前监控源仅 12 对 paired locations，尚未达到评审建议的 50–100 对规模。
-后续准备如何修改：扩大 monitoring 场景池并提高 `num_queries`，再运行 220+ gallery 配置。
+5. Blur/mosaic 参数扫描：数据已生成但未在主文显式展示为图表。
 
-5. Blur/mosaic 参数扫描：已实跑并导出。
-修改说明：`src/outputs/controlled_retrieval_v3lite/baseline_sweep.csv` 已包含 blur kernel 与 mosaic block 扫描结果；同时修复了该模块的 CSV 字段错误（`R@k` 与 `R@k_mean/std` 不匹配）导致的运行失败问题。
-未全部修改原因：主文尚未将扫描曲线或最优点显式写入图表。
-后续准备如何修改：从 `baseline_sweep.csv` 选取最佳 operating points，补充到 Section 4.5 的图注与对比讨论。
-
-6. BibTeX 字段：维持当前状态（剩余 warning 属可接受范围）。
-修改说明：本轮未新增文献警告，现有剩余 warning 仍主要来自 ICLR/ArXiv 的格式特性，不影响主结论。
+6. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
