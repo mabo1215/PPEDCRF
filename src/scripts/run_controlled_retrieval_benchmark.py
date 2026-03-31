@@ -88,6 +88,12 @@ def parse_args() -> argparse.Namespace:
                         help="Sigma values for the full ablation table (DCRF/NCP comparison)")
     parser.add_argument("--matched_psnr_targets", type=float, nargs="+", default=[30.0, 33.0, 36.0],
                         help="PSNR targets for matched-utility comparison (dB)")
+    parser.add_argument("--matched_sigma_min", type=float, default=2.0,
+                        help="Minimum sigma in matched-PSNR search.")
+    parser.add_argument("--matched_sigma_max", type=float, default=50.0,
+                        help="Maximum sigma in matched-PSNR search (exclusive).")
+    parser.add_argument("--matched_sigma_step", type=float, default=1.0,
+                        help="Step size in matched-PSNR sigma search (smaller is finer).")
     parser.add_argument("--blur_kernel_sizes", type=int, nargs="+", default=[5, 11, 21, 31],
                         help="Kernel sizes for blur parameter sweep (m7)")
     parser.add_argument("--mosaic_block_sizes", type=int, nargs="+", default=[4, 8, 12, 20],
@@ -442,15 +448,19 @@ def discover_paired_locations(
         remaining = [clip_id for clip_id in ordered_ids[pair_pool_size:] if clip_id not in used and clip_id not in existing]
         distractor_ids.extend(remaining[: distractor_needed - len(distractor_ids)])
 
+    # Do not fail hard here. External distractor pools (COCO/Digica) are merged
+    # later in main() and can fill large-gallery requirements.
     if len(distractor_ids) < distractor_needed:
-        raise RuntimeError(
-            f"Needed {distractor_needed} distractor sequences, but only found {len(distractor_ids)}."
+        print(
+            "[WARN] monitoring-only distractors are insufficient: "
+            f"needed {distractor_needed}, found {len(distractor_ids)}. "
+            "Will rely on external distractor pools if provided."
         )
 
     return pairs, distractor_ids, selected_hard_distractors
 
 
-def collect_external_image_paths(root: str) -> List[Path]:
+def collect_external_image_paths(root: str, max_items: int | None = None) -> List[Path]:
     root_path = Path(root)
     if not root_path.is_dir():
         return []
@@ -460,6 +470,8 @@ def collect_external_image_paths(root: str) -> List[Path]:
     for path in root_path.rglob("*"):
         if path.is_file() and path.suffix.lower() in exts:
             image_paths.append(path)
+            if max_items is not None and len(image_paths) >= int(max_items):
+                break
     return sorted(image_paths)
 
 
@@ -519,8 +531,11 @@ def main() -> None:
     distractor_ids = [f"dist_{idx:03d}" for idx in range(len(distractor_clip_ids))]
     distractor_label_to_clip = {label: clip_id for label, clip_id in zip(distractor_ids, distractor_clip_ids)}
 
-    coco_image_paths = collect_external_image_paths(args.coco_root)
-    digica_image_paths = collect_external_image_paths(args.digica_root)
+    # Early-stop scanning to avoid traversing the full external dataset trees.
+    # We only need enough external distractors for max_external_distractors.
+    half_pool = max(1, int(args.max_external_distractors) // 2)
+    coco_image_paths = collect_external_image_paths(args.coco_root, max_items=half_pool)
+    digica_image_paths = collect_external_image_paths(args.digica_root, max_items=int(args.max_external_distractors))
     external_paths = coco_image_paths + digica_image_paths
     external_frames_by_id = build_external_distractor_frames(
         image_paths=external_paths,
@@ -695,6 +710,7 @@ def main() -> None:
     ablation_rows: List[dict] = []
     robustness_rows: List[dict] = []
     frontier_rows: List[dict] = []
+    ablation_sigma_rows: List[dict] = []
 
     default_gallery_size = max(args.gallery_sizes)
     default_backbone = args.backbones[0]
@@ -820,6 +836,77 @@ def main() -> None:
                 }
             )
 
+    # ---- High-sigma ablation for DCRF/NCP variants ----
+    # Evaluates PPEDCRF, w/o temporal, and w/o NCP across user-specified sigmas.
+    for sigma in args.ablation_sigmas:
+        for variant in ("ppedcrf", "no_temporal", "no_ncp"):
+            retrieval_runs = []
+            psnr_runs = []
+            ssim_runs = []
+            for seed in args.seeds:
+                cfg_sigma = clone_cfg(cfg)
+                cfg_sigma["ppedcrf"]["noise"] = dict(cfg_sigma["ppedcrf"]["noise"])
+                cfg_sigma["ppedcrf"]["noise"]["seed"] = int(seed)
+                cfg_sigma["ppedcrf"]["noise"]["sigma"] = float(sigma)
+
+                protected_frames = []
+                psnr_scores = []
+                ssim_scores = []
+                for clip_id in query_ids:
+                    protected_clip, _ = protect_clip_variant(
+                        query_clips[clip_id],
+                        sensnet,
+                        cfg_sigma,
+                        device=device,
+                        variant=variant,
+                        seed=int(seed),
+                    )
+                    protected_frame = select_eval_frame(protected_clip)
+                    original_frame = raw_query_images[clip_id]
+                    protected_frames.append(protected_frame)
+                    psnr_scores.append(psnr_torch(original_frame, protected_frame))
+                    ssim_scores.append(
+                        ssim_grayscale_np(
+                            tensor_to_uint8_image(original_frame),
+                            tensor_to_uint8_image(protected_frame),
+                        )
+                    )
+
+                protected_tensor = torch.stack(protected_frames, dim=0)
+                rcfg = RetrievalConfig(
+                    backbone=default_backbone,
+                    device=str(device),
+                    normalize=True,
+                    input_size=224,
+                    topk=(1, 5, 10),
+                )
+                embedder = make_default_embedder(rcfg).eval().to(device)
+                gallery_tensor, gallery_ids = build_gallery_tensor(
+                    gallery_frame_by_id=gallery_frames_by_id,
+                    query_ids=query_ids,
+                    distractor_ids=distractor_ids,
+                    gallery_size=default_gallery_size,
+                )
+                gallery_emb = build_gallery_embeddings(rcfg, embedder, gallery_tensor)
+                retrieval_runs.append(
+                    query_topk(rcfg, protected_tensor, list(query_ids), gallery_emb, gallery_ids, embedder)
+                )
+                psnr_runs.append(float(np.mean(psnr_scores)))
+                ssim_runs.append(float(np.mean(ssim_scores)))
+
+            ablation_sigma_rows.append(
+                {
+                    "variant": variant,
+                    "label": VARIANT_LABELS[variant],
+                    "sigma": float(sigma),
+                    **aggregate_metric_dict(retrieval_runs),
+                    "psnr_mean": float(np.mean(psnr_runs)),
+                    "psnr_std": float(np.std(psnr_runs, ddof=1)) if len(psnr_runs) > 1 else 0.0,
+                    "ssim_mean": float(np.mean(ssim_runs)),
+                    "ssim_std": float(np.std(ssim_runs, ddof=1)) if len(ssim_runs) > 1 else 0.0,
+                }
+            )
+
     # ---- Blur/mosaic parameter sweep (m7) ----
     # Sweep blur kernel sizes and mosaic block sizes to build comparable frontiers.
     baseline_sweep_rows: List[dict] = []
@@ -861,11 +948,19 @@ def main() -> None:
             gallery_size=default_gallery_size)
         ge_bk = build_gallery_embeddings(rcfg_bk, emb_bk, gt_bk)
         retr_bk = query_topk(rcfg_bk, prot_tensor_bk, list(query_ids), ge_bk, gids_bk, emb_bk)
+        retr_bk_agg = {
+            "R@1_mean": float(retr_bk.get("R@1", 0.0)),
+            "R@1_std": 0.0,
+            "R@5_mean": float(retr_bk.get("R@5", 0.0)),
+            "R@5_std": 0.0,
+            "R@10_mean": float(retr_bk.get("R@10", 0.0)),
+            "R@10_std": 0.0,
+        }
         row_bk = {
             "variant": "masked_blur",
             "label": f"blur (k={ks})",
             "param": ks,
-            **retr_bk,
+            **retr_bk_agg,
             "psnr_mean": float(np.mean(psnr_scores_bk)),
             "psnr_std": float(np.std(psnr_scores_bk, ddof=1)) if len(psnr_scores_bk) > 1 else 0.0,
             "ssim_mean": float(np.mean(ssim_scores_bk)),
@@ -876,7 +971,7 @@ def main() -> None:
             "variant": "masked_blur",
             "label": f"blur (k={ks})",
             "sigma": float(ks),
-            **retr_bk,
+            **retr_bk_agg,
             "psnr_mean": row_bk["psnr_mean"],
             "psnr_std": row_bk["psnr_std"],
             "ssim_mean": row_bk["ssim_mean"],
@@ -921,11 +1016,19 @@ def main() -> None:
             gallery_size=default_gallery_size)
         ge_ms = build_gallery_embeddings(rcfg_ms, emb_ms, gt_ms)
         retr_ms = query_topk(rcfg_ms, prot_tensor_ms, list(query_ids), ge_ms, gids_ms, emb_ms)
+        retr_ms_agg = {
+            "R@1_mean": float(retr_ms.get("R@1", 0.0)),
+            "R@1_std": 0.0,
+            "R@5_mean": float(retr_ms.get("R@5", 0.0)),
+            "R@5_std": 0.0,
+            "R@10_mean": float(retr_ms.get("R@10", 0.0)),
+            "R@10_std": 0.0,
+        }
         row_ms = {
             "variant": "masked_mosaic",
             "label": f"mosaic (b={bs})",
             "param": bs,
-            **retr_ms,
+            **retr_ms_agg,
             "psnr_mean": float(np.mean(psnr_scores_ms)),
             "psnr_std": float(np.std(psnr_scores_ms, ddof=1)) if len(psnr_scores_ms) > 1 else 0.0,
             "ssim_mean": float(np.mean(ssim_scores_ms)),
@@ -936,7 +1039,7 @@ def main() -> None:
             "variant": "masked_mosaic",
             "label": f"mosaic (b={bs})",
             "sigma": float(bs),
-            **retr_ms,
+            **retr_ms_agg,
             "psnr_mean": row_ms["psnr_mean"],
             "psnr_std": row_ms["psnr_std"],
             "ssim_mean": row_ms["ssim_mean"],
@@ -948,7 +1051,7 @@ def main() -> None:
     # noise closest, then compare their retrieval accuracy at that operating point.
     matched_rows: List[dict] = []
     matched_variants = ["ppedcrf", "full_frame", "masked_blur", "masked_mosaic"]
-    search_sigmas = np.arange(2.0, 50.0, 2.0).tolist()
+    search_sigmas = np.arange(args.matched_sigma_min, args.matched_sigma_max, args.matched_sigma_step).tolist()
     for target_psnr in args.matched_psnr_targets:
         for variant in matched_variants:
             # Deterministic baselines: blur/mosaic have fixed PSNR regardless of sigma
@@ -1162,6 +1265,17 @@ def main() -> None:
             baseline_sweep_rows,
             fieldnames=[
                 "variant", "label", "param",
+                "R@1_mean", "R@1_std", "R@5_mean", "R@5_std",
+                "R@10_mean", "R@10_std",
+                "psnr_mean", "psnr_std", "ssim_mean", "ssim_std",
+            ],
+        )
+    if ablation_sigma_rows:
+        save_csv(
+            os.path.join(args.output_dir, "ablation_sigma_sweep.csv"),
+            ablation_sigma_rows,
+            fieldnames=[
+                "variant", "label", "sigma",
                 "R@1_mean", "R@1_std", "R@5_mean", "R@5_std",
                 "R@10_mean", "R@10_std",
                 "psnr_mean", "psnr_std", "ssim_mean", "ssim_std",

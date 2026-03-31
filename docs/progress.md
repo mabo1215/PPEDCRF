@@ -114,39 +114,42 @@
 
 ## 当前状态（2026-03-31）
 
-**阻塞项（无法在本轮完成）：**
-- 未添加 NetVLAD / CosPlace / MixVPR 强攻击者评估（需要外部 VPR 模型权重与对应数据）
-- 未添加大规模公开数据集（Pittsburgh250k、Tokyo247 等）的 retrieval 实验（需要外部数据集访问）
+**阻塞项（无法在本轮完全完成）：**
+- 已完成 `vgg16` 非 ResNet 攻击器与 `220` gallery 扩展重跑，但尚未集成 NetVLAD / CosPlace / MixVPR 等 VPR 专用攻击器（需额外模型权重与适配代码）。
+- 已完成基于本地 COCO + Digica 的大图库干扰扩展，但尚未完成 50–100 paired locations 的更大规模监控场景重建。
 
 **下一步评审循环建议：**
-当前 revision_suggestions.tex 中仍有若干 high-priority 要求（M1 更强攻击者、M2 更大规模 benchmark）属于外部资源阻塞项。建议在获取相关模型权重与数据集授权后，在 `src/eval/` 中新增 VPR 攻击器模块（NetVLAD backbone），重新运行 `run_controlled_retrieval_benchmark.py`，并更新正文 Table 3 与对应分析段落。
+当前 revision_suggestions.tex 中剩余 high-priority 要求主要集中在 M1（更强 VPR 攻击器）和 M2（更大 paired-scene 规模）。建议下一轮优先：
+1) 在 `src/eval/` 增加 NetVLAD/CosPlace 适配器；
+2) 扩展 monitoring 场景池后将 `num_queries` 提升到 50+；
+3) 用现有已修复脚本直接重跑并更新主文表格与结论。
 
 # 未修改或部分修改
 
-1. 跨攻击骨干网络的隐私稳健性仅部分补强。
-修改说明：已加入 ResNet18 与 ResNet50 的 attacker-sensitivity 实验。
-未全部修改原因：评审意见 M4 要求新增至少一个非 ResNet 架构，当前缺少可用的 SensNet checkpoint（`src/outputs/sensnet_final.pt` 不存在）导致扩展攻击实验无法直接运行。
-后续准备如何修改：补齐 checkpoint 后在当前 benchmark 上增加 VGG16、ViT 或 VPR 专用模型攻击器。
+1. 跨攻击骨干网络稳健性：已新增非 ResNet 攻击骨干，但仍未覆盖 VPR 专用模型。
+修改说明：在 `src/eval/retrieval_attack.py` 中新增 `vgg16` 与 `vit_b_16` 支持，并在 `run_controlled_retrieval_benchmark.py` 实跑 `--backbones resnet18 resnet50 vgg16`。`src/outputs/controlled_retrieval_v3lite/robustness_summary.csv` 已包含 vgg16 在 gallery 48/220 下的结果。
+未全部修改原因：评审意见 M4 更偏向 NetVLAD/CosPlace/MixVPR 等 VPR 专用攻击器，当前仓库尚未集成这些模型与权重。
+后续准备如何修改：在 `src/eval/` 新增 NetVLAD/CosPlace 适配器后，复用同一 benchmark 管线重跑 robustness 表。
 
-2. DCRF 与 NCP 的高 sigma 消融和 temporal consistency 具体数值待实验。
-修改说明：脚本已支持 `--ablation_sigmas 8 16 24 32`，正文 Section 4.6 的 Table (tab:temporal) 中 flicker 和 perturbation stability 标记为 TBD。
-未全部修改原因：原监控序列路径（`F:\work\datasets\monitoring\images`）仍不可用，且同样受 checkpoint 缺失限制。
-后续准备如何修改：补齐 checkpoint 后，用新增的 COCO（`C:\work\datasets\Coco`）与 Digica（`C:\work\datasets\digica\digica_v4.3`）扩展干扰图库，并在可用监控序列上运行高 sigma 与 temporal 指标实验替换 TBD。
+2. DCRF/NCP 高 sigma 消融：已从“仅参数支持”升级为“可直接导出结果”。
+修改说明：修复并扩展 `run_controlled_retrieval_benchmark.py`，新增真实执行的 `ablation_sigma_sweep.csv` 导出；`src/outputs/controlled_retrieval_v3lite/ablation_sigma_sweep.csv` 已包含 σ={8,16,24,32} 下 PPEDCRF / w/o temporal / w/o NCP 的 Top-k、PSNR、SSIM。
+未全部修改原因：主文 `paper/main.tex` 尚未把该新 CSV 的高 sigma 消融表纳入正文展示。
+后续准备如何修改：将 `ablation_sigma_sweep.csv` 汇总为新表（建议放 Section 4.6 或附录），并更新对应分析段落。
 
-3. Matched-operating-point Table (tab:matched) 已重构为 Equal-noise-level 与 Equal-utility 两面板。
-修改说明：修正了原表中 matched-utility 与 matched-privacy 行重复的问题，现在 Panel A 展示同 σ₀=8 下 PPEDCRF 与 Global 的 6 dB PSNR 差距，Panel B 展示 ~30 dB 匹配效用下各方法对比（含 blur/mosaic）。文本叙述已与表格数据一致。
-未全部修改原因：表格数值基于已有 frontier 数据点，尚需更细粒度 sigma 搜索确认。
-后续准备如何修改：运行 `--matched_psnr_targets 30 33 36` 后微调数值。
+3. Matched-operating-point：已补细粒度搜索开关并跑通一次。
+修改说明：新增 `--matched_sigma_min/--matched_sigma_max/--matched_sigma_step` 三个参数；`src/outputs/controlled_retrieval_v3lite/matched_operating_point.csv` 已由新搜索逻辑生成（本轮为 target=30 的快速重跑配置）。
+未全部修改原因：为控制时长，本轮大规模重跑仅保留了 target=30，未完整覆盖 30/33/36 的重跑版本。
+后续准备如何修改：使用相同脚本运行 `--matched_psnr_targets 30 33 36 --matched_sigma_step 1.0` 生成最终提交版匹配结果并替换正文数字。
 
-4. Benchmark 规模待扩大。
-修改说明：评审意见 M3 建议 50–100 对位置和 200+ gallery。
-未全部修改原因：当前脚本已接入本地 COCO 与 Digica 作为可选外部干扰图库来源，但尚未完成一次带新数据源的大规模重跑（仍受 checkpoint 缺失影响）。
-后续准备如何修改：在补齐 checkpoint 后以 `--max_gallery 200+`、`--coco_root`、`--digica_root` 运行并更新主文规模化结果。
+4. Benchmark 规模：已完成 200+ gallery 实跑。
+修改说明：已在 `C:\work\datasets\Coco` 和 `C:\work\datasets\digica\digica_v4.3` 上完成扩展运行，`src/outputs/controlled_retrieval_v3lite/selection.json` 显示 `max_gallery=220`、`external_distractors_loaded=220`。同时修复了“监控序列 distractor 不足时直接报错”的逻辑，改为允许外部图库补齐。
+未全部修改原因：当前监控源仅 12 对 paired locations，尚未达到评审建议的 50–100 对规模。
+后续准备如何修改：扩大 monitoring 场景池并提高 `num_queries`，再运行 220+ gallery 配置。
 
-5. Blur/mosaic 参数扫描已在代码中实现，待运行生成结果。
-修改说明：`run_controlled_retrieval_benchmark.py` 新增 `--blur_kernel_sizes` 和 `--mosaic_block_sizes` 参数，支持对 blur kernel size（默认 [5, 11, 21, 31]）和 mosaic block size（默认 [4, 8, 12, 20]）进行参数扫描，结果自动加入 frontier 图和 `baseline_sweep.csv`。正文 Section 4.5 已提及该扫描功能。
-未全部修改原因：同样受 checkpoint 缺失影响，无法运行。
-后续准备如何修改：补齐 checkpoint 后运行扫描并将 frontier 图更新到论文中。
+5. Blur/mosaic 参数扫描：已实跑并导出。
+修改说明：`src/outputs/controlled_retrieval_v3lite/baseline_sweep.csv` 已包含 blur kernel 与 mosaic block 扫描结果；同时修复了该模块的 CSV 字段错误（`R@k` 与 `R@k_mean/std` 不匹配）导致的运行失败问题。
+未全部修改原因：主文尚未将扫描曲线或最优点显式写入图表。
+后续准备如何修改：从 `baseline_sweep.csv` 选取最佳 operating points，补充到 Section 4.5 的图注与对比讨论。
 
-6. BibTeX 字段已大幅补全（warning 从 39 条降至 4 条）。
-修改说明：补全了 20+ 条 @inproceedings 条目的 publisher/address 字段，将 balle2018improving 从 arXiv 转为 ICML 正式引用，修复 dwork2014algorithmic 的 volume/number 冲突。剩余 4 条 warning 来自 ICLR 论文（无传统页码）和 arXiv 预印本，属正常范围。
+6. BibTeX 字段：维持当前状态（剩余 warning 属可接受范围）。
+修改说明：本轮未新增文献警告，现有剩余 warning 仍主要来自 ICLR/ArXiv 的格式特性，不影响主结论。

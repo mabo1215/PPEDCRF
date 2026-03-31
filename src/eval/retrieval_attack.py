@@ -13,7 +13,7 @@ import torchvision
 
 @dataclass
 class RetrievalConfig:
-    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "yolox_s" | "yolov11n" | "yolov11s" ...
+    backbone: str = "resnet18"   # "resnet18" | "resnet50" | "vgg16" | "vit_b_16" | "yolox_s" | "yolov11n" | ...
     device: str = "cuda"
     normalize: bool = True       # L2 normalize embeddings
     input_size: int = 224        # embedding network input resolution
@@ -30,18 +30,51 @@ class ImageEmbedder(nn.Module):
         if backbone == "resnet50":
             m = torchvision.models.resnet50(weights=torchvision.models.ResNet50_Weights.DEFAULT)
             dim = 2048
+            self.features = nn.Sequential(*list(m.children())[:-1])  # -> (B,dim,1,1)
+            self.out_dim = dim
+            self._pool_flatten = True
+            return
+        if backbone == "vgg16":
+            m = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.DEFAULT)
+            # Take penultimate classifier features before logits (4096-d)
+            self.features = nn.Sequential(m.features, m.avgpool)
+            self.proj = nn.Sequential(*list(m.classifier.children())[:-1])
+            self.out_dim = 4096
+            self._pool_flatten = False
+            return
+        if backbone == "vit_b_16":
+            m = torchvision.models.vit_b_16(weights=torchvision.models.ViT_B_16_Weights.DEFAULT)
+            # Keep encoder trunk and use class token output before classifier head.
+            self.vit = m
+            self.out_dim = 768
+            self._is_vit = True
+            return
         else:
             m = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
             dim = 512
-
-        # remove classifier
-        self.features = nn.Sequential(*list(m.children())[:-1])  # -> (B,dim,1,1)
-        self.out_dim = dim
+            self.features = nn.Sequential(*list(m.children())[:-1])  # -> (B,dim,1,1)
+            self.out_dim = dim
+            self._pool_flatten = True
+            return
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (B,3,H,W) in [0,1] recommended
-        f = self.features(x).flatten(1)  # (B,dim)
-        return f
+        if getattr(self, "_is_vit", False):
+            # Follow torchvision ViT forward path up to pre-logits features.
+            n = x.shape[0]
+            x = self.vit._process_input(x)
+            cls_token = self.vit.class_token.expand(n, -1, -1)
+            x = torch.cat([cls_token, x], dim=1)
+            x = self.vit.encoder(x)
+            return x[:, 0]
+
+        if getattr(self, "_pool_flatten", False):
+            return self.features(x).flatten(1)
+
+        # VGG16 branch
+        x = self.features(x)
+        x = torch.flatten(x, 1)
+        return self.proj(x)
 
 
 class YOLOXEmbedder(nn.Module):
