@@ -161,12 +161,15 @@
 51. 已执行“独立重评审重置”并完成新一轮最高优先级一致性修订。
 修改说明：已按命令重写 `docs/Revision_suggestions.tex`（全新评审，不继承旧轮次内容），并立即落实本轮最高优先级项：在 `paper/main.tex` 中修正 seed 口径（默认表格为多 seed、统一 8 骨干表为单 seed）、新增“跨表可比性边界”段落、为 Table~4 增加负/零/正 Δ 统计句（20/2/2）及单一输出目录溯源路径。该批修改已通过论文编译验证。
 
+52. 已补充 larger-pair 待确认声明并清理图表双格式工件。
+修改说明：按新评审 M4 要求，在 `paper/main.tex` 的 robustness 段与 Conclusion 显式加入“当前 unified 8 骨干表仍基于 12 paired locations，larger-pair confirmation 仍待后续周期”表述，进一步降低结论强度并避免超范围解读；同时删除 `paper/figs/` 中与主文无关的重复 PDF 图（`privacy_utility_tradeoff.pdf`、`retrieval_robustness_topk.pdf`、`baseline_param_sweep.pdf`），保留主文实际引用的 JPG 工件。
+
 ---
 
 ## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 已完成 51 项修订任务
+- 已完成 52 项修订任务
 - 论文编译通过（0 错误）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -177,6 +180,7 @@
 - 已完成摘要-主结果-结论的一致性收口与评审意见文本级修订
 - 已完成 8 骨干单次统一长跑复核并用单一输出目录更新主文 robustness
 - 已完成独立重评审重置并开始新一轮修订循环
+- 已在主文显式标注 larger-pair confirmation 待完成状态并完成图表工件单源化清理
 
 **阻塞项（无法在本轮完全完成）：**
 - 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
