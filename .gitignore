@@ -29,6 +29,9 @@ USAGE_codex.md
 .claude/*
 .github/agents/*
 
+*.pth
+*.ckpt
+
 # Generated / synthetic data
 src/data/driving/train/
 src/data/driving/val/

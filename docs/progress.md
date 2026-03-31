@@ -140,41 +140,40 @@
 44. 已新增 CLIP BibTeX 条目并通过编译验证。
 修改说明：`paper/ref.bib` 新增 `radford2021learning`（ICML 2021）。论文编译 0 LaTeX 错误、0 TBD 残留，BibTeX warning 从 4 增至 5（新增 CLIP 条目的 address 字段已修复为 "Virtual"）。main.pdf 4.3 MB, appendix.pdf 737 KB。
 
+45. 已继续下载 VPR 专用模型代码与权重，不再受“无法下载”阻塞。
+修改说明：已成功克隆 `CosPlace`、`MixVPR`、`Patch-NetVLAD` 到 `src/third_party/`；已成功下载 CosPlace 权重（`ResNet18_512_cosplace.pth`）、Patch-NetVLAD 预训练模型包和 MixVPR 权重（`resnet50_MixVPR_4096_channels(1024)_rows(4).ckpt`）到本地缓存目录。
+
+46. 已验证 50+ paired locations 的数据可行性，原“样本不足”结论已失效。
+修改说明：实测 `F:\work\datasets\monitoring\images` 含 3710 个可用 clip id，`images2` 含 2696 个可用 clip id；并通过 `discover_paired_locations` 探针成功构建 50 对 paired locations（`num_queries=50`, `max_gallery=100`）。COCO（`F:\work\datasets\coco`）已确认可用（约 128k 图像）并可继续作为外部 distractor 池。
+
 ---
 
-## 当前状态（2026-03-31 更新 2）
+## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 全部 44 项修改已完成
+- 已完成 46 项修订任务
 - 论文编译通过（0 错误）
 - 5 个攻击骨干的完整 robustness 分析
 - CLIP ViT-L/14 失效模式已记录并集成到论文
+- VPR 专用模型代码与权重已完成本地下载（CosPlace / MixVPR / Patch-NetVLAD）
+- 已确认本地数据可支持 50+ paired locations 构建
 
 **阻塞项（无法在本轮完全完成）：**
-- NetVLAD / CosPlace / MixVPR 等 VPR 专用攻击器：需外部模型权重下载，当前网络环境（公司代理 SSL 证书问题）阻止 HuggingFace Hub 直接下载。已通过本地缓存解决 CLIP，但 VPR 模型无本地缓存。
-- 50–100 paired locations 大规模重建：当前仍为 12 对 paired locations，受限于 monitoring 数据源规模。
+- VPR 专用攻击器尚未接入主 benchmark 主线：权重已下载完成，下一步是把 CosPlace/MixVPR/Patch-NetVLAD 的推理接口并入现有 `retrieval_attack.py` 和基准脚本并重跑主表。
 
 **下一步评审循环建议：**
 当前 revision_suggestions.tex 剩余 high-priority 要求主要集中在：
-1) M2（更大 paired-scene 规模）—— 需扩大 monitoring 场景池
-2) M3（VPR 专用攻击器）—— 已部分被 CLIP 结果覆盖，但 NetVLAD/CosPlace/MixVPR 仍需独立适配
+1) M2（更大 paired-scene 规模）—— 数据已具备（可构建 50+ pairs），需按新规模重跑并更新主文表格
+2) M3（VPR 专用攻击器）—— 下载阻塞已解除，需完成代码接入并重跑
 3) Comment 8（utility story 在 privacy benchmark 同一数据上的下游任务评估）—— 需额外实验设计
 
 # 未修改或部分修改
 
 1. 跨攻击骨干网络稳健性：已完成 5 骨干评估（ResNet18/50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14）。
 修改说明：本轮新增 CLIP ViT-B/32 和 CLIP ViT-L/14 攻击骨干。CLIP ViT-L/14 暴露了失效模式（σ₀=8 时 PPEDCRF 无法降低 Top-1），已集成到论文。
-未全部修改原因：NetVLAD/CosPlace/MixVPR 等 VPR 专用模型需额外权重下载，受网络限制阻塞。
-后续准备如何修改：在可访问 HuggingFace 的环境中下载 VPR 模型权重后重跑。
+未全部修改原因：CosPlace/MixVPR/Patch-NetVLAD 权重已下载，但尚未完成到主 benchmark 推理接口的集成与重跑。
+后续准备如何修改：在 `src/eval/retrieval_attack.py` 增加 VPR embedder 适配，扩展 `--backbones` 枚举后重跑主表（Table 4/robustness）。
 
-2. DCRF/NCP 高 sigma 消融：**已完成**，新增 tab:sigma_sweep 表。
-修改说明：v4 benchmark 运行 σ={8,16,24,32} 消融，结果作为独立表格纳入主文。
-3. Matched-operating-point：**已完成** 30/33/36 dB 三目标分析。
-修改说明：v4 benchmark 运行 `--matched_psnr_targets 30 33 36`，Table 5 已扩展为 Panel A/B/C。
+2. Blur/mosaic 参数扫描：数据已生成但未在主文显式展示为图表。
 
-4. Benchmark 规模：维持 12 paired locations + gallery 48。
-未全部修改原因：`synthetic_monitoring/images` 仅含 720 张图，不足以构建 50+ paired locations。
-
-5. Blur/mosaic 参数扫描：数据已生成但未在主文显式展示为图表。
-
-6. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
+3. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
