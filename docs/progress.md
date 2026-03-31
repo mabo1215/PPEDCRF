@@ -152,19 +152,27 @@
 48. 已将 blur/mosaic 参数扫描显式纳入主文图表与正文分析。
 修改说明：在 benchmark 脚本中新增 baseline sweep 作图并导出 `paper/figs/baseline_param_sweep.jpg`；`paper/main.tex` 新增 `fig:baseline_sweep` 及对应文字分析，明确展示不同 blur kernel 与 mosaic block 在 PSNR-R@1 平面上的位置，补足主文对 support-aware baseline 参数敏感性的可视化说明。
 
+49. 已按最新评审意见完成 final narrative polishing（摘要-结果-结论一致性收口）。
+修改说明：在 `paper/main.tex` 中集中修订 Abstract、Related Work、Contributions、attacker-sensitivity 解释、matched-operating-point 结论句、temporal interpretation 和 Conclusion。已将结论从旧的 CLIP 中心叙述改为与当前主表一致的六骨干叙述（ResNet18/ResNet50/VGG16/CosPlace/MixVPR/Patch-NetVLAD），显式写入 ResNet50/VGG16 的正向 Δ（不利迁移）并同步强调 dedicated VPR 的有界支持证据；同时将“less nominal sigma”改写为参数效率解释、弱化时序模块归因强度，并在 Fig.5 图注中明确“support localization 可迁移价值”定位。论文已重新编译通过。
+
+50. 已完成更大 paired-scene 设置下的 8 骨干单次统一重跑，并以单一输出目录回填主文 robustness。
+修改说明：运行 `run_controlled_retrieval_benchmark.py` 于 `src/outputs/controlled_retrieval_unified8_large/`，参数为统一 8 骨干（`resnet18/resnet50/vgg16/clip_vitb32/clip_vitl14/cosplace/mixvpr/patchnetvlad`）、`pair_pool_size=600`、`max_gallery=100`、`gallery_sizes=12/24/48`。基于该单一目录的 `robustness_summary.csv` 更新了 `paper/main.tex` 中 Table~4、robustness 图注/描述和结论攻击器范围叙述，消除了“基础 run + VPR 专项 run”的合并来源不一致问题。
+
 ---
 
 ## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 已完成 48 项修订任务
+- 已完成 50 项修订任务
 - 论文编译通过（0 错误）
-- 5 个攻击骨干的完整 robustness 分析
+- 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
 - VPR 专用模型代码与权重已完成本地下载（CosPlace / MixVPR / Patch-NetVLAD）
 - 已确认本地数据可支持 50+ paired locations 构建
 - 已完成 dedicated VPR 攻击器接入，并补齐 CosPlace / MixVPR / Patch-NetVLAD 三骨干结果
 - 已在主文显式加入 blur/mosaic 参数扫描图与对应说明
+- 已完成摘要-主结果-结论的一致性收口与评审意见文本级修订
+- 已完成 8 骨干单次统一长跑复核并用单一输出目录更新主文 robustness
 
 **阻塞项（无法在本轮完全完成）：**
 - 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
@@ -172,14 +180,8 @@
 **下一步评审循环建议：**
 当前 revision_suggestions.tex 剩余 high-priority 要求主要集中在：
 1) M2（更大 paired-scene 规模）—— 数据已具备（可构建 50+ pairs），需按新规模重跑并更新主文表格
-2) M3（更强 attacker 统一复核）—— 已完成 dedicated VPR 接入与三骨干重跑，但尚未完成包含全部 8 个骨干的单次统一长跑复核
-3) Comment 8（utility story 在 privacy benchmark 同一数据上的下游任务评估）—— 需额外实验设计
+2) Comment 8（utility story 在 privacy benchmark 同一数据上的下游任务评估）—— 需额外实验设计
 
 # 未修改或部分修改
 
-1. 跨攻击骨干网络稳健性：已完成 8 个攻击骨干中的分批重跑与主文集成，但尚未完成单次统一全骨干长跑复核。
-修改说明：当前 Table 4 与 robustness 图已结合基础五骨干结果和 dedicated VPR 三骨干结果，CosPlace/MixVPR/Patch-NetVLAD 已进入正文分析。
-未全部修改原因：包含全部 8 个骨干的单次统一 benchmark 长跑耗时较高，当前采用“基础 run + VPR 专项 run”合并复核的方式先完成论文更新。
-后续准备如何修改：在更大 paired-scene 设置下一次性重跑 `resnet18/resnet50/vgg16/clip_vitb32/clip_vitl14/cosplace/mixvpr/patchnetvlad`，并以单一输出目录重新核对主文全部 robustness 数值。
-
-2. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
+1. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
