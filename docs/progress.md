@@ -164,12 +164,15 @@
 52. 已补充 larger-pair 待确认声明并清理图表双格式工件。
 修改说明：按新评审 M4 要求，在 `paper/main.tex` 的 robustness 段与 Conclusion 显式加入“当前 unified 8 骨干表仍基于 12 paired locations，larger-pair confirmation 仍待后续周期”表述，进一步降低结论强度并避免超范围解读；同时删除 `paper/figs/` 中与主文无关的重复 PDF 图（`privacy_utility_tradeoff.pdf`、`retrieval_robustness_topk.pdf`、`baseline_param_sweep.pdf`），保留主文实际引用的 JPG 工件。
 
+53. 已将 robustness 图拆分为上下两行（每行 4 子图）并作为双子图插入主文。
+修改说明：更新 `src/scripts/regenerate_combined_figures.py` 以 unified 8 骨干输出为数据源，新增导出 `paper/figs/retrieval_robustness_topk_top.jpg` 与 `paper/figs/retrieval_robustness_topk_bottom.jpg`；`paper/main.tex` 中 `fig:robustness` 改为两个竖向 subfigure（上排：ResNet18/ResNet50/VGG16/CLIP ViT-B/32；下排：CLIP ViT-L/14/CosPlace/MixVPR/Patch-NetVLAD），并同步更新图注与 Description。编译验证通过。
+
 ---
 
 ## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 已完成 52 项修订任务
+- 已完成 53 项修订任务
 - 论文编译通过（0 错误）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -181,6 +184,7 @@
 - 已完成 8 骨干单次统一长跑复核并用单一输出目录更新主文 robustness
 - 已完成独立重评审重置并开始新一轮修订循环
 - 已在主文显式标注 larger-pair confirmation 待完成状态并完成图表工件单源化清理
+- 已完成 robustness 图 2×4 子图重排并插入主文
 
 **阻塞项（无法在本轮完全完成）：**
 - 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
