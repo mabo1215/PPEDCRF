@@ -1,4 +1,4 @@
-"""Regenerate paper figures combining v4 (classification backbones) and CLIP results."""
+"""Regenerate paper figures combining existing and newly added attacker results."""
 import csv
 import os
 import matplotlib
@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 PAPER_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "paper", "figs")
-V4_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "controlled_retrieval_v4")
-CLIP_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "controlled_retrieval_clip")
+BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "controlled_retrieval")
+VPR_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "controlled_retrieval_vpr_new3")
 
 
 def read_csv(path):
@@ -17,9 +17,9 @@ def read_csv(path):
 
 
 def merge_robustness():
-    """Merge robustness_summary from v4 and CLIP runs."""
-    rows = read_csv(os.path.join(V4_DIR, "robustness_summary.csv"))
-    rows += read_csv(os.path.join(CLIP_DIR, "robustness_summary.csv"))
+    """Merge robustness_summary from base run and new VPR run."""
+    rows = read_csv(os.path.join(BASE_DIR, "robustness_summary.csv"))
+    rows += read_csv(os.path.join(VPR_DIR, "robustness_summary.csv"))
     return rows
 
 
@@ -38,8 +38,9 @@ def plot_robustness(rows, outpath):
         "resnet18": "ResNet18",
         "resnet50": "ResNet50",
         "vgg16": "VGG16",
-        "clip_vitb32": "CLIP ViT-B/32",
-        "clip_vitl14": "CLIP ViT-L/14",
+        "cosplace": "CosPlace",
+        "mixvpr": "MixVPR",
+        "patchnetvlad": "Patch-NetVLAD",
     }
 
     fig, axes = plt.subplots(1, len(backbones), figsize=(3.2 * len(backbones), 3.0),
@@ -75,8 +76,8 @@ def plot_robustness(rows, outpath):
 
 
 def plot_frontier(outpath):
-    """Plot privacy-utility frontier from v4 frontier_summary."""
-    rows = read_csv(os.path.join(V4_DIR, "frontier_summary.csv"))
+    """Plot privacy-utility frontier from current base frontier_summary."""
+    rows = read_csv(os.path.join(BASE_DIR, "frontier_summary.csv"))
     fig, ax = plt.subplots(figsize=(5, 3.5))
 
     for variant, label, marker, color in [

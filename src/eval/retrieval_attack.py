@@ -4,6 +4,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import configparser
+import importlib
+import importlib.util
+import os
+import sys
 
 import torch
 import torch.nn as nn
@@ -18,6 +23,37 @@ class RetrievalConfig:
     normalize: bool = True       # L2 normalize embeddings
     input_size: int = 224        # embedding network input resolution
     topk: Tuple[int, ...] = (1, 5, 10)
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+THIRD_PARTY_ROOT = PROJECT_ROOT / "src" / "third_party"
+VPR_CACHE_ROOT = PROJECT_ROOT / "src" / "models" / "vpr_cache"
+
+
+def _add_sys_path(path: Path) -> None:
+    p = str(path.resolve())
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+
+def _load_module_from_file(module_name: str, file_path: Path):
+    spec = importlib.util.spec_from_file_location(module_name, str(file_path))
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Unable to create import spec for {file_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def default_input_size_for_backbone(backbone: str) -> int:
+    b = backbone.lower()
+    if b.startswith("mixvpr"):
+        # MixVPR reference checkpoint uses 320x320 in published demo.
+        return 320
+    if b.startswith("patchnetvlad") or b.startswith("netvlad"):
+        # Patch-NetVLAD configs use larger resolutions; 480 keeps memory moderate.
+        return 480
+    return 224
 
 
 class ImageEmbedder(nn.Module):
@@ -208,6 +244,143 @@ class YOLOv11Embedder(nn.Module):
         return self.backbone(x).flatten(1)
 
 
+class CosPlaceEmbedder(nn.Module):
+    """CosPlace embedder loaded from local VPR cache."""
+
+    def __init__(self, checkpoint: Optional[str] = None, backbone: str = "ResNet18", out_dim: int = 512):
+        super().__init__()
+        cos_root = THIRD_PARTY_ROOT / "CosPlace"
+        _add_sys_path(cos_root)
+
+        cos_module = importlib.import_module("cosplace_model.cosplace_network")
+        GeoLocalizationNet = getattr(cos_module, "GeoLocalizationNet")
+
+        self.model = GeoLocalizationNet(backbone, out_dim)
+
+        ckpt_path = Path(checkpoint) if checkpoint else (VPR_CACHE_ROOT / "cosplace" / "ResNet18_512_cosplace.pth")
+        if not ckpt_path.is_file():
+            raise FileNotFoundError(f"CosPlace checkpoint not found: {ckpt_path}")
+        state_dict = torch.load(str(ckpt_path), map_location="cpu")
+        self.model.load_state_dict(state_dict, strict=True)
+        self.model.eval()
+        self.out_dim = int(out_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.model(x)
+
+
+class MixVPREmbedder(nn.Module):
+    """MixVPR embedder using released checkpoint and repository modules."""
+
+    def __init__(self, checkpoint: Optional[str] = None):
+        super().__init__()
+        mix_root = THIRD_PARTY_ROOT / "MixVPR"
+        backbone_mod = _load_module_from_file(
+            "mixvpr_backbone_resnet",
+            mix_root / "models" / "backbones" / "resnet.py",
+        )
+        aggregator_mod = _load_module_from_file(
+            "mixvpr_aggregator_mixvpr",
+            mix_root / "models" / "aggregators" / "mixvpr.py",
+        )
+
+        self.backbone = backbone_mod.ResNet(
+            model_name="resnet50",
+            pretrained=True,
+            layers_to_freeze=1,
+            layers_to_crop=[4],
+        )
+        self.aggregator = aggregator_mod.MixVPR(
+            in_channels=1024,
+            in_h=20,
+            in_w=20,
+            out_channels=1024,
+            mix_depth=4,
+            mlp_ratio=1,
+            out_rows=4,
+        )
+
+        ckpt_path = (
+            Path(checkpoint)
+            if checkpoint
+            else (VPR_CACHE_ROOT / "mixvpr" / "resnet50_MixVPR_4096_channels(1024)_rows(4).ckpt")
+        )
+        if not ckpt_path.is_file():
+            raise FileNotFoundError(f"MixVPR checkpoint not found: {ckpt_path}")
+        state_dict = torch.load(str(ckpt_path), map_location="cpu")
+        self.load_state_dict(state_dict, strict=True)
+
+        self.out_dim = 4096
+        self.eval()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.backbone(x)
+        return self.aggregator(x)
+
+
+class PatchNetVLADEmbedder(nn.Module):
+    """Patch-NetVLAD global descriptor embedder with WPCA head."""
+
+    def __init__(self, config_path: Optional[str] = None):
+        super().__init__()
+        pn_root = THIRD_PARTY_ROOT / "Patch-NetVLAD"
+        _add_sys_path(pn_root)
+
+        from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
+
+        cfg_path = Path(config_path) if config_path else (pn_root / "patchnetvlad" / "configs" / "performance.ini")
+        if not cfg_path.is_file():
+            raise FileNotFoundError(f"Patch-NetVLAD config not found: {cfg_path}")
+
+        parser = configparser.ConfigParser()
+        parser.read(str(cfg_path))
+        gcfg = parser["global_params"]
+
+        resume_prefix = gcfg.get("resumepath", "./pretrained_models/mapillary_WPCA")
+        num_pcs = gcfg.get("num_pcs", "4096")
+        ckpt = Path(f"{resume_prefix}{num_pcs}.pth.tar") if num_pcs != "0" else Path(f"{resume_prefix}.pth.tar")
+        if not ckpt.is_file():
+            # Try resolving relative to Patch-NetVLAD repository root.
+            ckpt = pn_root / ckpt
+        if not ckpt.is_file():
+            # Official downloader stores files under patchnetvlad/pretrained_models.
+            ckpt = (
+                pn_root
+                / "patchnetvlad"
+                / "pretrained_models"
+                / Path(f"{resume_prefix}{num_pcs}.pth.tar").name
+            )
+        if not ckpt.is_file():
+            raise FileNotFoundError(f"Patch-NetVLAD checkpoint not found: {ckpt}")
+
+        checkpoint = torch.load(str(ckpt), map_location="cpu")
+
+        # Patch-NetVLAD configs omit num_clusters in some .ini files; recover from checkpoint.
+        num_clusters = int(checkpoint["state_dict"]["pool.centroids"].shape[0])
+        gcfg["num_clusters"] = str(num_clusters)
+
+        encoder_dim, encoder = get_backend()
+        use_pca = str(gcfg.get("num_pcs", "0")) != "0"
+        model = get_model(encoder, encoder_dim, gcfg, append_pca_layer=use_pca)
+        model.load_state_dict(checkpoint["state_dict"], strict=True)
+        model.eval()
+
+        self.model = model
+        self.get_pca_encoding = get_pca_encoding
+        self.out_dim = int(num_pcs) if num_pcs != "0" else int(encoder_dim * int(gcfg.get("num_clusters", "64")))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        image_encoding = self.model.encoder(x)
+        pooled = self.model.pool(image_encoding)
+        if isinstance(pooled, tuple):
+            _, global_vlad = pooled
+        else:
+            global_vlad = pooled
+        if hasattr(self.model, "WPCA"):
+            return self.get_pca_encoding(self.model, global_vlad)
+        return global_vlad
+
+
 def preprocess_for_embed(x: torch.Tensor, input_size: int = 224) -> torch.Tensor:
     """
     x: (B,3,H,W) float32, either [0,255] or [0,1]
@@ -290,6 +463,12 @@ def query_topk(
 
 def make_default_embedder(cfg: RetrievalConfig) -> nn.Module:
     b = cfg.backbone.lower()
+    if b.startswith("cosplace"):
+        return CosPlaceEmbedder()
+    if b.startswith("mixvpr"):
+        return MixVPREmbedder()
+    if b.startswith("patchnetvlad") or b.startswith("netvlad"):
+        return PatchNetVLADEmbedder()
     if b.startswith("yolov11") or (b.startswith("yolo11") and "cls" not in b):
         return YOLOv11Embedder(cfg.backbone)
     if b.startswith("yolox"):

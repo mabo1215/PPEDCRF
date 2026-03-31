@@ -25,7 +25,13 @@ sys.path.insert(0, SRC_ROOT)
 from datasets.monitoring_clip_dataset import MonitoringClipDataset, iter_clip_ids
 from datasets.driving_clip_dataset import _read_image, _resize_if_needed
 from eval.metrics import flicker_score, perturbation_stability, psnr_torch, ssim_grayscale_np
-from eval.retrieval_attack import RetrievalConfig, build_gallery_embeddings, make_default_embedder, query_topk
+from eval.retrieval_attack import (
+    RetrievalConfig,
+    build_gallery_embeddings,
+    default_input_size_for_backbone,
+    make_default_embedder,
+    query_topk,
+)
 from main import load_sensnet_checkpoint
 from models.dynamic_crf import DynamicCRF, DynamicCRFConfig
 from privacy.NCP import NCPAllocator, NCPConfig
@@ -43,6 +49,18 @@ VARIANT_LABELS = {
     "full_frame": "global Gaussian noise",
     "raw": "raw query",
 }
+
+
+SUPPORTED_ATTACK_BACKBONES = [
+    "resnet18",
+    "resnet50",
+    "vgg16",
+    "clip_vitb32",
+    "clip_vitl14",
+    "cosplace",
+    "mixvpr",
+    "patchnetvlad",
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -82,7 +100,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--resize_w", type=int, default=320)
     parser.add_argument("--min_frames", type=int, default=6)
     parser.add_argument("--seeds", type=int, nargs="+", default=[1234, 1235, 1236])
-    parser.add_argument("--backbones", type=str, nargs="+", default=["resnet18", "resnet50"])
+    parser.add_argument(
+        "--backbones",
+        type=str,
+        nargs="+",
+        default=["resnet18", "resnet50", "vgg16", "clip_vitb32", "clip_vitl14"],
+        choices=SUPPORTED_ATTACK_BACKBONES,
+        help="Attacker embedding backbones used in robustness evaluation.",
+    )
     parser.add_argument("--frontier_sigmas", type=float, nargs="+", default=[8.0, 16.0, 24.0])
     parser.add_argument("--ablation_sigmas", type=float, nargs="+", default=[8.0, 16.0, 24.0, 32.0],
                         help="Sigma values for the full ablation table (DCRF/NCP comparison)")
@@ -267,6 +292,14 @@ def save_json(path: str, payload: dict) -> None:
         json.dump(payload, handle, indent=2)
 
 
+def save_figure_dual(fig: plt.Figure, output_path: str) -> None:
+    """Save figure to requested path and mirrored .jpg/.pdf sibling."""
+    out = Path(output_path)
+    fig.savefig(str(out), dpi=300, bbox_inches="tight")
+    sibling = out.with_suffix(".jpg") if out.suffix.lower() == ".pdf" else out.with_suffix(".pdf")
+    fig.savefig(str(sibling), dpi=300, bbox_inches="tight")
+
+
 def plot_frontier(frontier_rows: List[dict], output_path: str) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2), constrained_layout=True)
     metric_pairs = [("R@1_mean", "R@1"), ("R@5_mean", "R@5")]
@@ -288,7 +321,7 @@ def plot_frontier(frontier_rows: List[dict], output_path: str) -> None:
         ax.grid(alpha=0.25)
 
     axes[1].legend(frameon=False, loc="best")
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    save_figure_dual(fig, output_path)
     plt.close(fig)
 
 
@@ -324,7 +357,52 @@ def plot_robustness(robustness_rows: List[dict], output_path: str) -> None:
         ax.grid(alpha=0.25)
 
     axes[-1].legend(frameon=False, loc="best")
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    save_figure_dual(fig, output_path)
+    plt.close(fig)
+
+
+def plot_baseline_sweep(baseline_rows: List[dict], output_path: str) -> None:
+    if not baseline_rows:
+        return
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.2, 4.2), constrained_layout=True)
+    style = {
+        "masked_blur": {"label": "Mask-guided blur", "color": "#2ca02c", "marker": "s"},
+        "masked_mosaic": {"label": "Mask-guided mosaic", "color": "#ff7f0e", "marker": "^"},
+    }
+
+    for variant in ("masked_blur", "masked_mosaic"):
+        rows = [row for row in baseline_rows if row["variant"] == variant]
+        rows = sorted(rows, key=lambda item: float(item["param"]))
+        if not rows:
+            continue
+
+        xs = [float(row["psnr_mean"]) for row in rows]
+        ys = [float(row["R@1_mean"]) for row in rows]
+        ax.plot(
+            xs,
+            ys,
+            marker=style[variant]["marker"],
+            linewidth=2,
+            label=style[variant]["label"],
+            color=style[variant]["color"],
+        )
+        for row, x, y in zip(rows, xs, ys):
+            param_name = "k" if variant == "masked_blur" else "b"
+            ax.annotate(
+                f"{param_name}={int(float(row['param']))}",
+                (x, y),
+                xytext=(4, 4),
+                textcoords="offset points",
+                fontsize=8,
+            )
+
+    ax.set_xlabel("PSNR (dB)")
+    ax.set_ylabel("R@1 retrieval accuracy")
+    ax.set_title("Support-aware baseline parameter sweep")
+    ax.grid(alpha=0.25)
+    ax.legend(frameon=False, loc="best")
+    save_figure_dual(fig, output_path)
     plt.close(fig)
 
 
@@ -390,7 +468,7 @@ def discover_paired_locations(
         backbone="resnet18",
         device=str(device),
         normalize=True,
-        input_size=224,
+        input_size=default_input_size_for_backbone("resnet18"),
         topk=(1, 5, 10),
     )
     embedder = make_default_embedder(rcfg).eval().to(device)
@@ -720,7 +798,7 @@ def main() -> None:
             backbone=backbone,
             device=str(device),
             normalize=True,
-            input_size=224,
+            input_size=default_input_size_for_backbone(backbone),
             topk=(1, 5, 10),
         )
         embedder = make_default_embedder(rcfg).eval().to(device)
@@ -808,7 +886,7 @@ def main() -> None:
                     backbone=default_backbone,
                     device=str(device),
                     normalize=True,
-                    input_size=224,
+                    input_size=default_input_size_for_backbone(default_backbone),
                     topk=(1, 5, 10),
                 )
                 embedder = make_default_embedder(rcfg).eval().to(device)
@@ -877,7 +955,7 @@ def main() -> None:
                     backbone=default_backbone,
                     device=str(device),
                     normalize=True,
-                    input_size=224,
+                    input_size=default_input_size_for_backbone(default_backbone),
                     topk=(1, 5, 10),
                 )
                 embedder = make_default_embedder(rcfg).eval().to(device)
@@ -939,8 +1017,12 @@ def main() -> None:
                 tensor_to_uint8_image(orig_frame), tensor_to_uint8_image(eval_frame)))
         prot_tensor_bk = torch.stack(prot_frames_bk, dim=0)
         rcfg_bk = RetrievalConfig(
-            backbone=default_backbone, device=str(device),
-            normalize=True, input_size=224, topk=(1, 5, 10))
+            backbone=default_backbone,
+            device=str(device),
+            normalize=True,
+            input_size=default_input_size_for_backbone(default_backbone),
+            topk=(1, 5, 10),
+        )
         emb_bk = make_default_embedder(rcfg_bk).eval().to(device)
         gt_bk, gids_bk = build_gallery_tensor(
             gallery_frame_by_id=gallery_frames_by_id,
@@ -1007,8 +1089,12 @@ def main() -> None:
                 tensor_to_uint8_image(orig_frame), tensor_to_uint8_image(eval_frame)))
         prot_tensor_ms = torch.stack(prot_frames_ms, dim=0)
         rcfg_ms = RetrievalConfig(
-            backbone=default_backbone, device=str(device),
-            normalize=True, input_size=224, topk=(1, 5, 10))
+            backbone=default_backbone,
+            device=str(device),
+            normalize=True,
+            input_size=default_input_size_for_backbone(default_backbone),
+            topk=(1, 5, 10),
+        )
         emb_ms = make_default_embedder(rcfg_ms).eval().to(device)
         gt_ms, gids_ms = build_gallery_tensor(
             gallery_frame_by_id=gallery_frames_by_id,
@@ -1106,7 +1192,9 @@ def main() -> None:
                     prot_tensor = torch.stack(prot_frames_s, dim=0)
                     rcfg_m = RetrievalConfig(
                         backbone=default_backbone, device=str(device),
-                        normalize=True, input_size=224, topk=(1, 5, 10),
+                        normalize=True,
+                        input_size=default_input_size_for_backbone(default_backbone),
+                        topk=(1, 5, 10),
                     )
                     emb_m = make_default_embedder(rcfg_m).eval().to(device)
                     gt, gids = build_gallery_tensor(
@@ -1284,6 +1372,7 @@ def main() -> None:
 
     plot_frontier(frontier_rows, os.path.join(paper_image_dir, "privacy_utility_tradeoff.pdf"))
     plot_robustness(robustness_rows, os.path.join(paper_image_dir, "retrieval_robustness_topk.pdf"))
+    plot_baseline_sweep(baseline_sweep_rows, os.path.join(paper_image_dir, "baseline_param_sweep.pdf"))
 
     report_path = os.path.join(args.output_dir, "summary.md")
     with open(report_path, "w", encoding="utf-8") as handle:
@@ -1324,6 +1413,8 @@ def main() -> None:
     print(f"Saved benchmark outputs to: {args.output_dir}")
     print(f"Saved figure: {os.path.join(paper_image_dir, 'privacy_utility_tradeoff.pdf')}")
     print(f"Saved figure: {os.path.join(paper_image_dir, 'retrieval_robustness_topk.pdf')}")
+    if baseline_sweep_rows:
+        print(f"Saved figure: {os.path.join(paper_image_dir, 'baseline_param_sweep.pdf')}")
 
 
 if __name__ == "__main__":

@@ -146,34 +146,40 @@
 46. 已验证 50+ paired locations 的数据可行性，原“样本不足”结论已失效。
 修改说明：实测 `F:\work\datasets\monitoring\images` 含 3710 个可用 clip id，`images2` 含 2696 个可用 clip id；并通过 `discover_paired_locations` 探针成功构建 50 对 paired locations（`num_queries=50`, `max_gallery=100`）。COCO（`F:\work\datasets\coco`）已确认可用（约 128k 图像）并可继续作为外部 distractor 池。
 
+47. 已将 CosPlace、MixVPR、Patch-NetVLAD 接入主 retrieval attack 接口并完成专用 VPR benchmark 重跑。
+修改说明：在 `src/eval/retrieval_attack.py` 中新增 dedicated VPR embedder 适配与骨干自适应输入尺寸；在 `src/scripts/run_controlled_retrieval_benchmark.py` 中扩展 `--backbones`、修复 MixVPR 模块导入冲突、补齐 Patch-NetVLAD checkpoint 与 `num_clusters` 推断逻辑，并成功完成 `cosplace/mixvpr/patchnetvlad` 三骨干 benchmark，输出 `src/outputs/controlled_retrieval_vpr_new3/robustness_summary.csv` 等结果。主文 Table 4 与 robustness 段落已据此更新，并重新生成合并后的 robustness 图。
+
+48. 已将 blur/mosaic 参数扫描显式纳入主文图表与正文分析。
+修改说明：在 benchmark 脚本中新增 baseline sweep 作图并导出 `paper/figs/baseline_param_sweep.jpg`；`paper/main.tex` 新增 `fig:baseline_sweep` 及对应文字分析，明确展示不同 blur kernel 与 mosaic block 在 PSNR-R@1 平面上的位置，补足主文对 support-aware baseline 参数敏感性的可视化说明。
+
 ---
 
 ## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 已完成 46 项修订任务
+- 已完成 48 项修订任务
 - 论文编译通过（0 错误）
 - 5 个攻击骨干的完整 robustness 分析
 - CLIP ViT-L/14 失效模式已记录并集成到论文
 - VPR 专用模型代码与权重已完成本地下载（CosPlace / MixVPR / Patch-NetVLAD）
 - 已确认本地数据可支持 50+ paired locations 构建
+- 已完成 dedicated VPR 攻击器接入，并补齐 CosPlace / MixVPR / Patch-NetVLAD 三骨干结果
+- 已在主文显式加入 blur/mosaic 参数扫描图与对应说明
 
 **阻塞项（无法在本轮完全完成）：**
-- VPR 专用攻击器尚未接入主 benchmark 主线：权重已下载完成，下一步是把 CosPlace/MixVPR/Patch-NetVLAD 的推理接口并入现有 `retrieval_attack.py` 和基准脚本并重跑主表。
+- 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
 
 **下一步评审循环建议：**
 当前 revision_suggestions.tex 剩余 high-priority 要求主要集中在：
 1) M2（更大 paired-scene 规模）—— 数据已具备（可构建 50+ pairs），需按新规模重跑并更新主文表格
-2) M3（VPR 专用攻击器）—— 下载阻塞已解除，需完成代码接入并重跑
+2) M3（更强 attacker 统一复核）—— 已完成 dedicated VPR 接入与三骨干重跑，但尚未完成包含全部 8 个骨干的单次统一长跑复核
 3) Comment 8（utility story 在 privacy benchmark 同一数据上的下游任务评估）—— 需额外实验设计
 
 # 未修改或部分修改
 
-1. 跨攻击骨干网络稳健性：已完成 5 骨干评估（ResNet18/50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14）。
-修改说明：本轮新增 CLIP ViT-B/32 和 CLIP ViT-L/14 攻击骨干。CLIP ViT-L/14 暴露了失效模式（σ₀=8 时 PPEDCRF 无法降低 Top-1），已集成到论文。
-未全部修改原因：CosPlace/MixVPR/Patch-NetVLAD 权重已下载，但尚未完成到主 benchmark 推理接口的集成与重跑。
-后续准备如何修改：在 `src/eval/retrieval_attack.py` 增加 VPR embedder 适配，扩展 `--backbones` 枚举后重跑主表（Table 4/robustness）。
+1. 跨攻击骨干网络稳健性：已完成 8 个攻击骨干中的分批重跑与主文集成，但尚未完成单次统一全骨干长跑复核。
+修改说明：当前 Table 4 与 robustness 图已结合基础五骨干结果和 dedicated VPR 三骨干结果，CosPlace/MixVPR/Patch-NetVLAD 已进入正文分析。
+未全部修改原因：包含全部 8 个骨干的单次统一 benchmark 长跑耗时较高，当前采用“基础 run + VPR 专项 run”合并复核的方式先完成论文更新。
+后续准备如何修改：在更大 paired-scene 设置下一次性重跑 `resnet18/resnet50/vgg16/clip_vitb32/clip_vitl14/cosplace/mixvpr/patchnetvlad`，并以单一输出目录重新核对主文全部 robustness 数值。
 
-2. Blur/mosaic 参数扫描：数据已生成但未在主文显式展示为图表。
-
-3. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
+2. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
