@@ -158,12 +158,15 @@
 50. 已完成更大 paired-scene 设置下的 8 骨干单次统一重跑，并以单一输出目录回填主文 robustness。
 修改说明：运行 `run_controlled_retrieval_benchmark.py` 于 `src/outputs/controlled_retrieval_unified8_large/`，参数为统一 8 骨干（`resnet18/resnet50/vgg16/clip_vitb32/clip_vitl14/cosplace/mixvpr/patchnetvlad`）、`pair_pool_size=600`、`max_gallery=100`、`gallery_sizes=12/24/48`。基于该单一目录的 `robustness_summary.csv` 更新了 `paper/main.tex` 中 Table~4、robustness 图注/描述和结论攻击器范围叙述，消除了“基础 run + VPR 专项 run”的合并来源不一致问题。
 
+51. 已执行“独立重评审重置”并完成新一轮最高优先级一致性修订。
+修改说明：已按命令重写 `docs/Revision_suggestions.tex`（全新评审，不继承旧轮次内容），并立即落实本轮最高优先级项：在 `paper/main.tex` 中修正 seed 口径（默认表格为多 seed、统一 8 骨干表为单 seed）、新增“跨表可比性边界”段落、为 Table~4 增加负/零/正 Δ 统计句（20/2/2）及单一输出目录溯源路径。该批修改已通过论文编译验证。
+
 ---
 
 ## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 已完成 50 项修订任务
+- 已完成 51 项修订任务
 - 论文编译通过（0 错误）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -173,6 +176,7 @@
 - 已在主文显式加入 blur/mosaic 参数扫描图与对应说明
 - 已完成摘要-主结果-结论的一致性收口与评审意见文本级修订
 - 已完成 8 骨干单次统一长跑复核并用单一输出目录更新主文 robustness
+- 已完成独立重评审重置并开始新一轮修订循环
 
 **阻塞项（无法在本轮完全完成）：**
 - 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
