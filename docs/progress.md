@@ -118,6 +118,8 @@
 修改说明：使用 `run_controlled_retrieval_benchmark.py` 完成包含 ResNet18/ResNet50/VGG16 三骨干、3 seeds、gallery 12/24/48、sigma sweep 8/16/24/32、matched 30/33/36 dB 的完整 v4 benchmark。所有表格（tab:ablation、tab:robustness、tab:matched、tab:temporal）及正文叙述均替换为 v4 数值，PPEDCRF Top-1 从 0.306 更新为 0.333（v4 重跑值）。
 
 38. 已新增 sigma sweep 消融表（tab:sigma_sweep）。
+
+39. 已在正文中增加对当前实验限制的显式说明：当前评估覆盖 ResNet/VGG/CLIP 风格嵌入，但尚不包含 NetVLAD、Patch-NetVLAD、CosPlace 或 MixVPR 等专用 VPR 架构。修改说明：在 Related Work、benchmark scope 和 Conclusion 中补充该限制语句，进一步收束论文贡献范围。
 修改说明：在 Section 3.3 与 Section 3.4 之间新增 Table，展示 σ₀∈{8,16,24,32} 下 PPEDCRF / w/o temporal / w/o NCP 的 Top-1、Top-5、PSNR、SSIM。数据来源为 `src/outputs/controlled_retrieval_v4/ablation_sigma_sweep.csv`。
 
 39. 已将 matched-operating-point 分析扩展至 3 个 PSNR 目标。
