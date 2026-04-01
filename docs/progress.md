@@ -167,12 +167,15 @@
 53. 已将 robustness 图拆分为上下两行（每行 4 子图）并作为双子图插入主文。
 修改说明：更新 `src/scripts/regenerate_combined_figures.py` 以 unified 8 骨干输出为数据源，新增导出 `paper/figs/retrieval_robustness_topk_top.jpg` 与 `paper/figs/retrieval_robustness_topk_bottom.jpg`；`paper/main.tex` 中 `fig:robustness` 改为两个竖向 subfigure（上排：ResNet18/ResNet50/VGG16/CLIP ViT-B/32；下排：CLIP ViT-L/14/CosPlace/MixVPR/Patch-NetVLAD），并同步更新图注与 Description。编译验证通过。
 
+54. 已按最新独立评审意见完成最终文本收口（必改项全部落地）。
+修改说明：在 `paper/main.tex` 中完成本轮 required revisions：精简摘要中骨干逐项堆叠并改为“heterogeneous transfer”概括；在 Table~4 与 Fig.~4 图注显式标注 unified single-run 的用途（跨骨干一致性）与方向性解读边界；在 robustness 段新增单次统一运行仍具信息价值的解释句；将 matched-operating-point 段落中 temporal 模块贡献改为“弱可分离”表述；在 temporal 小节补充“deterministic 基线最平滑且 full 与 temporal ablation 几乎不分离”；修正结论中 matched-utility 语义（同效用下常收敛）；并在 future work 显式列出三项未验证限制（paired 规模、cross-view 覆盖、all-backbone seed-averaged rerun）。已重新编译通过。
+
 ---
 
 ## 当前状态（2026-04-01 更新）
 
 **已完成项：**
-- 已完成 53 项修订任务
+- 已完成 54 项修订任务
 - 论文编译通过（0 错误）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -190,10 +193,14 @@
 - 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
 
 **下一步评审循环建议：**
-当前 revision_suggestions.tex 剩余 high-priority 要求主要集中在：
-1) M2（更大 paired-scene 规模）—— 数据已具备（可构建 50+ pairs），需按新规模重跑并更新主文表格
-2) Comment 8（utility story 在 privacy benchmark 同一数据上的下游任务评估）—— 需额外实验设计
+当前 `docs/Revision_suggestions.tex` 中的 required revision 已在主文全部落地；若继续下一轮增强，优先执行更大 paired-scene 与 seed-averaged all-backbone 复核实验，以把当前“方向性证据”升级为更稳定统计证据。
 
 # 未修改或部分修改
 
-1. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
+1. 【进行中】all-backbone seed-averaged 复核尚未完成。
+原因与下一步：当前主文已明确 unified single-run 仅作方向性比较；下一步在统一协议下补跑多 seed（至少 3 seeds）并在 Appendix 给出均值与标准差，验证跨骨干结论稳定性。
+
+2. 【进行中】更大 paired-scene（如 50+ pairs）主文回填尚未完成。
+原因与下一步：数据与代码已具备，但完整重跑耗时较长；下一步按既定参数完成大规模重跑并更新 Table~4/Fig.~4 及结论中的规模声明。
+
+3. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
