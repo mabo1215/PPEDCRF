@@ -169,13 +169,19 @@
 
 54. 已按最新独立评审意见完成最终文本收口（必改项全部落地）。
 修改说明：在 `paper/main.tex` 中完成本轮 required revisions：精简摘要中骨干逐项堆叠并改为“heterogeneous transfer”概括；在 Table~4 与 Fig.~4 图注显式标注 unified single-run 的用途（跨骨干一致性）与方向性解读边界；在 robustness 段新增单次统一运行仍具信息价值的解释句；将 matched-operating-point 段落中 temporal 模块贡献改为“弱可分离”表述；在 temporal 小节补充“deterministic 基线最平滑且 full 与 temporal ablation 几乎不分离”；修正结论中 matched-utility 语义（同效用下常收敛）；并在 future work 显式列出三项未验证限制（paired 规模、cross-view 覆盖、all-backbone seed-averaged rerun）。已重新编译通过。
+55. 已完成 all-backbone seed-averaged 复核。
+修改说明：在统一协议下完成了 3 seeds（1234/1235/1236）× 8 骨干（ResNet18、ResNet50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14、CosPlace、MixVPR、Patch-NetVLAD）× 3 gallery 大小（12/24/48）的完整 seed-averaged 基准实验。输出目录为 `src/outputs/controlled_retrieval_seed_avg/`，包含 10 个 CSV 文件。关键结果：24 个骨干-gallery 单元中 23 个 Δ 为负，仅 MixVPR g48（raw=0.000）为边际正值。CLIP ViT-L/14 此前在单次运行中表现为"逆向迁移"，现已在 seed-averaging 下全部为负 Δ，证实原先正值为单次噪声采样伪影。主文全部表格（tab:ablation、tab:sigma_sweep、tab:robustness、tab:matched、tab:temporal）、摘要、讨论和结论均已更新为 seed-averaged 数值。
 
+56. 已完成更大 paired-scene（50 pairs）主文回填。
+修改说明：50-pair benchmark 已完成（8 骨干 × 3 seeds × gallery 50/75/100，COCO 128 外部干扰，输出 `src/outputs/controlled_retrieval_large50/`）。关键结果：24 个骨干-gallery 单元中 21 个 Δ 为负，3 个正值均来自 MixVPR。已在 `paper/appendix.tex` 新增 "Scaling Confirmation: 50 Paired Locations" 节及完整 Table（tab:large50）；`paper/main.tex` 结论已移除 "larger-pair confirmation is in progress" 保留语并引用 50-pair 附录确认；robustness 段落新增 50-pair 交叉验证句。论文编译通过。
+
+57. BibTeX 字段清理完成，剩余 5 条 warning 属可接受范围。新增 CLIP 条目（radford2021learning）。
 ---
 
 ## 当前状态（2026-04-02 更新）
 
 **已完成项：**
-- 已完成 54 项修订任务
+- 已完成 57 项修订任务
 - 论文编译通过（0 错误）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -199,10 +205,4 @@
 
 # 未修改或部分修改
 
-1. 【已完成】all-backbone seed-averaged 复核。
-变更说明：在统一协议下完成了 3 seeds（1234/1235/1236）× 8 骨干（ResNet18、ResNet50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14、CosPlace、MixVPR、Patch-NetVLAD）× 3 gallery 大小（12/24/48）的完整 seed-averaged 基准实验。输出目录为 `src/outputs/controlled_retrieval_seed_avg/`，包含 10 个 CSV 文件。关键结果：24 个骨干-gallery 单元中 23 个 Δ 为负，仅 MixVPR g48（raw=0.000）为边际正值。CLIP ViT-L/14 此前在单次运行中表现为"逆向迁移"，现已在 seed-averaging 下全部为负 Δ，证实原先正值为单次噪声采样伪影。主文全部表格（tab:ablation、tab:sigma_sweep、tab:robustness、tab:matched、tab:temporal）、摘要、讨论和结论均已更新为 seed-averaged 数值。
-
-2. 【已完成】更大 paired-scene（50 pairs）主文回填。
-变更说明：50-pair benchmark 已完成（8 骨干 × 3 seeds × gallery 50/75/100，COCO 128 外部干扰，输出 `src/outputs/controlled_retrieval_large50/`）。关键结果：24 个骨干-gallery 单元中 21 个 Δ 为负，3 个正值均来自 MixVPR。已在 `paper/appendix.tex` 新增 "Scaling Confirmation: 50 Paired Locations" 节及完整 Table（tab:large50）；`paper/main.tex` 结论已移除 "larger-pair confirmation is in progress" 保留语并引用 50-pair 附录确认；robustness 段落新增 50-pair 交叉验证句。论文编译通过。
-
-3. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
+（当前无未完成项。）
