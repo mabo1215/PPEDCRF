@@ -172,7 +172,7 @@
 
 ---
 
-## 当前状态（2026-04-01 更新）
+## 当前状态（2026-04-02 更新）
 
 **已完成项：**
 - 已完成 54 项修订任务
@@ -188,19 +188,21 @@
 - 已完成独立重评审重置并开始新一轮修订循环
 - 已在主文显式标注 larger-pair confirmation 待完成状态并完成图表工件单源化清理
 - 已完成 robustness 图 2×4 子图重排并插入主文
+- 已完成 50-pair 大规模确认实验（21/24 负 Δ），附录新增完整表格，主文结论已移除保留语
+- all-backbone seed-averaged 复核与 50-pair 规模确认均已完成
 
-**阻塞项（无法在本轮完全完成）：**
-- 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
+**阻塞项：**
+- 当前无硬阻塞项。所有评审可执行项均已落地。
 
 **下一步评审循环建议：**
-当前 `docs/Revision_suggestions.tex` 中的全部 required revision 与 suggested revision 均已在主文落地。剩余事项仅为 50-pair 大规模确认实验。
+当前 `docs/Revision_suggestions.tex` 中的全部 required revision 与 suggested revision 均已在主文落地，50-pair 大规模确认实验也已完成。如需进一步提升，可考虑新一轮独立评审重置。
 
 # 未修改或部分修改
 
 1. 【已完成】all-backbone seed-averaged 复核。
 变更说明：在统一协议下完成了 3 seeds（1234/1235/1236）× 8 骨干（ResNet18、ResNet50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14、CosPlace、MixVPR、Patch-NetVLAD）× 3 gallery 大小（12/24/48）的完整 seed-averaged 基准实验。输出目录为 `src/outputs/controlled_retrieval_seed_avg/`，包含 10 个 CSV 文件。关键结果：24 个骨干-gallery 单元中 23 个 Δ 为负，仅 MixVPR g48（raw=0.000）为边际正值。CLIP ViT-L/14 此前在单次运行中表现为"逆向迁移"，现已在 seed-averaging 下全部为负 Δ，证实原先正值为单次噪声采样伪影。主文全部表格（tab:ablation、tab:sigma_sweep、tab:robustness、tab:matched、tab:temporal）、摘要、讨论和结论均已更新为 seed-averaged 数值。
 
-2. 【进行中】更大 paired-scene（50 pairs）主文回填。
-变更说明：已扩展合成数据至 120 场景（1440 帧），已完成 VPR 模型权重下载（CosPlace、MixVPR、Patch-NetVLAD）。50-pair 基准实验正在后台运行（8 骨干、3 seeds、gallery 50/75/100、COCO 外部干扰源），待完成后将结果集成至论文主文或附录，并移除结论中"larger-pair confirmation is in progress"的保留语。
+2. 【已完成】更大 paired-scene（50 pairs）主文回填。
+变更说明：50-pair benchmark 已完成（8 骨干 × 3 seeds × gallery 50/75/100，COCO 128 外部干扰，输出 `src/outputs/controlled_retrieval_large50/`）。关键结果：24 个骨干-gallery 单元中 21 个 Δ 为负，3 个正值均来自 MixVPR。已在 `paper/appendix.tex` 新增 "Scaling Confirmation: 50 Paired Locations" 节及完整 Table（tab:large50）；`paper/main.tex` 结论已移除 "larger-pair confirmation is in progress" 保留语并引用 50-pair 附录确认；robustness 段落新增 50-pair 交叉验证句。论文编译通过。
 
 3. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
