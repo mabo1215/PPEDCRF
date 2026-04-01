@@ -293,11 +293,11 @@ def save_json(path: str, payload: dict) -> None:
 
 
 def save_figure_dual(fig: plt.Figure, output_path: str) -> None:
-    """Save figure to requested path and mirrored .jpg/.pdf sibling."""
+    """Save figure as JPG only (no PDF sibling)."""
     out = Path(output_path)
-    fig.savefig(str(out), dpi=300, bbox_inches="tight")
-    sibling = out.with_suffix(".jpg") if out.suffix.lower() == ".pdf" else out.with_suffix(".pdf")
-    fig.savefig(str(sibling), dpi=300, bbox_inches="tight")
+    # Always save as .jpg regardless of requested extension
+    jpg_path = out.with_suffix(".jpg")
+    fig.savefig(str(jpg_path), dpi=300, bbox_inches="tight")
 
 
 def plot_frontier(frontier_rows: List[dict], output_path: str) -> None:
@@ -325,40 +325,49 @@ def plot_frontier(frontier_rows: List[dict], output_path: str) -> None:
     plt.close(fig)
 
 
-def plot_robustness(robustness_rows: List[dict], output_path: str) -> None:
-    backbones = sorted({row["backbone"] for row in robustness_rows})
-    fig, axes = plt.subplots(1, len(backbones), figsize=(5.2 * len(backbones), 4.2), constrained_layout=True)
-    if len(backbones) == 1:
-        axes = [axes]
-
+def plot_robustness(robustness_rows: List[dict], output_dir: str) -> None:
+    """Plot robustness as two 1x4 sub-figures (top + bottom), each saved as JPG."""
+    label_map = {
+        "resnet18": "ResNet18", "resnet50": "ResNet50", "vgg16": "VGG16",
+        "clip_vitb32": "CLIP ViT-B/32", "clip_vitl14": "CLIP ViT-L/14",
+        "cosplace": "CosPlace", "mixvpr": "MixVPR", "patchnetvlad": "Patch-NetVLAD",
+    }
+    all_backbones = sorted({row["backbone"] for row in robustness_rows})
+    top_backbones = [b for b in ["resnet18", "resnet50", "vgg16", "clip_vitb32"] if b in all_backbones]
+    bottom_backbones = [b for b in ["clip_vitl14", "cosplace", "mixvpr", "patchnetvlad"] if b in all_backbones]
+    gallery_sizes = sorted({int(row['gallery_size']) for row in robustness_rows})
     colors = {"raw": "#7f7f7f", "ppedcrf": "#1f77b4"}
-    for ax, backbone in zip(axes, backbones):
-        for variant in ("raw", "ppedcrf"):
-            rows = [row for row in robustness_rows if row["backbone"] == backbone and row["variant"] == variant]
-            rows = sorted(rows, key=lambda item: int(item["gallery_size"]))
-            xs = [int(row["gallery_size"]) for row in rows]
-            ys = [row["R@1_mean"] for row in rows]
-            yerr = [row["R@1_std"] for row in rows]
-            ax.errorbar(
-                xs,
-                ys,
-                yerr=yerr,
-                marker="o",
-                linewidth=2,
-                capsize=3,
-                label=VARIANT_LABELS[variant],
-                color=colors[variant],
-            )
 
-        ax.set_title(f"Retrieval robustness ({backbone})")
-        ax.set_xlabel("Gallery size")
-        ax.set_ylabel("R@1 retrieval accuracy")
-        ax.set_xticks(sorted({int(row['gallery_size']) for row in robustness_rows}))
-        ax.grid(alpha=0.25)
+    def _plot_group(backbones, suffix):
+        if not backbones:
+            return
+        fig, axes = plt.subplots(1, len(backbones), figsize=(3.0 * len(backbones), 3.0), sharey=True)
+        if len(backbones) == 1:
+            axes = [axes]
+        for ax, backbone in zip(axes, backbones):
+            for variant in ("raw", "ppedcrf"):
+                rows = sorted(
+                    [row for row in robustness_rows if row["backbone"] == backbone and row["variant"] == variant],
+                    key=lambda item: int(item["gallery_size"]),
+                )
+                xs = [int(row["gallery_size"]) for row in rows]
+                ys = [row["R@1_mean"] for row in rows]
+                yerr = [row["R@1_std"] for row in rows]
+                ax.errorbar(xs, ys, yerr=yerr, marker="o", linewidth=2, capsize=3,
+                            label=VARIANT_LABELS[variant], color=colors[variant])
+            ax.set_title(label_map.get(backbone, backbone), fontsize=10)
+            ax.set_xlabel("Gallery size")
+            ax.set_xticks(gallery_sizes)
+            ax.grid(alpha=0.25)
+        axes[0].set_ylabel("Top-1 Retrieval Accuracy")
+        axes[0].legend(fontsize=8, loc="upper right", frameon=False)
+        fig.tight_layout()
+        out = Path(output_dir) / f"retrieval_robustness_topk_{suffix}.jpg"
+        fig.savefig(str(out), dpi=300, bbox_inches="tight")
+        plt.close(fig)
 
-    axes[-1].legend(frameon=False, loc="best")
-    save_figure_dual(fig, output_path)
-    plt.close(fig)
+    _plot_group(top_backbones, "top")
+    _plot_group(bottom_backbones, "bottom")
 
 
 def plot_baseline_sweep(baseline_rows: List[dict], output_path: str) -> None:
@@ -648,9 +657,9 @@ def main() -> None:
                 "max": float(np.max(pair_similarities)),
             },
             "distractor_hardness_stats": {
-                "mean": float(np.mean(distractor_hardness)),
-                "min": float(np.min(distractor_hardness)),
-                "max": float(np.max(distractor_hardness)),
+                "mean": float(np.mean(distractor_hardness)) if distractor_hardness else None,
+                "min": float(np.min(distractor_hardness)) if distractor_hardness else None,
+                "max": float(np.max(distractor_hardness)) if distractor_hardness else None,
             },
             "distractor_hardness_stats_by_gallery": distractor_hardness_by_gallery,
             "resize_hw": list(resize_hw),
@@ -1370,9 +1379,9 @@ def main() -> None:
             ],
         )
 
-    plot_frontier(frontier_rows, os.path.join(paper_image_dir, "privacy_utility_tradeoff.pdf"))
-    plot_robustness(robustness_rows, os.path.join(paper_image_dir, "retrieval_robustness_topk.pdf"))
-    plot_baseline_sweep(baseline_sweep_rows, os.path.join(paper_image_dir, "baseline_param_sweep.pdf"))
+    plot_frontier(frontier_rows, os.path.join(paper_image_dir, "privacy_utility_tradeoff.jpg"))
+    plot_robustness(robustness_rows, paper_image_dir)
+    plot_baseline_sweep(baseline_sweep_rows, os.path.join(paper_image_dir, "baseline_param_sweep.jpg"))
 
     report_path = os.path.join(args.output_dir, "summary.md")
     with open(report_path, "w", encoding="utf-8") as handle:

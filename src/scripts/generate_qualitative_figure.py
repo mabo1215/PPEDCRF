@@ -55,7 +55,7 @@ def main() -> None:
     parser.add_argument("--image-path", type=str, required=True)
     parser.add_argument("--checkpoint", type=str, default="src/outputs/sensnet_final.pt")
     parser.add_argument("--config", type=str, default="src/config/config.yaml")
-    parser.add_argument("--output", type=str, default="paper/figs/qualitative_figure.pdf")
+    parser.add_argument("--output", type=str, default="paper/figs/qualitative_figure.jpg")
     parser.add_argument("--noise-sigma", type=float, default=24.0,
                         help="Use a stronger sigma for visual clarity in the figure")
     parser.add_argument("--resize-h", type=int, default=384)

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 PAPER_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "paper", "figs")
-UNIFIED_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "controlled_retrieval_unified8_large")
+UNIFIED_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "controlled_retrieval_seed_avg")
 
 
 def read_csv(path):

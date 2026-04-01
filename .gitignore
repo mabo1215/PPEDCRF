@@ -37,3 +37,5 @@ src/data/driving/train/
 src/data/driving/val/
 src/data/driving/test/
 synthetic_monitoring/
+
+src/third_party/*

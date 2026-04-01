@@ -193,14 +193,14 @@
 - 当前无下载或数据层面的硬阻塞；剩余未完成事项主要是统一复核型实验，属于运行时间较长而非环境不可达。
 
 **下一步评审循环建议：**
-当前 `docs/Revision_suggestions.tex` 中的 required revision 已在主文全部落地；若继续下一轮增强，优先执行更大 paired-scene 与 seed-averaged all-backbone 复核实验，以把当前“方向性证据”升级为更稳定统计证据。
+当前 `docs/Revision_suggestions.tex` 中的全部 required revision 与 suggested revision 均已在主文落地。剩余事项仅为 50-pair 大规模确认实验。
 
 # 未修改或部分修改
 
-1. 【进行中】all-backbone seed-averaged 复核尚未完成。
-原因与下一步：当前主文已明确 unified single-run 仅作方向性比较；下一步在统一协议下补跑多 seed（至少 3 seeds）并在 Appendix 给出均值与标准差，验证跨骨干结论稳定性。
+1. 【已完成】all-backbone seed-averaged 复核。
+变更说明：在统一协议下完成了 3 seeds（1234/1235/1236）× 8 骨干（ResNet18、ResNet50、VGG16、CLIP ViT-B/32、CLIP ViT-L/14、CosPlace、MixVPR、Patch-NetVLAD）× 3 gallery 大小（12/24/48）的完整 seed-averaged 基准实验。输出目录为 `src/outputs/controlled_retrieval_seed_avg/`，包含 10 个 CSV 文件。关键结果：24 个骨干-gallery 单元中 23 个 Δ 为负，仅 MixVPR g48（raw=0.000）为边际正值。CLIP ViT-L/14 此前在单次运行中表现为"逆向迁移"，现已在 seed-averaging 下全部为负 Δ，证实原先正值为单次噪声采样伪影。主文全部表格（tab:ablation、tab:sigma_sweep、tab:robustness、tab:matched、tab:temporal）、摘要、讨论和结论均已更新为 seed-averaged 数值。
 
-2. 【进行中】更大 paired-scene（如 50+ pairs）主文回填尚未完成。
-原因与下一步：数据与代码已具备，但完整重跑耗时较长；下一步按既定参数完成大规模重跑并更新 Table~4/Fig.~4 及结论中的规模声明。
+2. 【进行中】更大 paired-scene（50 pairs）主文回填。
+变更说明：已扩展合成数据至 120 场景（1440 帧），已完成 VPR 模型权重下载（CosPlace、MixVPR、Patch-NetVLAD）。50-pair 基准实验正在后台运行（8 骨干、3 seeds、gallery 50/75/100、COCO 外部干扰源），待完成后将结果集成至论文主文或附录，并移除结论中"larger-pair confirmation is in progress"的保留语。
 
 3. BibTeX 字段：5 条 warning，属可接受范围。新增 CLIP 条目（radford2021learning）。
