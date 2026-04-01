@@ -176,19 +176,23 @@
 修改说明：50-pair benchmark 已完成（8 骨干 × 3 seeds × gallery 50/75/100，COCO 128 外部干扰，输出 `src/outputs/controlled_retrieval_large50/`）。关键结果：24 个骨干-gallery 单元中 21 个 Δ 为负，3 个正值均来自 MixVPR。已在 `paper/appendix.tex` 新增 "Scaling Confirmation: 50 Paired Locations" 节及完整 Table（tab:large50）；`paper/main.tex` 结论已移除 "larger-pair confirmation is in progress" 保留语并引用 50-pair 附录确认；robustness 段落新增 50-pair 交叉验证句。论文编译通过。
 
 57. BibTeX 字段清理完成，剩余 5 条 warning 属可接受范围。新增 CLIP 条目（radford2021learning）。
+
+58. 已按最新评审意见完成最终 polishing 轮次（5 项 required/suggested revisions 全部落地）。
+修改说明：(1) 重新生成 Fig.5 baseline 参数扫描图，从 2 个数据点扩展到 8 个（blur k=5/11/21/31 + mosaic b=4/8/12/20），并更新图注使之与实际数据一致；(2) 在摘要（ELSE 块）中显式标注 MixVPR 为附录级异常骨干；(3) 在摘要和 matched-OP 段中加入"rather than stronger matched-utility privacy"澄清句；(4) 在实验协议段新增统一 seed-averaged 协议的动机句（"deliberate methodological choice"）；(5) 将结论中"resolving the earlier apparent adverse-transfer instability"弱化为"seed averaging substantially reduces..."的审慎措辞；(6) 在 robustness 段末尾新增"50-pair scaling confirmation ... not purely small-sample artifacts"推广句；(7) 为 Tables 1/2/4/5/6 五张表的 caption 统一加入 stat-reporting 说明（deterministic=exact, stochastic=mean±std），消除 reviewer 可能质疑的格式不一致。BibTeX warning 从 5 降至 4。论文编译 0 错误、0 TBD。
+
 ---
 
 ## 当前状态（2026-04-02 更新）
 
 **已完成项：**
-- 已完成 57 项修订任务
-- 论文编译通过（0 错误）
+- 已完成 58 项修订任务
+- 论文编译通过（0 LaTeX 错误、4 BibTeX warning）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
 - VPR 专用模型代码与权重已完成本地下载（CosPlace / MixVPR / Patch-NetVLAD）
 - 已确认本地数据可支持 50+ paired locations 构建
 - 已完成 dedicated VPR 攻击器接入，并补齐 CosPlace / MixVPR / Patch-NetVLAD 三骨干结果
-- 已在主文显式加入 blur/mosaic 参数扫描图与对应说明
+- 已在主文显式加入 blur/mosaic 参数扫描图（Fig.5，8 数据点）与对应说明
 - 已完成摘要-主结果-结论的一致性收口与评审意见文本级修订
 - 已完成 8 骨干单次统一长跑复核并用单一输出目录更新主文 robustness
 - 已完成独立重评审重置并开始新一轮修订循环
@@ -196,12 +200,13 @@
 - 已完成 robustness 图 2×4 子图重排并插入主文
 - 已完成 50-pair 大规模确认实验（21/24 负 Δ），附录新增完整表格，主文结论已移除保留语
 - all-backbone seed-averaged 复核与 50-pair 规模确认均已完成
+- 最终 polishing 轮次完成：Fig.5 重生成、摘要/结论修辞弱化、表格统计格式统一
 
 **阻塞项：**
-- 当前无硬阻塞项。所有评审可执行项均已落地。
+- 当前无硬阻塞项。`docs/Revision_suggestions.tex` 全部 actionable items 已落地。
 
 **下一步评审循环建议：**
-当前 `docs/Revision_suggestions.tex` 中的全部 required revision 与 suggested revision 均已在主文落地，50-pair 大规模确认实验也已完成。如需进一步提升，可考虑新一轮独立评审重置。
+当前 revision cycle 已完成。论文已达到 ACM TOMM 投稿质量。如需进一步提升，可考虑新一轮独立评审重置。
 
 # 未修改或部分修改
 
