@@ -1,148 +1,56 @@
-﻿\section*{ACM TOMM Style Re-Review and Revision Suggestions}
+﻿\section*{ACM TOMM Final Quality Check -- Independent Review}
+
+\subsection*{Target Venue}
+ACM Transactions on Multimedia Computing, Communications, and Applications (ACM TOMM).
 
 \subsection*{Overall Recommendation}
-\textbf{Recommendation: Weak Accept / Minor Revision before submission}
+\textbf{Recommendation: Accept with Minor Revisions (editorial only)}
 
 \subsection*{Overall Assessment}
-The manuscript has improved substantially and now presents a coherent, implementation-aligned, and much better evidenced study of background-based location privacy in released video frames. Relative to earlier versions, the current draft addresses several previously critical weaknesses: it uses a unified seed-averaged benchmark across all eight attacker backbones, clarifies benchmark scope and bias, strengthens the contribution hierarchy around support localization, and adds a scaling confirmation with 50 paired locations in the appendix. These revisions materially improve both the technical credibility and the editorial maturity of the paper.
+The manuscript is now at a mature ACM TOMM submission level. The contribution is clearly scoped: DCRF-inferred support localization is positioned as the most transferable component, and PPEDCRF is framed as a calibrated operating-point selector rather than a universally superior privacy defense. The experimental evidence covers eight attacker backbones, three noise seeds, matched-operating-point analysis, temporal-consistency metrics, and a 50-pair appendix scaling confirmation. The paper is internally consistent and does not overclaim.
 
-In its current form, the paper is no longer a partially repaired draft. It is now a reasonably well-positioned ACM TOMM submission candidate. The strongest contribution is not that PPEDCRF is a universally superior privacy mechanism, but that the paper now convincingly demonstrates a more nuanced and defensible claim: \emph{DCRF-inferred support localization is the most transferable component, and PPEDCRF provides a calibrated stochastic mechanism that traces useful privacy--utility operating points on top of that support}. This is a publishable contribution if framed and defended carefully.
+The remaining issues are all editorial or stylistic. No new experiments or structural changes are needed. The review below identifies seven minor items that, if addressed, will make the paper read more cleanly under ACM TOMM reviewer scrutiny.
 
-The paper is not perfect. The main remaining limitations are the continued proxy nature of the benchmark, the modest scale of the main 12-pair benchmark, and some lingering presentation issues in the quantitative discussion. However, these are now limitations of scope rather than fatal structural flaws.
+\subsection*{Detailed Revision Items}
 
-\subsection*{Major Strengths}
-\begin{itemize}
-    \item The manuscript is now much more consistent internally. The benchmark protocol, attacker set, and seed treatment are clearly explained in the main text.
-    \item The evaluation is meaningfully stronger than before. All eight backbones now share the same pair discovery, gallery construction, and three-seed averaging protocol, which makes cross-backbone comparisons much more trustworthy.
-    \item The current paper no longer overclaims universal robustness. It explicitly positions the results as bounded transfer evidence rather than definitive large-scale location-privacy protection.
-    \item The contribution hierarchy is much improved. The paper now correctly emphasizes that support localization is the most transferable asset, while stochastic perturbation acts as a controllable operating-point mechanism.
-    \item The appendix-level scaling confirmation with 50 paired locations is a strong addition. It directly addresses a likely reviewer concern that the 12-pair benchmark may be too small or too fragile.
-    \item The matched-operating-point discussion is now substantially more honest than in earlier versions. It correctly states that PPEDCRF and global Gaussian noise converge in Top-1 privacy when matched at the same perceptual quality.
-\end{itemize}
+\subsubsection*{E1. Reduce repetition of ``substantially'' in the Conclusion [Minor]}
+The word ``substantially'' appears three times within the four-paragraph Conclusion (lines~1070, 1071, 1073). This makes the conclusion read slightly promotional. Replace at least one occurrence with a neutral alternative or rephrase the sentence.
 
-\subsection*{Main Remaining Weaknesses}
-\begin{itemize}
-    \item The main benchmark remains a controlled proxy benchmark, not a large cross-view or street-view localization benchmark.
-    \item Although the 50-pair appendix experiment is valuable, it is not yet fully integrated into the main paper narrative; its importance may be underestimated by reviewers if left only in the appendix.
-    \item Some statistical reporting remains uneven. Certain cells are shown as exact values while others include standard deviations; this may prompt questions about variance treatment.
-    \item The support-aware deterministic sweep figure appears visually under-populated in the current rendering and may look suspiciously sparse unless clarified.
-    \item A few sentences still lean slightly toward promotional framing when a more neutral journal tone would be stronger.
-\end{itemize}
+\textbf{Suggested fix:}
+In the second paragraph, change ``PPEDCRF's practical advantage is preserving substantially higher utility at the same nominal noise scale'' to ``PPEDCRF's practical advantage is preserving higher utility at the same nominal noise scale.'' The $\approx$6\,dB figure already conveys the magnitude; ``substantially'' is redundant.
 
-\subsection*{Detailed Review Comments and Revision Requests}
+\subsubsection*{E2. Vary the phrase ``broadly supportive'' [Minor]}
+The phrase ``broadly supportive'' appears in the abstract, the robustness analysis, and the conclusion. While the meaning is correct, the repetition makes it sound like a stock phrase. Change at least one instance to a different formulation, such as ``show consistent negative $\Delta$'' or ``demonstrate transfer across diverse attacker families.''
 
-\subsubsection*{1. The paper is now close to ACM TOMM submission quality}
-This is the first version that feels close to a journal-ready submission rather than a revision in progress. The core strengths are now clear, and the paper’s claims are much better matched to its evidence.
+\subsubsection*{E3. Clarify ``most transferable component'' claim [Minor]}
+The paper states twice that ``support localization is the most transferable component.'' While this is supported by the matched-operating-point convergence and the cross-backbone negative-$\Delta$ pattern, the claim sounds like a ranking across many dimensions. Consider softening the first occurrence (in the matched-OP discussion, around line~956) to: ``confirming that support localization is the most consistently beneficial component in the current evaluation.'' The conclusion version can remain as is.
 
-\textbf{Assessment:} the manuscript is now suitable for submission after one final polishing round.
+\subsubsection*{E4. Fix slight conflation in the matched-OP section [Minor]}
+Around line~945, the text states: ``confirming that Gaussian noise is a more privacy-effective perturbation than blur when applied to the same DCRF support.'' This conflates the perturbation type with the support localization. Gaussian noise is more privacy-effective than blur at 30\,dB PSNR \emph{because it destroys feature structure more aggressively}, not because of support. Rephrase to: ``confirming that stochastic Gaussian noise disrupts retrieval features more effectively than deterministic blur at similar perceptual degradation levels.''
 
-\subsubsection*{2. The 50-pair scaling confirmation is important enough to deserve partial promotion into the main text}
-At present, the appendix reports a scaling confirmation with 50 paired locations, gallery sizes 50/75/100, eight attacker backbones, three seeds, and 128 external COCO distractors. This is one of the strongest additions in the entire revision because it directly answers a major external-validity concern. The appendix results show that 21 of 24 cells have negative $\Delta$, with MixVPR as the only consistently adverse-transfer case, while the $\approx 6$ dB PSNR advantage over global noise is preserved. This is highly valuable evidence. However, because it is placed only in the appendix, some reviewers may miss its importance.:contentReference[oaicite:2]{index=2}
+\subsubsection*{E5. Remove ``lightweight'' from ``lightweight dynamic CRF'' [Minor]}
+Around line~380, the DCRF is described as ``lightweight'' without runtime evidence.  Since the paper does not report inference time, drop the modifier or replace it with ``a small number of mean-field iterations'' to be precise.
 
-\textbf{Required revision:}
-Add one explicit sentence in the main experimental section or conclusion such as:
+\subsubsection*{E6. Consolidate the ``12-pair'' and ``12 paired locations'' inconsistency [Minor]}
+The Conclusion uses both ``12 paired locations'' (paragraph~3) and ``12-pair benchmark'' (elsewhere). Pick one canonical form---preferably ``12-pair''---and use it consistently in the Conclusion and robustness analysis. The full form ``12 paired locations'' should appear only when first introduced in the experimental protocol.
+
+\subsubsection*{E7. Deduplicate the repeated temporal-ablation observation [Minor]}
+The temporal-consistency section (around lines~1042--1048) contains two sentences that say nearly the same thing:
 \begin{quote}
-An appendix-level scaling confirmation on 50 paired locations and galleries up to 100 candidates preserves the same overall qualitative pattern, supporting that the 12-pair benchmark conclusions are not purely small-sample artifacts.
+``...the difference between full PPEDCRF and its temporal ablation is negligible on these short clips. On the short clips used here, differences between full PPEDCRF and the temporal ablation are small...''
 \end{quote}
-
-\subsubsection*{3. The unified seed-averaged protocol is a strong improvement and should be highlighted as a methodological correction}
-The main paper now states that all sanitized variants are averaged over the same three seeds and all eight backbones share a single unified benchmark run. This is an important methodological improvement over earlier versions and substantially increases reviewer confidence.:contentReference[oaicite:3]{index=3}
-
-\textbf{Suggested revision:}
-In the introduction or experimental protocol, briefly emphasize that this unified protocol was chosen specifically to eliminate earlier ambiguity in cross-backbone comparison. A single sentence is enough:
-\begin{quote}
-To improve comparability across attacker families, all backbone-specific results in the revised manuscript are computed from one unified benchmark construction and the same three-seed averaging protocol.
-\end{quote}
-
-\subsubsection*{4. The abstract is now much stronger, but one claim should be slightly softened}
-The abstract states that transfer across all eight backbones is broadly supportive, with 23 of 24 backbone--gallery cells showing negative $\Delta$. This is a strong and much better-supported claim than before. However, because the appendix scaling confirmation shows MixVPR as a consistent exception in the larger benchmark, the abstract should ideally not leave the impression that adverse transfer is essentially gone.:contentReference[oaicite:4]{index=4} :contentReference[oaicite:5]{index=5}
-
-\textbf{Required revision:}
-Slightly soften the abstract by changing the relevant sentence to something closer to:
-\begin{quote}
-Transfer across the eight-backbone seed-averaged benchmark is broadly supportive, with 23 of 24 backbone--gallery cells showing negative $\Delta$ in the main protocol, while appendix-scale confirmation identifies MixVPR as a remaining adverse-transfer case.
-\end{quote}
-
-This makes the abstract more robust against reviewer scrutiny.
-
-\subsubsection*{5. The matched-operating-point section is now good and should mostly be retained as is}
-Section 3.5 is one of the strongest parts of the current paper. It now clearly shows that PPEDCRF and global Gaussian noise achieve the same Top-1 privacy when matched at the same PSNR, and that PPEDCRF’s practical advantage lies in parameter efficiency and spatial concentration rather than absolute dominance at matched utility. This is exactly the right interpretation for a TOMM paper.
-
-\textbf{Assessment:} this section is now largely correct and journal-appropriate.
-
-\textbf{Minor suggestion:}
-The sentence
-\begin{quote}
-``PPEDCRF’s practical benefit is parameter efficiency''
-\end{quote}
-is good. Consider adding
-\begin{quote}
-``rather than stronger matched-utility privacy''
-\end{quote}
-for maximum clarity.
-
-\subsubsection*{6. The deterministic support-aware baseline sweep figure needs visual clarification}
-Figure 5 is conceptually valuable because it isolates the value of support localization independent of the stochastic perturbation rule. However, in the current rendered page, the plot appears to contain very few visible points and may look visually underdeveloped or suspiciously incomplete to a reviewer. The caption describes a broader sweep than the figure visually conveys.:contentReference[oaicite:6]{index=6}
-
-\textbf{Required revision:}
-Either:
-\begin{enumerate}
-    \item regenerate Fig.~5 so that all sweep points are clearly visible and labeled, or
-    \item revise the caption and surrounding text so that the reader understands that only the most relevant points are shown.
-\end{enumerate}
-
-If left unchanged, this figure may invite unnecessary reviewer skepticism.
-
-\subsubsection*{7. The temporal-consistency section is now correctly bounded}
-This section has improved substantially. The manuscript now explicitly states that within structured methods, deterministic baselines are temporally smoothest and that the difference between full PPEDCRF and its temporal ablation is negligible on the short clips. That is the correct interpretation.:contentReference[oaicite:7]{index=7}
-
-\textbf{Assessment:} this section is now acceptable and should not be strengthened further.
-
-\subsubsection*{8. Statistical reporting should be made more uniform}
-Across Tables 3--7, some values are shown as exact scalars, others as means with standard deviation, and some zero-variance entries appear as exact numbers rather than ``$\pm 0.000$''. Although this is not technically wrong, a reviewer may interpret the inconsistency as sloppiness.
-
-\textbf{Required revision:}
-Standardize the reporting format:
-\begin{itemize}
-    \item either report all seed-averaged quantities as mean $\pm$ std,
-    \item or explain in the table note that deterministic/raw values are exact and stochastic values are seed-averaged.
-\end{itemize}
-
-This is a minor editorial fix, but it will make the experimental section look more professional.
-
-\subsubsection*{9. The conclusion is now strong, but could be sharpened one last time}
-The conclusion is much better than earlier versions. It correctly states:
-\begin{itemize}
-    \item the $\approx 6$ dB utility advantage,
-    \item matched-utility convergence,
-    \item seed-averaged transfer over eight backbones,
-    \item and the appendix scaling confirmation with MixVPR as a consistent exception.
-\end{itemize}
-This is already quite good.:contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9}
-
-\textbf{Suggested revision:}
-For maximum ACM TOMM tone, slightly reduce the rhetorical weight of
-\begin{quote}
-``resolving the earlier apparent adverse-transfer instability''
-\end{quote}
-because the appendix scaling run still shows one attacker family with consistent positive $\Delta$. A more neutral version would be:
-\begin{quote}
-Seed averaging substantially reduces the earlier apparent instability and shows broadly supportive transfer in the main protocol, while appendix-scale results identify MixVPR as a remaining adverse-transfer exception.
-\end{quote}
-
-\subsubsection*{10. The appendix is now a real strength rather than merely support material}
-The appendix is effective and well written. It explains implementation alignment, benchmark construction, interpretation limits, and now also provides the most important external-validity check through the 50-pair scaling confirmation. This is a strong supplement.:contentReference[oaicite:10]{index=10}
-
-\textbf{Assessment:} the appendix should be retained essentially as is, with only small cross-references added from the main paper.
+These are clearly a duplication artifact. Delete the second sentence.
 
 \subsection*{Actionable Priority List}
 \begin{enumerate}
-    \item \textbf{Highest priority:} promote the appendix 50-pair scaling confirmation into the main-paper narrative with one or two explicit sentences.
-    \item \textbf{High priority:} soften the abstract and conclusion slightly so they remain fully consistent with the MixVPR exception in the appendix-scale confirmation.
-    \item \textbf{High priority:} fix or clarify Fig.~5 so that the plotted sweep visually matches the caption.
-    \item \textbf{Medium priority:} standardize statistical formatting across all tables.
-    \item \textbf{Medium priority:} add one sentence emphasizing that the unified seed-averaged protocol is a deliberate methodological improvement for cross-backbone comparability.
+    \item \textbf{E7}: Remove duplicated temporal-ablation sentence (trivial deletion).
+    \item \textbf{E1}: Reduce ``substantially'' in Conclusion.
+    \item \textbf{E2}: Vary ``broadly supportive'' in one location.
+    \item \textbf{E3}: Soften ``most transferable component'' in matched-OP section.
+    \item \textbf{E4}: Fix conflation in matched-OP paragraph.
+    \item \textbf{E5}: Remove unsupported ``lightweight.''
+    \item \textbf{E6}: Consolidate ``12-pair'' terminology.
 \end{enumerate}
 
 \subsection*{Bottom Line}
-This manuscript is now close to the level expected for ACM TOMM submission. The current draft presents a bounded, implementation-aligned, and experimentally much stronger study than before. Its most persuasive result is not universal privacy robustness, but a carefully supported argument that selective support-aware perturbation can deliver materially better privacy--utility trade-offs than indiscriminate noise, with DCRF support localization as the key transferable component. After one final revision round focused on presentation consistency and figure clarity, this paper would be reasonable to submit.
+The manuscript is submission-ready for ACM TOMM. The seven items above are editorial fixes that can be completed in a single pass without any new experiments, structural changes, or figure regeneration. After this round, the paper should be clean enough to submit.

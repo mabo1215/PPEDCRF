@@ -15,10 +15,22 @@ with open(CSV_PATH, newline="") as f:
     for row in csv.DictReader(f):
         rows.append(row)
 
-fig, ax = plt.subplots(1, 1, figsize=(6.2, 4.2), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(7.0, 4.5), constrained_layout=True)
 style = {
     "masked_blur": {"label": "Mask-guided blur", "color": "#2ca02c", "marker": "s"},
     "masked_mosaic": {"label": "Mask-guided mosaic", "color": "#ff7f0e", "marker": "^"},
+}
+
+# Manual label offsets to avoid overlap (keyed by variant, param)
+offsets = {
+    ("masked_blur", 5): (6, 6),
+    ("masked_blur", 11): (6, 6),
+    ("masked_blur", 21): (-38, 10),
+    ("masked_blur", 31): (6, -14),
+    ("masked_mosaic", 4): (6, -14),
+    ("masked_mosaic", 8): (6, 6),
+    ("masked_mosaic", 12): (-40, -14),
+    ("masked_mosaic", 20): (6, 6),
 }
 
 for variant in ("masked_blur", "masked_mosaic"):
@@ -33,8 +45,9 @@ for variant in ("masked_blur", "masked_mosaic"):
     for r, x, y in zip(vrows, xs, ys):
         pn = "k" if variant == "masked_blur" else "b"
         param_val = int(float(r["param"]))
+        dx, dy = offsets.get((variant, param_val), (6, 6))
         ax.annotate(f"{pn}={param_val}", (x, y),
-                    xytext=(5, 6), textcoords="offset points", fontsize=9)
+                    xytext=(dx, dy), textcoords="offset points", fontsize=9)
 
 ax.set_xlabel("PSNR (dB)", fontsize=11)
 ax.set_ylabel("R@1 retrieval accuracy", fontsize=11)
