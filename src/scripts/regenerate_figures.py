@@ -36,14 +36,17 @@ for ax, (metric_key, metric_label) in zip(axes, metric_pairs):
         ys = [float(r[metric_key]) for r in rows]
         ax.plot(xs, ys, marker="o", linewidth=2,
                 label=VARIANT_LABELS[variant], color=colors[variant])
+        # Offset labels: PPEDCRF above, global noise below to avoid overlap
+        y_offset = 6 if variant == "ppedcrf" else -14
         for row, x, y in zip(rows, xs, ys):
             sigma_val = int(float(row["sigma"]))
             ax.annotate(
                 r"$\sigma=" + str(sigma_val) + r"$",
                 (x, y),
-                xytext=(4, 4),
+                xytext=(4, y_offset),
                 textcoords="offset points",
                 fontsize=8,
+                color=colors[variant],
             )
     ax.set_xlabel("PSNR (dB)", fontsize=11)
     ax.set_ylabel(f"{metric_label} retrieval accuracy", fontsize=11)

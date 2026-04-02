@@ -1,71 +1,83 @@
-﻿\section*{Fresh Independent Review -- ACM TOMM Final Polish}
+﻿\section*{Independent Review -- ACM TOMM Submission Readiness}
+
+\textbf{This review is written from scratch based solely on the current manuscript (\texttt{paper/main.tex}, \texttt{paper/appendix.tex}) and rendered figures, evaluated against ACM Transactions on Multimedia Computing, Communications, and Applications (ACM TOMM) standards. It has no connection to any prior review cycle.}
 
 \subsection*{Overall Assessment}
-The manuscript is at ACM TOMM submission quality. The problem formulation is unified, the method description is implementation-aligned, the eight-backbone seed-averaged benchmark is thorough and reproducible, statistical reporting is now consistent, and claims are carefully bounded. The remaining items below are purely editorial and do not affect scientific substance.
+The manuscript presents PPEDCRF, a release-side selective perturbation framework that concentrates Gaussian noise on DCRF-inferred location-sensitive background regions to protect video-frame geo-privacy while preserving perceptual quality. The paper is well-structured, honestly scoped, and technically sound. The eight-backbone seed-averaged benchmark with matched-operating-point analysis is thorough by multimedia systems standards. The contribution positioning as a ``calibrated privacy--utility trade-off optimizer'' rather than a universal privacy solution is appropriate.
 
-\textbf{Recommendation:} Accept with minor editorial polish.
+\textbf{Recommendation:} Accept with minor revisions. The items below are editorial or presentational; none requires new experiments.
 
-\subsection*{What Is Already Strong Enough}
-All structural, methodological, and experimental components are now publication-ready and should not be changed:
+\subsection*{Components That Are Publication-Ready}
+The following should not be changed:
 \begin{itemize}
-    \item unified DCRF--NCP--Gaussian pipeline description with clear notation,
-    \item explicit non-DP scope statement,
-    \item seed-averaged eight-backbone benchmark with three seeds,
-    \item matched-operating-point analysis,
-    \item restrained temporal-consistency discussion,
-    \item appendix-scale 50-pair confirmation,
-    \item bounded claim framing throughout,
-    \item consistent statistical formatting across tables.
+    \item problem formulation, threat model, and non-DP scope disclaimer,
+    \item DCRF--NCP--Gaussian pipeline description (Eq.~1--5, Algorithm~1),
+    \item seed-averaged eight-backbone benchmark protocol,
+    \item matched-operating-point analysis and temporal-consistency evaluation,
+    \item Related Work coverage (seven paragraphs, 42 references),
+    \item appendix 50-pair scaling confirmation,
+    \item bounded claim framing and MixVPR exception acknowledgment.
 \end{itemize}
 
-\subsection*{Remaining Editorial Items}
+\subsection*{Actionable Revision Items}
 
-\subsubsection*{E1. Clarify ``earlier apparent instability'' in the Conclusion}
-The conclusion states:
-\begin{quote}
-``Seed averaging substantially reduces the earlier apparent instability in the main protocol\ldots''
-\end{quote}
-A cold reader encountering this manuscript for the first time does not know what ``earlier'' refers to---it is an artifact of the revision history rather than a reference to something explained in the paper. The single-run results that showed apparent instability are not discussed in the paper.
+\subsubsection*{R1. Fix overlapping $\sigma$ labels in Fig.~3 (privacy--utility frontier)}
+In the rendered figure \texttt{figs/privacy\_utility\_tradeoff.jpg}, the sigma annotations for PPEDCRF and global Gaussian noise overlap at convergence points around 30\,dB PSNR in the R@1 panel. The overlapping labels read as ``$\sigma=86$'' instead of two separate annotations. This obscures an important result: that the two methods converge at matched PSNR.
 
-\textbf{Recommended fix:}
-Replace with:
-\begin{quote}
-Seed averaging across three independent noise realizations stabilizes the transfer assessment in the main protocol\ldots
-\end{quote}
+\textbf{Required fix:}
+Regenerate the figure with vertical or horizontal offset between the two $\sigma$ label sets (e.g., place PPEDCRF labels above the marker and global-noise labels below, or use different annotation colors).
 
-\subsubsection*{E2. Align the ACM abstract transfer sentence with the body}
-The ACM abstract says:
-\begin{quote}
-``Transfer across the eight-backbone seed-averaged benchmark is broadly supportive\ldots''
-\end{quote}
-This is vaguer than the body text, which quantifies ``23 of 24 backbone--gallery cells show negative $\Delta$.'' Adding the count to the abstract would strengthen the reader's first impression without adding length.
+\subsubsection*{R2. Explain apparent non-selectivity in Fig.~6 qualitative panel}
+Fig.~6 panel~(d) shows the absolute pixel difference map at $\sigma_0=24$. It appears nearly uniform red across the entire frame---including the foreground pedestrians and ground---which visually contradicts the paper's central narrative of \emph{selective} perturbation. This is because $\sigma_0=24$ is a strong perturbation level where even the ``unperturbed'' foreground regions show visible noise spillover after clipping.
 
-\textbf{Recommended fix:}
-\begin{quote}
-Transfer across the eight-backbone seed-averaged benchmark is broadly supportive (23 of 24 backbone--gallery cells show negative~$\Delta$)\ldots
-\end{quote}
+The text says ``$\sigma_0=24$ for visual clarity,'' but the figure actually undercuts the selectivity argument by showing barely any spatial structure in the difference map.
 
-\subsubsection*{E3. Unify ``broadly supportive'' vs.\ ``broadly favorable'' in Section 3.4}
-After prior revisions, Section~3.4 now contains two near-synonymous phrases in close proximity:
+\textbf{Required fix (choose one):}
+\begin{enumerate}
+    \item Add one sentence to the caption explicitly noting that $\sigma_0=24$ is chosen for visibility and that lower-$\sigma$ settings produce sharper spatial selectivity; or
+    \item Regenerate the figure at $\sigma_0=8$ or $\sigma_0=16$ where the difference map shows clearer spatial localization, and adjust the caption accordingly.
+\end{enumerate}
+
+\subsubsection*{R3. Add a brief note on computational overhead}
+The paper gives no indication of runtime cost. For ACM TOMM, which targets multimedia systems, even one sentence about practical throughput would help. Reviewers from the multimedia-systems community will ask about this.
+
+\textbf{Required fix:}
+Add one sentence in the Experimental Protocol section (or after Algorithm~1) stating approximate per-frame processing time on the hardware used, or at least the number of DCRF iterations and whether the pipeline runs at interactive rates.
+
+\subsubsection*{R4. Harmonize the two abstracts}
+The ACM abstract (ELSE branch) now includes the concrete ``23 of 24'' quantification and is well-scoped. The IEEE abstract (IF branch) is noticeably weaker: it omits the 23/24 count, the appendix confirmation, and uses vaguer phrasing. While ACM TOMM will render the ELSE branch, maintaining both abstracts at the same quality avoids accidental regressions if the format flag changes.
+
+\textbf{Suggested fix:}
+Update the IEEE abstract to include the same ``23 of 24 backbone--gallery cells'' quantification.
+
+\subsubsection*{R5. Tighten the Section 3.2 benchmark-hardness paragraph}
+The paragraph beginning ``The mined benchmark is intentionally difficult\ldots'' provides useful context, but it includes raw floating-point statistics (mean similarity 0.989, range 0.980--0.997, mean max-sim 0.919, 0.856, hardest 0.994) in running prose. These would be easier to absorb in a compact inline display or a small supplementary table, freeing the prose to focus on the qualitative point: hard negatives, not random.
+
+\textbf{Suggested fix:}
+Either (a)~round the statistics (e.g., ``average cosine similarity $\approx$0.99'') and reduce detail, or (b)~move the full statistics to parenthetical or end-of-section display.
+
+\subsubsection*{R6. Caption for Fig.~2 (architecture diagram)}
+The current caption reads: ``Implementation PPEDCRF pipeline.'' The word ``Implementation'' as a standalone adjective is awkward.
+
+\textbf{Suggested fix:}
+Replace with ``PPEDCRF release-side pipeline'' or ``Overview of the PPEDCRF pipeline.''
+
+\subsection*{Non-Actionable Observations (No Changes Needed)}
 \begin{itemize}
-    \item ``broadly supportive transfer'' (in the main interpretation paragraph),
-    \item ``broadly favorable transfer'' (in the transition sentence).
+    \item The ablation showing temporal and NCP components are weakly distinguished is honestly presented and does not require additional experiments, given the paper's scope disclaimer.
+    \item The matched-OP convergence (PPEDCRF = global noise at equal PSNR) is correctly reported and the ``parameter efficiency'' framing is appropriate for the current contribution claim.
+    \item The 12-pair benchmark size is a real limitation, but it is adequately managed by the explicit disclaimers and the 50-pair appendix confirmation.
 \end{itemize}
-Using two slightly different adjectives for the same concept may look like an oversight.
 
-\textbf{Recommended fix:}
-Standardize both to ``broadly supportive transfer'' for phrase stability.
+\subsection*{Priority Order}
+\begin{enumerate}
+    \item R1: Fix Fig.~3 label overlap (visual clarity, high reviewer impact).
+    \item R2: Address Fig.~6 selectivity concern (narrative consistency).
+    \item R3: Add computational cost note (ACM TOMM expectation).
+    \item R4: Harmonize IEEE abstract (maintenance).
+    \item R5: Tighten benchmark statistics paragraph (readability).
+    \item R6: Fix Fig.~2 caption wording (minor polish).
+\end{enumerate}
 
-\subsubsection*{E4. Consider adding $\pm$std to PSNR/SSIM in the matched-operating-point table}
-In Table~3 (matched), stochastic rows now correctly show Top-1 as $\text{mean}\pm\text{std}$ (including $\pm 0.000$). However, the PSNR and SSIM columns for those same stochastic rows are still reported as exact scalars (e.g., \texttt{36.14}, \texttt{30.16}), even though Table~1 (ablation) reports corresponding values as $36.14\pm0.01$ and $0.918\pm0.001$.
-
-This cross-table inconsistency is very minor (the std is $\approx$0.01\,dB), and adding $\pm$std may clutter the already dense matched table. Either adding it or adding a short table footnote acknowledging the omission would resolve the issue.
-
-\textbf{Recommended fix (minimal):}
-Add one footnote sentence to the matched table caption:
-\begin{quote}
-PSNR and SSIM columns report stochastic means; their seed-to-seed standard deviations ($\leq$0.01\,dB and $\leq$0.001 respectively) are omitted for readability.
-\end{quote}
-
-\subsection*{Summary}
-Four purely editorial items remain. None affect the scientific contribution, experimental validity, or overall narrative. After these minor touches, the manuscript is ready for ACM TOMM submission.
+\subsection*{Bottom Line}
+The manuscript is submission-ready for ACM TOMM. Six items remain, all editorial or presentational. The scientific contribution---a calibrated, DCRF-guided selective perturbation framework with bounded, carefully evaluated transfer---is appropriate for TOMM's multimedia privacy scope.
