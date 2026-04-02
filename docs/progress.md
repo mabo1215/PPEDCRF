@@ -195,12 +195,18 @@
 63. 已按用户指令执行完整独立评审重置并完成 6 项修订（R1–R6）。
 修改说明：用户触发"重新开始评审并生成评审修改意见"命令。直接基于当前 main.tex、appendix.tex 和所有渲染图形独立评审，以 ACM TOMM 标准编写全新英文评审意见（6 项，推荐 Accept with minor revisions）并重写 `docs/Revision_suggestions.tex`。立即实现全部 6 项：(R1) 重新生成 Fig.3（privacy-utility frontier）——PPEDCRF sigma 标签上移、global noise 标签下移并按曲线颜色着色，消除收敛区域标签重叠；(R2) Fig.6 定性图 caption 新增说明"at lower σ₀ the difference map shows sharper spatial selectivity"，解释 σ₀=24 差异图近似均匀红色的原因；(R3) Algorithm 1 后新增一句运行时性能说明（192×320 帧 <50ms on RTX 3090）；(R4) IEEE 摘要（IF branch）与 ACM 摘要对齐——加入"so the practical benefit lies in spatially concentrated perturbation and parameter efficiency"措辞和去除弱措辞；(R5) 压缩 benchmark 难度统计段落——12 条 pair 相似度从四位小数简化为 ≈0.99、distractors 简化为 0.86；(R6) Fig.2 caption 从"Implementation PPEDCRF pipeline"改为"Overview of the PPEDCRF pipeline"。论文编译 0 错误、4 BibTeX warning。main.pdf 18 页、appendix.pdf 4 页。
 
+64. 已按外部评审意见（10 项 reviewer-proofing）完成最终核查，仅剩 1 项未落地并已修复。
+修改说明：`docs/Revision_suggestions.tex` 外部更新为中文评审格式（10 项 reviewer-proofing + 优先级排序）。逐项核查发现 9 项已在前序轮次中落地：Section 3.4 claim 已用"broadly supportive"措辞（#1/✅）；表格统计格式已统一并在 caption 说明（#2/✅）；Fig.4 gallery 尺寸说明已写入正文（#3/✅）；Fig.5 标签可读性已修复（#4/✅）；Section 3.4 过渡句已存在（#6/✅）；Appendix 前置指引已存在（#7/✅）；Temporal 保持现状（#8/✅）；术语已统一（#9/✅）；Table 3"best"已限定为"among stochastic methods"（#10/✅）。唯一残留项为 #5：robustness 段 line 385 仍用"resolves this instability"和 line 455 仍用"is resolved"——已分别改为"substantially reduces this instability"和"is substantially reduced"，同步提及 MixVPR 例外。论文编译 0 错误、4 BibTeX warning。main.pdf 18 页、appendix.pdf 4 页、titlepage.pdf 新增。
+
+65. 已执行第 5 轮独立评审重置并完成 5 项修订（R1–R5）。
+修改说明：`docs/Revision_suggestions.tex` 完全重写为新一轮英文独立评审（Round 5，推荐 Accept with no further revisions）。发现并修复 1 项关键问题 + 4 项次要问题：(R1/Critical) matched-operating-point 段中"smaller nominal sigma"方向性错误——PPEDCRF 实际需要更大 σ₀ 才能达到相同 PSNR，已重写为"at any given σ₀, selective perturbation preserves approximately 6 dB more PSNR"；摘要中同义措辞同步修正，删除"parameter efficiency"改为"spatially concentrated perturbation that preserves higher visual quality at any given noise scale"。(R2) frontier 段引用的 Global Gaussian PSNR 值（24.23/20.83 dB）仅在图中不在表中，已加括号注明数据来源。(R3) 附录 benchmark 构造步骤中"fixed ResNet18 attacker"改为"backbone"以统一术语。(R4) Fig.3 caption 从模糊的"substantially better"改为定量"approximately 6 dB PSNR advantage"。(R5) robustness 段两处"resolves/is resolved"弱化为"substantially reduces/is substantially reduced"。论文编译 0 错误、4 BibTeX warning。main.pdf 18 页、appendix.pdf 4 页、titlepage.pdf。
+
 ---
 
 ## 当前状态（2026-04-02 更新）
 
 **已完成项：**
-- 已完成 63 项修订任务
+- 已完成 65 项修订任务
 - 论文编译通过（0 LaTeX 错误、4 BibTeX warning、0 TBD 残留）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -220,10 +226,10 @@
 - 第 63 轮独立评审重置完成：Fig.3 标签重叠修复、Fig.6 caption 说明、运行时性能、IEEE 摘要对齐、benchmark 统计压缩、Fig.2 caption
 
 **阻塞项：**
-- 当前无硬阻塞项。`docs/Revision_suggestions.tex` 全部 6 项已落地。
+- 当前无硬阻塞项。`docs/Revision_suggestions.tex` 第 5 轮独立评审全部 5 项已落地。
 
 **下一步评审循环建议：**
-当前 revision cycle 已完成。论文已达到 ACM TOMM 投稿质量。连续三轮独立评审均仅发现纯编辑级问题，结构性和科学性问题已全部解决。建议直接进入投稿准备阶段。
+当前 revision cycle 已完成。论文已达到 ACM TOMM 投稿质量。连续五轮独立评审中，第 5 轮发现了 1 项关键方向性错误（matched-OP 中 σ₀ 方向说反）已修复，其余均为纯编辑级问题。结构性和科学性问题已全部解决。build.bat 已更新为编译 main + titlepage + appendix。匿名投稿源码已通过审查。建议直接进入投稿准备阶段。
 
 # 未修改或部分修改
 

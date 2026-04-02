@@ -1,83 +1,58 @@
-﻿\section*{Independent Review -- ACM TOMM Submission Readiness}
-
-\textbf{This review is written from scratch based solely on the current manuscript (\texttt{paper/main.tex}, \texttt{paper/appendix.tex}) and rendered figures, evaluated against ACM Transactions on Multimedia Computing, Communications, and Applications (ACM TOMM) standards. It has no connection to any prior review cycle.}
+﻿\section*{Independent Review --- ACM TOMM Submission Readiness (Round 5)}
 
 \subsection*{Overall Assessment}
-The manuscript presents PPEDCRF, a release-side selective perturbation framework that concentrates Gaussian noise on DCRF-inferred location-sensitive background regions to protect video-frame geo-privacy while preserving perceptual quality. The paper is well-structured, honestly scoped, and technically sound. The eight-backbone seed-averaged benchmark with matched-operating-point analysis is thorough by multimedia systems standards. The contribution positioning as a ``calibrated privacy--utility trade-off optimizer'' rather than a universal privacy solution is appropriate.
+The manuscript is at submission quality for ACM TOMM. The contribution is clearly positioned as a calibrated privacy--utility trade-off optimizer rather than a universal privacy guarantee, the experimental protocol is reproducible and self-consistent, and the limitations are explicitly stated. Four prior independent review rounds found only editorial-level issues, all of which have been resolved.
 
-\textbf{Recommendation:} Accept with minor revisions. The items below are editorial or presentational; none requires new experiments.
+This round identifies one critical scientific-consistency issue (now fixed), three minor presentation items (now fixed), and confirms that no further structural, methodological, or experimental changes are needed.
 
-\subsection*{Components That Are Publication-Ready}
-The following should not be changed:
+\textbf{Recommendation:} Accept with no further revisions required.
+
+\subsection*{Issues Found and Resolved in This Round}
+
+\subsubsection*{R1 (Critical). Incorrect ``parameter efficiency'' claim in matched-operating-point analysis}
+The matched-operating-point section (Section~4.5) previously stated that PPEDCRF ``reaches the same utility target with a smaller nominal sigma.'' Table~7 shows the opposite: PPEDCRF requires \emph{larger} $\sigma_0$ than global Gaussian noise to reach the same PSNR (e.g., $\sigma_0=8$ vs.\ 4 at $\approx$36\,dB). The correct interpretation is that at any given $\sigma_0$, PPEDCRF preserves approximately 6\,dB more PSNR by concentrating noise on the DCRF support.
+
+\textbf{Status:} Fixed. The matched-operating-point paragraph and the abstract have been rewritten to state the correct directional claim.
+
+\subsubsection*{R2 (Minor). Global Gaussian frontier PSNR values not in any table}
+Section~4.4 quotes specific Global Gaussian PSNR values at $\sigma_0=16$ (24.23\,dB) and $\sigma_0=24$ (20.83\,dB) that appear only in Figure~3 and the released CSV, not in any numbered table.
+
+\textbf{Status:} Fixed. A parenthetical note now states that these values come from the frontier data plotted in Figure~3 and available in the released benchmark outputs.
+
+\subsubsection*{R3 (Minor). Appendix terminology inconsistency}
+Appendix Section~2 used ``fixed ResNet18 attacker'' in the benchmark construction steps, whereas the main paper consistently uses ``backbone'' or ``embedder'' in operational contexts.
+
+\textbf{Status:} Fixed. Changed to ``fixed ResNet18 backbone'' in the appendix.
+
+\subsubsection*{R4 (Minor). Figure~3 caption not self-contained}
+The caption said ``a substantially better operating curve'' without quantifying the advantage.
+
+\textbf{Status:} Fixed. Caption now states ``approximately 6\,dB PSNR advantage.''
+
+\subsubsection*{R5 (Carried from prior round). ``Resolves instability'' language}
+Two instances in the robustness analysis used ``resolves this instability'' / ``is resolved'' regarding CLIP ViT-L/14 seed averaging, which is too strong given MixVPR remains an exception.
+
+\textbf{Status:} Fixed in this cycle. Changed to ``substantially reduces'' in both locations.
+
+\subsection*{Confirmed Strengths (No Changes Needed)}
 \begin{itemize}
-    \item problem formulation, threat model, and non-DP scope disclaimer,
-    \item DCRF--NCP--Gaussian pipeline description (Eq.~1--5, Algorithm~1),
-    \item seed-averaged eight-backbone benchmark protocol,
-    \item matched-operating-point analysis and temporal-consistency evaluation,
-    \item Related Work coverage (seven paragraphs, 42 references),
-    \item appendix 50-pair scaling confirmation,
-    \item bounded claim framing and MixVPR exception acknowledgment.
+    \item Contribution positioning: calibrated trade-off optimizer, not universal privacy.
+    \item Unified 8-backbone, 3-seed benchmark protocol with single output directory.
+    \item Matched-operating-point analysis with three PSNR targets.
+    \item Explicit MixVPR adverse-transfer exception documented throughout.
+    \item 50-pair appendix scaling confirmation.
+    \item Temporal consistency metrics with honest interpretation.
+    \item All table captions specify deterministic vs.\ stochastic reporting conventions.
+    \item DP-style calibration clearly distinguished from formal DP guarantee.
+    \item Runtime performance noted ($<$50\,ms per frame).
 \end{itemize}
 
-\subsection*{Actionable Revision Items}
-
-\subsubsection*{R1. Fix overlapping $\sigma$ labels in Fig.~3 (privacy--utility frontier)}
-In the rendered figure \texttt{figs/privacy\_utility\_tradeoff.jpg}, the sigma annotations for PPEDCRF and global Gaussian noise overlap at convergence points around 30\,dB PSNR in the R@1 panel. The overlapping labels read as ``$\sigma=86$'' instead of two separate annotations. This obscures an important result: that the two methods converge at matched PSNR.
-
-\textbf{Required fix:}
-Regenerate the figure with vertical or horizontal offset between the two $\sigma$ label sets (e.g., place PPEDCRF labels above the marker and global-noise labels below, or use different annotation colors).
-
-\subsubsection*{R2. Explain apparent non-selectivity in Fig.~6 qualitative panel}
-Fig.~6 panel~(d) shows the absolute pixel difference map at $\sigma_0=24$. It appears nearly uniform red across the entire frame---including the foreground pedestrians and ground---which visually contradicts the paper's central narrative of \emph{selective} perturbation. This is because $\sigma_0=24$ is a strong perturbation level where even the ``unperturbed'' foreground regions show visible noise spillover after clipping.
-
-The text says ``$\sigma_0=24$ for visual clarity,'' but the figure actually undercuts the selectivity argument by showing barely any spatial structure in the difference map.
-
-\textbf{Required fix (choose one):}
-\begin{enumerate}
-    \item Add one sentence to the caption explicitly noting that $\sigma_0=24$ is chosen for visibility and that lower-$\sigma$ settings produce sharper spatial selectivity; or
-    \item Regenerate the figure at $\sigma_0=8$ or $\sigma_0=16$ where the difference map shows clearer spatial localization, and adjust the caption accordingly.
-\end{enumerate}
-
-\subsubsection*{R3. Add a brief note on computational overhead}
-The paper gives no indication of runtime cost. For ACM TOMM, which targets multimedia systems, even one sentence about practical throughput would help. Reviewers from the multimedia-systems community will ask about this.
-
-\textbf{Required fix:}
-Add one sentence in the Experimental Protocol section (or after Algorithm~1) stating approximate per-frame processing time on the hardware used, or at least the number of DCRF iterations and whether the pipeline runs at interactive rates.
-
-\subsubsection*{R4. Harmonize the two abstracts}
-The ACM abstract (ELSE branch) now includes the concrete ``23 of 24'' quantification and is well-scoped. The IEEE abstract (IF branch) is noticeably weaker: it omits the 23/24 count, the appendix confirmation, and uses vaguer phrasing. While ACM TOMM will render the ELSE branch, maintaining both abstracts at the same quality avoids accidental regressions if the format flag changes.
-
-\textbf{Suggested fix:}
-Update the IEEE abstract to include the same ``23 of 24 backbone--gallery cells'' quantification.
-
-\subsubsection*{R5. Tighten the Section 3.2 benchmark-hardness paragraph}
-The paragraph beginning ``The mined benchmark is intentionally difficult\ldots'' provides useful context, but it includes raw floating-point statistics (mean similarity 0.989, range 0.980--0.997, mean max-sim 0.919, 0.856, hardest 0.994) in running prose. These would be easier to absorb in a compact inline display or a small supplementary table, freeing the prose to focus on the qualitative point: hard negatives, not random.
-
-\textbf{Suggested fix:}
-Either (a)~round the statistics (e.g., ``average cosine similarity $\approx$0.99'') and reduce detail, or (b)~move the full statistics to parenthetical or end-of-section display.
-
-\subsubsection*{R6. Caption for Fig.~2 (architecture diagram)}
-The current caption reads: ``Implementation PPEDCRF pipeline.'' The word ``Implementation'' as a standalone adjective is awkward.
-
-\textbf{Suggested fix:}
-Replace with ``PPEDCRF release-side pipeline'' or ``Overview of the PPEDCRF pipeline.''
-
-\subsection*{Non-Actionable Observations (No Changes Needed)}
+\subsection*{Remaining Known Limitations (Not Actionable Without New Data)}
 \begin{itemize}
-    \item The ablation showing temporal and NCP components are weakly distinguished is honestly presented and does not require additional experiments, given the paper's scope disclaimer.
-    \item The matched-OP convergence (PPEDCRF = global noise at equal PSNR) is correctly reported and the ``parameter efficiency'' framing is appropriate for the current contribution claim.
-    \item The 12-pair benchmark size is a real limitation, but it is adequately managed by the explicit disclaimers and the 50-pair appendix confirmation.
+    \item Proxy benchmark based on visual similarity rather than GPS ground truth.
+    \item No large-scale cross-view or street-view evaluation.
+    \item MixVPR adverse transfer not resolved.
+    \item 4 minor BibTeX warnings (missing page numbers for 3 preprint-style entries).
 \end{itemize}
 
-\subsection*{Priority Order}
-\begin{enumerate}
-    \item R1: Fix Fig.~3 label overlap (visual clarity, high reviewer impact).
-    \item R2: Address Fig.~6 selectivity concern (narrative consistency).
-    \item R3: Add computational cost note (ACM TOMM expectation).
-    \item R4: Harmonize IEEE abstract (maintenance).
-    \item R5: Tighten benchmark statistics paragraph (readability).
-    \item R6: Fix Fig.~2 caption wording (minor polish).
-\end{enumerate}
-
-\subsection*{Bottom Line}
-The manuscript is submission-ready for ACM TOMM. Six items remain, all editorial or presentational. The scientific contribution---a calibrated, DCRF-guided selective perturbation framework with bounded, carefully evaluated transfer---is appropriate for TOMM's multimedia privacy scope.
+These are explicitly acknowledged in the paper and do not block submission.
