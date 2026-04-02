@@ -47,7 +47,8 @@ for variant in ("masked_blur", "masked_mosaic"):
         param_val = int(float(r["param"]))
         dx, dy = offsets.get((variant, param_val), (6, 6))
         ax.annotate(f"{pn}={param_val}", (x, y),
-                    xytext=(dx, dy), textcoords="offset points", fontsize=9)
+                    xytext=(dx, dy), textcoords="offset points", fontsize=8,
+                    arrowprops=dict(arrowstyle="-", color="gray", lw=0.5))
 
 ax.set_xlabel("PSNR (dB)", fontsize=11)
 ax.set_ylabel("R@1 retrieval accuracy", fontsize=11)

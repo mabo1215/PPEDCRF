@@ -186,12 +186,18 @@
 60. 已执行独立评审重置并完成纯编辑级修订（E1–E7）。
 修改说明：`docs/Revision_suggestions.tex` 完全重写为新一轮独立评审（7 项 editorial fixes，推荐 Accept with Minor Revisions）。立即实现全部 7 项：(E1) 删除 Conclusion 中重复的"substantially"（3→0）；(E2) 将 robustness 段和 Conclusion 中的"broadly supportive"替换为"consistent transfer across diverse attacker families"和"consistent negative Δ"；(E3) 在 matched-OP 段将"most transferable component"改为"most consistently beneficial component in the current evaluation"；(E4) 修正 matched-OP 段中 blur/noise 隐私效果对比的归因（从 support 改为 feature disruption）；(E5) 删除"lightweight dynamic CRF"的无证据修饰词，改为"a small number of mean-field iterations"；(E6) 将 Conclusion 中"12 paired locations"统一为"12 pairs"；(E7) 删除 temporal 段的重复句（两句合并为一句）。论文编译 0 错误、4 BibTeX warning、0 TBD。main.pdf 18 页。
 
+61. 已按新一轮外部评审意见（10 项）完成全面 reviewer-proofing 修订。
+修改说明：`docs/Revision_suggestions.tex` 被外部更新为"Final ACM TOMM-Oriented Revision Suggestions"（10 项）。全部实现：(R1) Section 3.4 主张从"consistent transfer"弱化为"broadly supportive transfer under the current benchmark protocol"；(R2) 统一统计报告格式——tab:sigma_sweep 全部条目改为 mean±std（含零方差 ±0.000）、PSNR/SSIM 加入 ±std，tab:ablation 和 tab:matched Panel C 零方差条目同步修正；(R3) Fig.4 引用处新增一句明确说明图中展示的是主 benchmark（gallery 12/24/48）而非附录大规模协议；(R4) Fig.5 标签字号从 9→8 并添加灰色箭头连接线，改善低 PSNR 区域密集标签可读性；(R5) Conclusion 中"resolves"改为"substantially reduces"；(R6) Section 3.4 末尾新增过渡句总结主 benchmark 与附录确认的一致结论；(R7) Scope 段扩展附录指引，明确 50-pair 确认用途；(R8) 无需修改，temporal section 已保持恰当克制；(R9) 将贡献列表和 matched-OP 段中残留的"most transferable component"统一为"most consistently beneficial component"；(R10) Section 3.3 匹配操作点措辞更精确，强调 PPEDCRF 在随机方法中的 high-utility 定位并与确定性 baseline 互补。论文编译 0 错误、4 BibTeX warning。main.pdf 18 页、appendix.pdf 4 页。
+
+62. 已执行独立评审重置并完成 4 项编辑级修订（E1–E4）。
+修改说明：`docs/Revision_suggestions.tex` 完全重写为新一轮独立评审（4 项 editorial，推荐 Accept with minor editorial polish）。立即实现全部 4 项：(E1) Conclusion 中"earlier apparent instability"改为面向冷读者的措辞"Seed averaging across three independent noise realizations stabilizes the transfer assessment"；(E2) ACM 摘要 transfer 句补充"(23 of 24 backbone--gallery cells show negative Δ)"，与正文对齐；(E3) Section 3.4 过渡句中"broadly favorable"统一为"broadly supportive"；(E4) tab:matched 表题补充脚注说明 PSNR/SSIM 列省略 ±std 的原因。论文编译 0 错误、4 BibTeX warning。main.pdf 18 页、appendix.pdf 4 页。
+
 ---
 
 ## 当前状态（2026-04-02 更新）
 
 **已完成项：**
-- 已完成 60 项修订任务
+- 已完成 62 项修订任务
 - 论文编译通过（0 LaTeX 错误、4 BibTeX warning、0 TBD 残留）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -208,13 +214,13 @@
 - all-backbone seed-averaged 复核与 50-pair 规模确认均已完成
 - 最终 polishing 轮次完成：Fig.5 重生成、摘要/结论修辞弱化、表格统计格式统一
 - 第 59 轮 reviewer-proofing 完成：benchmark 限制管理句、MixVPR 一致措辞、Fig.5 标签修复、摘要压缩、附录指引、结论语气精炼
-- 第 60 轮编辑级修订完成：删除重复的"substantially"、变换"broadly supportive"、修正归因、统一术语
+- 第 62 轮编辑级修订完成：冷读者措辞修正、摘要量化补充、术语统一、表注补充
 
 **阻塞项：**
-- 当前无硬阻塞项。`docs/Revision_suggestions.tex` 全部 editorial items 已落地。
+- 当前无硬阻塞项。`docs/Revision_suggestions.tex` 全部 4 项已落地。
 
 **下一步评审循环建议：**
-当前 revision cycle 已完成。论文已达到 ACM TOMM 投稿质量（推荐 Accept with Minor Revisions 级别）。如需进一步提升可考虑新一轮独立评审重置，但预期不会发现结构性问题。
+当前 revision cycle 已完成。论文已达到 ACM TOMM 投稿质量。连续两轮独立评审均仅发现纯编辑级问题，结构性和科学性问题已全部解决。建议直接进入投稿准备阶段。
 
 # 未修改或部分修改
 
