@@ -27,7 +27,7 @@ CLAUDE.md
 USAGE_claude.md
 USAGE_codex.md
 .claude/*
-.github/agents/*
+.github/*
 
 *.pth
 *.ckpt
