@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  ppedcrf-train:
+    build: .
+    image: ppedcrf:latest
+    container_name: ppedcrf-train
+    runtime: nvidia
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: "0"  # 修改为需要的 GPU ID
+    volumes:
+      - ./src/data/driving:/workspace/src/data/driving
+      - ./src/outputs:/workspace/src/outputs
+      - ./src/config:/workspace/src/config
+    working_dir: /workspace
+    command: >
+      python src/main.py 
+      --config src/config/config.yaml 
+      train
+    # 取消下行注释以保持容器运行进行调试
+    # stdin_open: true
+    # tty: true
+    # entrypoint: /bin/bash
+
+  ppedcrf-attack:
+    build: .
+    image: ppedcrf:latest
+    container_name: ppedcrf-attack
+    runtime: nvidia
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: "0"
+    volumes:
+      - ./src/data/driving:/workspace/src/data/driving
+      - ./src/outputs:/workspace/src/outputs
+      - ./src/config:/workspace/src/config
+    working_dir: /workspace
+    command: >
+      python src/main.py 
+      --config src/config/config.yaml 
+      attack
+    # 依赖训练完成后再运行
+    # depends_on:
+    #   - ppedcrf-train
+
+  ppedcrf-protect:
+    build: .
+    image: ppedcrf:latest
+    container_name: ppedcrf-protect
+    runtime: nvidia
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: "0"
+    volumes:
+      - ./src/data/driving:/workspace/src/data/driving
+      - ./src/outputs:/workspace/src/outputs
+      - ./src/config:/workspace/src/config
+    working_dir: /workspace
+    command: >
+      python src/main.py 
+      --config src/config/config.yaml 
+      protect
+      --checkpoint src/outputs/sensnet_final.pt
+
+  ppedcrf-dev:
+    build: .
+    image: ppedcrf:latest
+    container_name: ppedcrf-dev
+    runtime: nvidia
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: "0"
+    volumes:
+      - ./src:/workspace/src
+      - ./paper:/workspace/paper
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    entrypoint: /bin/bash
+    # 开发模式：进入容器进行交互开发
+    # docker-compose run ppedcrf-dev
+
+# 使用说明：
+# 1. 构建镜像：
+#    docker-compose build
+#
+# 2. 运行训练：
+#    docker-compose run --rm ppedcrf-train
+#
+# 3. 运行攻击评估：
+#    docker-compose run --rm ppedcrf-attack
+#
+# 4. 运行隐私保护：
+#    docker-compose run --rm ppedcrf-protect
+#
+# 5. 进入开发环境（交互式 shell）：
+#    docker-compose run --rm ppedcrf-dev
+#
+# 6. 查看 GPU 使用情况（在容器内）：
+#    docker-compose run --rm ppedcrf-train nvidia-smi
+#
+# 注意：
+# - 确保已安装 nvidia-docker2（支持 GPU）
+# - CUDA_VISIBLE_DEVICES 可以改为多个 GPU，如 "0,1,2"
+# - 所有输出和数据都会保存在本地对应目录中
