@@ -27,12 +27,26 @@ WORKDIR /workspace
 # Copy the entire repository
 COPY . /workspace/
 
+# Mirror requirements file for environments that expect /environment/requirements.txt
+RUN mkdir -p /environment && \
+        if [ -f /workspace/src/requirements.txt ]; then cp /workspace/src/requirements.txt /environment/requirements.txt; \
+        elif [ -f /workspace/requirements.txt ]; then cp /workspace/requirements.txt /environment/requirements.txt; \
+        fi
+
 # Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r src/requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
+        if [ -f /environment/requirements.txt ]; then \
+            python -m pip install --no-cache-dir -r /environment/requirements.txt; \
+        elif [ -f /workspace/src/requirements.txt ]; then \
+            python -m pip install --no-cache-dir -r /workspace/src/requirements.txt; \
+        elif [ -f /workspace/requirements.txt ]; then \
+            python -m pip install --no-cache-dir -r /workspace/requirements.txt; \
+        else \
+            echo "requirements.txt not found in expected locations" && exit 1; \
+        fi
 
 # Install additional recommended packages for research
-RUN pip install --no-cache-dir \
+RUN python -m pip install --no-cache-dir \
     huggingface-hub \
     tensorboard \
     matplotlib \

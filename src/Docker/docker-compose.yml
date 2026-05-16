@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   ppedcrf-train:
-    build: .
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
     image: ppedcrf:latest
     container_name: ppedcrf-train
     runtime: nvidia
@@ -10,9 +12,9 @@ services:
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"  # 修改为需要的 GPU ID
     volumes:
-      - ./src/data/driving:/workspace/src/data/driving
-      - ./src/outputs:/workspace/src/outputs
-      - ./src/config:/workspace/src/config
+      - ../data/driving:/workspace/src/data/driving
+      - ../outputs:/workspace/src/outputs
+      - ../config:/workspace/src/config
     working_dir: /workspace
     command: >
       python src/main.py 
@@ -24,7 +26,9 @@ services:
     # entrypoint: /bin/bash
 
   ppedcrf-attack:
-    build: .
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
     image: ppedcrf:latest
     container_name: ppedcrf-attack
     runtime: nvidia
@@ -32,9 +36,9 @@ services:
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"
     volumes:
-      - ./src/data/driving:/workspace/src/data/driving
-      - ./src/outputs:/workspace/src/outputs
-      - ./src/config:/workspace/src/config
+      - ../data/driving:/workspace/src/data/driving
+      - ../outputs:/workspace/src/outputs
+      - ../config:/workspace/src/config
     working_dir: /workspace
     command: >
       python src/main.py 
@@ -45,7 +49,9 @@ services:
     #   - ppedcrf-train
 
   ppedcrf-protect:
-    build: .
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
     image: ppedcrf:latest
     container_name: ppedcrf-protect
     runtime: nvidia
@@ -53,9 +59,9 @@ services:
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"
     volumes:
-      - ./src/data/driving:/workspace/src/data/driving
-      - ./src/outputs:/workspace/src/outputs
-      - ./src/config:/workspace/src/config
+      - ../data/driving:/workspace/src/data/driving
+      - ../outputs:/workspace/src/outputs
+      - ../config:/workspace/src/config
     working_dir: /workspace
     command: >
       python src/main.py 
@@ -64,7 +70,9 @@ services:
       --checkpoint src/outputs/sensnet_final.pt
 
   ppedcrf-dev:
-    build: .
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
     image: ppedcrf:latest
     container_name: ppedcrf-dev
     runtime: nvidia
@@ -72,8 +80,8 @@ services:
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"
     volumes:
-      - ./src:/workspace/src
-      - ./paper:/workspace/paper
+      - ..:/workspace/src
+      - ../../paper:/workspace/paper
     working_dir: /workspace
     stdin_open: true
     tty: true
