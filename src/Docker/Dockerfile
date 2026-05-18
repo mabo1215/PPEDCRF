@@ -35,12 +35,12 @@ RUN mkdir -p /environment && \
 
 # Install Python dependencies
 RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
-        if [ -f /environment/requirements.txt ]; then \
-            python -m pip install --no-cache-dir -r /environment/requirements.txt; \
-        elif [ -f /workspace/src/requirements.txt ]; then \
+        if [ -f /workspace/src/requirements.txt ]; then \
             python -m pip install --no-cache-dir -r /workspace/src/requirements.txt; \
         elif [ -f /workspace/requirements.txt ]; then \
             python -m pip install --no-cache-dir -r /workspace/requirements.txt; \
+        elif [ -f /environment/requirements.txt ]; then \
+            python -m pip install --no-cache-dir -r /environment/requirements.txt; \
         else \
             echo "requirements.txt not found in expected locations" && exit 1; \
         fi
