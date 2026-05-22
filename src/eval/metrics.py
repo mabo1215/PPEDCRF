@@ -3,7 +3,11 @@ from __future__ import annotations
 import math
 import numpy as np
 import torch
-from skimage.metrics import structural_similarity as ssim
+
+try:
+    from skimage.metrics import structural_similarity as ssim
+except ModuleNotFoundError:
+    ssim = None
 
 
 def psnr_torch(x: torch.Tensor, y: torch.Tensor, data_range: float = 255.0) -> float:
@@ -40,6 +44,11 @@ def ssim_grayscale_np(img1: np.ndarray, img2: np.ndarray) -> float:
         img2g = (0.114 * img2[..., 0] + 0.587 * img2[..., 1] + 0.299 * img2[..., 2]).astype(np.uint8)
     else:
         img1g, img2g = img1, img2
+
+    if ssim is None:
+        raise ImportError(
+            "scikit-image is required for SSIM metric. Install with: pip install scikit-image"
+        )
 
     score = ssim(img1g, img2g, data_range=255)
     return float(score)
