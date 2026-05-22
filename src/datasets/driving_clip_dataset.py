@@ -84,6 +84,31 @@ def _resize_if_needed(fr: torch.Tensor, size_hw: Optional[Tuple[int, int]]) -> t
     return TF.resize(fr, [h, w], antialias=True)
 
 
+def _resolve_dataset_root(root: str) -> str:
+    """Resolve dataset roots across local and container-style layouts."""
+    if os.path.isabs(root) and os.path.isdir(root):
+        return root
+
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    src_dir = os.path.dirname(module_dir)
+    repo_dir = os.path.dirname(src_dir)
+
+    stripped = root.lstrip("/\\")
+    candidates = [
+        root,
+        os.path.join(module_dir, stripped),
+        os.path.join(src_dir, stripped),
+        os.path.join(repo_dir, stripped),
+        os.path.join(repo_dir, "src", stripped),
+    ]
+
+    for candidate in candidates:
+        if os.path.isdir(candidate):
+            return candidate
+
+    return root
+
+
 class DrivingClipDataset(Dataset):
     """
     Driving clip dataset loader.
@@ -117,6 +142,7 @@ class DrivingClipDataset(Dataset):
         self.sample_mode = str(sample_mode)
         self.resize_hw = resize_hw
 
+        root = _resolve_dataset_root(root)
         split_dir = os.path.join(root, split)
         if not os.path.isdir(split_dir):
             raise FileNotFoundError(f"Split directory not found: {split_dir}")
