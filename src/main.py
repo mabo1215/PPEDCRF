@@ -19,6 +19,28 @@ from privacy.noise_injector import NoiseInjector, NoiseConfig
 from utils.config import load_yaml, maybe_override
 
 
+def _resolve_repo_relative_path(path_value: str) -> str:
+    """Resolve config paths reliably regardless of current working directory."""
+    if os.path.isabs(path_value):
+        return path_value
+
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_dir = os.path.dirname(src_dir)
+
+    candidates = [
+        os.path.normpath(path_value),
+        os.path.normpath(os.path.join(src_dir, path_value)),
+        os.path.normpath(os.path.join(repo_dir, path_value)),
+    ]
+
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+
+    # Default to repo-relative for not-yet-created outputs.
+    return os.path.normpath(os.path.join(repo_dir, path_value))
+
+
 def load_sensnet_checkpoint(ckpt_path: str, device: torch.device):
     from run_train import SensitiveRegionNet
     # Support Hugging Face Hub repo id (e.g. "mabo1215/ppedcrf-sensnet"); requires pip install huggingface_hub
@@ -428,9 +450,10 @@ def cmd_protect(cfg: Dict[str, Any]) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser("PPEDCRF entrypoint")
-    p.add_argument("--config", type=str, default="src/config/config.yaml", help="Path to YAML config")
+    default_config = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "config.yaml")
+    p.add_argument("--config", type=str, default=default_config, help="Path to YAML config")
 
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd")
 
     # Train overrides
     t = sub.add_parser("train", help="Train sensitive region network")
@@ -468,26 +491,26 @@ def apply_cli_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[s
     maybe_override(cfg, "data.root", getattr(args, "data_root", None))
 
     if args.cmd == "train":
-        maybe_override(cfg, "train.out_dir", args.out_dir)
-        maybe_override(cfg, "train.epochs", args.epochs)
-        maybe_override(cfg, "train.batch_size", args.batch_size)
-        maybe_override(cfg, "train.num_workers", args.num_workers)
-        maybe_override(cfg, "train.lr", args.lr)
+        maybe_override(cfg, "train.out_dir", getattr(args, "out_dir", None))
+        maybe_override(cfg, "train.epochs", getattr(args, "epochs", None))
+        maybe_override(cfg, "train.batch_size", getattr(args, "batch_size", None))
+        maybe_override(cfg, "train.num_workers", getattr(args, "num_workers", None))
+        maybe_override(cfg, "train.lr", getattr(args, "lr", None))
         # mask_root: allow explicit "null-like" values via empty string -> None
-        if args.mask_root == "":
+        if getattr(args, "mask_root", None) == "":
             cfg["train"]["mask_root"] = None
         else:
-            maybe_override(cfg, "train.mask_root", args.mask_root)
+            maybe_override(cfg, "train.mask_root", getattr(args, "mask_root", None))
 
     elif args.cmd == "attack":
-        maybe_override(cfg, "attack.backbone", args.backbone)
-        maybe_override(cfg, "attack.max_gallery", args.max_gallery)
-        maybe_override(cfg, "attack.max_query", args.max_query)
+        maybe_override(cfg, "attack.backbone", getattr(args, "backbone", None))
+        maybe_override(cfg, "attack.max_gallery", getattr(args, "max_gallery", None))
+        maybe_override(cfg, "attack.max_query", getattr(args, "max_query", None))
 
     elif args.cmd == "protect":
-        maybe_override(cfg, "protect.checkpoint", args.checkpoint)
-        maybe_override(cfg, "protect.split", args.split)
-        maybe_override(cfg, "protect.max_clips", args.max_clips)
+        maybe_override(cfg, "protect.checkpoint", getattr(args, "checkpoint", None))
+        maybe_override(cfg, "protect.split", getattr(args, "split", None))
+        maybe_override(cfg, "protect.max_clips", getattr(args, "max_clips", None))
 
     return cfg
 
@@ -496,8 +519,20 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    cfg = load_yaml(args.config)
+    if args.cmd is None:
+        parser.print_help()
+        return
+
+    config_path = _resolve_repo_relative_path(args.config)
+    cfg = load_yaml(config_path)
     cfg = apply_cli_overrides(cfg, args)
+
+    if "data" in cfg and "root" in cfg["data"]:
+        cfg["data"]["root"] = _resolve_repo_relative_path(str(cfg["data"]["root"]))
+    if "protect" in cfg and "checkpoint" in cfg["protect"]:
+        cfg["protect"]["checkpoint"] = _resolve_repo_relative_path(str(cfg["protect"]["checkpoint"]))
+    if "train" in cfg and "out_dir" in cfg["train"]:
+        cfg["train"]["out_dir"] = _resolve_repo_relative_path(str(cfg["train"]["out_dir"]))
 
     if args.cmd == "train":
         cmd_train(cfg)
