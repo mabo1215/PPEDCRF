@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 from typing import Any, Dict, List
 
 import numpy as np
@@ -448,6 +449,18 @@ def cmd_protect(cfg: Dict[str, Any]) -> None:
         print(f"Mean PSNR(first frame): {mean_psnr:.2f} dB")
 
 
+def cmd_selfcheck(cfg: Dict[str, Any]) -> None:
+    """Run a lightweight environment check without touching datasets."""
+    print("[selfcheck] PPEDCRF environment check")
+    print(f"[selfcheck] python={platform.python_version()}")
+    print(f"[selfcheck] torch={torch.__version__}")
+    print(f"[selfcheck] cuda_available={torch.cuda.is_available()}")
+    print(f"[selfcheck] config_loaded={bool(cfg)}")
+    if "data" in cfg and "root" in cfg["data"]:
+        print(f"[selfcheck] data_root={cfg['data']['root']}")
+    print("[selfcheck] OK")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser("PPEDCRF entrypoint")
     default_config = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "config.yaml")
@@ -481,6 +494,8 @@ def build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--checkpoint", type=str, default=None)
     pr.add_argument("--split", type=str, default=None)
     pr.add_argument("--max_clips", type=int, default=None)
+
+    sub.add_parser("selfcheck", help="Run environment/config checks without loading data")
 
     return p
 
@@ -540,6 +555,8 @@ def main():
         cmd_attack(cfg)
     elif args.cmd == "protect":
         cmd_protect(cfg)
+    elif args.cmd == "selfcheck":
+        cmd_selfcheck(cfg)
     else:
         raise ValueError(f"Unknown command: {args.cmd}")
 
