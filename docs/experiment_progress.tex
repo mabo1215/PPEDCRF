@@ -8,6 +8,8 @@
 \usepackage{xcolor}
 \usepackage[hidelinks]{hyperref}
 
+\setlength{\emergencystretch}{3em}
+
 \definecolor{DoneGreen}{RGB}{20,115,70}
 \definecolor{RunOrange}{RGB}{180,90,0}
 \definecolor{PendRed}{RGB}{160,25,25}
@@ -20,7 +22,7 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{30 August 2026}
+\date{31 August 2026}
 
 \begin{document}
 \maketitle
@@ -32,8 +34,8 @@ This table is the active plan for the review letter in
 experiment entries below for this PPEDCRF revision cycle. No incomplete run
 may be used for paper writeback.
 
-\begin{longtable}{p{0.08\linewidth}p{0.30\linewidth}p{0.15\linewidth}p{0.39\linewidth}}
-\caption{Active PPEDCRF revision-cycle experiment plan and next steps (30 August 2026).}
+\begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
+\caption{Active PPEDCRF revision-cycle experiment plan and next steps (31 August 2026).}
 \label{tab:ppedcrf-next-step}\\
 \toprule
 ID & Review gap & Status & Next step / completion gate \\
@@ -48,25 +50,21 @@ ID & Review gap & Status & Next step / completion gate \\
 \endfoot
 \bottomrule
 \endlastfoot
-E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \blocked & Implement the manifest-driven geotagged-VPR runner; start on 4c after the host-key change is owner-confirmed; require unique place labels, query/gallery disjointness, file checks, and complete per-query output before paper use. \\
-E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \running & Local 12-query ResNet18 proxy and schema checks complete; run all declared backbones, seeds, and gallery sizes on 4c, then require native and matched-operating-point CSVs plus effective perturbation MSE before paper use. \\
-E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \running & The constrained fixed-attacker diagnostic passes a small local run; repeat at scale and report it only if same-gallery, same-utility, finite-result, and reproducibility gates pass. \\
-E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \pending & The manifest evaluator passes CUDA smoke; use label-backed COCO/VOC images with frozen models and identical original/sanitized inputs, or mark blocked if weights or annotations are unavailable. \\
-E5 & Unary predictor provenance and sensitivity-map assessment (R3-1) & \blocked & The checkpoint has \texttt{mask\_root=null} and produces an almost spatially constant monitoring-map probe (mean spatial standard deviation $2.6\times10^{-4}$); obtain a mask-backed checkpoint or rerun training before claiming sensitivity-map evidence. \\
-E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-2, R3-5, R3-7) & \running & Local per-query rank/margin CSVs and a case-study renderer are available; complete the multi-backbone run and update Fig.~6 only after the manifest and output checksum pass. \\
-E7 & MixVPR adverse transfer analysis (R3-8) & \pending & Produce per-query and margin-level results for all gallery sizes and seeds, classify failures, and revise robustness language to remain attacker-dependent. \\
+E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \blocked & MSLS is the primary official source; Oxford RobotCar is the registered fallback. Build the manifest only after registration/download, then require true place labels, query/gallery disjointness, two cities, two condition subtasks, and complete per-query output before paper use. \\
+E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \pending & The current fixed-budget proxy run is complete, but matched effective-MSE/PSNR outputs are not. Run native and nearest-neighbour matched comparisons and retain the current claim qualification until the checksum gate passes. \\
+E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \pending & Blur/mosaic and a small constrained attacker-aware diagnostic exist. Repeat at scale only when same-gallery, same-utility, finite-result, and reproducibility gates pass; otherwise keep the adaptive result as an appendix diagnostic. \\
+E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \running & Corrected CUDA segmentation mIoU is integrated. An existing \texttt{map50} artifact must be re-audited against the final manifest and added to the utility table, or explicitly marked unavailable. \\
+E5 & Unary predictor provenance and independent sensitivity-map assessment (R3-1) & \blocked & The checkpoint has \texttt{mask\_root=null} and produces an almost spatially constant monitoring-map probe (mean spatial standard deviation $2.6\times10^{-4}$). Build the KITTI-360 attribution manifest and obtain a mask-backed checkpoint before claiming independent map evidence. \\
+E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-2, R3-5, R3-7) & \running & Local per-query rank/margin CSVs and a case-study renderer are available. Add small/large-margin aggregation and update Fig.~6 only after the manifest, gallery evidence, and output checksum gates pass. \\
+E7 & MixVPR transfer diagnosis and mitigation (R3-8) & \pending & The proxy tables and cautious robustness wording are present. Produce per-query/margin failure categories and test one mitigation, or retain MixVPR only as an explicitly qualified limitation. \\
 \end{longtable}
 
-\paragraph{Current execution state.} The new scripts compile and the CUDA
-smoke suite passes on the local RTX 3070. A 12-query ResNet18 proxy run, a
-small attacker-aware diagnostic, and the unary provenance audit also
-complete, but they remain engineering evidence because the stored unary
-checkpoint has no mask root and is nearly spatially constant. The intended
-4c connection from the \texttt{4c 3090} entry in \texttt{C:/source/.env}
-currently fails the TCP connectivity check; the older \texttt{h800cs2} alias
-also has a changed host fingerprint. These are security/connectivity gates,
-not reasons to fabricate results. The handoff contract for Claude Code is in
-\texttt{docs/4c\_experiment\_handoff.md}; no remote run has been started.
+\paragraph{Current execution state.} The new public-data adapters and unary
+attribution validator are now present in \texttt{src/scripts/}. Their local
+CUDA smoke tests are required before any data transfer. The MSLS and KITTI-360
+files are not yet present locally; both official releases require registration
+or intended-use approval. The previous vGPU 3090 instance was shut down, so no
+remote run is currently active.
 
 \paragraph{Evidence policy.} The existing 12/50-pair benchmark remains a
 visual-similarity proxy. E1 is the only route to a true-place/geolocation
@@ -74,29 +72,13 @@ claim. E2--E7 can strengthen mechanism, utility, and attacker-sensitivity
 claims, but incomplete, smoke, blocked, or protocol-mismatched outputs remain
 engineering evidence and must not be inserted into the manuscript.
 
-\paragraph{Scope of this file.} Three tables, kept current rather than
-appended to, tracking the PPEDCRF (dynamic-CRF-guided selective
-perturbation for background-based location privacy) revision cycle:
-\begin{enumerate}
-  \item \textbf{Table~\ref{tab:completion}}: current completion status of
-  every open item in the active review, \texttt{docs/Revision\_suggestions.tex}.
-  \item \textbf{Table~\ref{tab:schedule}}: the next-step experiment
-  schedule -- what is running or queued, how much is done, and the
-  estimated completion time.
-  \item \textbf{Table~\ref{tab:textonly}}: manuscript-text-only revision
-  items -- no experiment, GPU run, or scorer required -- with a
-  0--100\% completion estimate and, for anything not at 100\%, the
-  specific reason in the notes column.
-\end{enumerate}
-Day-to-day narrative updates live in \texttt{docs/progress.md}.
-
 \section*{Table 1: Revision Suggestions Completion Status}
 
-\begin{longtable}{p{0.05\linewidth}p{0.30\linewidth}p{0.11\linewidth}p{0.46\linewidth}}
+\begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
 \caption{Open, blocked, deferred, and not-yet-started items from
-\texttt{docs/Revision\_suggestions.tex}. Completed items are intentionally
-omitted from this current-work table; their evidence remains in
-\texttt{docs/progress.md} and in the paper.}
+\texttt{docs/revision\_suggestions.tex}. Completed items are omitted from this
+current-work table; their evidence remains in \texttt{docs/progress.md} and in
+the paper.}
 \label{tab:completion}\\
 \toprule
 \# & Open item & Status & Evidence / notes \\
@@ -111,26 +93,28 @@ omitted from this current-work table; their evidence remains in
 \endfoot
 \bottomrule
 \endlastfoot
+E1 & MSLS or Oxford RobotCar real place/GPS VPR & \blocked & Public source selected, but registration/download, manifest construction, and remote execution are pending. The current proxy has no geographic ground truth. \\
+E2 & Matched PSNR/MSE/energy experiment & \pending & Current paper deliberately reports fixed-budget values only; a matched operating-point result must be generated and checked before writeback. \\
+E3 & Stronger mask-based and attacker-aware baselines & \pending & Blur/mosaic and a small constrained attacker-aware diagnostic exist; scale only after same-gallery, utility, finite-result, and reproducibility gates pass. \\
+E4 & Detection mAP integration & \running & A \texttt{map50} JSON artifact exists; the revised manuscript currently integrates only the corrected segmentation mIoU table. \\
+E5 & KITTI-360 independent unary attribution diagnostic & \blocked & Public source selected, but the current checkpoint has no mask root and is near-constant on monitoring frames. The new validator requires sequence-held-out masks, poses, and frozen-VPR occlusion attribution. \\
+E6 & Margin subgroup and Figure 6 retrieval evidence & \running & Per-query margin fields and a renderer exist; small/large-margin aggregation and gallery/rank evidence are not yet in the paper. \\
+E7 & MixVPR per-query diagnosis and mitigation & \pending & Transfer values and attacker-dependent qualification are present; failure categories and mitigation are still missing. \\
 \end{longtable}
 
 \section*{Table 2: Next-Step Plan (Experiment Schedule)}
 
-\begin{longtable}{p{0.20\linewidth}p{0.10\linewidth}p{0.12\linewidth}p{0.19\linewidth}p{0.29\linewidth}}
-\caption{Open, deferred, and blocked experiment status. Completed items are
-omitted from this current-work table; their evidence remains in
-\texttt{docs/progress.md}. The fourth column always carries both the
-estimated/actual completion timestamp and the estimated/actual total
-duration, so wait time is legible without cross-referencing the Notes
-column.}
+\begin{longtable}{@{}p{0.14\linewidth}p{0.15\linewidth}p{0.10\linewidth}p{0.18\linewidth}p{0.31\linewidth}@{}}
+\caption{Open, deferred, and blocked experiment status as of 31 August 2026.
+The fourth column carries the current execution condition and duration
+estimate.}
 \label{tab:schedule}\\
 \toprule
-Experiment & Status & \% complete & Est.\ completion / duration &
-Notes \\
+Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
 \midrule
 \endfirsthead
 \toprule
-Experiment & Status & \% complete & Est.\ completion / duration &
-Notes \\
+Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
 \midrule
 \endhead
 \midrule
@@ -138,16 +122,21 @@ Notes \\
 \endfoot
 \bottomrule
 \endlastfoot
+Public-data registration and checksum gate & \blocked & 0\% & After owner access / TBD & MSLS and KITTI-360 require registration or intended-use approval; no public images are stored in the repository. \\
+E1 MSLS geotagged VPR & \blocked & 0\% & After manifest / TBD & Build official query/database JSONL; target 200 queries, gallery 1,000, two cities, and two condition subtasks. \\
+E2 matched utility and ablations & \pending & 20\% & After local proxy rerun / TBD & Native proxy outputs exist; matched effective-MSE/PSNR and all declared variants remain to be run and checked. \\
+E3 attacker-aware baseline & \pending & 20\% & After E2 protocol freeze / TBD & Small diagnostic exists; scale only if utility and reproducibility gates pass. \\
+E4 detector mAP writeback & \running & 60\% & Local re-audit / TBD & Segmentation mIoU is integrated; current detector \texttt{map50} output still needs final-manifest verification and paper integration. \\
+E5 KITTI-360 unary attribution & \blocked & 0\% & After data/checkpoint access / TBD & Sequence-held-out semantic/pose manifest plus tiled VPR occlusion attribution; current checkpoint is a known provenance blocker. \\
+E6 margin subgroups and retrieval case study & \running & 30\% & After E1/E2 exports / TBD & Per-query margins and renderer exist; aggregate small/large-margin table and gallery evidence remain. \\
+E7 MixVPR diagnosis & \pending & 35\% & After proxy exports / TBD & Cross-backbone tables exist; per-query failure categories and mitigation remain. \\
 \end{longtable}
 
 \section*{Table 3: Text-Only Revision Items (No Experiments Required)}
 
-\begin{longtable}{p{0.05\linewidth}p{0.34\linewidth}p{0.09\linewidth}p{0.44\linewidth}}
-\caption{Every item from the current \texttt{docs/Revision\_suggestions.tex}
-that is a manuscript-text change only -- no new experiment, GPU run, or
-scorer required. Progress is 0--100\% completion of the recommended
-change; the notes column gives the exact location and, for anything below
-100\%, the reason.}
+\begin{longtable}{@{}p{0.05\linewidth}p{0.28\linewidth}p{0.11\linewidth}p{0.46\linewidth}@{}}
+\caption{Text-only safeguards already added while public-data experiments remain
+pending.}
 \label{tab:textonly}\\
 \toprule
 \# & Item (review section) & Progress & Location / notes \\
@@ -162,6 +151,9 @@ change; the notes column gives the exact location and, for anything below
 \endfoot
 \bottomrule
 \endlastfoot
+T1 & State the current proxy benchmark as paired-scene evidence only & 100\% & Main paper Experimental Protocol and Appendix interpretation state that synthetic pairs have no GPS ground truth. \\
+T2 & Record MSLS/KITTI-360 as the public-data validation path without inserting results & 100\% & Main paper scope paragraph and Appendix external-validation note identify the official sources, labels, and no-placeholder rule. \\
+T3 & Keep unary accuracy and geographic claims conditional on evidence gates & 100\% & Main paper and Appendix distinguish provenance/attribution diagnostics from sensitivity-map accuracy and verified geolocation. \\
 \end{longtable}
 
 \end{document}

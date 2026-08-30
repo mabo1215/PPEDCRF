@@ -30,9 +30,6 @@ SCRIPT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(SRC_ROOT))
 sys.path.insert(0, str(SCRIPT_ROOT))
 
-SEGMENTATION_MEAN = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32).view(3, 1, 1)
-SEGMENTATION_STD = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32).view(3, 1, 1)
-
 from datasets.driving_clip_dataset import _read_image, _resize_if_needed  # noqa: E402
 from main import load_sensnet_checkpoint  # noqa: E402
 from run_tomm_review_proxy import protect_review_clip  # noqa: E402
@@ -197,10 +194,11 @@ def build_segmenter(device: torch.device):
     import torchvision
     from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
 
+    weights = DeepLabV3_ResNet50_Weights.DEFAULT
     model = torchvision.models.segmentation.deeplabv3_resnet50(
-        weights=DeepLabV3_ResNet50_Weights.DEFAULT
+        weights=weights
     )
-    return model.to(device).eval()
+    return model.to(device).eval(), weights.transforms()
 
 
 @torch.no_grad()
@@ -215,24 +213,41 @@ def predict_detector(model, image: torch.Tensor, device: torch.device, threshold
 
 
 @torch.no_grad()
-def predict_segmenter(model, image: torch.Tensor, device: torch.device) -> np.ndarray:
-    image = image / 255.0
-    image = (image - SEGMENTATION_MEAN.to(image)) / SEGMENTATION_STD.to(image)
-    output = model(image.unsqueeze(0).to(device))["out"]
+def predict_segmenter(
+    model, image: torch.Tensor, device: torch.device, preprocess=None
+) -> np.ndarray:
+    original_size = tuple(int(value) for value in image.shape[-2:])
+    if preprocess is None:
+        from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
+
+        preprocess = DeepLabV3_ResNet50_Weights.DEFAULT.transforms()
+    model_input = preprocess(image / 255.0)
+    output = model(model_input.unsqueeze(0).to(device))["out"]
+    output = F.interpolate(output, size=original_size, mode="bilinear", align_corners=False)
     return output.argmax(dim=1)[0].detach().cpu().numpy().astype(np.int64)
 
 
 @torch.no_grad()
 def predict_segmenter_batch(
-    model, images: Sequence[torch.Tensor], device: torch.device, batch_size: int = 8
+    model,
+    images: Sequence[torch.Tensor],
+    device: torch.device,
+    preprocess=None,
+    batch_size: int = 8,
 ) -> List[np.ndarray]:
-    """Predict segmentation masks in small batches without changing preprocessing."""
+    """Predict masks with the official weights transform and restore image size."""
     predictions: List[np.ndarray] = []
+    if preprocess is None:
+        from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
+
+        preprocess = DeepLabV3_ResNet50_Weights.DEFAULT.transforms()
     for start in range(0, len(images), batch_size):
-        batch = torch.stack(list(images[start : start + batch_size])) / 255.0
-        batch = (batch - SEGMENTATION_MEAN.to(batch)) / SEGMENTATION_STD.to(batch)
-        output = model(batch.to(device))["out"].argmax(dim=1).detach().cpu().numpy()
-        predictions.extend(mask.astype(np.int64) for mask in output)
+        image_batch = list(images[start : start + batch_size])
+        original_size = tuple(int(value) for value in image_batch[0].shape[-2:])
+        batch = torch.stack([preprocess(image / 255.0) for image in image_batch])
+        logits = model(batch.to(device))["out"]
+        logits = F.interpolate(logits, size=original_size, mode="bilinear", align_corners=False)
+        predictions.extend(mask.astype(np.int64) for mask in logits.argmax(dim=1).cpu().numpy())
     return predictions
 
 
@@ -301,6 +316,9 @@ def run_smoke(args: argparse.Namespace) -> Path:
     sanitizer = SensitiveRegionNet().to(device).eval()
     detector = ToyDetector()
     segmenter = ToySegmenter().to(device).eval()
+    from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
+
+    segmentation_preprocess = DeepLabV3_ResNet50_Weights.DEFAULT.transforms()
     target = {"boxes": [[0, 0, size, size]], "labels": [1]}
     target_mask = np.zeros((size, size), dtype=np.int64)
     target_mask[:, size // 2 :] = 1
@@ -311,7 +329,7 @@ def run_smoke(args: argparse.Namespace) -> Path:
         )
         protected_image = protected[0]
         prediction = toy_prediction(detector, protected_image, device, 0.05)
-        segment_prediction = predict_segmenter(segmenter, protected_image, device)
+        segment_prediction = predict_segmenter(segmenter, protected_image, device, segmentation_preprocess)
         rows.append(
             {
                 "variant": variant,
@@ -338,7 +356,7 @@ def run_manifest(args: argparse.Namespace) -> Path:
     sensnet = load_sensnet_checkpoint(args.checkpoint, device)
     has_detection_targets = any(bool(record.get("boxes")) for record in records)
     detector = build_detector(device) if has_detection_targets else None
-    segmenter = build_segmenter(device)
+    segmenter, segmentation_preprocess = build_segmenter(device)
     original_det: List[dict] = []
     original_seg: List[np.ndarray] = []
     targets: List[dict] = []
@@ -359,7 +377,7 @@ def run_manifest(args: argparse.Namespace) -> Path:
     if target_masks and len(target_masks) != len(records):
         raise ValueError("Segmentation labels must be present for every manifest record or for none of them.")
     if target_masks:
-        original_seg = predict_segmenter_batch(segmenter, images, device)
+        original_seg = predict_segmenter_batch(segmenter, images, device, segmentation_preprocess)
 
     rows: List[dict] = []
     for variant in args.variants:
@@ -375,7 +393,9 @@ def run_manifest(args: argparse.Namespace) -> Path:
             det_row["map50_original"] = average_precision_detections(original_det, targets)
             det_row["map50_sanitized"] = average_precision_detections(protected_det, targets)
         if target_masks:
-            protected_seg = predict_segmenter_batch(segmenter, protected_images, device)
+            protected_seg = predict_segmenter_batch(
+                segmenter, protected_images, device, segmentation_preprocess
+            )
             det_row["miou_original"] = mean_iou(original_seg, target_masks)
             det_row["miou_sanitized"] = mean_iou(protected_seg, target_masks)
         rows.append(det_row)

@@ -216,10 +216,10 @@
 - 应用户要求做了 GPU 并行优化（8 进程拆分 + 线程上限），GPU 利用率从 0% 提升到 58%–100%；顺带修复了 `proxy12`/`proxy50` 输出目录冲突的真实 bug
 - vGPU 3090 已确认关机（连接已断开，停止计费）
 - E1 仍按原计划阻塞未尝试；4c 3090 已按用户决定放弃使用
-- 下一步：审计 `src/outputs/tomm_review_proxy50/`、`tomm_review_proxy12/`、`tomm_same_image_utility{,_seg}/` 的具体数值，决定哪些写入论文
+- 已完成：审计并回填 `src/outputs/tomm_review_proxy50/`、`tomm_review_proxy12/` 和 `tomm_same_image_utility_seg_v2/` 的具体数值。
 
 **已完成项：**
-- 已完成 67 项修订任务
+- 已完成 74 项修订任务
 - 论文编译通过（0 LaTeX 错误、4 BibTeX warning、0 TBD 残留）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -230,22 +230,24 @@
 - 已完成摘要-主结果-结论的一致性收口与评审意见文本级修订
 - 已完成 8 骨干单次统一长跑复核并用单一输出目录更新主文 robustness
 - 已完成独立重评审重置并开始新一轮修订循环
-- 已在主文显式标注 larger-pair confirmation 待完成状态并完成图表工件单源化清理
+- 已完成 larger-pair proxy50 confirmation，并完成图表工件单源化清理
 - 已完成 robustness 图 2×4 子图重排并插入主文
-- 已完成 50-pair 大规模确认实验（21/24 负 Δ），附录新增完整表格，主文结论已移除保留语
+- 已完成 50-pair 大规模确认实验（23/24 负 Δ、1 个平局），附录新增完整表格并同步更新主文结论
 - all-backbone seed-averaged 复核与 50-pair 规模确认均已完成
 - 最终 polishing 轮次完成：Fig.5 重生成、摘要/结论修辞弱化、表格统计格式统一
 - 第 59 轮 reviewer-proofing 完成：benchmark 限制管理句、MixVPR 一致措辞、Fig.5 标签修复、摘要压缩、附录指引、结论语气精炼
 - 第 63 轮独立评审重置完成：Fig.3 标签重叠修复、Fig.6 caption 说明、运行时性能、IEEE 摘要对齐、benchmark 统计压缩、Fig.2 caption
 - 已完成当前新审稿意见对应的 Design.md 实验计划登记、5 个实验/诊断脚本、论文方法与限制说明，以及本地 RTX 3070 CUDA smoke test
 - 已完成 12-query 代理消融、攻击者感知小规模诊断和 unary provenance audit；这些结果因 checkpoint provenance 和代理数据限制仅作为工程验证保留
+- 已完成 E4 官方 DeepLab 预处理修正、CUDA manifest 重跑及同图像 mIoU 结果集成
+- 已完成 proxy12/proxy50 retrieval 数值替换、固定预算图重生成和 LaTeX 渲染复核
 
 **阻塞项：**
 - E1 真实 place/GPS VPR 与 4c 远程启动【已阻挡】：本地监控数据没有真实 place/GPS 标签，4c 的 TCP 检查失败且既有 SSH alias 存在 host fingerprint 变更；下一步由管理员确认端点可达性与指纹，并提供合规 manifest。
 - E5 unary sensitivity-map 证据【已阻挡】：当前 checkpoint 没有 mask root，监控片段上的空间标准差约为 $2.6\times10^{-4}$；下一步提供 mask-backed checkpoint 或重新训练后再做独立诊断。
 
 **下一步评审循环建议：**
-E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 seed 和更大 gallery 运行尚未完成；E4 仍需在同一批带标签图像上得到 mAP/mIoU。4c 连接恢复且实验门槛通过后，由 Claude Code 按 `docs/4c_experiment_handoff.md` 继续监控，完成结果审计后再更新论文数字和图表。
+E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程资源门槛约束；E2/E3/E4/E6/E7 还需分别完成 matched energy、attacker-aware 定量写回、detection mAP 整合、margin/case-study 和 MixVPR 深度诊断。远程 GPU 连接恢复且实验门槛通过后，由 Claude Code 按 `docs/archived/4c_experiment_handoff.md` 继续监控。
 
 68. 已修复 E4（同图像效用评估）里一个真实 bug，并新增 manifest 生成脚本，已推送到 origin/main（commit `19f0752`）。
 修改说明：`src/scripts/evaluate_same_image_utility.py` 的 `load_target()` 之前用 `_read_image`（RGB 照片解码器）读取 VOC 风格的调色板索引分割 mask，会把类别 id 经调色板转换成显示颜色，彻底破坏 0..20/255 的类别语义；还有第二个 bug，把结果（`(3,H,W)` torch tensor）直接传给 `cv2.resize`（要求 numpy 数组），直接崩溃。已新增 `_read_class_index_mask()`（用 PIL 按调色板索引读取，不做 RGB 转换）并替换掉原逻辑，本地 2 图 CPU smoke 验证：mIoU 原图 0.746，`full`（PPEDCRF）掉到 0.719，`global_noise` 掉到 0.548——方向上与论文隐私-效用故事一致。同时新增 `src/scripts/build_same_image_utility_manifest.py`，从本地 COCO val2017（检测框）和 VOC2012（分割 mask）各采样 200 张，坐标已按目标分辨率重新缩放，供 E4 使用。
@@ -259,12 +261,27 @@ E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 s
 71. 已完成 vGPU 3090 上全部 5 类 revision-cycle 实验（E2/E3/E6/E7 的 proxy12+proxy50、E4 的 detection+segmentation、E5 provenance），拉回并校验全部结果，关闭 vGPU 3090 实例。
 修改说明：应用户要求"最大化压榨 GPU"，诊断发现原始单进程顺序跑 8 骨干时 GPU 利用率长期为 0%（瓶颈在 CPU 端单条 Python 循环的图像预处理），遂将 `proxy50` 拆成 8 个各跑一个骨干的并行进程并给每个进程加 `OMP_NUM_THREADS=8`/`MKL_NUM_THREADS=8` 线程上限（避免多进程抢 96 核互相拖慢），GPU 利用率随之提升到 58%–100%。过程中同时发现并修复一个真实数据损坏 bug：`proxy12` 与 `proxy50` 此前共用默认输出目录 `src/outputs/tomm_review_proxy`，两个进程会互相覆盖对方的 `per_query.csv`/`summary.csv`，已改为各自独立目录。拆分引入的新问题也逐一处理：(1) 8 个并行进程各自重复计算共享的 pair-discovery 步骤，瞬时显存峰值叠加导致 `clip_vitb32`/`patchnetvlad` 各 OOM 一次，等其他进程结束释放显存后重跑成功；(2) `patchnetvlad` 骨干本身显存占用高达 ~21GB，需要在显存宽裕时单独跑；(3) CLIP 系列（`clip_vitb32`/`clip_vitl14`）加载依赖 `transformers` 联网拉取模型，需要 `source /etc/network_turbo`，重启后一度因未带上该环境变量而报连接失败，补上后又因早期失败请求被 `huggingface_hub` 缓存为".no_exist"负结果导致离线模式下持续报"找不到文件"，清空对应缓存目录后解决；(4) 换用非缓存的直接下载后发现 `huggingface_hub` 默认的 xet 传输后端在 `network_turbo` 代理下会报 401 或直接卡在 0 字节不重连（和此前 monitoring 数据下载遇到的问题同源），改用 `curl -C -`（断点续传）+ `--speed-limit`/`--speed-time` 卡死检测的重试循环，直接把权重文件写入 HF 缓存的 blob 路径（用 HEAD 请求的 `X-Linked-ETag` 确定目标哈希）并手写 snapshot 软链接，绕过 `huggingface_hub` 的下载逻辑；(5) 当晚 `network_turbo` 到 `huggingface.co` 的链路本身时快时慢（30KB/s–870KB/s 波动），改用 `hf-mirror.com`（无需 turbo）后测得约 3.6MB/s，两个 CLIP 权重文件（577MB + 1.63GB）改道后很快下载完成，离线加载验证通过。全部 8 个 `proxy50` 骨干 + `proxy12`（完整 8 骨干单进程）+ `e5_provenance` + `e4_detection`/`e4_segmentation` 均以 `EXIT_CODE=0` 收尾；结果文件（`per_query.csv`/`summary.csv`/`selection.json`/`run_metadata.json`/`provenance.json`/`utility_summary.json`）打包为 2.3MB tar.gz 用 sha256 校验后 scp 拉回本地，行数与远端日志报告的行数逐一核对一致（如 `proxy50` 各骨干 3750/3900 行、`proxy12` 7236 行）；`proxy50` 的 8 份骨干结果已在本地合并为统一的 `src/outputs/tomm_review_proxy50/{per_query,summary}.csv`（30150/219 行，字段取并集以兼容 resnet18 独有的 attacker-aware 列）。全部结果确认落地后执行 `shutdown -h now` 关闭 vGPU 3090 实例并验证连接已断开（停止计费）。
 
+72. 已修正 E4 同图像分割预处理并在指定环境中完成 CUDA 重跑。
+修改说明：在 `evaluate_same_image_utility.py` 中改用官方 DeepLabV3-ResNet50 权重的输入变换，保留 VOC 调色板分割 mask 的类别索引，并在 mIoU 计算前将模型 logits 恢复到原图尺寸。使用 `D:\source\.venv` 在 CUDA 上完成 200 张 manifest 图像评估；结果写入 `src/outputs/tomm_same_image_utility_seg_v2/utility_summary.json`，PPEDCRF mIoU=0.669、global Gaussian noise mIoU=0.632，原图参考 mIoU=0.697。
+
+73. 已用 proxy12/proxy50 新数字整体替换论文中的旧 retrieval 表格和叙述。
+修改说明：主文 `tab:ablation`、`tab:robustness`、固定预算图及摘要/正文/结论已改用 `src/outputs/tomm_review_proxy12/`；附录 `tab:large50` 和 scaling 叙述已改用 `src/outputs/tomm_review_proxy50/`。同步删除没有新 proxy 数据支撑的旧 sigma sweep、matched-PSNR 和 temporal 数值结论，统一注明固定 `sigma_0=8` 与 paired-scene proxy 限制；按新 CSV 重生成三张 retrieval 图并完成 LaTeX 与渲染复核。
+
+74. 已基于当前论文状态重写独立评审意见。
+修改说明：完全重写 `docs/revision_suggestions.tex`，移除上一轮已过期的 frontier、matched-operating-point 和旧 transfer 判断，重新核对 proxy12/proxy50、E4 mIoU、固定 `sigma_0=8`、论文图表和已知限制；当前评审结论为无阻塞性修改项。
+
+75. 【进行中】已完成 E1/E5 公开数据集检索、实验计划登记和论文限制更新。
+修改说明：基于官方数据源检索并选定 MSLS 作为 E1 首选、Oxford RobotCar 作为注册制备选、KITTI-360 作为 E5 的序列保持验证数据；已将数据来源、标签字段、许可门槛、实验指标和禁止占位数字的规则写入 `docs/Design.md` 与 `docs/revision_suggestions.tex`，并新增 MSLS/KITTI-360 manifest 构建脚本及 unary attribution 验证脚本。由于公开数据尚未完成注册/下载，当前只进行本地 smoke test，尚未产生可写回论文的 E1/E5 数字。
+
 **安全提醒（需要你关注，累计更新）**：本次操作中 Hugging Face token 除此前记录的两次外，又因命令行内联传递（`ps aux`/screen 启动命令回显）在本会话工具输出中出现了若干次。token 本身仍未被写入任何提交、日志文件或论文内容，只出现在这次交互式会话的回复中；建议你之后去 Hugging Face 账号设置里吊销并重新生成 `.env` 里的 `Huggingface_model_token`。
+76. 【进行中】已完成 E1/E5 适配器、指定 CUDA 环境 smoke test 和本轮文档/论文构建校验。
+修改说明：使用 `D:\source\.venv`（Python 3.14、PyTorch 2.13.0+cu132、RTX 3070 CUDA）运行 unary attribution smoke（3 queries）与 geotagged VPR smoke（9 rows），并成功构建 `docs/revision_suggestions.pdf`、`docs/experiment_progress.pdf`、主论文和独立附录。真实 MSLS/KITTI-360 运行仍需注册数据、mask-backed checkpoint 和 3090 vGPU；没有把 smoke 数字写入论文。
 
 # 未修改或部分修改
 
-- E2、E3、E6、E7 和 E4 的实验运行已完成（见上方第 71 条），但结果尚未审计进论文：下一步核对 `src/outputs/tomm_review_proxy50/`、`tomm_review_proxy12/`、`tomm_same_image_utility{,_seg}/` 里的数值（seed 方差、attacker-aware 结果、mIoU/mAP），确认符合预期后再决定哪些数字可以写入 `paper/main.tex`/`paper/appendix.tex`。
-- E1（真实 place/GPS VPR）仍【已阻挡】：本地监控数据没有真实 place/GPS 标签，未改变，不在本轮尝试范围内。
+- E1（真实 place/GPS VPR）【进行中/待数据访问】：已确定 MSLS 首选和 Oxford RobotCar 备选，并完成 manifest 适配器；尚未完成官方数据注册、下载、manifest gate 和 vGPU 实验。
+- E5（unary map 独立验证）【已阻挡】：已确定 KITTI-360 和 tiled VPR attribution 方案，并新增验证脚本；当前 checkpoint 仍无 mask root，且 KITTI-360 尚未完成注册/下载，下一步需提供 mask-backed checkpoint 或重新训练并完成序列保持诊断。
+- E2/E3/E4/E6/E7【部分修改】：实验协议、代码入口或已有 proxy/utility 输出已具备，但 matched energy、attacker-aware 定量写回、detection mAP 论文整合、margin 分组/case study 和 MixVPR 深度分析仍未完成。
 
 # 遗留问题
 

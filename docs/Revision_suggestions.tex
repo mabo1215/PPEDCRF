@@ -1,67 +1,134 @@
-﻿\documentclass[11pt]{article}
+\documentclass[11pt]{article}
 
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage[hidelinks]{hyperref}
 
 \begin{document}
 
-\section*{Independent Review --- ACM TOMM Submission Readiness (Round 5)}
+\section*{Independent Review --- ACM TOMM Revision Cycle (2026-08-31)}
 
 \subsection*{Overall Assessment}
-The manuscript is at submission quality for ACM TOMM. The contribution is clearly positioned as a calibrated privacy--utility trade-off optimizer rather than a universal privacy guarantee, the experimental protocol is reproducible and self-consistent, and the limitations are explicitly stated. Four prior independent review rounds found only editorial-level issues, all of which have been resolved.
+The manuscript is internally consistent for the current fixed-budget
+proxy12/proxy50 retrieval study and the corrected E4 segmentation evaluation.
+However, the response-letter requests concerning true geographic place labels
+and independent validation of the learned unary map are still open. A new
+public-data search identifies a concrete path for both items, but registration,
+download, manifest construction, and GPU execution must precede any numerical
+writeback to the paper.
 
-This round identifies one critical scientific-consistency issue (now fixed), three minor presentation items (now fixed), and confirms that no further structural, methodological, or experimental changes are needed.
+\textbf{Recommendation:} Major revision for evidence completion, followed by a
+new audit after the public-data runs. The current proxy results must remain
+explicitly scoped as paired-scene retrieval evidence.
 
-\textbf{Recommendation:} Accept with no further revisions required.
-
-\subsection*{Issues Found and Resolved in This Round}
-
-\subsubsection*{R1 (Critical). Incorrect ``parameter efficiency'' claim in matched-operating-point analysis}
-The matched-operating-point section (Section~4.5) previously stated that PPEDCRF ``reaches the same utility target with a smaller nominal sigma.'' Table~7 shows the opposite: PPEDCRF requires \emph{larger} $\sigma_0$ than global Gaussian noise to reach the same PSNR (e.g., $\sigma_0=8$ vs.\ 4 at $\approx$36\,dB). The correct interpretation is that at any given $\sigma_0$, PPEDCRF preserves approximately 6\,dB more PSNR by concentrating noise on the DCRF support.
-
-\textbf{Status:} Fixed. The matched-operating-point paragraph and the abstract have been rewritten to state the correct directional claim.
-
-\subsubsection*{R2 (Minor). Global Gaussian frontier PSNR values not in any table}
-Section~4.4 quotes specific Global Gaussian PSNR values at $\sigma_0=16$ (24.23\,dB) and $\sigma_0=24$ (20.83\,dB) that appear only in Figure~3 and the released CSV, not in any numbered table.
-
-\textbf{Status:} Fixed. A parenthetical note now states that these values come from the frontier data plotted in Figure~3 and available in the released benchmark outputs.
-
-\subsubsection*{R3 (Minor). Appendix terminology inconsistency}
-Appendix Section~2 used ``fixed ResNet18 attacker'' in the benchmark construction steps, whereas the main paper consistently uses ``backbone'' or ``embedder'' in operational contexts.
-
-\textbf{Status:} Fixed. Changed to ``fixed ResNet18 backbone'' in the appendix.
-
-\subsubsection*{R4 (Minor). Figure~3 caption not self-contained}
-The caption said ``a substantially better operating curve'' without quantifying the advantage.
-
-\textbf{Status:} Fixed. Caption now states ``approximately 6\,dB PSNR advantage.''
-
-\subsubsection*{R5 (Carried from prior round). ``Resolves instability'' language}
-Two instances in the robustness analysis used ``resolves this instability'' / ``is resolved'' regarding CLIP ViT-L/14 seed averaging, which is too strong given MixVPR remains an exception.
-
-\textbf{Status:} Fixed in this cycle. Changed to ``substantially reduces'' in both locations.
-
-\subsection*{Confirmed Strengths (No Changes Needed)}
+\subsection*{Current Evidence That Is Already Adequate}
 \begin{itemize}
-    \item Contribution positioning: calibrated trade-off optimizer, not universal privacy.
-    \item Unified 8-backbone, 3-seed benchmark protocol with single output directory.
-    \item Matched-operating-point analysis with three PSNR targets.
-    \item Explicit MixVPR adverse-transfer exception documented throughout.
-    \item 50-pair appendix scaling confirmation.
-    \item Temporal consistency metrics with honest interpretation.
-    \item All table captions specify deterministic vs.\ stochastic reporting conventions.
-    \item DP-style calibration clearly distinguished from formal DP guarantee.
-    \item Runtime performance noted ($<$50\,ms per frame).
+    \item The released implementation now defines the sigmoid, average-pooling
+    smoother, kernel, stride, padding, mean-field iterations, and temporal
+    reuse. The unary architecture and checkpoint provenance are also documented.
+    \item The proxy12 and proxy50 retrieval tables use the current CSV exports,
+    and the manuscript qualifies transfer as attacker-dependent. The fixed
+    \(\sigma_0=8\) comparison is no longer described as a matched-privacy
+    advantage.
+    \item E4 segmentation uses indexed VOC targets, the official DeepLabV3
+    preprocessing, nearest-neighbour target resizing, and restored output
+    logits. The CUDA mIoU result is integrated in the main paper.
+    \item Gallery size, pair construction, distractors, per-query margins, and
+    the absence of GPS labels are disclosed. These changes improve
+    reproducibility but do not turn the proxy into a geographic benchmark.
 \end{itemize}
 
-\subsection*{Remaining Known Limitations (Not Actionable Without New Data)}
-\begin{itemize}
-    \item Proxy benchmark based on visual similarity rather than GPS ground truth.
-    \item No large-scale cross-view or street-view evaluation.
-    \item MixVPR adverse transfer not resolved.
-    \item 4 minor BibTeX warnings (missing page numbers for 3 preprint-style entries).
-\end{itemize}
+\subsection*{Open Revision Requirements}
 
-These are explicitly acknowledged in the paper and do not block submission.
+\begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.14\linewidth}p{0.51\linewidth}@{}}
+\toprule
+ID & Review gap & Status & Required action and completion gate \\
+\midrule
+E1 & Real place recognition or geolocalization benchmark (R2-1, R3-5) & Open / data access pending & Use official MSLS metadata with longitude, latitude, sequence IDs, place clusters, and cross-condition subtasks. Report at least two cities, two condition subtasks, 200 queries, and a gallery target of 1,000 when resources permit. Require query/gallery disjointness, valid place positives, metadata checks, per-query ranks, and condition-stratified results. Oxford RobotCar is the registered fallback. \\
+E2 & Matched utility and perturbation-energy comparison (R2-2, R3-3, R3-4) & Open & Run full, no-temporal, no-NCP, unary-only, no-DCRF, blur, mosaic, global noise, and the constrained attacker-aware baseline at matched effective MSE/PSNR. Do not restore the removed matched-utility claim until the nearest-neighbour matching output passes the checksum gate. \\
+E3 & Stronger mask-based and attacker-aware baselines (R2-2) & Open & Repeat blur/mosaic and constrained attacker-aware comparisons at the frozen gallery, utility, seed, and output-schema settings. Keep the adaptive result as an appendix diagnostic until the same-gallery, finite-result, and reproducibility gates pass. \\
+E4 & Same-image detection mAP integration (R2-2) & Partially complete & A detector output with \texttt{map50} exists, while the corrected E4 result currently integrated into the paper is segmentation mIoU only. Re-audit the detector output on the final manifest and add a table with original and sanitized mAP alongside mIoU, or explicitly mark detection as unavailable. \\
+E5 & Independent unary-map assessment (R3-1) & Open / checkpoint and data pending & Use a sequence-held-out KITTI-360 manifest with 2D semantic/instance masks and georegistered poses. Compare the unary/refined map with frozen-VPR tiled-occlusion attribution using Spearman correlation, top-10-percent overlap, attribution-energy concentration, and static-background versus dynamic-object strata. This is weak attribution-consistency evidence, not sensitivity ground-truth accuracy. \\
+E6 & Margin subgroups and Figure 6 retrieval evidence (R3-2, R3-5, R3-7) & Open & Aggregate small-margin and large-margin query groups, report correct-versus-hardest-negative similarities and margins before/after sanitization, and regenerate the qualitative case study with the correct gallery image, strongest competitors, ranks, similarities, margins, and attacker backbone. \\
+E7 & MixVPR transfer diagnosis (R3-8) & Partially complete & The revised proxy tables and cautious wording are present, but per-query/margin failure categories and a mitigation experiment are missing. Report these diagnostics or keep MixVPR as a qualified attacker-dependent limitation. \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Public Dataset Decision}
+The primary E1 candidate is Mapillary Street-Level Sequences (MSLS). Its
+official release describes 1.6 million street-level images and provides raw
+longitude/latitude, capture time, sequence IDs, view direction, unique place
+clusters, and standardized cross-condition subtasks. The official release and
+metadata are available at
+\url{https://github.com/mapillary/mapillary_sls} and
+\url{https://www.mapillary.com/dataset/places}.
+
+Oxford RobotCar is retained as a fallback because its official release has more
+than 100 repetitions of a route over more than one year, GPS/INS ground truth,
+and changes in weather, traffic, lighting, construction, and season. It
+requires registration and is licensed for non-commercial academic use:
+\url{https://robotcar-dataset.robots.ox.ac.uk/}.
+
+The primary E5 candidate is KITTI-360. The official release contains over
+320,000 images, accurate geolocation, an IMU/GPS system, continuous vehicle
+poses, and 2D semantic and instance labels. Its download requires registration
+and an intended-use declaration under CC BY-NC-SA 3.0:
+\url{https://www.cvlibs.net/datasets/kitti-360/}.
+
+Kaggle mirrors are not treated as authoritative. They may be used only if the
+downloaded files, metadata, checksums, and license terms are verified against
+the official release. A mirror that omits GPS, sequence, condition, or label
+metadata cannot pass the scientific-evidence gate.
+
+The targeted Kaggle audit found one potentially useful fallback mirror,
+\url{https://www.kaggle.com/datasets/creatorofuniverses/oxfordrobotcar-iprofi-hack-23},
+which describes a pre-processed Oxford RobotCar place-recognition subset and
+claims GPS/INS coverage. It remains a convenience mirror rather than the
+source of record because its file list and preprocessing must be compared with
+the registered Oxford release. The Kaggle
+\url{https://www.kaggle.com/datasets/greatgamedota/kitti360-3d-semantics}
+entry is not currently acceptable for E5: its card describes fused labelled
+3D point clouds and reports an unknown license, without establishing the
+RGB--pose--2D-mask topology required by the validator. Mapillary Vistas
+mirrors are also unsuitable for E1 because Vistas is a segmentation collection,
+not the MSLS place/sequence benchmark. These mirrors may support smoke or
+utility preparation, but none may supply paper-facing E1/E5 numbers without
+the official-source verification gate.
+
+\subsection*{Implementation and Paper-Writeback Plan}
+\begin{enumerate}
+    \item Keep the current monitoring proxy as the reproducible engineering
+    benchmark and do not relabel its synthetic pairs as geographic places.
+    \item Build an MSLS JSONL manifest from official query/database metadata,
+    preserving the official unique-cluster place label and recording city,
+    condition,
+    GPS, sequence, and capture-time fields.
+    \item Build a KITTI-360 sequence-held-out manifest that links images,
+    semantic masks, poses, and pose-derived place cells. Use tiled occlusion of
+    the query image to create the independent VPR attribution reference.
+    \item Run local CUDA smoke tests first. A real run is eligible for paper
+    writeback only after file-existence, label, disjointness, condition,
+    non-constant-map, output-schema, and checksum gates pass.
+    \item If registration, data access, checkpoint quality, or remote GPU
+    connectivity remains unavailable, update the paper with the concrete
+    limitation and dataset plan, but do not insert placeholder results.
+\end{enumerate}
+
+\subsection*{Required Manuscript Changes After Valid Runs}
+The main paper should add the approved E1 protocol, true place-level retrieval
+metrics, condition-stratified results, and a clear separation between the
+proxy and geographic benchmarks. The appendix should add the MSLS manifest
+schema, KITTI-360 attribution protocol, map-validation metrics, the detector
+mAP table, margin subgroup analysis, and the retrieval case-study figure.
+Claims about the learned unary predictor must remain limited to provenance and
+attribution consistency until an independently labelled sensitivity target is
+available.
+
+\textbf{Disposition:} E1 and E5 are blocked until public data registration or
+download and a usable checkpoint/remote run are available. E2--E4 and
+E6--E7 remain actionable. No new paper number is approved from a smoke test or an
+incomplete remote run.
 
 \end{document}

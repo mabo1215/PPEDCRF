@@ -1,4 +1,4 @@
-# PPEDCRF ACM TOMM Revision-Cycle Experiment Plan (2026-08-30)
+# PPEDCRF ACM TOMM Revision-Cycle Experiment Plan (2026-08-31)
 
 This section is the active experiment design for the review letter in
 `docs/TOMM_Response_Letter.md`. It takes precedence over the historical
@@ -18,6 +18,58 @@ and output checksum.
 | E5 | Explain the unary predictor and independently assess its sensitivity maps (R3-1) | Exact architecture, parameter count, training target/source, loss, checkpoint provenance, and a held-out or weakly supervised attribution-consistency diagnostic | Method/appendix text plus `unary_diagnostic.csv`; attribution agreement is labelled diagnostic evidence, not ground-truth map accuracy |
 | E6 | Define Eq. (2), smoothing operator, gallery construction, and the retrieval evidence for Fig. 6 (R3-2, R3-5, R3-7) | Reproducible constants, source counts, pair/distractor IDs, per-query correct rank, strongest negative, similarities, and pre/post margins | Text revision, `retrieval_case_study.csv`, and an updated qualitative figure if the case-study gate passes |
 | E7 | Analyze MixVPR adverse transfer and qualify robustness (R3-8) | Per-query and margin-level results for all gallery sizes and seeds, including the raw rank, sanitized rank, correct similarity, hardest-negative similarity, and failure category | `mixvpr_per_query.csv`, failure summary, and revised robustness wording |
+
+## Public dataset selection for E1 and E5 (2026-08-31)
+
+The public-data search uses the official dataset pages and repositories as the
+source of record. Kaggle mirrors may be used only as a transport convenience
+after their files and metadata are byte-level checked against the official
+release; a Kaggle-only mirror is not sufficient evidence because it may omit
+GPS, sequence, condition, or license metadata.
+
+| Dataset | Role | Why it satisfies the gate | Acquisition and license gate |
+|---|---|---|---|
+| Mapillary Street-Level Sequences (MSLS) | E1 primary | 1.6M street-level images with raw longitude/latitude, capture time, sequence IDs, view direction, unique place clusters, and official cross-condition subtasks (`day2night`, `night2day`, `summer2winter`, `old2new`, and related tasks). | Download from the official Mapillary release, retain the Meta terms-of-use record, and do not redistribute images in the repository. |
+| Oxford RobotCar | E1 fallback / cross-check | More than 100 repetitions of a fixed Oxford route over a year with GPS/INS ground truth and weather, traffic, lighting, construction, and seasonal change. | Registration is required; use only the registered non-commercial academic release and store paths/metadata, not raw images, in the repository. |
+| KITTI-360 | E5 primary, optional E1 cross-check | Over 320k images with accurate geolocation, continuous vehicle poses, synchronized OXTS GPS/IMU measurements, and 2D semantic/instance masks. | Registration and intended-use declaration are required; the official CC BY-NC-SA 3.0 terms must be recorded before download or paper use. |
+
+The primary E1 run will use MSLS because its official metadata already exposes
+place clusters and standardized condition subtasks. The runner will construct
+query/gallery records from the official query/database split, preserve the
+provided `unique_cluster` as `place_id`, and report city/condition strata. A
+positive gallery item must share the official place cluster while query and
+gallery files remain disjoint. The initial remote target is at least 200
+queries, 1,000 gallery candidates, two cities, and two condition subtasks; the
+final size may be reduced only with a recorded resource limitation. Oxford
+RobotCar remains a fallback if MSLS registration or download access cannot be
+completed.
+
+For E5, KITTI-360 semantic and instance labels are not treated as sensitivity
+ground truth. Instead, the held-out diagnostic will build an independent,
+weakly supervised reference from a frozen VPR embedder: tiled query occlusion
+will measure the drop in the correct-place-versus-hardest-negative margin.
+Dynamic semantic instances will be excluded from the background analysis, and
+the unary/refined map will be compared with the reference using Spearman
+correlation, top-10-percent overlap, attribution energy concentration, and
+static-background versus dynamic-object stratification. The diagnostic will
+split by sequence, so no frame from a training sequence may be used in the
+held-out report. It will be labelled attribution-consistency evidence rather
+than pixel-level ground-truth accuracy.
+
+Official sources recorded for reproducibility:
+
+* MSLS release and metadata: `https://github.com/mapillary/mapillary_sls` and
+  `https://www.mapillary.com/dataset/places`.
+* Oxford RobotCar: `https://robotcar-dataset.robots.ox.ac.uk/`.
+* KITTI-360 overview, labels, poses, and terms:
+  `https://www.cvlibs.net/datasets/kitti-360/`.
+
+The targeted Kaggle audit found an Oxford RobotCar place-recognition mirror
+that may be useful after file-list, checksum, metadata, and license
+verification. A KITTI-360 3D-semantics mirror reports an unknown license and
+does not demonstrate the RGB--pose--2D-mask topology required by E5; it is
+therefore rejected as a paper-facing source. Mapillary Vistas mirrors are
+segmentation-only and are not an E1 MSLS replacement.
 
 ## Execution order and gates
 
@@ -46,14 +98,22 @@ and output checksum.
    and keep detection mAP and segmentation mIoU in a separate utility track.
    If pretrained weights or annotations are unavailable on 4c, mark E4
    blocked and do not substitute legacy training curves.
-5. **E1 geotagged benchmark.** Prefer a standard VPR/geolocalization release
-   with explicit place IDs or GPS and multiple acquisition conditions. The new
-   loader accepts a CSV/JSONL manifest rather than assuming a particular
-   directory layout. Required fields are `query_id`, `query_path`,
-   `gallery_id`, `gallery_path`, `place_id` (or latitude/longitude), and
-   optional `viewpoint`, `illumination`, `season`, and `weather`. A run is
-   scientific evidence only if the manifest passes uniqueness, file-exists,
-   place-label, and query/gallery disjointness gates.
+5. **E1 geotagged benchmark.** Use the official MSLS metadata first and
+    preserve its `unique_cluster` as the place label. The new loader accepts a
+    CSV/JSONL manifest rather than assuming a particular public VPR directory
+    layout. Required fields are `query_id`, `query_path`, `gallery_id`,
+    `gallery_path`, `place_id` (or latitude/longitude), and optional
+    `viewpoint`, `illumination`, `season`, and `weather`. A run is scientific
+    evidence only if the manifest passes uniqueness, file-exists, place-label,
+    condition-coverage, and query/gallery disjointness gates. If the primary
+    MSLS download is not available, use the registered Oxford RobotCar release
+    under the same gate; never relabel the current monitoring proxy as GPS data.
+6. **E5 independent unary diagnostic.** Build a KITTI-360 manifest from
+    sequence-held-out images, 2D semantic/instance labels, and georegistered
+    poses. Use frozen VPR occlusion attribution as a weak reference, report the
+    metrics defined above, and fail the gate when the checkpoint is missing,
+    maps are constant, or fewer than the declared held-out samples have valid
+    labels and gallery positives.
 
 ## Fair-comparison definitions
 
@@ -88,7 +148,7 @@ and output checksum.
   not disable host-key verification or overwrite `known_hosts` without an
   administrator/owner-confirmed fingerprint. Until resolved, the remote
   status is `blocked`, while local code and smoke tests may proceed.
-- After the code is pushed, `docs/4c_experiment_handoff.md` is the handoff
+- After the code is pushed, `docs/archived/4c_experiment_handoff.md` is the handoff
   contract for Claude Code. It must contain the commit SHA, exact launch
   command, run root, completion gates, polling cadence, and explicit rules
   against paper writeback from incomplete or failed runs.
@@ -104,7 +164,7 @@ data, unavailable weights, or remote access, the paper must explicitly state
 the limitation and the next step; no placeholder number or proxy relabeling is
 allowed.
 
-## Local validation status (2026-08-30)
+## Local validation status (2026-08-31)
 
 The new review-cycle scripts compile successfully and the CUDA smoke suite
 passes on the local RTX 3070. A small real-image proxy run and a constrained
@@ -116,7 +176,9 @@ therefore reports no ground-truth sensitivity-map accuracy, and no local
 output is eligible for paper number writeback.
 
 The geotagged benchmark loader and same-image utility evaluator pass smoke
-tests, but the local monitoring pool has no true place/GPS labels. The 4c
-launch is consequently pending both a compliant manifest/checkpoint and
-owner-confirmed SSH connectivity. See `docs/4c_experiment_handoff.md` for
-the exact remote contract and monitoring instructions for Claude Code.
+tests, but the local monitoring pool has no true place/GPS labels. The public
+MSLS and KITTI-360 releases require registration/download before their
+manifests can be built. The 4c/vGPU launch is consequently pending both
+compliant public-data manifests and owner-confirmed remote GPU access. See
+`docs/archived/4c_experiment_handoff.md` for the exact remote contract and monitoring
+instructions for Claude Code.
