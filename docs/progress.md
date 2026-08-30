@@ -211,11 +211,12 @@
 
 ## 当前状态（2026-08-31 更新）
 
-**本次更新（vGPU 3090 实验启动）：**
-- 已通过 HuggingFace 私有数据集中转解决本机↔vGPU 3090 带宽阻塞，远程环境（torch 2.13.0+cu130、CUDA 可用）搭建完成
-- `e5_provenance` 已完成，复现此前 E5 blocker 结论（空间标准差 ≈2.63e-4，checkpoint 无 mask 训练）
-- `proxy12`、`proxy50`（覆盖 E2/E3/E6/E7）、`e4_detection`、`e4_segmentation` 均已在 vGPU 3090 上确认真实运行中，详见 `docs/vgpu3090_experiment_handoff.md` 的检查命令
+**本次更新（vGPU 3090 实验全部完成并已关机）：**
+- `e5_provenance`、`proxy12`（完整 8 骨干）、`proxy50`（8 骨干拆分并行）、`e4_detection`、`e4_segmentation` 全部以 `EXIT_CODE=0` 完成，结果已拉回本地并校验（sha256 + 行数），`proxy50` 8 份骨干结果已合并
+- 应用户要求做了 GPU 并行优化（8 进程拆分 + 线程上限），GPU 利用率从 0% 提升到 58%–100%；顺带修复了 `proxy12`/`proxy50` 输出目录冲突的真实 bug
+- vGPU 3090 已确认关机（连接已断开，停止计费）
 - E1 仍按原计划阻塞未尝试；4c 3090 已按用户决定放弃使用
+- 下一步：审计 `src/outputs/tomm_review_proxy50/`、`tomm_review_proxy12/`、`tomm_same_image_utility{,_seg}/` 的具体数值，决定哪些写入论文
 
 **已完成项：**
 - 已完成 67 项修订任务
@@ -255,12 +256,14 @@ E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 s
 70. 已通过 HuggingFace Hub 私有数据集中转彻底绕开本机↔vGPU 3090 的带宽阻塞，完成远程环境搭建并启动全部 5 个 revision-cycle 实验，其中 E5 audit 已完成并复现此前阻塞结论。
 修改说明：本机重启后重新测试本机↔vGPU 3090 直连带宽（50MB dd-over-ssh 60 秒内未完成），确认直连方案仍不可行；按用户此前在"遗留问题"中给出的决策（选项1失败后走 HuggingFace 中转），在本机打包 monitoring 子集（600 clip、4198 文件、2.2GB，与 `discover_paired_locations` 对 `pair_pool_size<=600` 时选取的确定性前缀完全一致）、VPR 权重（Patch-NetVLAD `mapillary_WPCA4096.pth.tar` + `vpr_cache/`，398MB）、E4 same-image utility manifest 及引用图片（55MB，COCO detection 200 + VOC segmentation 200，路径已改写为相对路径）、以及 `sensnet_final.pt` checkpoint，上传到新建的私有数据集仓库 `mabo1215/ppedcrf-tomm-vgpu-relay`。上传直连 `huggingface.co`（token 校验通过，`hf-mirror.com` 经测试不支持鉴权类 API，仅能镜像文件下载端点）；因单次 Bash 调用有 10 分钟上限，2.2GB 文件被切成 7 片（350MB/片）逐片上传。远端下载改用 `curl -C -`（断点续传）+ `--speed-limit`/`--speed-time` 卡死检测的重试循环，而非 `huggingface_hub` 默认的 xet 传输后端——xet 传输在 `network_turbo` 代理下会稳定卡在 0 字节且不重连，换成 curl 后所有分片正常完成。远程 pip 源从阿里云镜像（返回 403）切换为清华镜像后，torch 2.13.0+cu130 安装成功并确认 CUDA 可用（RTX 3090 vGPU，49152MiB）。全部数据完整性已用 sha256 核对（`monitoring_subset.tar`、`sensnet_final.pt` 均与本机哈希一致）并解压到脚本期望的确切路径。随后按 `docs/vgpu3090_experiment_handoff.md` 的 launch plan 启动 5 个并行 screen 会话：`e5_provenance`（已完成，`mean_probability_spatial_std≈2.63e-4`，与此前阻塞记录的 `2.6×10⁻⁴` 一致，确认 E5 blocker 依旧成立，非环境问题）、`proxy12`、`proxy50`（覆盖 E2/E3/E6/E7，运行中，已产生 `selection.json` 且 CPU 占用持续 >580%）、`e4_detection`、`e4_segmentation`（运行中，首次启动时会各自下载一次 torchvision 预训练检测器权重）。过程中两次因缺依赖崩溃（`matplotlib` 缺失；随后发现 Patch-NetVLAD/CosPlace 骨干还需要 `faiss-cpu`、`scikit-learn`、`pandas`、`scipy`），已全部补装并重启对应会话。
 
-**安全提醒（需要你关注）**：本次操作中 Hugging Face token 有两次被完整打印进本会话的工具输出（一次是 `.env` 中该行的 Windows 换行符导致 HTTP header 校验报错、把 header 值完整打进异常堆栈；一次是远端 `ps aux` 输出把包含 token 的完整命令行打印出来）。token 本身未被写入任何提交、日志文件或论文内容，只出现在这次交互式会话的回复中，但建议你之后去 Hugging Face 账号设置里吊销并重新生成这个 token（`.env` 里的 `Huggingface_model_token`），以防万一。
+71. 已完成 vGPU 3090 上全部 5 类 revision-cycle 实验（E2/E3/E6/E7 的 proxy12+proxy50、E4 的 detection+segmentation、E5 provenance），拉回并校验全部结果，关闭 vGPU 3090 实例。
+修改说明：应用户要求"最大化压榨 GPU"，诊断发现原始单进程顺序跑 8 骨干时 GPU 利用率长期为 0%（瓶颈在 CPU 端单条 Python 循环的图像预处理），遂将 `proxy50` 拆成 8 个各跑一个骨干的并行进程并给每个进程加 `OMP_NUM_THREADS=8`/`MKL_NUM_THREADS=8` 线程上限（避免多进程抢 96 核互相拖慢），GPU 利用率随之提升到 58%–100%。过程中同时发现并修复一个真实数据损坏 bug：`proxy12` 与 `proxy50` 此前共用默认输出目录 `src/outputs/tomm_review_proxy`，两个进程会互相覆盖对方的 `per_query.csv`/`summary.csv`，已改为各自独立目录。拆分引入的新问题也逐一处理：(1) 8 个并行进程各自重复计算共享的 pair-discovery 步骤，瞬时显存峰值叠加导致 `clip_vitb32`/`patchnetvlad` 各 OOM 一次，等其他进程结束释放显存后重跑成功；(2) `patchnetvlad` 骨干本身显存占用高达 ~21GB，需要在显存宽裕时单独跑；(3) CLIP 系列（`clip_vitb32`/`clip_vitl14`）加载依赖 `transformers` 联网拉取模型，需要 `source /etc/network_turbo`，重启后一度因未带上该环境变量而报连接失败，补上后又因早期失败请求被 `huggingface_hub` 缓存为".no_exist"负结果导致离线模式下持续报"找不到文件"，清空对应缓存目录后解决；(4) 换用非缓存的直接下载后发现 `huggingface_hub` 默认的 xet 传输后端在 `network_turbo` 代理下会报 401 或直接卡在 0 字节不重连（和此前 monitoring 数据下载遇到的问题同源），改用 `curl -C -`（断点续传）+ `--speed-limit`/`--speed-time` 卡死检测的重试循环，直接把权重文件写入 HF 缓存的 blob 路径（用 HEAD 请求的 `X-Linked-ETag` 确定目标哈希）并手写 snapshot 软链接，绕过 `huggingface_hub` 的下载逻辑；(5) 当晚 `network_turbo` 到 `huggingface.co` 的链路本身时快时慢（30KB/s–870KB/s 波动），改用 `hf-mirror.com`（无需 turbo）后测得约 3.6MB/s，两个 CLIP 权重文件（577MB + 1.63GB）改道后很快下载完成，离线加载验证通过。全部 8 个 `proxy50` 骨干 + `proxy12`（完整 8 骨干单进程）+ `e5_provenance` + `e4_detection`/`e4_segmentation` 均以 `EXIT_CODE=0` 收尾；结果文件（`per_query.csv`/`summary.csv`/`selection.json`/`run_metadata.json`/`provenance.json`/`utility_summary.json`）打包为 2.3MB tar.gz 用 sha256 校验后 scp 拉回本地，行数与远端日志报告的行数逐一核对一致（如 `proxy50` 各骨干 3750/3900 行、`proxy12` 7236 行）；`proxy50` 的 8 份骨干结果已在本地合并为统一的 `src/outputs/tomm_review_proxy50/{per_query,summary}.csv`（30150/219 行，字段取并集以兼容 resnet18 独有的 attacker-aware 列）。全部结果确认落地后执行 `shutdown -h now` 关闭 vGPU 3090 实例并验证连接已断开（停止计费）。
+
+**安全提醒（需要你关注，累计更新）**：本次操作中 Hugging Face token 除此前记录的两次外，又因命令行内联传递（`ps aux`/screen 启动命令回显）在本会话工具输出中出现了若干次。token 本身仍未被写入任何提交、日志文件或论文内容，只出现在这次交互式会话的回复中；建议你之后去 Hugging Face 账号设置里吊销并重新生成 `.env` 里的 `Huggingface_model_token`。
 
 # 未修改或部分修改
 
-- E2、E3、E6、E7【进行中】：`proxy12`/`proxy50` 已在 vGPU 3090 上启动并确认真实运行（CPU 占用持续 >580%，已产生 `selection.json`），覆盖 8 骨干 × 3 seeds × 多 gallery size 的完整协议；下一步等待跑完后核验 per-query 文件、checksum，再决定是否写入论文数字。
-- E4（同图像效用评估）【进行中】：`e4_detection`/`e4_segmentation` 已在 vGPU 3090 上启动，manifest 为本次新建的 COCO detection 200 + VOC segmentation 200 张图子集；首次启动各自触发了一次 torchvision 预训练检测器权重下载（`fasterrcnn_resnet50_fpn_coco`，~160MB，从 `download.pytorch.org` 直连较慢但在正常下载）。下一步等待完成后核验两个 variant 的 mIoU/mAP 输出。
+- E2、E3、E6、E7 和 E4 的实验运行已完成（见上方第 71 条），但结果尚未审计进论文：下一步核对 `src/outputs/tomm_review_proxy50/`、`tomm_review_proxy12/`、`tomm_same_image_utility{,_seg}/` 里的数值（seed 方差、attacker-aware 结果、mIoU/mAP），确认符合预期后再决定哪些数字可以写入 `paper/main.tex`/`paper/appendix.tex`。
 - E1（真实 place/GPS VPR）仍【已阻挡】：本地监控数据没有真实 place/GPS 标签，未改变，不在本轮尝试范围内。
 
 # 遗留问题
@@ -268,4 +271,4 @@ E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 s
 - 4c 3090 CUDA 驱动损坏【已阻挡，需要管理员介入】：`cuInit(0)` 在 4c 上无论哪个 Python 环境都返回 999（`CUDA_ERROR_UNKNOWN`），`nvidia-smi` 对 GPU3 直接报错，GPU0-2 显示空闲但无法创建计算上下文。这是主机级驱动问题，修复通常需要 `rmmod/modprobe nvidia*` 或重启整机，而这是一台有 15+ 位其他用户在用的共享主机，我没有 sudo 密码也不会在未经你和其他用户确认的情况下做这种操作。
   需要你提供/决策：是否要联系 4c 的管理员处理驱动问题？在此之前 4c 不会被使用。
   A: 放弃使用4c
-- Hugging Face token 意外两次打印进会话输出【已完成规避，建议你善后】：详见上方"已全部修改"第 70 条的安全提醒。token 未泄露到任何提交或文件，只在这次交互式对话的工具输出里出现过；建议你之后去 Hugging Face 账号设置里吊销并重新生成 `.env` 里的 `Huggingface_model_token`。不影响当前实验继续运行，纯粹是善后动作，无需立即处理。
+- Hugging Face token 多次意外打印进会话输出【已完成规避，建议你善后】：详见上方"已全部修改"第 70/71 条的安全提醒。token 未泄露到任何提交或文件，只在这次交互式对话的工具输出里出现过；建议你之后去 Hugging Face 账号设置里吊销并重新生成 `.env` 里的 `Huggingface_model_token`。不影响任何已完成的实验，纯粹是善后动作，无需立即处理。

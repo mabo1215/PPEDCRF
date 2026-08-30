@@ -1,3 +1,51 @@
+## UPDATE 2 (2026-08-31): all experiments completed, results pulled, instance shut down
+
+All 5 runs finished with `EXIT_CODE=0`: `e5_provenance`, `proxy12` (full 8-backbone
+single process), `proxy50` split into 8 per-backbone processes
+(resnet18/resnet50/vgg16/clip_vitb32/clip_vitl14/cosplace/mixvpr/patchnetvlad),
+`e4_detection`, `e4_segmentation`. Results were tarred
+(`/root/autodl-tmp/ppedcrf_tomm_20260830/tomm_results_20260831.tar.gz`, 2.3MB,
+sha256 `fa2af18b1b6fbde8155ef4dfb09bd63ae1baa98ae50f83f631e95929531c0add`),
+scp'd back to `src/outputs/` locally, and extracted. The 8 `proxy50_split/*`
+directories were merged locally into `src/outputs/tomm_review_proxy50/`
+(union of columns to handle resnet18's extra attacker-aware fields). The
+instance was then shut down via `ssh ... "shutdown -h now"` and confirmed
+offline (`Connection refused` on a follow-up SSH attempt) — billing stopped.
+
+Key lessons from getting the last 2 backbones (CLIP) working, in case a
+future session needs to bring vGPU 3090 back up for further runs:
+- `retrieval_attack.py`'s CLIP loader sets `HF_HUB_OFFLINE=1` internally —
+  it expects the model already fully cached; it will NOT reliably download
+  on demand. Always pre-populate the cache before launching a CLIP-backbone
+  run, don't rely on the run itself to fetch it.
+- `huggingface_hub`'s default xet transfer backend does not work through
+  the AutoDL `network_turbo` proxy (fails with 401 or stalls at 0 bytes) —
+  this matches the earlier finding for the private relay dataset. Always
+  set `HF_HUB_DISABLE_XET=1`, or better, download via plain `curl -C -`
+  directly into the HF cache blob path (get the target sha256 from the
+  `X-Linked-ETag` header on a HEAD request with the token, place the file
+  at `~/.cache/huggingface/hub/models--<org>--<repo>/blobs/<sha256>`, then
+  symlink it from `snapshots/<revision>/<filename>`).
+- `network_turbo`'s actual throughput to `huggingface.co` varies wildly
+  night to night (30KB/s–870KB/s was observed in one session). Before
+  spending a long time waiting on it, test `hf-mirror.com` directly (no
+  turbo needed) — it hit ~3.6MB/s when `network_turbo` was crawling. Use
+  `https://hf-mirror.com/<repo>/resolve/main/<file>` as a drop-in swap for
+  `https://huggingface.co/<repo>/resolve/main/<file>` for downloads (it does
+  NOT support authenticated write APIs like `create_repo`/`upload_file`,
+  only file resolve/download).
+- Splitting a multi-backbone sequential script into N parallel per-backbone
+  processes sharing one GPU is a real speedup (0%→58-100% SM utilization
+  observed) since the original script processes backbones one at a time in
+  a single process — but check for redundant shared setup work first
+  (`discover_paired_locations` in `run_controlled_retrieval_benchmark.py`
+  runs once per process, so N processes recompute it N times; this caused
+  a transient OOM here). Watch nvidia-smi memory during the first wave and
+  be ready to re-launch any backbone that OOMs once memory frees up from
+  finished backbones — `patchnetvlad` in particular needs ~21GB alone.
+
+---
+
 ## UPDATE (2026-08-31): data relay completed, experiments running
 
 The direct local↔vGPU 3090 link was re-tested after the local host restart
