@@ -4,7 +4,7 @@
 **Repository:** `mabo1215/PPEDCRF`
 **Current local state:** runnable review scripts and paper text updates are prepared.
 **Paper submodule commit:** `a0f69be` (`PPEDCRF_overleaf` `main`, pushed 2026-08-30).
-**Parent integration commit:** will be recorded here after the parent repository push.
+**Parent integration commit:** `b4a623c` (`PPEDCRF` `main`, pushed 2026-08-30).
 **Remote target:** the `4c 3090` entry in `C:\source\.env`
 **Remote start status:** blocked pending a successful TCP/SSH connection and host-key confirmation.
 
