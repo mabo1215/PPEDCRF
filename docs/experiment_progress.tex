@@ -49,21 +49,24 @@ ID & Review gap & Status & Next step / completion gate \\
 \bottomrule
 \endlastfoot
 E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \blocked & Implement the manifest-driven geotagged-VPR runner; start on 4c after the host-key change is owner-confirmed; require unique place labels, query/gallery disjointness, file checks, and complete per-query output before paper use. \\
-E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \pending & Run the controlled proxy diagnostic with full, no-temporal, no-NCP, unary-only, and no-DCRF variants; require native and matched-operating-point CSVs plus effective perturbation MSE and seed metadata. \\
-E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \pending & Retain blur/mosaic and add the constrained fixed-attacker feature-suppression diagnostic; report it only if same-gallery, same-utility, finite-result, and reproducibility gates pass. \\
-E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \pending & Use label-backed COCO/VOC images with frozen models and identical original/sanitized inputs; if weights or annotations are unavailable, mark blocked and preserve the legacy track as auxiliary only. \\
-E5 & Unary predictor provenance and sensitivity-map assessment (R3-1) & \pending & Add exact architecture/training/checkpoint details to the paper and run the held-out or weak attribution diagnostic; do not call attribution agreement ground-truth accuracy. \\
-E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-2, R3-5, R3-7) & \pending & Export per-query correct rank, hardest-negative similarity, pre/post margin, and case-study images; update the paper only after the manifest and output checksum pass. \\
+E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \running & Local 12-query ResNet18 proxy and schema checks complete; run all declared backbones, seeds, and gallery sizes on 4c, then require native and matched-operating-point CSVs plus effective perturbation MSE before paper use. \\
+E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \running & The constrained fixed-attacker diagnostic passes a small local run; repeat at scale and report it only if same-gallery, same-utility, finite-result, and reproducibility gates pass. \\
+E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \pending & The manifest evaluator passes CUDA smoke; use label-backed COCO/VOC images with frozen models and identical original/sanitized inputs, or mark blocked if weights or annotations are unavailable. \\
+E5 & Unary predictor provenance and sensitivity-map assessment (R3-1) & \blocked & The checkpoint has \texttt{mask\_root=null} and produces an almost spatially constant monitoring-map probe (mean spatial standard deviation $2.6\times10^{-4}$); obtain a mask-backed checkpoint or rerun training before claiming sensitivity-map evidence. \\
+E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-2, R3-5, R3-7) & \running & Local per-query rank/margin CSVs and a case-study renderer are available; complete the multi-backbone run and update Fig.~6 only after the manifest and output checksum pass. \\
 E7 & MixVPR adverse transfer analysis (R3-8) & \pending & Produce per-query and margin-level results for all gallery sizes and seeds, classify failures, and revise robustness language to remain attacker-dependent. \\
 \end{longtable}
 
-\paragraph{Current execution state.} Local code changes and the smoke test are
-the next critical path. The intended 4c alias is \texttt{h800cs2}, but SSH
-currently rejects it because the remote host fingerprint changed. This is a
-security gate, not a compute failure: host-key verification must be repaired
-or the fingerprint confirmed before any remote launch. The handoff contract
-for Claude Code will be written to
-\texttt{docs/4c\_experiment\_handoff.md} after the runnable commit is pushed.
+\paragraph{Current execution state.} The new scripts compile and the CUDA
+smoke suite passes on the local RTX 3070. A 12-query ResNet18 proxy run, a
+small attacker-aware diagnostic, and the unary provenance audit also
+complete, but they remain engineering evidence because the stored unary
+checkpoint has no mask root and is nearly spatially constant. The intended
+4c connection from the \texttt{4c 3090} entry in \texttt{C:/source/.env}
+currently fails the TCP connectivity check; the older \texttt{h800cs2} alias
+also has a changed host fingerprint. These are security/connectivity gates,
+not reasons to fabricate results. The handoff contract for Claude Code is in
+\texttt{docs/4c\_experiment\_handoff.md}; no remote run has been started.
 
 \paragraph{Evidence policy.} The existing 12/50-pair benchmark remains a
 visual-similarity proxy. E1 is the only route to a true-place/geolocation

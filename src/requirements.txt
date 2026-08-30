@@ -7,7 +7,7 @@ opencv-python>=4.8
 numpy>=1.24
 
 # Metrics
-scikit-image>=0.21,<0.23
+scikit-image>=0.23,<0.27
 
 # Utils
 tqdm>=4.66

@@ -204,12 +204,15 @@
 66. 已将 ACM TOMM 审稿信整理为结构化 Markdown 文档。
 修改说明：重排 `docs/TOMM_Response_Letter.md` 的编辑决定、三位审稿人的推荐结论、文字性意见和附加问题，统一使用 Markdown 标题、编号列表、引用块和字段列表；保留审稿意见原文及空白回答项的语义。
 
+67. 已根据当前 ACM TOMM 新审稿意见启动 revision cycle，并完成实验计划、代码骨架、论文事实校准和远程实验交接。
+修改说明：在 `docs/Design.md` 中先登记 E1–E7 实验计划及完成门槛，在 `src/scripts/` 中新增受控消融、地理标注 VPR、同图像效用、unary provenance 和 retrieval case-study 工具；`paper/main.tex` 与 `paper/appendix.tex` 已补充方法来源、公式定义、数据构造和可复现性限制。CUDA smoke test、12-query ResNet18 代理运行、攻击者感知小规模诊断和 provenance audit 均已完成，但当前 checkpoint 的 `mask_root=null` 且 unary map 近似空间常数，因此没有把代理结果写成论文证据；`docs/4c_experiment_handoff.md` 已写明 4c 启动命令与 Claude Code 监控规则。
+
 ---
 
 ## 当前状态（2026-08-30 更新）
 
 **已完成项：**
-- 已完成 66 项修订任务
+- 已完成 67 项修订任务
 - 论文编译通过（0 LaTeX 错误、4 BibTeX warning、0 TBD 残留）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
@@ -227,13 +230,16 @@
 - 最终 polishing 轮次完成：Fig.5 重生成、摘要/结论修辞弱化、表格统计格式统一
 - 第 59 轮 reviewer-proofing 完成：benchmark 限制管理句、MixVPR 一致措辞、Fig.5 标签修复、摘要压缩、附录指引、结论语气精炼
 - 第 63 轮独立评审重置完成：Fig.3 标签重叠修复、Fig.6 caption 说明、运行时性能、IEEE 摘要对齐、benchmark 统计压缩、Fig.2 caption
+- 已完成当前新审稿意见对应的 Design.md 实验计划登记、5 个实验/诊断脚本、论文方法与限制说明，以及本地 RTX 3070 CUDA smoke test
+- 已完成 12-query 代理消融、攻击者感知小规模诊断和 unary provenance audit；这些结果因 checkpoint provenance 和代理数据限制仅作为工程验证保留
 
 **阻塞项：**
-- 当前无硬阻塞项。`docs/Revision_suggestions.tex` 第 5 轮独立评审全部 5 项已落地。
+- E1 真实 place/GPS VPR 与 4c 远程启动【已阻挡】：本地监控数据没有真实 place/GPS 标签，4c 的 TCP 检查失败且既有 SSH alias 存在 host fingerprint 变更；下一步由管理员确认端点可达性与指纹，并提供合规 manifest。
+- E5 unary sensitivity-map 证据【已阻挡】：当前 checkpoint 没有 mask root，监控片段上的空间标准差约为 $2.6\times10^{-4}$；下一步提供 mask-backed checkpoint 或重新训练后再做独立诊断。
 
 **下一步评审循环建议：**
-当前 revision cycle 已完成。论文已达到 ACM TOMM 投稿质量。连续五轮独立评审中，第 5 轮发现了 1 项关键方向性错误（matched-OP 中 σ₀ 方向说反）已修复，其余均为纯编辑级问题。结构性和科学性问题已全部解决。build.bat 已更新为编译 main + titlepage + appendix。匿名投稿源码已通过审查。建议直接进入投稿准备阶段。
+E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 seed 和更大 gallery 运行尚未完成；E4 仍需在同一批带标签图像上得到 mAP/mIoU。4c 连接恢复且实验门槛通过后，由 Claude Code 按 `docs/4c_experiment_handoff.md` 继续监控，完成结果审计后再更新论文数字和图表。
 
 # 未修改或部分修改
 
-（当前无未完成项。）
+- E2、E3、E4、E6、E7【进行中】：代码与 smoke/schema 验证已完成，但缺少满足完整协议的远程长跑输出；下一步运行并核验 manifest、seed、checksum 和 per-query 文件，再决定是否写入论文。

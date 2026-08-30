@@ -103,3 +103,20 @@ only with same-image labelled evaluation. If an item is blocked by missing
 data, unavailable weights, or remote access, the paper must explicitly state
 the limitation and the next step; no placeholder number or proxy relabeling is
 allowed.
+
+## Local validation status (2026-08-30)
+
+The new review-cycle scripts compile successfully and the CUDA smoke suite
+passes on the local RTX 3070. A small real-image proxy run and a constrained
+attacker-aware diagnostic also complete, but they are engineering checks only:
+the current `src/outputs/sensnet_final.pt` checkpoint stores `mask_root=null`
+and produces an almost spatially constant unary map on monitoring clips
+(mean spatial standard deviation about `2.6e-4`). The provenance diagnostic
+therefore reports no ground-truth sensitivity-map accuracy, and no local
+output is eligible for paper number writeback.
+
+The geotagged benchmark loader and same-image utility evaluator pass smoke
+tests, but the local monitoring pool has no true place/GPS labels. The 4c
+launch is consequently pending both a compliant manifest/checkpoint and
+owner-confirmed SSH connectivity. See `docs/4c_experiment_handoff.md` for
+the exact remote contract and monitoring instructions for Claude Code.
