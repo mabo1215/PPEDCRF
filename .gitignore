@@ -15,6 +15,7 @@ __pycache__/
 agents/
 docs/build/
 docs/academic-research-skills/
+*.pdf
 
 # LaTeX / BibTeX
 *.bib

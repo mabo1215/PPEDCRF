@@ -217,14 +217,26 @@ def predict_segmenter(model, image: torch.Tensor, device: torch.device) -> np.nd
     return output.argmax(dim=1)[0].detach().cpu().numpy().astype(np.int64)
 
 
+def _read_class_index_mask(path: str) -> np.ndarray:
+    """Read a palette-indexed segmentation PNG as raw class-id values.
+
+    Must not go through ``_read_image``: that function decodes to an RGB
+    photo (via ``cv2.IMREAD_COLOR`` or ``Image.convert('RGB')``), which maps
+    each palette index through to an arbitrary display colour and destroys
+    the class-id semantics that VOC-style masks (0..20, 255=ignore) rely on.
+    """
+    from PIL import Image
+
+    with Image.open(path) as image:
+        return np.array(image, dtype=np.int64)
+
+
 def load_target(record: Mapping[str, object], root: str, resize_hw: Tuple[int, int]) -> Tuple[dict, np.ndarray | None]:
     target = {"boxes": record.get("boxes", []), "labels": record.get("labels", [])}
     mask = None
     mask_path = record.get("segmentation_path")
     if mask_path:
-        mask_image = _read_image(str(resolve_path(str(mask_path), root)))
-        if mask_image.ndim == 3:
-            mask_image = mask_image[..., 0]
+        mask_image = _read_class_index_mask(str(resolve_path(str(mask_path), root)))
         # Nearest-neighbour resize preserves class IDs.
         import cv2
 
