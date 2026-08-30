@@ -475,3 +475,5 @@ PRO 6000 已开，需要最大化限度的压榨显卡性能（显存96G），�
 ```text
 请根据 <The International Conference on Learning Representations (ICLR 2027)> 的投稿要求对这篇论文进行完整学术评审，并将所有评审意见和修改建议以完整的可以一键复制的 LaTeX 格式写入docs\revision_suggestions.tex。
 ```
+
+先修正 E4 分割预处理，然后用上述 proxy12/proxy50 数字整体替换论文中的旧 retrieval 表格和叙述   其中环境用  D:\source\.venv  

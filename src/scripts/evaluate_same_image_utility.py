@@ -30,6 +30,9 @@ SCRIPT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(SRC_ROOT))
 sys.path.insert(0, str(SCRIPT_ROOT))
 
+SEGMENTATION_MEAN = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32).view(3, 1, 1)
+SEGMENTATION_STD = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32).view(3, 1, 1)
+
 from datasets.driving_clip_dataset import _read_image, _resize_if_needed  # noqa: E402
 from main import load_sensnet_checkpoint  # noqa: E402
 from run_tomm_review_proxy import protect_review_clip  # noqa: E402
@@ -213,8 +216,24 @@ def predict_detector(model, image: torch.Tensor, device: torch.device, threshold
 
 @torch.no_grad()
 def predict_segmenter(model, image: torch.Tensor, device: torch.device) -> np.ndarray:
-    output = model((image / 255.0).unsqueeze(0).to(device))["out"]
+    image = image / 255.0
+    image = (image - SEGMENTATION_MEAN.to(image)) / SEGMENTATION_STD.to(image)
+    output = model(image.unsqueeze(0).to(device))["out"]
     return output.argmax(dim=1)[0].detach().cpu().numpy().astype(np.int64)
+
+
+@torch.no_grad()
+def predict_segmenter_batch(
+    model, images: Sequence[torch.Tensor], device: torch.device, batch_size: int = 8
+) -> List[np.ndarray]:
+    """Predict segmentation masks in small batches without changing preprocessing."""
+    predictions: List[np.ndarray] = []
+    for start in range(0, len(images), batch_size):
+        batch = torch.stack(list(images[start : start + batch_size])) / 255.0
+        batch = (batch - SEGMENTATION_MEAN.to(batch)) / SEGMENTATION_STD.to(batch)
+        output = model(batch.to(device))["out"].argmax(dim=1).detach().cpu().numpy()
+        predictions.extend(mask.astype(np.int64) for mask in output)
+    return predictions
 
 
 def _read_class_index_mask(path: str) -> np.ndarray:
@@ -292,12 +311,12 @@ def run_smoke(args: argparse.Namespace) -> Path:
         )
         protected_image = protected[0]
         prediction = toy_prediction(detector, protected_image, device, 0.05)
-        segment_prediction = segmenter((protected_image / 255.0).unsqueeze(0).to(device))["out"].argmax(1)[0]
+        segment_prediction = predict_segmenter(segmenter, protected_image, device)
         rows.append(
             {
                 "variant": variant,
                 "map50": average_precision_detections([prediction], [target]),
-                "miou": mean_iou([segment_prediction.detach().cpu().numpy()], [target_mask]),
+                "miou": mean_iou([segment_prediction], [target_mask]),
             }
         )
     (output_dir / "utility_summary.json").write_text(json.dumps({"device": str(device), "rows": rows, "scientific_evidence": False}, indent=2), encoding="utf-8")
@@ -317,7 +336,8 @@ def run_manifest(args: argparse.Namespace) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     resize_hw = (int(args.resize_h), int(args.resize_w))
     sensnet = load_sensnet_checkpoint(args.checkpoint, device)
-    detector = build_detector(device)
+    has_detection_targets = any(bool(record.get("boxes")) for record in records)
+    detector = build_detector(device) if has_detection_targets else None
     segmenter = build_segmenter(device)
     original_det: List[dict] = []
     original_seg: List[np.ndarray] = []
@@ -331,13 +351,15 @@ def run_manifest(args: argparse.Namespace) -> Path:
             raise ValueError(f"Record {record['image_id']} has neither detection nor segmentation labels.")
         images.append(image)
         targets.append(target)
-        original_det.append(predict_detector(detector, image / 255.0, device, float(args.score_threshold)))
+        if has_detection_targets:
+            original_det.append(predict_detector(detector, image / 255.0, device, float(args.score_threshold)))
         if mask is not None:
-            original_seg.append(predict_segmenter(segmenter, image, device))
             target_masks.append(mask)
 
     if target_masks and len(target_masks) != len(records):
         raise ValueError("Segmentation labels must be present for every manifest record or for none of them.")
+    if target_masks:
+        original_seg = predict_segmenter_batch(segmenter, images, device)
 
     rows: List[dict] = []
     for variant in args.variants:
@@ -345,14 +367,15 @@ def run_manifest(args: argparse.Namespace) -> Path:
         for image in images:
             protected, _ = protect_review_clip(image.unsqueeze(0), sensnet, cfg, device, variant, int(args.seed))
             protected_images.append(protected[0])
-        protected_det = [predict_detector(detector, image / 255.0, device, float(args.score_threshold)) for image in protected_images]
         det_row = {
             "variant": variant,
-            "map50_original": average_precision_detections(original_det, targets),
-            "map50_sanitized": average_precision_detections(protected_det, targets),
         }
+        if has_detection_targets:
+            protected_det = [predict_detector(detector, image / 255.0, device, float(args.score_threshold)) for image in protected_images]
+            det_row["map50_original"] = average_precision_detections(original_det, targets)
+            det_row["map50_sanitized"] = average_precision_detections(protected_det, targets)
         if target_masks:
-            protected_seg = [predict_segmenter(segmenter, image, device) for image in protected_images]
+            protected_seg = predict_segmenter_batch(segmenter, protected_images, device)
             det_row["miou_original"] = mean_iou(original_seg, target_masks)
             det_row["miou_sanitized"] = mean_iou(protected_seg, target_masks)
         rows.append(det_row)

@@ -45,12 +45,11 @@ Pre-trained model: [mabo1215/ppedcrf-sensnet](https://huggingface.co/mabo1215/pp
 
 ## Setup
 
-Python 3.8+ is recommended.
+Python 3.14 is used by the shared environment at `D:\source\.venv`.
 
 ```bash
-python -m venv .venv
 # Windows PowerShell
-.venv\Scripts\Activate.ps1
+D:\source\.venv\Scripts\Activate.ps1
 pip install -r src/requirements.txt
 ```
 
