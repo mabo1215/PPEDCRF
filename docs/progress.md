@@ -205,7 +205,7 @@
 修改说明：重排 `docs/TOMM_Response_Letter.md` 的编辑决定、三位审稿人的推荐结论、文字性意见和附加问题，统一使用 Markdown 标题、编号列表、引用块和字段列表；保留审稿意见原文及空白回答项的语义。
 
 67. 已根据当前 ACM TOMM 新审稿意见启动 revision cycle，并完成实验计划、代码骨架、论文事实校准和远程实验交接。
-修改说明：在 `docs/Design.md` 中先登记 E1–E7 实验计划及完成门槛，在 `src/scripts/` 中新增受控消融、地理标注 VPR、同图像效用、unary provenance 和 retrieval case-study 工具；`paper/main.tex` 与 `paper/appendix.tex` 已补充方法来源、公式定义、数据构造和可复现性限制。CUDA smoke test、12-query ResNet18 代理运行、攻击者感知小规模诊断和 provenance audit 均已完成，但当前 checkpoint 的 `mask_root=null` 且 unary map 近似空间常数，因此没有把代理结果写成论文证据；`docs/4c_experiment_handoff.md` 已写明 4c 启动命令与 Claude Code 监控规则。
+修改说明：在 `docs/Design.md` 中先登记 E1–E7 实验计划及完成门槛，在 `src/scripts/` 中新增受控消融、地理标注 VPR、同图像效用、unary provenance 和 retrieval case-study 工具；`paper/main.tex` 与 `paper/appendix.tex` 已补充方法来源、公式定义、数据构造和可复现性限制。CUDA smoke test、12-query ResNet18 代理运行、攻击者感知小规模诊断和 provenance audit 均已完成，但当前 checkpoint 的 `mask_root=null` 且 unary map 近似空间常数，因此没有把代理结果写成论文证据；`docs/4c_experiment_handoff.md` 已写明 4c 启动命令与 Claude Code 监控规则。论文子模块 commit 为 `a0f69be`，父仓库集成 commit 为 `b4a623c`，交接文档最终更新 commit 为 `254c5f7`，均已推送到对应 `origin/main`。
 
 ---
 
