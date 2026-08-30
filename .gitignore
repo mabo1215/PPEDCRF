@@ -12,6 +12,9 @@ src/outputs/
 # Python bytecode
 *.pyc
 __pycache__/
+agents/
+docs/build/
+docs/academic-research-skills/
 
 # LaTeX / BibTeX
 *.bib

@@ -1,0 +1,164 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{DoneGreen}{RGB}{20,115,70}
+\definecolor{RunOrange}{RGB}{180,90,0}
+\definecolor{PendRed}{RGB}{160,25,25}
+\newcommand{\done}{\textcolor{DoneGreen}{\textbf{$\checkmark$ Done}}}
+\newcommand{\running}{\textcolor{RunOrange}{\textbf{Running}}}
+\newcommand{\pending}{\textcolor{PendRed}{\textbf{Pending}}}
+\newcommand{\deferred}{\textcolor{RunOrange}{Deferred}}
+\newcommand{\blocked}{\textcolor{PendRed}{\textbf{Blocked}}}
+\newcommand{\skipped}{Skipped (optional)}
+
+\title{\textbf{Experiment Progress and Next-Step Plan}}
+\author{}
+\date{30 August 2026}
+
+\begin{document}
+\maketitle
+
+\section*{PPEDCRF ACM TOMM Revision Cycle --- Next-Step Plan}
+
+This table is the active plan for the review letter in
+\texttt{docs/TOMM\_Response\_Letter.md}. It supersedes the historical
+experiment entries below for this PPEDCRF revision cycle. No incomplete run
+may be used for paper writeback.
+
+\begin{longtable}{p{0.08\linewidth}p{0.30\linewidth}p{0.15\linewidth}p{0.39\linewidth}}
+\caption{Active PPEDCRF revision-cycle experiment plan and next steps (30 August 2026).}
+\label{tab:ppedcrf-next-step}\\
+\toprule
+ID & Review gap & Status & Next step / completion gate \\
+\midrule
+\endfirsthead
+\toprule
+ID & Review gap & Status & Next step / completion gate \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \blocked & Implement the manifest-driven geotagged-VPR runner; start on 4c after the host-key change is owner-confirmed; require unique place labels, query/gallery disjointness, file checks, and complete per-query output before paper use. \\
+E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \pending & Run the controlled proxy diagnostic with full, no-temporal, no-NCP, unary-only, and no-DCRF variants; require native and matched-operating-point CSVs plus effective perturbation MSE and seed metadata. \\
+E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \pending & Retain blur/mosaic and add the constrained fixed-attacker feature-suppression diagnostic; report it only if same-gallery, same-utility, finite-result, and reproducibility gates pass. \\
+E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \pending & Use label-backed COCO/VOC images with frozen models and identical original/sanitized inputs; if weights or annotations are unavailable, mark blocked and preserve the legacy track as auxiliary only. \\
+E5 & Unary predictor provenance and sensitivity-map assessment (R3-1) & \pending & Add exact architecture/training/checkpoint details to the paper and run the held-out or weak attribution diagnostic; do not call attribution agreement ground-truth accuracy. \\
+E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-2, R3-5, R3-7) & \pending & Export per-query correct rank, hardest-negative similarity, pre/post margin, and case-study images; update the paper only after the manifest and output checksum pass. \\
+E7 & MixVPR adverse transfer analysis (R3-8) & \pending & Produce per-query and margin-level results for all gallery sizes and seeds, classify failures, and revise robustness language to remain attacker-dependent. \\
+\end{longtable}
+
+\paragraph{Current execution state.} Local code changes and the smoke test are
+the next critical path. The intended 4c alias is \texttt{h800cs2}, but SSH
+currently rejects it because the remote host fingerprint changed. This is a
+security gate, not a compute failure: host-key verification must be repaired
+or the fingerprint confirmed before any remote launch. The handoff contract
+for Claude Code will be written to
+\texttt{docs/4c\_experiment\_handoff.md} after the runnable commit is pushed.
+
+\paragraph{Evidence policy.} The existing 12/50-pair benchmark remains a
+visual-similarity proxy. E1 is the only route to a true-place/geolocation
+claim. E2--E7 can strengthen mechanism, utility, and attacker-sensitivity
+claims, but incomplete, smoke, blocked, or protocol-mismatched outputs remain
+engineering evidence and must not be inserted into the manuscript.
+
+\paragraph{Scope of this file.} Three tables, kept current rather than
+appended to, tracking the PPEDCRF (dynamic-CRF-guided selective
+perturbation for background-based location privacy) revision cycle:
+\begin{enumerate}
+  \item \textbf{Table~\ref{tab:completion}}: current completion status of
+  every open item in the active review, \texttt{docs/Revision\_suggestions.tex}.
+  \item \textbf{Table~\ref{tab:schedule}}: the next-step experiment
+  schedule -- what is running or queued, how much is done, and the
+  estimated completion time.
+  \item \textbf{Table~\ref{tab:textonly}}: manuscript-text-only revision
+  items -- no experiment, GPU run, or scorer required -- with a
+  0--100\% completion estimate and, for anything not at 100\%, the
+  specific reason in the notes column.
+\end{enumerate}
+Day-to-day narrative updates live in \texttt{docs/progress.md}.
+
+\section*{Table 1: Revision Suggestions Completion Status}
+
+\begin{longtable}{p{0.05\linewidth}p{0.30\linewidth}p{0.11\linewidth}p{0.46\linewidth}}
+\caption{Open, blocked, deferred, and not-yet-started items from
+\texttt{docs/Revision\_suggestions.tex}. Completed items are intentionally
+omitted from this current-work table; their evidence remains in
+\texttt{docs/progress.md} and in the paper.}
+\label{tab:completion}\\
+\toprule
+\# & Open item & Status & Evidence / notes \\
+\midrule
+\endfirsthead
+\toprule
+\# & Open item & Status & Evidence / notes \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\end{longtable}
+
+\section*{Table 2: Next-Step Plan (Experiment Schedule)}
+
+\begin{longtable}{p{0.20\linewidth}p{0.10\linewidth}p{0.12\linewidth}p{0.19\linewidth}p{0.29\linewidth}}
+\caption{Open, deferred, and blocked experiment status. Completed items are
+omitted from this current-work table; their evidence remains in
+\texttt{docs/progress.md}. The fourth column always carries both the
+estimated/actual completion timestamp and the estimated/actual total
+duration, so wait time is legible without cross-referencing the Notes
+column.}
+\label{tab:schedule}\\
+\toprule
+Experiment & Status & \% complete & Est.\ completion / duration &
+Notes \\
+\midrule
+\endfirsthead
+\toprule
+Experiment & Status & \% complete & Est.\ completion / duration &
+Notes \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\end{longtable}
+
+\section*{Table 3: Text-Only Revision Items (No Experiments Required)}
+
+\begin{longtable}{p{0.05\linewidth}p{0.34\linewidth}p{0.09\linewidth}p{0.44\linewidth}}
+\caption{Every item from the current \texttt{docs/Revision\_suggestions.tex}
+that is a manuscript-text change only -- no new experiment, GPU run, or
+scorer required. Progress is 0--100\% completion of the recommended
+change; the notes column gives the exact location and, for anything below
+100\%, the reason.}
+\label{tab:textonly}\\
+\toprule
+\# & Item (review section) & Progress & Location / notes \\
+\midrule
+\endfirsthead
+\toprule
+\# & Item (review section) & Progress & Location / notes \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\end{longtable}
+
+\end{document}

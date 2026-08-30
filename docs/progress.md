@@ -201,12 +201,15 @@
 65. 已执行第 5 轮独立评审重置并完成 5 项修订（R1–R5）。
 修改说明：`docs/Revision_suggestions.tex` 完全重写为新一轮英文独立评审（Round 5，推荐 Accept with no further revisions）。发现并修复 1 项关键问题 + 4 项次要问题：(R1/Critical) matched-operating-point 段中"smaller nominal sigma"方向性错误——PPEDCRF 实际需要更大 σ₀ 才能达到相同 PSNR，已重写为"at any given σ₀, selective perturbation preserves approximately 6 dB more PSNR"；摘要中同义措辞同步修正，删除"parameter efficiency"改为"spatially concentrated perturbation that preserves higher visual quality at any given noise scale"。(R2) frontier 段引用的 Global Gaussian PSNR 值（24.23/20.83 dB）仅在图中不在表中，已加括号注明数据来源。(R3) 附录 benchmark 构造步骤中"fixed ResNet18 attacker"改为"backbone"以统一术语。(R4) Fig.3 caption 从模糊的"substantially better"改为定量"approximately 6 dB PSNR advantage"。(R5) robustness 段两处"resolves/is resolved"弱化为"substantially reduces/is substantially reduced"。论文编译 0 错误、4 BibTeX warning。main.pdf 18 页、appendix.pdf 4 页、titlepage.pdf。
 
+66. 已将 ACM TOMM 审稿信整理为结构化 Markdown 文档。
+修改说明：重排 `docs/TOMM_Response_Letter.md` 的编辑决定、三位审稿人的推荐结论、文字性意见和附加问题，统一使用 Markdown 标题、编号列表、引用块和字段列表；保留审稿意见原文及空白回答项的语义。
+
 ---
 
-## 当前状态（2026-04-02 更新）
+## 当前状态（2026-08-30 更新）
 
 **已完成项：**
-- 已完成 65 项修订任务
+- 已完成 66 项修订任务
 - 论文编译通过（0 LaTeX 错误、4 BibTeX warning、0 TBD 残留）
 - 8 个攻击骨干（分批）稳健性分析与主文集成
 - CLIP ViT-L/14 失效模式已记录并集成到论文
