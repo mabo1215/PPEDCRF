@@ -258,7 +258,7 @@ E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 s
   1. 重启后如果网络恢复正常，直接告诉我继续即可，我会按 `docs/vgpu3090_experiment_handoff.md` 里的步骤重新验证并接着传数据。
   2. 如果重启后网络仍然很差，是否要换一台 `.env` 里的其他主机（PRO 6000 / A800 / h800）？
   3. 或者是否要尝试用 Hugging Face Hub 作为中转（本机上传到 HF 数据集仓库，vGPU 3090 用 `network_turbo` 加速下载，这条路径对 HF 是有加速的）？
-  A:（待回复）
+  A: 选1,  如果用huggingface ，用代理 hf-mirror.com  同时  vGPU 3090 用 `network_turbo` 加速下载. 
 - 4c 3090 CUDA 驱动损坏【已阻挡，需要管理员介入】：`cuInit(0)` 在 4c 上无论哪个 Python 环境都返回 999（`CUDA_ERROR_UNKNOWN`），`nvidia-smi` 对 GPU3 直接报错，GPU0-2 显示空闲但无法创建计算上下文。这是主机级驱动问题，修复通常需要 `rmmod/modprobe nvidia*` 或重启整机，而这是一台有 15+ 位其他用户在用的共享主机，我没有 sudo 密码也不会在未经你和其他用户确认的情况下做这种操作。
   需要你提供/决策：是否要联系 4c 的管理员处理驱动问题？在此之前 4c 不会被使用。
-  A:（待回复）
+  A: 放弃使用4c
