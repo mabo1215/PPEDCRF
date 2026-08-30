@@ -240,6 +240,25 @@
 **下一步评审循环建议：**
 E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 seed 和更大 gallery 运行尚未完成；E4 仍需在同一批带标签图像上得到 mAP/mIoU。4c 连接恢复且实验门槛通过后，由 Claude Code 按 `docs/4c_experiment_handoff.md` 继续监控，完成结果审计后再更新论文数字和图表。
 
+68. 已修复 E4（同图像效用评估）里一个真实 bug，并新增 manifest 生成脚本，已推送到 origin/main（commit `19f0752`）。
+修改说明：`src/scripts/evaluate_same_image_utility.py` 的 `load_target()` 之前用 `_read_image`（RGB 照片解码器）读取 VOC 风格的调色板索引分割 mask，会把类别 id 经调色板转换成显示颜色，彻底破坏 0..20/255 的类别语义；还有第二个 bug，把结果（`(3,H,W)` torch tensor）直接传给 `cv2.resize`（要求 numpy 数组），直接崩溃。已新增 `_read_class_index_mask()`（用 PIL 按调色板索引读取，不做 RGB 转换）并替换掉原逻辑，本地 2 图 CPU smoke 验证：mIoU 原图 0.746，`full`（PPEDCRF）掉到 0.719，`global_noise` 掉到 0.548——方向上与论文隐私-效用故事一致。同时新增 `src/scripts/build_same_image_utility_manifest.py`，从本地 COCO val2017（检测框）和 VOC2012（分割 mask）各采样 200 张，坐标已按目标分辨率重新缩放，供 E4 使用。
+
+69. 已在 4c 3090 和 vGPU 3090 两台主机上排查 GPU 可用性，发现两个不同的真实阻塞项，详见下方"遗留问题"。
+修改说明：4c 3090 SSH 可连但 CUDA 驱动栈整机损坏（`cuInit` 返回 999），已确认非代码/权限问题；转到 vGPU 3090 后连接和权限都正常，但当前从本机到该实例的网络带宽严重不足（2.2GB 数据传输预计需 16–40+ 小时）。vGPU 3090 远端环境已部分就绪：仓库已 clone 到 commit `19f0752`（含上条修复）、三个 third-party 子模块已手动 clone 到锁定 commit、`/root` 下清理了约 24GB 无关旧项目残留（已经用户确认）、pip 缓存目录和源已切换到 `/root/autodl-tmp` 与阿里云镜像。完整状态见 `docs/vgpu3090_experiment_handoff.md`。
+
 # 未修改或部分修改
 
 - E2、E3、E4、E6、E7【进行中】：代码与 smoke/schema 验证已完成，但缺少满足完整协议的远程长跑输出；下一步运行并核验 manifest、seed、checksum 和 per-query 文件，再决定是否写入论文。
+  - 本机重启后，下一次会话应先读 `docs/vgpu3090_experiment_handoff.md`，按文中步骤重新验证 vGPU 3090 网络状况，再决定是否继续当前方案（缩小后的 2.2GB monitoring 子集）还是需要用户进一步决策（见遗留问题）。
+
+# 遗留问题
+
+- vGPU 3090 网络带宽问题【已阻挡，需要你决策】：从本机到 `connect.westd.seetacloud.com:22766` 的链路当前严重带宽不足（观测到十几到几十 KB/s，2.2GB 的 monitoring 数据子集预计要 16–40+ 小时），且双向都慢，不是端口/密码问题。本机重启是否会改善这个问题还不确定。
+  需要你提供/决策：
+  1. 重启后如果网络恢复正常，直接告诉我继续即可，我会按 `docs/vgpu3090_experiment_handoff.md` 里的步骤重新验证并接着传数据。
+  2. 如果重启后网络仍然很差，是否要换一台 `.env` 里的其他主机（PRO 6000 / A800 / h800）？
+  3. 或者是否要尝试用 Hugging Face Hub 作为中转（本机上传到 HF 数据集仓库，vGPU 3090 用 `network_turbo` 加速下载，这条路径对 HF 是有加速的）？
+  A:（待回复）
+- 4c 3090 CUDA 驱动损坏【已阻挡，需要管理员介入】：`cuInit(0)` 在 4c 上无论哪个 Python 环境都返回 999（`CUDA_ERROR_UNKNOWN`），`nvidia-smi` 对 GPU3 直接报错，GPU0-2 显示空闲但无法创建计算上下文。这是主机级驱动问题，修复通常需要 `rmmod/modprobe nvidia*` 或重启整机，而这是一台有 15+ 位其他用户在用的共享主机，我没有 sudo 密码也不会在未经你和其他用户确认的情况下做这种操作。
+  需要你提供/决策：是否要联系 4c 的管理员处理驱动问题？在此之前 4c 不会被使用。
+  A:（待回复）
