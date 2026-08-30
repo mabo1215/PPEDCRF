@@ -1,3 +1,127 @@
+## UPDATE (2026-08-31): data relay completed, experiments running
+
+The direct local↔vGPU 3090 link was re-tested after the local host restart
+and is still broken (a 50MB dd-over-ssh test did not finish in 60s). The
+"What is NOT yet on vGPU 3090" section and the network-bandwidth blocker
+below are now historical — resolved via a Hugging Face Hub private-dataset
+relay instead of fixing the direct link. Everything from "What is already
+done" through "Code changes already pushed" below is still accurate
+background reading.
+
+**What actually happened:**
+- Private dataset repo created: `mabo1215/ppedcrf-tomm-vgpu-relay`
+  (namespace resolved via `whoami()`, token from `.env`'s
+  `Huggingface_model_token`). Contains: `monitoring_subset.tar.part00..06`
+  (7×350MB chunks of the 2.2GB tar — chunked because a single Bash tool call
+  is capped at 10 minutes and one `upload_file`/`hf_hub_download` call is an
+  atomic, non-resumable commit), `monitoring_subset.tar.sha256`,
+  `vpr_weights.tar` (417MB), `utility_subset.tar` (57MB), `sensnet_final.pt`.
+- Upload (local → HF): use the **default endpoint** (`huggingface.co`
+  directly, no `-x`/proxy needed — it authenticates fine from this local
+  machine). `hf-mirror.com` was tested and does NOT work for this: it only
+  mirrors the file-resolve/download endpoints, not the authenticated write
+  API (`whoami`, `create_repo`, `upload_file` all return 401 through it).
+- Download (vGPU 3090 ← HF): `source /etc/network_turbo` is required first
+  (huggingface.co is unreachable direct from this host — confirmed via a
+  `curl` connect-timeout). **Do not use `huggingface_hub`'s default
+  transfer backend for this** — `hf_hub_download`/`snapshot_download` use
+  the `hf-xet` transfer backend by default (pulled in automatically by
+  `huggingface_hub>=0.24`-ish), and it reproducibly stalls at 0 bytes
+  through the `network_turbo` HTTP proxy (confirmed twice, on two different
+  chunks, with no error — it just never sends another byte). Use plain
+  `curl` against the resolve URL instead:
+  `https://huggingface.co/datasets/<repo>/resolve/main/<filename>` with
+  `-H "Authorization: Bearer $HF_TOKEN"`, and wrap it in a resumable retry
+  loop — `curl -L --fail -H "..." --speed-limit 3000 --speed-time 20
+  --connect-timeout 20 --retry-all-errors -C - -o out.tar url` inside a
+  bash `until ... ; do sleep 5; done` loop (attempt cap ~40) — because a
+  stalled connection needs the loop to kill/reconnect it (the
+  `--speed-limit`/`--speed-time` pair makes curl itself abort a stalled
+  transfer, `-C -` resumes from the partial byte offset, `--retry-all-errors`
+  handles the rest). This combination downloaded all 11 files successfully.
+- Remote pip index: the pre-configured `mirrors.aliyun.com` mirror started
+  returning HTTP 403 for package lookups (`curl` confirmed 403 on a direct
+  test) — switched to `https://pypi.tuna.tsinghua.edu.cn/simple/` via `pip
+  config set global.index-url ...`, which worked immediately. If aliyun is
+  broken again on a future session, try tsinghua first before debugging
+  further.
+- Screen-session gotcha: `screen -dmS name bash -c '...'` inherits the
+  **environment of the shell that invokes it** (so a `source
+  .venv/bin/activate` run in the same SSH command *before* the `screen
+  -dmS` call carries into the detached session) — but if you omit that
+  `source` line in a later relaunch, the screen session silently runs with
+  system Python and fails fast. Always re-source the venv immediately
+  before every `screen -dmS` call in the same command, don't assume it
+  carries over from a previous SSH invocation.
+- Installed packages beyond the original plan (discovered via two crash
+  cycles, both now fixed): `matplotlib` (missing entirely from the first
+  install list — `run_controlled_retrieval_benchmark.py` imports it at
+  module load time), and `faiss-cpu`, `scikit-learn`, `pandas`, `scipy`
+  (needed transitively by the Patch-NetVLAD/CosPlace backbone model files).
+- Checksums verified after reassembly: `monitoring_subset.tar` sha256
+  matches the local one exactly; `sensnet_final.pt` sha256 matches
+  `576055d5bb173e45d29aab384abf8a0ac06e02d3f21fe3c75f66511a69d710a4`.
+- Data extracted to: monitoring images →
+  `/root/autodl-tmp/ppedcrf_tomm_20260830/monitoring_images/` (flat
+  `<clip_id>_frame<N>.jpg`, 4198 files, pass as `--monitoring_root`); VPR
+  weights → `src/third_party/Patch-NetVLAD/patchnetvlad/pretrained_models/mapillary_WPCA4096.pth.tar`
+  and `src/models/vpr_cache/{cosplace,mixvpr}/`; E4 manifest+images →
+  `<repo>/utility_subset/` (602 files, manifests already have relative
+  paths, run with `--root utility_subset`); checkpoint →
+  `<repo>/src/outputs/sensnet_final.pt`.
+
+**Experiments launched** (5 screen sessions, per the "Launch plan" section
+below, all under `/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF`, logs in
+`/root/autodl-tmp/ppedcrf_tomm_20260830/run_logs/`):
+- `e5_provenance` — **completed**, exit 0. Result:
+  `mean_probability_spatial_std ≈ 2.63e-4` — matches the previously recorded
+  blocked-item value (`2.6×10⁻⁴`), so this re-confirms (does not resolve)
+  the E5 blocker: the current checkpoint's unary map is still essentially
+  spatially constant. E5 stays blocked pending a mask-backed checkpoint.
+- `proxy12`, `proxy50` — running (covers E2/E3/E6/E7). Confirmed alive via
+  `ps aux` (>580% CPU each, real compute) rather than log output, because
+  Python's stdout is fully buffered when redirected to a file — don't judge
+  liveness from an empty log alone, check `ps aux | grep run_tomm_review`
+  and/or `nvidia-smi --query-compute-apps=pid,used_memory --format=csv`.
+  `src/outputs/tomm_review_proxy/selection.json` already exists, confirming
+  real progress.
+- `e4_detection`, `e4_segmentation` — running. Each independently triggers
+  a one-time `torchvision` download of `fasterrcnn_resnet50_fpn_coco`
+  (~160MB from `download.pytorch.org`, slow direct — no turbo needed but
+  no acceleration either, expect several minutes) the first time; this is
+  normal, not a hang. Segmentation run uses `--output_dir
+  src/outputs/tomm_same_image_utility_seg` to avoid colliding with
+  detection's default output dir.
+- E1 (geotagged VPR) — still not attempted, per the original blocked-item
+  decision (no compliant place/GPS data).
+
+**To check status in a later session**, from local WSL:
+```bash
+timeout 60 ssh -p 22766 -o ConnectTimeout=45 root@connect.westd.seetacloud.com "
+screen -ls
+tail -30 /root/autodl-tmp/ppedcrf_tomm_20260830/run_logs/proxy12.log
+tail -30 /root/autodl-tmp/ppedcrf_tomm_20260830/run_logs/proxy50.log
+tail -30 /root/autodl-tmp/ppedcrf_tomm_20260830/run_logs/e4_detection.log
+tail -30 /root/autodl-tmp/ppedcrf_tomm_20260830/run_logs/e4_segmentation.log
+find /root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF/src/outputs -name '*.csv' -o -name 'summary*.json'
+"
+```
+A run finishing shows `EXIT_CODE=0` appended to its log (the launch wrapper
+adds this). Once all 4 remaining runs show `EXIT_CODE=0`, pull the result
+files back (`scp` — they're small CSV/JSON, no relay needed) and audit
+against the manifests/seeds/checksums before writing any numbers into the
+paper, per the existing plan in this doc's "Launch plan" section.
+
+**Housekeeping note**: the HF token got printed in full into this session's
+own tool output twice (once via a `.env` line-ending bug that broke an HTTP
+header and dumped it in a traceback, once via a `ps aux` listing showing a
+curl command line with the token inline) — never into a commit, file, or
+the paper, but visible in this interactive session's transcript. Recorded
+as a housekeeping item in `docs/progress.md`'s 遗留问题 section
+(recommend rotating the token; not urgent, doesn't block anything).
+
+---
+
 # vGPU 3090 TOMM Revision-Cycle Handoff (2026-08-30, session interrupted for local host restart)
 
 The user is restarting the **local** machine (the one running Claude Code), not

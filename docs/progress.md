@@ -209,7 +209,13 @@
 
 ---
 
-## 当前状态（2026-08-30 更新）
+## 当前状态（2026-08-31 更新）
+
+**本次更新（vGPU 3090 实验启动）：**
+- 已通过 HuggingFace 私有数据集中转解决本机↔vGPU 3090 带宽阻塞，远程环境（torch 2.13.0+cu130、CUDA 可用）搭建完成
+- `e5_provenance` 已完成，复现此前 E5 blocker 结论（空间标准差 ≈2.63e-4，checkpoint 无 mask 训练）
+- `proxy12`、`proxy50`（覆盖 E2/E3/E6/E7）、`e4_detection`、`e4_segmentation` 均已在 vGPU 3090 上确认真实运行中，详见 `docs/vgpu3090_experiment_handoff.md` 的检查命令
+- E1 仍按原计划阻塞未尝试；4c 3090 已按用户决定放弃使用
 
 **已完成项：**
 - 已完成 67 项修订任务
@@ -246,19 +252,20 @@ E2/E3/E6/E7 的实验代码和本地验证已就绪，但完整多骨干、多 s
 69. 已在 4c 3090 和 vGPU 3090 两台主机上排查 GPU 可用性，发现两个不同的真实阻塞项，详见下方"遗留问题"。
 修改说明：4c 3090 SSH 可连但 CUDA 驱动栈整机损坏（`cuInit` 返回 999），已确认非代码/权限问题；转到 vGPU 3090 后连接和权限都正常，但当前从本机到该实例的网络带宽严重不足（2.2GB 数据传输预计需 16–40+ 小时）。vGPU 3090 远端环境已部分就绪：仓库已 clone 到 commit `19f0752`（含上条修复）、三个 third-party 子模块已手动 clone 到锁定 commit、`/root` 下清理了约 24GB 无关旧项目残留（已经用户确认）、pip 缓存目录和源已切换到 `/root/autodl-tmp` 与阿里云镜像。完整状态见 `docs/vgpu3090_experiment_handoff.md`。
 
+70. 已通过 HuggingFace Hub 私有数据集中转彻底绕开本机↔vGPU 3090 的带宽阻塞，完成远程环境搭建并启动全部 5 个 revision-cycle 实验，其中 E5 audit 已完成并复现此前阻塞结论。
+修改说明：本机重启后重新测试本机↔vGPU 3090 直连带宽（50MB dd-over-ssh 60 秒内未完成），确认直连方案仍不可行；按用户此前在"遗留问题"中给出的决策（选项1失败后走 HuggingFace 中转），在本机打包 monitoring 子集（600 clip、4198 文件、2.2GB，与 `discover_paired_locations` 对 `pair_pool_size<=600` 时选取的确定性前缀完全一致）、VPR 权重（Patch-NetVLAD `mapillary_WPCA4096.pth.tar` + `vpr_cache/`，398MB）、E4 same-image utility manifest 及引用图片（55MB，COCO detection 200 + VOC segmentation 200，路径已改写为相对路径）、以及 `sensnet_final.pt` checkpoint，上传到新建的私有数据集仓库 `mabo1215/ppedcrf-tomm-vgpu-relay`。上传直连 `huggingface.co`（token 校验通过，`hf-mirror.com` 经测试不支持鉴权类 API，仅能镜像文件下载端点）；因单次 Bash 调用有 10 分钟上限，2.2GB 文件被切成 7 片（350MB/片）逐片上传。远端下载改用 `curl -C -`（断点续传）+ `--speed-limit`/`--speed-time` 卡死检测的重试循环，而非 `huggingface_hub` 默认的 xet 传输后端——xet 传输在 `network_turbo` 代理下会稳定卡在 0 字节且不重连，换成 curl 后所有分片正常完成。远程 pip 源从阿里云镜像（返回 403）切换为清华镜像后，torch 2.13.0+cu130 安装成功并确认 CUDA 可用（RTX 3090 vGPU，49152MiB）。全部数据完整性已用 sha256 核对（`monitoring_subset.tar`、`sensnet_final.pt` 均与本机哈希一致）并解压到脚本期望的确切路径。随后按 `docs/vgpu3090_experiment_handoff.md` 的 launch plan 启动 5 个并行 screen 会话：`e5_provenance`（已完成，`mean_probability_spatial_std≈2.63e-4`，与此前阻塞记录的 `2.6×10⁻⁴` 一致，确认 E5 blocker 依旧成立，非环境问题）、`proxy12`、`proxy50`（覆盖 E2/E3/E6/E7，运行中，已产生 `selection.json` 且 CPU 占用持续 >580%）、`e4_detection`、`e4_segmentation`（运行中，首次启动时会各自下载一次 torchvision 预训练检测器权重）。过程中两次因缺依赖崩溃（`matplotlib` 缺失；随后发现 Patch-NetVLAD/CosPlace 骨干还需要 `faiss-cpu`、`scikit-learn`、`pandas`、`scipy`），已全部补装并重启对应会话。
+
+**安全提醒（需要你关注）**：本次操作中 Hugging Face token 有两次被完整打印进本会话的工具输出（一次是 `.env` 中该行的 Windows 换行符导致 HTTP header 校验报错、把 header 值完整打进异常堆栈；一次是远端 `ps aux` 输出把包含 token 的完整命令行打印出来）。token 本身未被写入任何提交、日志文件或论文内容，只出现在这次交互式会话的回复中，但建议你之后去 Hugging Face 账号设置里吊销并重新生成这个 token（`.env` 里的 `Huggingface_model_token`），以防万一。
+
 # 未修改或部分修改
 
-- E2、E3、E4、E6、E7【进行中】：代码与 smoke/schema 验证已完成，但缺少满足完整协议的远程长跑输出；下一步运行并核验 manifest、seed、checksum 和 per-query 文件，再决定是否写入论文。
-  - 本机重启后，下一次会话应先读 `docs/vgpu3090_experiment_handoff.md`，按文中步骤重新验证 vGPU 3090 网络状况，再决定是否继续当前方案（缩小后的 2.2GB monitoring 子集）还是需要用户进一步决策（见遗留问题）。
+- E2、E3、E6、E7【进行中】：`proxy12`/`proxy50` 已在 vGPU 3090 上启动并确认真实运行（CPU 占用持续 >580%，已产生 `selection.json`），覆盖 8 骨干 × 3 seeds × 多 gallery size 的完整协议；下一步等待跑完后核验 per-query 文件、checksum，再决定是否写入论文数字。
+- E4（同图像效用评估）【进行中】：`e4_detection`/`e4_segmentation` 已在 vGPU 3090 上启动，manifest 为本次新建的 COCO detection 200 + VOC segmentation 200 张图子集；首次启动各自触发了一次 torchvision 预训练检测器权重下载（`fasterrcnn_resnet50_fpn_coco`，~160MB，从 `download.pytorch.org` 直连较慢但在正常下载）。下一步等待完成后核验两个 variant 的 mIoU/mAP 输出。
+- E1（真实 place/GPS VPR）仍【已阻挡】：本地监控数据没有真实 place/GPS 标签，未改变，不在本轮尝试范围内。
 
 # 遗留问题
 
-- vGPU 3090 网络带宽问题【已阻挡，需要你决策】：从本机到 `connect.westd.seetacloud.com:22766` 的链路当前严重带宽不足（观测到十几到几十 KB/s，2.2GB 的 monitoring 数据子集预计要 16–40+ 小时），且双向都慢，不是端口/密码问题。本机重启是否会改善这个问题还不确定。
-  需要你提供/决策：
-  1. 重启后如果网络恢复正常，直接告诉我继续即可，我会按 `docs/vgpu3090_experiment_handoff.md` 里的步骤重新验证并接着传数据。
-  2. 如果重启后网络仍然很差，是否要换一台 `.env` 里的其他主机（PRO 6000 / A800 / h800）？
-  3. 或者是否要尝试用 Hugging Face Hub 作为中转（本机上传到 HF 数据集仓库，vGPU 3090 用 `network_turbo` 加速下载，这条路径对 HF 是有加速的）？
-  A: 选1,  如果用huggingface ，用代理 hf-mirror.com  同时  vGPU 3090 用 `network_turbo` 加速下载. 
 - 4c 3090 CUDA 驱动损坏【已阻挡，需要管理员介入】：`cuInit(0)` 在 4c 上无论哪个 Python 环境都返回 999（`CUDA_ERROR_UNKNOWN`），`nvidia-smi` 对 GPU3 直接报错，GPU0-2 显示空闲但无法创建计算上下文。这是主机级驱动问题，修复通常需要 `rmmod/modprobe nvidia*` 或重启整机，而这是一台有 15+ 位其他用户在用的共享主机，我没有 sudo 密码也不会在未经你和其他用户确认的情况下做这种操作。
   需要你提供/决策：是否要联系 4c 的管理员处理驱动问题？在此之前 4c 不会被使用。
   A: 放弃使用4c
+- Hugging Face token 意外两次打印进会话输出【已完成规避，建议你善后】：详见上方"已全部修改"第 70 条的安全提醒。token 未泄露到任何提交或文件，只在这次交互式对话的工具输出里出现过；建议你之后去 Hugging Face 账号设置里吊销并重新生成 `.env` 里的 `Huggingface_model_token`。不影响当前实验继续运行，纯粹是善后动作，无需立即处理。
