@@ -113,6 +113,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--attacker_linf", type=float, default=8.0)
     parser.add_argument("--smoke_queries", type=int, default=3)
     parser.add_argument("--smoke_size", type=int, default=64)
+    parser.add_argument(
+        "--sigma",
+        type=float,
+        default=None,
+        help="Override config noise sigma for every noise-based variant in this "
+        "run (used for the matched-operating-point sigma sweep, R2-2/R3-3/R3-4). "
+        "Leave unset to use the config's default sigma.",
+    )
     return parser.parse_args()
 
 
@@ -484,6 +492,10 @@ def _build_proxy_data(args: argparse.Namespace, device: torch.device):
 
 def run_proxy(args: argparse.Namespace) -> Path:
     cfg = load_yaml(args.config)
+    if args.sigma is not None:
+        cfg = copy.deepcopy(cfg)
+        cfg["ppedcrf"]["noise"] = dict(cfg["ppedcrf"]["noise"])
+        cfg["ppedcrf"]["noise"]["sigma"] = float(args.sigma)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     output_dir = Path(args.output_dir)
     ensure_dir(output_dir)
@@ -651,6 +663,7 @@ def run_proxy(args: argparse.Namespace) -> Path:
             "device": str(device),
             "backbones": args.backbones,
             "seeds": args.seeds,
+            "sigma": float(cfg["ppedcrf"]["noise"]["sigma"]),
             "variants": list(REVIEW_VARIANTS),
             "scientific_evidence": False,
             "attacker_aware_requested": bool(args.include_attacker_aware),

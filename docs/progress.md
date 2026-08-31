@@ -277,13 +277,65 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 76. 【进行中】已完成 E1/E5 适配器、指定 CUDA 环境 smoke test 和本轮文档/论文构建校验。
 修改说明：使用 `D:\source\.venv`（Python 3.14、PyTorch 2.13.0+cu132、RTX 3070 CUDA）运行 unary attribution smoke（3 queries）与 geotagged VPR smoke（9 rows），并成功构建 `docs/revision_suggestions.pdf`、`docs/experiment_progress.pdf`、主论文和独立附录。真实 MSLS/KITTI-360 运行仍需注册数据、mask-backed checkpoint 和 3090 vGPU；没有把 smoke 数字写入论文。
 
+77. 已修复 vGPU 3090 上被清空的 `src/` 源码目录。
+修改说明：本次会话登录 vGPU 3090（`connect.westd.seetacloud.com:22766`）后发现 `/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF/src/` 下 `scripts/`、`eval/`、`datasets/`、`models/`、`privacy/`、`utils/` 等目录只剩 `__pycache__` 和已缓存的 VPR 权重（`vpr_cache/`），全部 `.py` 源文件缺失（`main.py`/`run_eval.py`/`run_train.py`/`requirements.txt` 也缺失），推测是上一轮会话在准备 git fetch/checkout 时的清理步骤中途中断所致。已从本地仓库打包纯代码（排除 `outputs/`、`data/`、`third_party/`、`vpr_cache/` 等大文件/数据目录）通过已 pin 的 SSH 连接传输并在远端解压恢复，随后在远端用 `--mode smoke` 验证了完整流水线在实际 3090 显卡上可正常运行。
+
+78. 已在 `src/scripts/run_controlled_retrieval_benchmark.py` 中补充 `unary_only`/`no_dcrf` 两个 DCRF 消融变体及 sigma 匹配搜索的 `actual_mse` 派生列。
+修改说明：这两个变体与 `run_tomm_review_proxy.py`（当前论文数字的权威来源脚本）中已有的同名变体语义对齐（`unary_only` 保留 NCP 幅度调制，`no_dcrf` 同时关闭 DCRF 精炼和 NCP）；`matched_variants` 搜索列表也扩展为包含 `no_temporal`/`no_ncp`/`unary_only`/`no_dcrf`，并新增按 PSNR 反推的 `actual_mse` 字段。这是为 E2 matched-PSNR 实验准备的代码，`run_controlled_retrieval_benchmark.py` 是被 `run_tomm_review_proxy.py` 导入复用的底层模块，两者的变体定义保持一致。
+
+79. 已在 `src/scripts/run_tomm_review_proxy.py` 中新增 `--sigma` 覆盖参数，用于 E2 matched-PSNR sigma 扫描。
+修改说明：允许在不修改 `config.yaml` 的情况下为整次 proxy 运行覆盖噪声 sigma，写入 `run_metadata.json` 便于追溯；已用 `--mode smoke` 在本地 RTX 3070 和远端 vGPU 3090 上分别验证未破坏原有流程。
+
+80. 已完成 E3（attacker-aware 基线）审计并写入 `paper/appendix.tex` 新增的 "Constrained Attacker-Aware Baseline" 一节。
+修改说明：发现 `src/outputs/tomm_review_proxy12/per_query.csv` 中已经存在完整的 `attacker_aware` 变体数据（20 步符号梯度、$\ell_\infty=8$、ResNet18），与其余变体共享相同 gallery/seed/输出 schema，此前从未整合进论文正文或附录。核实数字后新增到附录：attacker-aware 基线在与 PPEDCRF 相近的画质预算下（PSNR≈35.1dB）把 Top-1 压到 0.000（全部 3 个 gallery size），而 PPEDCRF 同预算下是 0.722；作为诚实的“白盒攻击者上界”诊断写入，明确说明其威胁模型假设强于论文正设定。
+
+81. 已完成 E4（detection mAP 复核）并整合进 `paper/main.tex` Table~tab:e4seg。
+修改说明：定位到 `src/outputs/e4_audit/utility_manifest_detection.jsonl` 与 `utility_manifest_segmentation.jsonl`（各 200 张，08:28 构建，即"最终 manifest"），发现此前的 map50 结果（01:35）早于该 manifest 构建时间，不满足"针对最终 manifest 复核"的要求。已用本地 RTX 3070（`D:\source\.venv`）对两个 manifest 重新各跑一次全部 8 个变体（`full/no_temporal/no_ncp/unary_only/no_dcrf/masked_blur/masked_mosaic/global_noise`），确认 mIoU 数字与此前 v2 结果完全一致（可复现），mAP50 数字也与旧结果高度接近但来自同一次审计。已将 mAP@50 列与 mIoU 列合并进同一张表并更新正文两处引用数字的段落。
+
+82. 已完成 E6（margin 子组分析与定性 case study）并整合进 `paper/appendix.tex`。
+修改说明：新增 `src/scripts/margin_subgroup_analysis.py`，对已有的 `per_query.csv`（无需新实验/无需 GPU）按每个 backbone/gallery_size 的原始（未防护）margin 中位数做 small/large-margin 两分组，同一分组成员在防护前后保持一致以便对比。在 proxy50（全部 8 backbone、gallery=50）上发现：large-margin 组几乎不受防护影响（Top-1 从 1.000 到 0.987），privacy 效果几乎全部集中在 small-margin 组（Top-1 从 0.465 降到 0.377，降幅约 6.8 倍于 large-margin 组）。同时用 `src/scripts/generate_retrieval_case_study.py` 基于真实 `tomm_review_proxy12` 数据渲染了论文此前缺失的定性 retrieval case study 图（`paper/figs/retrieval_case_study.jpg`，选取最差 margin 的 query），已写入附录新章节并成功随 `build.bat` 编译。
+
+83. 已完成 E7（MixVPR 迁移诊断）并澄清审稿人所指的"adverse transfer"在当前修正流水线中已不复现。
+修改说明：核对当前 `paper/appendix.tex` 中 proxy50 的 MixVPR 数据（三个 gallery size 分别为 $-0.033/-0.053/-0.053$）和当前 proxy12 数据，均无正向（adverse）delta，与 R3-8 引用的旧附录状态不同；由于没有保留复现旧 adverse 结果的具体历史运行状态，未声称具体根因，只如实报告"当前复核结果不再复现该现象"。复用第 82 条的 margin 分组基础设施单独对 MixVPR 做了细分：large-margin 查询完全不受影响（Top-1 恒为 1.000），small-margin 查询从 0.560 降到 0.493，解释了为何 MixVPR 的聚合 delta 偏小但并非 adverse。因当前操作点并非 adverse，未运行专门的 mitigation 实验，而是在附录中明确记录了"若未来在其他 backbone/预算下复现 adverse transfer，应尝试对 large-margin 查询提高 sigma 的 margin-aware 噪声调度"作为具体的后续方向。
+
+84. 已启动 E2（matched-PSNR/MSE sigma 扫描）在 vGPU 3090 上的正式运行。
+修改说明：本地→vGPU 3090 通过已 pin 的 SSH 连接直传完整 monitoring 图像语料（`F:\work\datasets\monitoring\images`，14GB/25934 文件，此前 vGPU 上只有 24 张样例图和一个损坏的子集 tar 包，不足以复现论文已发表数字所用的确定性 pairing）。传输完成后在 vGPU 3090 上以 12 个并行 screen 会话（sigma∈{4,6,8,10,12,16,20,24,28,32,40,50}，ResNet18，proxy12 规模）运行 `run_tomm_review_proxy.py --mode proxy --sigma <S>`，用于生成 matched-PSNR/effective-MSE 对比表；完成后将回填 `actual_mse`/`actual_psnr` 匹配点和相应论文段落。此项在本次会话结束时可能仍在运行，需要下一轮继续跟进结果回填与关机。
+
 # 未修改或部分修改
 
-- E1（真实 place/GPS VPR）【进行中/待数据访问】：已确定 MSLS 首选和 Oxford RobotCar 备选，并完成 manifest 适配器；尚未完成官方数据注册、下载、manifest gate 和 vGPU 实验。
-- E5（unary map 独立验证）【已阻挡】：已确定 KITTI-360 和 tiled VPR attribution 方案，并新增验证脚本；当前 checkpoint 仍无 mask root，且 KITTI-360 尚未完成注册/下载，下一步需提供 mask-backed checkpoint 或重新训练并完成序列保持诊断。
-- E2/E3/E4/E6/E7【部分修改】：实验协议、代码入口或已有 proxy/utility 输出已具备，但 matched energy、attacker-aware 定量写回、detection mAP 论文整合、margin 分组/case study 和 MixVPR 深度分析仍未完成。
+- E1（真实 place/GPS VPR）【已阻挡，需要你的操作】：已确定 MSLS 首选和 Oxford RobotCar 备选，并完成 manifest 适配器；尚未完成官方数据注册、下载、manifest gate 和 vGPU 实验，注册步骤无法由我自动完成。
+- E5（unary map 独立验证）【已阻挡，需要你的操作】：已确定 KITTI-360 和 tiled VPR attribution 方案，并新增验证脚本；当前 checkpoint 仍无 mask root，且 KITTI-360 尚未完成注册/下载，下一步需提供 mask-backed checkpoint 或重新训练并完成序列保持诊断。
+- E2（matched-PSNR/MSE sigma 扫描）【进行中】：代码已就绪并已在 vGPU 3090 上启动 12 组并行运行；结果回填、matched-PSNR 表和相应论文段落更新取决于本次运行是否在会话内完成。
 
 # 遗留问题
+
+- E1/E5 公开数据集注册【已阻挡，需要你的操作】：MSLS（E1 首选）、Oxford RobotCar（E1 备选）、KITTI-360（E5）均要求以真实身份/机构信息注册或提交 intended-use 声明才能下载，这一步无法由我代为完成。
+  需要你提供/决策：是否已有这三个数据集之一的账号/下载权限？如果有，请告知账号所在位置或直接把数据放到可访问路径；如果没有，是否要由你本人完成注册（我可以准备好下载后的目录结构和 manifest 构建命令）。
+  A: MSLS download link: https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An8t-3LMOE6eyv7YZ5CD_ReDw-_DCGg2KLySdox-cFJUwtaKsQRjSRgz6gvDgaBpJnkfXoFHLGSTWnfmV5-ofbaqWwlduOhznfVmA0z5xBdLwcqKSXTdDLl1LjZo.md5?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdqER2dflGz8caNcA4gJpuhKJw8TqiskBTi3hOkHM3OCQzD8OqUAyB-jexClpQlXVxM&ccb=10-5&oh=00_AQIl5WJvsmQpyN_JqOIReyqxOS_baFkOwZEGvVkWU7HZ-w&oe=6ABC34CC&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An-x6BOZeUDmFXVxCKtosZWgMZzQiLR1iBxkevoDhNKLyXwMULUhqUB5pExN3EDE7RfPewnC6_Omad8kkRV1vwyOhWXqOJp3-3d6hWARSf_41taXCsAlVF1gp5gf2S7W.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdpcMi1WwL4JsDB_KadG3ScguoquJ9SXDpgFvfXCW753M-lMk5r5yPPkeLrHjOrBvNU&ccb=10-5&oh=00_AQIBjKe16gLrpOjgM741blRr3DEnFGwxrMtM0rIoMr9UKw&oe=6ABC5291&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An9l_yexUWNWbUOGWt-7HVC-ONHffIDJQeVnpo4Fp3-X7p6f7NoevyddUQ4WdsoufwUjzW2nhB29AMgdRm8WSxAup2B6qZikAC4tGtMaC0x3PLJn76tkBpMhjqlb_lLs.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdpwopRvV40v0WXCPKz9aaagGFMbmWUbJ5ncoJVsq_04xyFXTslqeVwEtNZBmaXiOXI&ccb=10-5&oh=00_AQJ2zRfesXSOmgV53gNrHWlTGJ5ljXukF-rweXT5FyB83g&oe=6ABC63B7&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An-McnhyZtsCZK-zzwCIPBlWXhBl4d3Qas_TyqLiRHb8VvEP_ilvcJftXCAcmvirTo1NBF_EJKzEgSdrFu0owLWvywQ4S7y6GNpFYb7XxokmgVpeGlisqVTWkOE4Wi9P.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdpMdH4okDy5NHncgJLHnQZhQV7uv0NvtISo6pOM_0QmIPCauy3Y73l5PQEsvWIricA&ccb=10-5&oh=00_AQLzOphJhauMNYwOQTd8T1PV6ScZPh3eDg-TtAZAjn4LVg&oe=6ABC542E&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An8vpu-mDXBO2YvVoOO9wcXuIVUF_6yTrxKFB4Wp4tFjaVnRcEqlmvTTdFk-lxjv0VVGFoowHUXsCUuUiykQ8d7dKaLx6Atvtw07uLfPbDhTrpoWdlA-FasNCMKuxCvp.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=Adp_gxQ_z-vOO7Jl_CWC__ZP4kmoJvvu7ILVNMrYzlZKwG_IOPNRVKKHZ3VI6ZFGmfk&ccb=10-5&oh=00_AQLff3JG3-RefMiMcD-8JFYokHJDUTnMSn0f69kmw2saSg&oe=6ABC4CEB&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An9e0HGaRi-9kM8QyF5wNHyA-DVxI_C_aN9rC3iAXHLN9_RoW9P8SUHRR39AeszPqegQnqk-LL49sYIjsAIdS23yl9rwu1NPOdDbjFmvzlTYERwsxv6nAObVUBNOjDrN.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdpKE2kqa-h95uEoMpoQqkJyaxEIy93mgGVOt-q8OajybyfAj-TPm9q11F3qOuxzE8k&ccb=10-5&oh=00_AQKdtYWGm9Not8nnvitHjeYfhq0YPGb1eP5QQOydIabD8A&oe=6ABC54FE&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An-zh-eec0DwQv9bkj0KVhowIEpbMW6qg578XP4PU51TH-5PpQtKYJDb8kax3KBOn1qXKeM9jUsKeaqkaEIxqpZFfsJ6tITsg2jsz7Wd9mSTWSLR3EuyXcjLzBGDImv_.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdqUaeaCPUR3jjvyItCjrixG2GFbLmONj1udJrtNKFKmDe9lv_M_Nk6BJyzJhMf6pvY&ccb=10-5&oh=00_AQL3XO1CmIA2RewfrFYoGI2h9_GBBaebT1KV3SvdvdJ5IQ&oe=6ABC48E1&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An9znN6Evsbp2KNZvdYc0NsYCk961Vy0u_j6ACpZ_QoylW800rBKCSeZQAq765BP03K_qyPpPK8aCNU6wnVa44M6cmx4X-iTJVQ8zCwaH5BJom47I8Xr25XLTw.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=AdoBDhGWexcsh89hsFgTvkkK4-Xzu6JOoMrwBBV0C6pUzdRwAYGiXuS8c-Re7xoa3PM&ccb=10-5&oh=00_AQIBe7LrEKW5bP3gxCmeeenAIELSSI8zHrJfCP_3eTsW0A&oe=6ABC3618&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An9DCNVm9dpPbX3zG544xA35U2Qqb7oPWrN3-_39Fp9NxF2oKLx3cKw3QKzPL5bsNokN-NodhGD-mHrUZsXVfA3Zil71HcjIZXJ3Lk8P5jktf3sftUlmO_9sohJb.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=Adpb-kOIaxTJTVXa74EAYmfsEQ-8DXSKfRv6P-nALToOE88aF4GiA6TfyOqQiUGS04E&ccb=10-5&oh=00_AQKe8wx_duN1I9PfBCUFYWn4K63dUF-rILyFaP6SXYX9xg&oe=6ABC5732&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An-iewUNRD-dHGFg9XeYxpR2oePxRF-ZeCVTzm-RhYB-zfU6Jlr31qGVCpAYfGw6cIZ8SqDTbuaotG7O7FMXymKYMZxrx4cT2AZGbViZBRgx9D4l-g.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=Adrr6oSvMj3azBP_EzLpYQWFFAh5uaejNFT6e3Z-VnGErEZxF-sESmWWgljncfr6BwQ&ccb=10-5&oh=00_AQIxFMcwjHvjrQtkV6FNe7sKbTPjLUDQHuZ5FO2xOHzsng&oe=6ABC4C90&_nc_sid=6de079
+https://scontent.fhlz4-1.fna.fbcdn.net/m1/v/t6/An8LTuJVoMu5TDEFO1s4uRaF4EaXQ79_EC0d7UEt_3hxp9ZFULCAIQFc5t9hdqAB9o3Vlv_XFiGcotEsoHvWrkShU1quiNXuiEnwaTGpXtEUsEZ1dVNu.zip?_nc_gid=tNyiMH_cz4DDXysmG7-52w&_nc_oc=Adq7f3gb3K2N3j1s6KU07Grereg5trAGUNmekE_eh8xVd9bRbrscpNR-khQioMn839c&ccb=10-5&oh=00_AQJoS8_j71yPlt_eg2JAGVwU0xv6sHGlZ2NSj5TFDLg9RQ&oe=6ABC46FE&_nc_sid=6de079
+
+  Oxford RpbptCar licence: https://creativecommons.org/licenses/by-nc-sa/4.0/
+  KITTI-360: submit\download_2d_perspective.zip , I got licence from them. 
+Check the datasets in this path(/root/autodl-pub/) first, like: /root/autodl-pub/KITTI
+
+  跟进（本轮会话）：已开始下载上面 11 个 MSLS 签名链接（10 个 .zip + 1 个 .md5）到 `G:\work\datasets\msls\raw`；`00.md5` 已下载，列出 9 个官方文件名（`images_vol_1..6.zip`、`metadata.zip`、`sample.zip`、`patch_v1.1.zip`），其余 10 个 zip 正在下载中（共约 57GB，链接到 2026-09-29 才过期，不着急）。已检查 `/root/autodl-pub/`，里面的 `KITTI`（`object`/`sceneflow`）和 `SemanticKITTI`（LiDAR odometry）都不是 KITTI-360。
+
+  KITTI-360 跟进：你确认已有账号且能访问 download.php 全部 2D 数据。E5（unary map 独立验证）只需要下面这 4 类，不需要 Fisheye（355G+11G）、3D Velodyne/SICK、Confidence masks（44G×2）：
+  - Perspective Images for Train & Val（128G 全量，但下载脚本支持按 chunk/序列选，我只需要 1-2 个 sequence，例如 `2013_05_28_drive_0000_sync`，远小于 128G）
+  - Semantics of Left Perspective Camera（1.8G，全量即可）   G:\work\datasets\kitti360\data_2d_semantics\
+  - Vehicle Poses（8.9M，全量即可） G:\work\datasets\kitti360\data_poses\
+  - Calibrations（3K，全量即可） G:\work\datasets\kitti360\calibration\
+  "zip 是带 token 的下载脚本" —— 我没有你 cvlibs.net 账号的登录方式，无法自己去点这 4 个下载按钮拿到脚本。
+  需要你：登录 download.php，对上面 4 类分别点下载，会各自给一个含 token 的小 zip（脚本本身很小，不是完整数据）；把这 4 个 zip 放到 `G:\work\datasets\kitti360\download_scripts\`（文件名保持原样即可），我这边会自动读取并只用脚本下载我需要的那 1-2 个 sequence，不会跑满 128G。
 
 - 4c 3090 CUDA 驱动损坏【已阻挡，需要管理员介入】：`cuInit(0)` 在 4c 上无论哪个 Python 环境都返回 999（`CUDA_ERROR_UNKNOWN`），`nvidia-smi` 对 GPU3 直接报错，GPU0-2 显示空闲但无法创建计算上下文。这是主机级驱动问题，修复通常需要 `rmmod/modprobe nvidia*` 或重启整机，而这是一台有 15+ 位其他用户在用的共享主机，我没有 sudo 密码也不会在未经你和其他用户确认的情况下做这种操作。
   需要你提供/决策：是否要联系 4c 的管理员处理驱动问题？在此之前 4c 不会被使用。

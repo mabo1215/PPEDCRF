@@ -43,6 +43,8 @@ VARIANT_LABELS = {
     "ppedcrf": "PPEDCRF",
     "no_temporal": "w/o temporal consistency",
     "no_ncp": "w/o NCP (fixed sigma)",
+    "unary_only": "unary-only + NCP",
+    "no_dcrf": "no-DCRF + fixed strength",
     "masked_blur": "mask-guided blur",
     "masked_mosaic": "mask-guided mosaic",
     "random_mask": "random mask",
@@ -131,6 +133,11 @@ def clone_cfg(cfg: dict) -> dict:
     return copy.deepcopy(cfg)
 
 
+def mse_from_psnr(psnr_db: float, data_range: float = 255.0) -> float:
+    """Effective per-pixel MSE implied by a PSNR value at a fixed data range."""
+    return float((data_range ** 2) / (10.0 ** (psnr_db / 10.0)))
+
+
 def build_variant_modules(cfg: dict, variant: str, device: torch.device, seed: int) -> Tuple[DynamicCRF, NCPAllocator, NoiseInjector]:
     dcfg = cfg["ppedcrf"]["dynamic_crf"]
     ncfg = cfg["ppedcrf"]["ncp"]
@@ -140,9 +147,16 @@ def build_variant_modules(cfg: dict, variant: str, device: torch.device, seed: i
     if variant == "no_temporal":
         temporal_weight = 0.0
 
+    # unary_only/no_dcrf isolate the DCRF mean-field refinement: zero iterations
+    # makes DynamicCRF.refine() return sigmoid(unary_logit) directly (see
+    # models/dynamic_crf.py). unary_only keeps NCP allocation; no_dcrf also
+    # fixes the injection strength (see the no_ncp/no_dcrf branch below),
+    # matching the canonical variant definitions in run_tomm_review_proxy.py.
+    n_iters = 0 if variant in ("unary_only", "no_dcrf") else int(dcfg["n_iters"])
+
     crf = DynamicCRF(
         DynamicCRFConfig(
-            n_iters=int(dcfg["n_iters"]),
+            n_iters=n_iters,
             spatial_weight=float(dcfg["spatial_weight"]),
             temporal_weight=temporal_weight,
             smooth_kernel=int(dcfg["smooth_kernel"]),
@@ -256,7 +270,7 @@ def protect_clip_variant(
             strength = torch.ones_like(refined_prob)
         else:
             mask = refined_prob
-            if variant == "no_ncp":
+            if variant in ("no_ncp", "no_dcrf"):
                 strength = torch.ones_like(refined_prob)
             else:
                 strength = ncp.allocate(refined_prob)
@@ -734,7 +748,7 @@ def main() -> None:
 
     protected_query_images: Dict[str, Dict[int, Tensor]] = {}
     quality_summary_rows: List[dict] = []
-    variants = ["ppedcrf", "no_temporal", "no_ncp", "masked_blur", "masked_mosaic", "random_mask", "full_frame"]
+    variants = ["ppedcrf", "no_temporal", "no_ncp", "unary_only", "no_dcrf", "masked_blur", "masked_mosaic", "random_mask", "full_frame"]
 
     for variant in variants:
         protected_query_images[variant] = {}
@@ -926,7 +940,7 @@ def main() -> None:
     # ---- High-sigma ablation for DCRF/NCP variants ----
     # Evaluates PPEDCRF, w/o temporal, and w/o NCP across user-specified sigmas.
     for sigma in args.ablation_sigmas:
-        for variant in ("ppedcrf", "no_temporal", "no_ncp"):
+        for variant in ("ppedcrf", "no_temporal", "no_ncp", "unary_only", "no_dcrf"):
             retrieval_runs = []
             psnr_runs = []
             ssim_runs = []
@@ -1145,7 +1159,7 @@ def main() -> None:
     # For each PSNR target, find the sigma that brings PPEDCRF and global Gaussian
     # noise closest, then compare their retrieval accuracy at that operating point.
     matched_rows: List[dict] = []
-    matched_variants = ["ppedcrf", "full_frame", "masked_blur", "masked_mosaic"]
+    matched_variants = ["ppedcrf", "full_frame", "no_temporal", "no_ncp", "unary_only", "no_dcrf", "masked_blur", "masked_mosaic"]
     search_sigmas = np.arange(args.matched_sigma_min, args.matched_sigma_max, args.matched_sigma_step).tolist()
     for target_psnr in args.matched_psnr_targets:
         for variant in matched_variants:
@@ -1169,6 +1183,7 @@ def main() -> None:
                             "label": VARIANT_LABELS[variant],
                             "actual_sigma": best_sigma,
                             "actual_psnr": best_psnr,
+                            "actual_mse": mse_from_psnr(best_psnr),
                             "R@1_mean": arow.get("R@1_mean", float("nan")),
                             "R@1_std": arow.get("R@1_std", 0.0),
                         })
@@ -1229,6 +1244,7 @@ def main() -> None:
                     "label": VARIANT_LABELS[variant],
                     "actual_sigma": best_sigma,
                     "actual_psnr": best_result["actual_psnr"],
+                    "actual_mse": mse_from_psnr(best_result["actual_psnr"]),
                     "R@1_mean": best_result["R@1_mean"],
                     "R@1_std": best_result["R@1_std"],
                 })
@@ -1343,7 +1359,7 @@ def main() -> None:
             matched_rows,
             fieldnames=[
                 "target_psnr", "variant", "label", "actual_sigma",
-                "actual_psnr", "R@1_mean", "R@1_std",
+                "actual_psnr", "actual_mse", "R@1_mean", "R@1_std",
             ],
         )
     if temporal_rows:

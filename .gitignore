@@ -16,6 +16,7 @@ agents/
 docs/build/
 docs/academic-research-skills/
 *.pdf
+submit/
 
 # LaTeX / BibTeX
 *.bib
