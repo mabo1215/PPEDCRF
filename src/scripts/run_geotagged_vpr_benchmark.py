@@ -127,17 +127,26 @@ def load_manifest(path: str, root: str) -> Tuple[List[dict], Dict[str, dict]]:
                     if key not in gallery_item:
                         raise ValueError(f"Query {query_id} gallery item is missing '{key}'.")
                 gallery_id = str(gallery_item["gallery_id"])
-                if gallery_id in gallery_by_id:
-                    raise ValueError(f"Duplicate gallery_id: {gallery_id}")
                 gallery_path = resolve_path(str(gallery_item["path"]), root)
-                if not gallery_path.is_file():
-                    raise FileNotFoundError(f"Gallery image does not exist: {gallery_path}")
                 gallery_record = {
                     "gallery_id": gallery_id,
                     "path": str(gallery_path),
                     "place_id": str(gallery_item["place_id"]),
                 }
-                gallery_by_id[gallery_id] = gallery_record
+                # The manifest format shares one gallery pool across every query
+                # line (see build_msls_manifest.py / build_kitti360_unary_manifest.py),
+                # so the same gallery_id legitimately recurs across queries. Only
+                # reject it if a later occurrence disagrees with the first one.
+                existing = gallery_by_id.get(gallery_id)
+                if existing is not None and existing != gallery_record:
+                    raise ValueError(
+                        f"Gallery id {gallery_id} maps to inconsistent records: "
+                        f"{existing} vs {gallery_record}"
+                    )
+                if existing is None:
+                    if not gallery_path.is_file():
+                        raise FileNotFoundError(f"Gallery image does not exist: {gallery_path}")
+                    gallery_by_id[gallery_id] = gallery_record
                 normalized_gallery.append(gallery_record)
             place_id = str(item["place_id"])
             if not any(g["place_id"] == place_id for g in normalized_gallery):

@@ -233,7 +233,25 @@ def main() -> None:
     eligible = [query for query in all_queries if any(item["place_id"] == query["place_id"] for item in all_database)]
     if not eligible:
         raise ValueError("No query has a GPS-backed positive in the database split.")
-    queries = eligible[: int(args.max_queries)]
+    # Round-robin across cities (in sorted, deterministic order) rather than a
+    # plain prefix truncation: a plain eligible[:max_queries] silently drops
+    # every city after the first if that city alone has enough eligible
+    # queries to fill the quota, which defeats a multi-city --cities request.
+    by_city: dict[str, list[dict]] = {}
+    for query in eligible:
+        by_city.setdefault(query["city"], []).append(query)
+    city_order = sorted(by_city)
+    cursors = {city: 0 for city in city_order}
+    queries: list[dict] = []
+    while len(queries) < int(args.max_queries) and any(
+        cursors[city] < len(by_city[city]) for city in city_order
+    ):
+        for city in city_order:
+            if len(queries) >= int(args.max_queries):
+                break
+            if cursors[city] < len(by_city[city]):
+                queries.append(by_city[city][cursors[city]])
+                cursors[city] += 1
     gallery = choose_gallery(queries, all_database, int(args.max_gallery))
     gallery_by_id = {
         f"{item['city']}_database_{item['key']}": item

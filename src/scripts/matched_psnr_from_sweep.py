@@ -33,6 +33,22 @@ SIGMA_DEPENDENT_VARIANTS = [
 ]
 FIXED_VARIANTS = ["masked_blur", "masked_mosaic"]
 
+# summary.csv is a numeric aggregate (see aggregate_rows() in
+# run_tomm_review_proxy.py) and never carries the human-readable "label"
+# column that only per_query.csv has; mirror that script's mapping here
+# instead of reading a column that does not exist in the summary schema.
+VARIANT_LABELS = {
+    "full": "PPEDCRF",
+    "no_temporal": "w/o temporal consistency",
+    "no_ncp": "w/o NCP (fixed strength)",
+    "unary_only": "unary-only + NCP",
+    "no_dcrf": "no-DCRF + fixed strength",
+    "masked_blur": "mask-guided blur",
+    "masked_mosaic": "mask-guided mosaic",
+    "global_noise": "global Gaussian noise",
+    "attacker_aware": "attacker-aware feature suppression",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Matched-PSNR table from a sigma sweep.")
@@ -77,7 +93,7 @@ def main() -> None:
             out_rows.append({
                 "target_psnr": target,
                 "variant": variant,
-                "label": row["label"],
+                "label": VARIANT_LABELS[variant],
                 "matched_sigma": row["sigma"],
                 "actual_psnr": row["psnr_mean_mean"],
                 "psnr_gap": row["psnr_gap"],
@@ -93,7 +109,7 @@ def main() -> None:
             out_rows.append({
                 "target_psnr": target,
                 "variant": variant,
-                "label": row["label"],
+                "label": VARIANT_LABELS[variant],
                 "matched_sigma": None,
                 "actual_psnr": row["psnr_mean_mean"],
                 "psnr_gap": abs(row["psnr_mean_mean"] - target),
