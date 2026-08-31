@@ -221,6 +221,33 @@ def run_geotagged(args: argparse.Namespace) -> Path:
         )
         embedder = make_default_embedder(rcfg).eval().to(device)
         gallery_tensor = gallery_images
+        raw_rows = detailed_retrieval(
+            query_images,
+            query_ids,
+            gallery_tensor,
+            gallery_ids,
+            embedder,
+            device,
+            rcfg.input_size,
+            positive_place_by_query=positive_place,
+            gallery_place_by_id=gallery_place,
+        )
+        for row, record in zip(raw_rows, records):
+            row.update(
+                {
+                    "variant": "raw",
+                    "label": "raw query",
+                    "seed": "raw",
+                    "backbone": backbone,
+                    "gallery_size": len(gallery_ids),
+                    "place_id": record["place_id"],
+                    "viewpoint": record.get("viewpoint", ""),
+                    "illumination": record.get("illumination", ""),
+                    "season": record.get("season", ""),
+                    "weather": record.get("weather", ""),
+                }
+            )
+        rows.extend(raw_rows)
         for variant in args.variants:
             for seed in args.seeds:
                 qrows = detailed_retrieval(
