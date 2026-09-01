@@ -19,6 +19,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a KITTI-360 unary attribution manifest.")
     parser.add_argument("--kitti360_root", required=True)
     parser.add_argument("--sequences", nargs="+", required=True, help="Sequence IDs such as 0000 0002.")
+    parser.add_argument(
+        "--training_sequences",
+        nargs="*",
+        default=[],
+        help="Sequences used to train the checkpoint; they must be disjoint from --sequences.",
+    )
     parser.add_argument("--camera", default="image_00", choices=("image_00", "image_01"))
     parser.add_argument("--stride", type=int, default=10)
     parser.add_argument("--place_cell_m", type=float, default=10.0)
@@ -85,6 +91,11 @@ def relativize(path: Path, root: Path) -> str:
 def main() -> None:
     args = parse_args()
     root = Path(args.kitti360_root).expanduser().resolve()
+    evaluation_sequences = [f"{int(sequence):04d}" for sequence in args.sequences]
+    training_sequences = [f"{int(sequence):04d}" for sequence in args.training_sequences]
+    overlap = sorted(set(evaluation_sequences) & set(training_sequences))
+    if overlap:
+        raise ValueError(f"Training and evaluation sequences overlap: {overlap}")
     all_queries: list[dict] = []
     all_gallery: list[dict] = []
     for sequence in args.sequences:
@@ -189,14 +200,16 @@ def main() -> None:
     metadata = {
         "dataset": "KITTI-360",
         "official_source": "https://www.cvlibs.net/datasets/kitti-360/",
-        "sequences": [f"{int(sequence):04d}" for sequence in args.sequences],
+        "sequences": evaluation_sequences,
+        "evaluation_sequences": evaluation_sequences,
+        "training_sequences": training_sequences,
         "camera": args.camera,
         "query_count": len(queries),
         "gallery_count": len(gallery),
         "place_labels": "10-metre pose-derived cells",
         "semantic_labels": "KITTI-360 2D semantic IDs",
         "query_gallery_path_overlap": 0,
-        "sequence_held_out": True,
+        "sequence_held_out": bool(training_sequences),
         "scientific_evidence": True,
     }
     metadata_path = Path(args.metadata_output) if args.metadata_output else output_path.with_suffix(".metadata.json")

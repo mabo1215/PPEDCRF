@@ -22,7 +22,7 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{1 September 2026 (local RTX 3070 session update: E1 real-place MSLS result and E2 matched-PSNR sweep both integrated into the paper)}
+\date{1 September 2026 (local RTX 3070 session update: E1 cross-time MSLS runs and E5 negative attribution diagnostic integrated into the paper)}
 
 \begin{document}
 \maketitle
@@ -35,7 +35,7 @@ experiment entries below for this PPEDCRF revision cycle. No incomplete run
 may be used for paper writeback.
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
-\caption{Active PPEDCRF revision-cycle experiment plan and next steps (31 August 2026, vGPU 3090 session).}
+\caption{Active PPEDCRF revision-cycle experiment plan and next steps (1 September 2026, local RTX 3070 session).}
 \label{tab:ppedcrf-next-step}\\
 \toprule
 ID & Review gap & Status & Next step / completion gate \\
@@ -50,12 +50,12 @@ ID & Review gap & Status & Next step / completion gate \\
 \endfoot
 \bottomrule
 \endlastfoot
-E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \done & First real result obtained and integrated. Fixed two real bugs found en route: \texttt{build\_msls\_manifest.py} truncated a city-sorted eligible list instead of balancing across cities (silently dropped Toronto entirely on the first run); \texttt{run\_geotagged\_vpr\_benchmark.py} rejected the shared-gallery-across-queries manifest format as ``duplicate'' gallery ids, and had no raw-baseline pass at all. With both fixed: 200 queries (Manila/Toronto, 100 each) against a shared 1000-image gallery, all structural gates pass (\texttt{scientific\_evidence=true}). Result: raw Top-1/5/10 = 0.170/0.385/0.450, PPEDCRF = 0.152/0.335/0.432 at 36.2\,dB PSNR --- correct direction, but a much smaller effect than proxy12 (Top-1 drop 0.018 vs.\ 0.111). Realized condition diversity is limited (100\% day, 99\% Forward-view, no season/weather metadata in this MSLS release for these cities) --- reported honestly in \texttt{paper/appendix.tex} as a scope limitation rather than deferred. Oxford RobotCar remains an unused fallback. \\
+E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \done & Official-source MSLS runs are complete for the all, o2n, and n2o protocols. Each uses 200 queries (Manila/Toronto, 100 each) against a shared 1000-image gallery, with true place clusters, disjointness gates, and per-query ranks; the cross-time manifests additionally include capture-time fields. All-run raw Top-1/5/10 = 0.170/0.385/0.450 and PPEDCRF = 0.152/0.335/0.432 at 36.2\,dB PSNR. In the official cross-time splits, o2n changes Top-1 from 0.140 to 0.168$\pm$0.009, while n2o changes it from 0.155 to 0.137$\pm$0.006; the direction is therefore condition-dependent. The realized subset remains day/Forward-view with empty season/weather fields and one attacker backbone, so no broad all-condition claim is made. Oxford RobotCar remains an unused fallback. \\
 E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \done & Pivoted off vGPU 3090 entirely: all local data/weights/checkpoint were already present, so the full 12-point sigma sweep (\{4,6,8,10,12,16,20,24,28,32,40,50\}, ResNet18, proxy12 scale, real monitoring corpus) ran sequentially on the local RTX 3070 in about 20 minutes (each point under 2 minutes). \texttt{matched\_psnr\_from\_sweep.py} produced the matched-PSNR/effective-MSE table at 30/33/36\,dB targets; a real schema-mismatch bug in that script (it read a non-existent \texttt{label} column from \texttt{summary.csv}, which only carries the numeric aggregate) was found and fixed. Headline finding: at matched PSNR the six sigma-tunable variants (full/no\_temporal/no\_ncp/unary\_only/no\_dcrf/global\_noise) are statistically indistinguishable in Top-1 (0.639 at 30\,dB, 0.667 at 33\,dB, 0.722 at 36\,dB across all six) --- PPEDCRF's DCRF/NCP/temporal mechanism buys better quality at matched privacy, not more privacy at matched quality. The deterministic mask-guided blur/mosaic baselines have no PSNR-tunable knob and could not be matched to the swept targets (their fixed native point sits 2--10\,dB below the targets), so their lower Top-1 at that lower quality is reported with an explicit PSNR-gap column rather than claimed as a matched-quality comparison. (An earlier verbal report of this result had the blur/mosaic direction backwards; corrected before writeback.) Integrated into \texttt{paper/appendix.tex} (new \S~Matched-PSNR/Effective-MSE Comparison) and five corresponding passages in \texttt{paper/main.tex}; both PDFs rebuild with 0 errors. \\
 E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \done & The constrained attacker-aware baseline (20-step sign-gradient, $\ell_\infty{=}8$, ResNet18) already exists in \texttt{tomm\_review\_proxy12}/\texttt{proxy50} with the same gallery/seed/output schema as every other variant. Audited and integrated into Appendix~F: Top-1 reaches 0.000 at a PSNR comparable to PPEDCRF's own budget. Blur/mosaic were already integrated. \\
 E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \done & Re-ran both the detection (COCO, 200 images) and segmentation (VOC, 200 images) manifests together on the local RTX 3070 against the current checkpoint; both numbers now come from the same audit pass. Table~tab:e4seg in main.tex now reports mAP@50 alongside mIoU for all 8 variants. \\
-E5 & Unary predictor provenance and independent sensitivity-map assessment (R3-1) & \blocked & KITTI-360 registration is complete; 2 sequences of perspective images (image\_00, $\sim$22.5\,GB of the 128\,GB full release) plus full semantics/poses/calibration are downloaded, extracted, and manifest-built (32 queries/128 gallery, sequence-held-out across \texttt{0000\_sync}/\texttt{0002\_sync}). \texttt{validate\_unary\_attribution.py} was run end-to-end against this real manifest (not the monitoring proxy): \texttt{gate\_passed=false}, 0/32 non-constant queries, mean Spearman $\approx -0.0009$ --- the checkpoint's near-constant unary map is now confirmed on the actual target dataset, not just a proxy. Still blocked on a mask-backed checkpoint or retraining; data acquisition itself is no longer the blocker. \\
-E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-2, R3-5, R3-7) & \done & Added \texttt{src/scripts/margin\_subgroup\_analysis.py}, a pure post-processing step over the existing \texttt{per\_query.csv} exports (no new GPU run needed). Small/large-margin aggregation (Appendix Table~tab:margin\_subgroups) and a regenerated qualitative case-study figure (worst-margin proxy12 query, Appendix Fig.~fig:case\_study) are integrated. \\
+E5 & Unary predictor provenance and independent sensitivity-map assessment (R3-1) & \done & The released checkpoint and its public Hub copy are bit-identical and mask-free; both fail the original non-constant-map probe. A new mask-backed checkpoint was trained on 1,033 sequence-0000 images using official KITTI-360 structural-support masks, then evaluated only on held-out sequence 0002 with 32 queries and 128 gallery images. The operational gate passes for all 32 queries, but mean static-background Spearman is $-0.00024$, top-10 overlap is 0.0497, and predicted top-10\% regions capture 0.0947 of reference attribution energy. E5 is therefore complete as a negative attribution diagnostic, not as validation of sensitivity-map accuracy. \\
+E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-5, R3-6, R3-7) & \done & Added \texttt{src/scripts/margin\_subgroup\_analysis.py}, a pure post-processing step over the existing \texttt{per\_query.csv} exports (no new GPU run needed). Small/large-margin aggregation (Appendix Table~tab:margin\_subgroups) and a regenerated qualitative case-study figure (worst-margin proxy12 query, Appendix Fig.~fig:case\_study) are integrated. \\
 E7 & MixVPR transfer diagnosis and mitigation (R3-8) & \done & The current corrected proxy12/proxy50 runs no longer reproduce the adverse MixVPR transfer the reviewer observed; verified against the already-integrated main-text/appendix tables. Added the margin-level diagnosis the reviewer asked for (Appendix~\S Margin-Level Diagnostics) explaining why MixVPR's aggregate delta is small even though it is not adverse. No mitigation experiment was run because the current operating point is not adverse; the margin-aware sigma-schedule mitigation is documented as the concrete next step if adverse transfer recurs. \\
 \end{longtable}
 
@@ -71,20 +71,25 @@ PowerShell once confirmed healthy), extracted locally, and manifest-built.
 E1's manifest build initially silently dropped one of the two requested
 cities (a real bug in the eligible-query selection, fixed); after the fix
 and two more real bug fixes in the benchmark runner itself (shared-gallery
-handling, missing raw baseline), E1 produced its first real place-labeled
-result and it is now integrated into both paper files. E5's diagnostic gate
-still fails --- now demonstrated on the real KITTI-360 manifest rather than
-the monitoring proxy --- confirming the checkpoint-provenance blocker is
-data-independent. E3/E4/E6/E7 required no vGPU time and were completed on
+handling, missing raw baseline), E1 produced complete all, o2n, and n2o
+place-labeled runs and they are now integrated into both paper files. The
+o2n/n2o runs are official cross-time splits, but their realized subset has
+limited viewpoint/illumination/season/weather diversity. The original E5
+checkpoint's diagnostic gate failed on the real KITTI-360 manifest, confirming
+the checkpoint-provenance problem. A replacement mask-backed checkpoint now
+passes the operational non-constant gate on held-out sequence 0002, but its
+near-zero attribution agreement is negative evidence rather than validation.
+E3/E4/E6/E7 required no vGPU time and were completed on
 the local RTX 3070 / CPU from already-existing per-query exports.
 
 \paragraph{Evidence policy.} The existing 12/50-pair benchmark remains a
 visual-similarity proxy. E1 is now the paper's one true-place/geolocation
 result (gate-passing, \texttt{scientific\_evidence=true}), reported alongside
-the proxy with an explicit note that its effect size is much smaller and its
-condition-diversity coverage is limited --- it strengthens, but does not
-replace, the proxy claims. E2--E7 strengthen mechanism, utility, and
-attacker-sensitivity claims, but incomplete, smoke, blocked, or
+the proxy with an explicit note that its effect size is much smaller, its
+cross-time direction is condition-dependent, and its condition-diversity
+coverage is limited --- it strengthens, but does not replace, the proxy
+claims. E2--E7 strengthen mechanism, utility, and attacker-sensitivity
+claims, but incomplete, smoke, blocked, or
 protocol-mismatched outputs
 remain engineering evidence and must not be inserted into the manuscript.
 Every number integrated into \texttt{paper/main.tex} or
@@ -93,6 +98,26 @@ non-smoke run's CSV/JSON export (\texttt{scientific\_evidence} audited
 manually where the export script's own flag defaults to false pending
 review) and cross-checked against the numbers already cited elsewhere in the
 manuscript for consistency.
+
+\paragraph{Additional local/vGPU verification (1 September 2026).} The vGPU
+3090 was subsequently powered on and re-checked through the credentials in the
+local environment file: the pinned host key matched, the RTX 3090 exposed
+49152 MiB, and the remote PyTorch environment reported CUDA availability.
+The earlier six-attacker proxy12/proxy50 checks completed with 5,436 and
+22,650 per-query rows, respectively. To close the previously blocked CLIP
+verification, the two public CLIP checkpoints were then downloaded through
+\texttt{https://hf-mirror.com}, loaded successfully in strict offline mode,
+and used in complete eight-attacker runs. The mirror-backed proxy12 run
+contains 7,236 per-query rows and 219 summary rows; the proxy50 run contains
+30,150 per-query rows and 219 summary rows. Both include CLIP ViT-B/32 and
+ViT-L/14, use CUDA, pass finite-value audits, and use the checkpoint whose
+SHA-256 matches the local copy. These runs remain proxy engineering evidence
+(\texttt{scientific\_evidence=false}) and do not replace the paper's existing
+validated export or alter its headline claims. Separately, the optional Manila
+s2w MSLS run completed locally with 80 queries, 80 gallery images, and three
+seeds; its raw/full Top-1 values were 0.5375 and $0.5000\pm0.0177$,
+respectively. Because this run is single-city and small-gallery evidence, it
+is not written into the paper's headline claims.
 
 \section*{Table 1: Revision Suggestions Completion Status}
 
@@ -115,11 +140,11 @@ the paper.}
 \endfoot
 \bottomrule
 \endlastfoot
-E1 & MSLS or Oxford RobotCar real place/GPS VPR & \done & Real result obtained (Manila+Toronto, 200 queries/1000 gallery, all gates pass) and integrated into \texttt{paper/appendix.tex} (new external-validation section) and \texttt{paper/main.tex} (5 passages). Effect direction matches the proxy benchmark but is much smaller in magnitude; condition diversity (day/night, season, weather) is not yet realized and is reported as an explicit scope limitation. \\
+E1 & MSLS or Oxford RobotCar real place/GPS VPR & \done & All, o2n, and n2o MSLS runs are complete (each: Manila+Toronto, 200 queries, 1000-image gallery, all gates pass) and integrated into both paper files. The all-run effect is smaller than the proxy effect; o2n and n2o show opposite Top-1 directions, so the result is explicitly condition-dependent. Remaining coverage is limited to day/Forward-view samples with empty season/weather fields and one attacker backbone. \\
 E2 & Matched PSNR/MSE/energy experiment & \done & Full 12-point sigma sweep completed on the local RTX 3070 (no vGPU needed); native ablation (incl.\ unary-only/no-DCRF) was already integrated. Matched-PSNR/effective-MSE table built at 30/33/36\,dB targets and integrated into \texttt{paper/appendix.tex} and \texttt{paper/main.tex}: sigma-tunable variants are statistically indistinguishable at matched quality; deterministic blur/mosaic baselines have no PSNR knob and are reported with an explicit PSNR gap rather than a matched claim. \\
 E3 & Stronger mask-based and attacker-aware baselines & \done & Blur/mosaic and the constrained attacker-aware diagnostic are integrated in Appendix~F with the same gallery/seed/schema as the rest of the benchmark. \\
 E4 & Detection mAP integration & \done & \texttt{map50\_original}/\texttt{map50\_sanitized} added alongside mIoU in Table~tab:e4seg from a co-audited manifest pair. \\
-E5 & KITTI-360 independent unary attribution diagnostic & \blocked & Author registration complete; KITTI-360 downloaded, extracted, and manifest-built (32 queries/128 gallery, sequence-held-out). The diagnostic ran end-to-end on this real manifest and failed its gate (constant map), confirming the checkpoint-provenance blocker independent of data availability. Needs a mask-backed checkpoint or retraining. \\
+E5 & KITTI-360 independent unary attribution diagnostic & \done & The original mask-free checkpoint failed the gate on real data. A replacement checkpoint trained on 1,033 sequence-0000 images with structural-support masks passes the non-constant operational gate on held-out sequence 0002 (32/32), but yields mean Spearman $-0.00024$, top-10 overlap 0.0497, and attribution energy 0.0947. This closes the execution blocker while retaining a negative scientific conclusion. \\
 E6 & Margin subgroups and Fig.~6 retrieval evidence & \done & Small/large-margin aggregation table and regenerated case-study figure added to Appendix. \\
 E7 & MixVPR transfer diagnosis & \done & Current data does not reproduce the adverse transfer reported by the reviewer; margin-level diagnosis added; mitigation documented as a conditional next step rather than run, since the current operating point is not adverse. \\
 \end{longtable}
@@ -127,9 +152,9 @@ E7 & MixVPR transfer diagnosis & \done & Current data does not reproduce the adv
 \section*{Table 2: Next-Step Plan (Experiment Schedule)}
 
 \begin{longtable}{@{}p{0.14\linewidth}p{0.15\linewidth}p{0.10\linewidth}p{0.18\linewidth}p{0.31\linewidth}@{}}
-\caption{Open, deferred, and blocked experiment status as of 31 August 2026
-(vGPU 3090 session, mid-run). The fourth column carries the current
-execution condition.}
+\caption{Open, deferred, and blocked experiment status as of 1 September 2026
+(local RTX 3070 session). The fourth column carries the current execution
+condition.}
 \label{tab:schedule}\\
 \toprule
 Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
@@ -145,11 +170,11 @@ Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
 \bottomrule
 \endlastfoot
 Public-data registration and checksum gate & \done & 100\% & Complete & MSLS and KITTI-360 both registered by the author and downloaded; no public images are committed to the repository (external \texttt{G:\textbackslash work\textbackslash datasets} paths only). \\
-E1 MSLS geotagged VPR & \done & 100\% & Complete & Real result obtained and written back to both paper files. Optional follow-up: an \texttt{o2n}/\texttt{n2o}-subtask rerun for genuine cross-condition coverage (not blocking, not required for the current writeback). \\
+E1 MSLS geotagged VPR & \done & 100\% & Complete & All, o2n, and n2o runs are complete and written back to both paper files. The cross-time split shows condition-dependent Top-1 direction; broader viewpoint/illumination/season/weather coverage remains a stated limitation. \\
 E2 matched utility and ablations & \done & 100\% & Complete & Pivoted to local RTX 3070; full 12-point sigma sweep, matched-PSNR/effective-MSE table, and paper writeback (Appendix table plus 5 main-text passages) all complete. \\
 E3 attacker-aware baseline & \done & 100\% & Complete & Audited and integrated into Appendix~F this session. \\
 E4 detector mAP writeback & \done & 100\% & Complete & Co-audited detection+segmentation manifests, integrated into Table~tab:e4seg. \\
-E5 KITTI-360 unary attribution & \blocked & 40\% & After mask-backed checkpoint / TBD & Data downloaded, manifest built, diagnostic run on real data; gate fails on checkpoint provenance, not data availability. \\
+E5 KITTI-360 unary attribution & \done & 100\% & Complete & The original checkpoint failed the gate; a sequence-0000 mask-backed checkpoint passes the non-constant operational gate on held-out sequence 0002 but has near-zero attribution agreement. It is reported as a negative diagnostic, not map-accuracy validation. \\
 E6 margin subgroups and retrieval case study & \done & 100\% & Complete & Appendix Table~tab:margin\_subgroups and Fig.~fig:case\_study added. \\
 E7 MixVPR diagnosis & \done & 100\% & Complete & No mitigation experiment run; current data is not adverse, so none was needed. Documented conditional mitigation for future recurrence. \\
 \end{longtable}
@@ -157,8 +182,8 @@ E7 MixVPR diagnosis & \done & 100\% & Complete & No mitigation experiment run; c
 \section*{Table 3: Text-Only Revision Items (No Experiments Required)}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.28\linewidth}p{0.11\linewidth}p{0.46\linewidth}@{}}
-\caption{Text-only safeguards already added while public-data experiments remain
-pending.}
+\caption{Text-only safeguards and evidence-scope statements added during the
+revision cycle.}
 \label{tab:textonly}\\
 \toprule
 \# & Item (review section) & Progress & Location / notes \\
@@ -174,7 +199,7 @@ pending.}
 \bottomrule
 \endlastfoot
 T1 & State the current proxy benchmark as paired-scene evidence only & 100\% & Main paper Experimental Protocol and Appendix interpretation state that synthetic pairs have no GPS ground truth. \\
-T2 & Record MSLS/KITTI-360 as the public-data validation path without inserting results & 100\% & Main paper scope paragraph and Appendix external-validation note identify the official sources, labels, and no-placeholder rule. \\
+T2 & Record MSLS/KITTI-360 as the public-data validation path & 100\% & Main paper scope paragraph and Appendix external-validation note identify the official sources, labels, completed results, and no-placeholder rule. \\
 T3 & Keep unary accuracy and geographic claims conditional on evidence gates & 100\% & Main paper and Appendix distinguish provenance/attribution diagnostics from sensitivity-map accuracy and verified geolocation. \\
 \end{longtable}
 

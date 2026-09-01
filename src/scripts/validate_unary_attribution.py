@@ -40,7 +40,11 @@ from run_tomm_review_proxy import preprocess_for_embed  # noqa: E402
 from utils.config import load_yaml  # noqa: E402
 
 
-DEFAULT_DYNAMIC_IDS = (11, 12, 13, 14, 15, 16, 17, 18)
+# KITTI-360 semantic IDs for humans and vehicles.  The previous default
+# (11--18) incorrectly treated buildings, walls, fences, and poles as dynamic
+# while leaving cars and people in the static-background stratum.  The mapping
+# follows the official KITTI-360 label definitions.
+DEFAULT_DYNAMIC_IDS = (5, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 43)
 
 
 class TinyEmbedder(nn.Module):

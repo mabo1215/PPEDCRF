@@ -8,20 +8,26 @@
 
 \begin{document}
 
-\section*{Independent Review --- ACM TOMM Revision Cycle (2026-08-31)}
+\section*{Independent Review --- ACM TOMM Revision Cycle (Status Audit 2026-09-01)}
 
 \subsection*{Overall Assessment}
 The manuscript is internally consistent for the current fixed-budget
-proxy12/proxy50 retrieval study and the corrected E4 segmentation evaluation.
-However, the response-letter requests concerning true geographic place labels
-and independent validation of the learned unary map are still open. A new
-public-data search identifies a concrete path for both items, but registration,
-download, manifest construction, and GPU execution must precede any numerical
-writeback to the paper.
+proxy12/proxy50 retrieval study, the corrected E4 detection/segmentation
+evaluation, and the newly integrated MSLS real-place validation. The review
+requests concerning true geographic place labels, matched operating points,
+stronger baselines, margin-level evidence, and MixVPR transfer have now been
+addressed in the manuscript with explicit scope limitations. The original
+released checkpoint fails the non-constant-map diagnostic, but a new
+mask-backed checkpoint has now completed the registered KITTI-360 run. The
+result is a negative attribution-consistency diagnostic rather than evidence
+that the learned unary map is valid.
 
-\textbf{Recommendation:} Major revision for evidence completion, followed by a
-new audit after the public-data runs. The current proxy results must remain
-explicitly scoped as paired-scene retrieval evidence.
+\textbf{Recommendation:} The current revision is substantially strengthened
+and all registered review experiments have been executed. The paper must keep
+the unary-map result qualified as a negative attribution diagnostic, the proxy
+results explicitly scoped as paired-scene retrieval evidence, and the MSLS
+result scoped to its realized two-city, day/forward-view and cross-time
+protocols.
 
 \subsection*{Current Evidence That Is Already Adequate}
 \begin{itemize}
@@ -32,32 +38,39 @@ explicitly scoped as paired-scene retrieval evidence.
     and the manuscript qualifies transfer as attacker-dependent. The fixed
     \(\sigma_0=8\) comparison is no longer described as a matched-privacy
     advantage.
-    \item E4 segmentation uses indexed VOC targets, the official DeepLabV3
-    preprocessing, nearest-neighbour target resizing, and restored output
-    logits. The CUDA mIoU result is integrated in the main paper.
-    \item Gallery size, pair construction, distractors, per-query margins, and
-    the absence of GPS labels are disclosed. These changes improve
-    reproducibility but do not turn the proxy into a geographic benchmark.
+    \item E4 detection and segmentation use the final same-image manifests,
+    indexed VOC targets, the official DeepLabV3 preprocessing,
+    nearest-neighbour target resizing, and restored output logits. The mAP and
+    mIoU results are integrated in the main paper.
+    \item Official-source MSLS runs now provide true place clusters, two
+    cities, 200 queries, a 1,000-image gallery, disjointness checks, capture
+    dates, and the o2n/n2o cross-time condition split. The realized subset is
+    still limited to day/forward-view samples under one attacker backbone, with
+    empty season/weather fields.
+    \item Matched-PSNR/effective-MSE results, the constrained attacker-aware
+    diagnostic, margin subgroups, and the retrieval case study are integrated
+    with the required qualifications. The proxy remains a visual-pair
+    benchmark rather than a geographic benchmark.
 \end{itemize}
 
-\subsection*{Open Revision Requirements}
+\subsection*{Revision Requirements and Current Status}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.14\linewidth}p{0.51\linewidth}@{}}
 \toprule
 ID & Review gap & Status & Required action and completion gate \\
 \midrule
-E1 & Real place recognition or geolocalization benchmark (R2-1, R3-5) & Open / data access pending & Use official MSLS metadata with longitude, latitude, sequence IDs, place clusters, and cross-condition subtasks. Report at least two cities, two condition subtasks, 200 queries, and a gallery target of 1,000 when resources permit. Require query/gallery disjointness, valid place positives, metadata checks, per-query ranks, and condition-stratified results. Oxford RobotCar is the registered fallback. \\
-E2 & Matched utility and perturbation-energy comparison (R2-2, R3-3, R3-4) & Open & Run full, no-temporal, no-NCP, unary-only, no-DCRF, blur, mosaic, global noise, and the constrained attacker-aware baseline at matched effective MSE/PSNR. Do not restore the removed matched-utility claim until the nearest-neighbour matching output passes the checksum gate. \\
-E3 & Stronger mask-based and attacker-aware baselines (R2-2) & Open & Repeat blur/mosaic and constrained attacker-aware comparisons at the frozen gallery, utility, seed, and output-schema settings. Keep the adaptive result as an appendix diagnostic until the same-gallery, finite-result, and reproducibility gates pass. \\
-E4 & Same-image detection mAP integration (R2-2) & Partially complete & A detector output with \texttt{map50} exists, while the corrected E4 result currently integrated into the paper is segmentation mIoU only. Re-audit the detector output on the final manifest and add a table with original and sanitized mAP alongside mIoU, or explicitly mark detection as unavailable. \\
-E5 & Independent unary-map assessment (R3-1) & Open / checkpoint and data pending & Use a sequence-held-out KITTI-360 manifest with 2D semantic/instance masks and georegistered poses. Compare the unary/refined map with frozen-VPR tiled-occlusion attribution using Spearman correlation, top-10-percent overlap, attribution-energy concentration, and static-background versus dynamic-object strata. This is weak attribution-consistency evidence, not sensitivity ground-truth accuracy. \\
-E6 & Margin subgroups and Figure 6 retrieval evidence (R3-2, R3-5, R3-7) & Open & Aggregate small-margin and large-margin query groups, report correct-versus-hardest-negative similarities and margins before/after sanitization, and regenerate the qualitative case study with the correct gallery image, strongest competitors, ranks, similarities, margins, and attacker backbone. \\
-E7 & MixVPR transfer diagnosis (R3-8) & Partially complete & The revised proxy tables and cautious wording are present, but per-query/margin failure categories and a mitigation experiment are missing. Report these diagnostics or keep MixVPR as a qualified attacker-dependent limitation. \\
+E1 & Real place recognition or geolocalization benchmark (R2-1, R3-5) & Complete with explicit condition limits & Official-source MSLS runs are complete for the all, o2n, and n2o protocols: two cities, 200 queries per run, a 1,000-image shared gallery, true place clusters, query/gallery disjointness, valid positives, and per-query ranks are present; the cross-time manifests additionally record capture-time metadata. An additional exploratory Manila s2w run completed with 80 queries, an 80-image gallery, ResNet18, and three seeds, but its single-city/small-gallery coverage is not used to broaden the paper claim. The o2n/n2o runs provide an official cross-time split, but the realized subset remains day/forward-view with empty season/weather fields and one attacker backbone; no broader all-condition claim is permitted. Oxford RobotCar remains a future fallback, not a requirement for this cycle. \\
+E2 & Matched utility and perturbation-energy comparison (R2-2, R3-3, R3-4) & Complete with scope limitation & The proxy12 sigma sweep covers full, no-temporal, no-NCP, unary-only, no-DCRF, and global-noise variants at matched PSNR/effective MSE, and the corrected interpretation is integrated in the paper. Blur and mosaic have fixed operating points and therefore are reported with explicit PSNR gaps rather than treated as truly matched. The matched result is limited to the ResNet18/gallery-48 proxy protocol. \\
+E3 & Stronger mask-based and attacker-aware baselines (R2-2) & Complete as a qualified diagnostic & Mask-guided blur/mosaic and the constrained attacker-aware baseline are integrated under the frozen proxy settings. The attacker-aware result is explicitly presented as a stronger white-box diagnostic upper bound, not as a directly comparable threat-model baseline; deterministic baselines are not claimed to be matched-PSNR comparisons. \\
+E4 & Same-image detection mAP integration (R2-2) & Complete & Detection mAP@50 and segmentation mIoU were re-audited on the final same-image manifests and integrated into the main-paper utility table alongside the original-reference values. \\
+E5 & Independent unary-map assessment (R3-1) & Complete as a negative attribution diagnostic & The released checkpoint and its public Hub copy were confirmed identical and mask-free, and both failed the original non-constant-map probe. A new checkpoint was trained on 1,033 sequence-0000 images using official KITTI-360 structural-support masks and evaluated on sequence 0002 only. All 32 predicted maps are non-constant, so the operational gate passes, but mean static-background Spearman is $-0.00024$, top-10 overlap is 0.0497, and predicted top-10\% regions capture 0.0947 of attribution energy. These results do not validate the learned sensitivity map; they close the execution gap while preserving the negative scientific conclusion. \\
+E6 & Margin subgroups and Figure 6 retrieval evidence (R3-6, R3-7; proxy-gallery disclosure in R3-5) & Complete & Small/large-margin groups and correct-versus-hardest-negative margins are reported before and after sanitization. The qualitative case study now includes the correct gallery image, strongest competitor, ranks, similarities, margins, and attacker backbone. The proxy gallery and pair construction remain explicitly distinguished from true geographic labels, which are supplied by E1. \\
+E7 & MixVPR transfer diagnosis (R3-8) & Complete with qualified scope & The current corrected proxy12/proxy50 runs do not reproduce the earlier adverse MixVPR transfer. Per-margin analysis shows an effect concentrated in small-margin queries, while large-margin queries remain largely unaffected. No separate mitigation run was justified because the adverse condition is absent; MixVPR remains an attacker-dependent limitation, with margin-aware scheduling retained as future work if the failure reappears. \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Public Dataset Decision}
-The primary E1 candidate is Mapillary Street-Level Sequences (MSLS). Its
+\subsection*{Public Dataset Decision and Evidence Status}
+The primary E1 dataset is Mapillary Street-Level Sequences (MSLS). Its
 official release describes 1.6 million street-level images and provides raw
 longitude/latitude, capture time, sequence IDs, view direction, unique place
 clusters, and standardized cross-condition subtasks. The official release and
@@ -65,13 +78,13 @@ metadata are available at
 \url{https://github.com/mapillary/mapillary_sls} and
 \url{https://www.mapillary.com/dataset/places}.
 
-Oxford RobotCar is retained as a fallback because its official release has more
+Oxford RobotCar is retained as a future fallback because its official release has more
 than 100 repetitions of a route over more than one year, GPS/INS ground truth,
 and changes in weather, traffic, lighting, construction, and season. It
 requires registration and is licensed for non-commercial academic use:
 \url{https://robotcar-dataset.robots.ox.ac.uk/}.
 
-The primary E5 candidate is KITTI-360. The official release contains over
+The primary E5 diagnostic dataset is KITTI-360. The official release contains over
 320,000 images, accurate geolocation, an IMU/GPS system, continuous vehicle
 poses, and 2D semantic and instance labels. Its download requires registration
 and an intended-use declaration under CC BY-NC-SA 3.0:
@@ -97,38 +110,52 @@ not the MSLS place/sequence benchmark. These mirrors may support smoke or
 utility preparation, but none may supply paper-facing E1/E5 numbers without
 the official-source verification gate.
 
-\subsection*{Implementation and Paper-Writeback Plan}
+\subsection*{Implementation and Paper-Writeback Status}
 \begin{enumerate}
     \item Keep the current monitoring proxy as the reproducible engineering
     benchmark and do not relabel its synthetic pairs as geographic places.
-    \item Build an MSLS JSONL manifest from official query/database metadata,
-    preserving the official unique-cluster place label and recording city,
-    condition,
-    GPS, sequence, and capture-time fields.
-    \item Build a KITTI-360 sequence-held-out manifest that links images,
-    semantic masks, poses, and pose-derived place cells. Use tiled occlusion of
-    the query image to create the independent VPR attribution reference.
-    \item Run local CUDA smoke tests first. A real run is eligible for paper
-    writeback only after file-existence, label, disjointness, condition,
-    non-constant-map, output-schema, and checksum gates pass.
-    \item If registration, data access, checkpoint quality, or remote GPU
-    connectivity remains unavailable, update the paper with the concrete
-    limitation and dataset plan, but do not insert placeholder results.
+    \item The official-source MSLS JSONL manifest and real-place benchmark are
+    complete. The manifest preserves unique-cluster place labels and records
+    city, condition, GPS, sequence, and capture-time fields; all required
+    disjointness, label, metadata, and output-schema gates passed.
+    \item The KITTI-360 sequence-held-out manifest links images, semantic masks,
+    poses, and pose-derived place cells. The released checkpoint failed its
+    non-constant-map gate, while the mask-backed 0000-trained checkpoint passed
+    the operational gate on held-out 0002. Its near-zero attribution agreement
+    is documented as negative diagnostic evidence, not positive validation.
+    \item E2--E4 and E6--E7 have been run and written back to the main paper or
+    appendix. All numerical claims retain the protocol, attacker, gallery, and
+    baseline limitations recorded in the table above.
+    \item The manuscript is self-contained: implementation details are stated
+    without repository-local paths, while released exports are described by
+    their benchmark role rather than by internal filenames.
+    \item The remaining optional work is broader MSLS viewpoint, illumination,
+    season, and weather coverage or a new unary target/checkpoint designed to
+    improve attribution agreement. The exploratory Manila s2w run is recorded
+    separately but is too narrow to remove this limitation. Neither is required
+    to support the current scoped results, and neither is represented as broad
+    condition coverage.
 \end{enumerate}
 
-\subsection*{Required Manuscript Changes After Valid Runs}
-The main paper should add the approved E1 protocol, true place-level retrieval
-metrics, condition-stratified results, and a clear separation between the
-proxy and geographic benchmarks. The appendix should add the MSLS manifest
-schema, KITTI-360 attribution protocol, map-validation metrics, the detector
-mAP table, margin subgroup analysis, and the retrieval case-study figure.
-Claims about the learned unary predictor must remain limited to provenance and
-attribution consistency until an independently labelled sensitivity target is
-available.
+\subsection*{Manuscript Writeback and Remaining Limits}
+The main paper now contains the approved E1 protocol and true place-level
+retrieval metrics, together with a clear separation between the proxy and
+geographic benchmarks. The appendix contains the MSLS manifest schema,
+KITTI-360 attribution protocol and negative agreement diagnostic, the detector
+mAP table, margin subgroup analysis, matched-PSNR analysis, and the retrieval
+case-study figure. Claims about the learned unary predictor remain limited to
+checkpoint provenance and the negative attribution diagnostic; the operational
+non-constant-map gate is not a sensitivity-accuracy guarantee. Claims about
+cross-condition robustness likewise remain limited because the current MSLS
+subset is day/forward-view with cross-time variation but no season/weather
+metadata.
 
-\textbf{Disposition:} E1 and E5 are blocked until public data registration or
-download and a usable checkpoint/remote run are available. E2--E4 and
-E6--E7 remain actionable. No new paper number is approved from a smoke test or an
-incomplete remote run.
+\textbf{Disposition:} E1--E4 and E6--E7 are complete with the scope
+qualifications stated above. E5 is complete as an executed negative
+attribution diagnostic: the operational gate passes for the mask-backed
+checkpoint, but the attribution agreement is near zero and no independently
+validated sensitivity-map claim is approved. Broader condition coverage and a
+more predictive unary target remain future work rather than missing results in
+this revision cycle.
 
 \end{document}

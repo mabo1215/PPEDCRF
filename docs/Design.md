@@ -16,7 +16,7 @@ and output checksum.
 | E3 | Add stronger mask-based and attacker-aware baselines (R2-2) | Existing mask-guided blur/mosaic baselines retained; a fixed-backbone gradient feature-suppression baseline constrained by the same image-space budget and reported only when its optimization completes | Baseline comparison CSV and an explicit scope statement if attacker-aware optimization is not comparable or fails its gate |
 | E4 | Report detection mAP and segmentation mIoU on the same sanitized images (R2-2) | Label-backed images processed by the same release-side sanitizer, with frozen pretrained detector/segmenter, identical original/sanitized inputs, and standard evaluation metrics | `utility_same_images.json`, detector/segmenter summaries, and an appendix table; COCO/VOC may be used only as utility datasets, not as geographic ground truth |
 | E5 | Explain the unary predictor and independently assess its sensitivity maps (R3-1) | Exact architecture, parameter count, training target/source, loss, checkpoint provenance, and a held-out or weakly supervised attribution-consistency diagnostic | Method/appendix text plus `unary_diagnostic.csv`; attribution agreement is labelled diagnostic evidence, not ground-truth map accuracy |
-| E6 | Define Eq. (2), smoothing operator, gallery construction, and the retrieval evidence for Fig. 6 (R3-2, R3-5, R3-7) | Reproducible constants, source counts, pair/distractor IDs, per-query correct rank, strongest negative, similarities, and pre/post margins | Text revision, `retrieval_case_study.csv`, and an updated qualitative figure if the case-study gate passes |
+| E6 | Define Eq. (2), smoothing operator, gallery construction, and the retrieval evidence for Fig. 6 (R3-5, R3-6, R3-7) | Reproducible constants, source counts, pair/distractor IDs, per-query correct rank, strongest negative, similarities, and pre/post margins | Text revision, `retrieval_case_study.csv`, and an updated qualitative figure if the case-study gate passes |
 | E7 | Analyze MixVPR adverse transfer and qualify robustness (R3-8) | Per-query and margin-level results for all gallery sizes and seeds, including the raw rank, sanitized rank, correct similarity, hardest-negative similarity, and failure category | `mixvpr_per_query.csv`, failure summary, and revised robustness wording |
 
 ## Public dataset selection for E1 and E5 (2026-08-31)
@@ -164,21 +164,25 @@ data, unavailable weights, or remote access, the paper must explicitly state
 the limitation and the next step; no placeholder number or proxy relabeling is
 allowed.
 
-## Local validation status (2026-08-31)
+## Local validation status (2026-09-01)
 
 The new review-cycle scripts compile successfully and the CUDA smoke suite
-passes on the local RTX 3070. A small real-image proxy run and a constrained
-attacker-aware diagnostic also complete, but they are engineering checks only:
-the current `src/outputs/sensnet_final.pt` checkpoint stores `mask_root=null`
-and produces an almost spatially constant unary map on monitoring clips
-(mean spatial standard deviation about `2.6e-4`). The provenance diagnostic
-therefore reports no ground-truth sensitivity-map accuracy, and no local
-output is eligible for paper number writeback.
+passes on the local RTX 3070. The original `src/outputs/sensnet_final.pt`
+checkpoint stores `mask_root=null` and produces an almost spatially constant
+unary map on monitoring clips (mean spatial standard deviation about
+`2.6e-4`). Its provenance diagnostic therefore reports no ground-truth
+sensitivity-map accuracy. A separate mask-backed checkpoint is used for the
+registered KITTI-360 diagnostic described below; it passes the operational
+non-constant-map gate but does not establish sensitivity-map accuracy.
 
 The geotagged benchmark loader and same-image utility evaluator pass smoke
-tests, but the local monitoring pool has no true place/GPS labels. The public
-MSLS and KITTI-360 releases require registration/download before their
-manifests can be built. The 4c/vGPU launch is consequently pending both
-compliant public-data manifests and owner-confirmed remote GPU access. See
-`docs/archived/4c_experiment_handoff.md` for the exact remote contract and monitoring
-instructions for Claude Code.
+tests. Official-source MSLS manifests and the KITTI-360 diagnostic manifest
+are now built and paper-facing results have been written back. MSLS all/o2n/n2o
+runs pass the real-place gates, but the realized subset is limited to two
+cities, day/Forward-view samples, and one attacker backbone. The original
+unary checkpoint fails the non-constant-map gate; a sequence-0000
+mask-backed checkpoint passes that operational gate on held-out sequence 0002
+but has near-zero attribution agreement, so no sensitivity-map accuracy claim
+is made. The 4c/vGPU launch remains unnecessary for the completed E1/E5
+diagnostics; see `docs/archived/4c_experiment_handoff.md` for the remote
+contract if a future run requires it.
