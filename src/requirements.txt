@@ -5,6 +5,7 @@ torchvision>=0.16
 # Data IO
 opencv-python>=4.8
 numpy>=1.24
+pandas>=2.0
 
 # Metrics
 scikit-image>=0.23,<0.27

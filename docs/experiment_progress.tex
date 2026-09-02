@@ -22,7 +22,7 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{1 September 2026 (local RTX 3070 session update: E1 cross-time MSLS runs and E5 negative attribution diagnostic integrated into the paper)}
+\date{3 September 2026 (fresh-review follow-up: F1--F3 registered; see Table 4. All of E1--E7 below are confirmed complete and unchanged since the 1 September 2026 local RTX 3070 session)}
 
 \begin{document}
 \maketitle
@@ -201,6 +201,43 @@ revision cycle.}
 T1 & State the current proxy benchmark as paired-scene evidence only & 100\% & Main paper Experimental Protocol and Appendix interpretation state that synthetic pairs have no GPS ground truth. \\
 T2 & Record MSLS/KITTI-360 as the public-data validation path & 100\% & Main paper scope paragraph and Appendix external-validation note identify the official sources, labels, completed results, and no-placeholder rule. \\
 T3 & Keep unary accuracy and geographic claims conditional on evidence gates & 100\% & Main paper and Appendix distinguish provenance/attribution diagnostics from sensitivity-map accuracy and verified geolocation. \\
+\end{longtable}
+
+\section*{Table 4: Fresh Independent Review Follow-Up (3 September 2026)}
+
+All items in Tables 1--3 above, and every point in
+\texttt{docs/TOMM\_Response\_Letter.md}, were re-checked directly against the
+current \texttt{paper/main.tex}/\texttt{paper/appendix.tex} text in this
+session and confirmed complete with no regression. A fresh independent
+review of the manuscript on its own merits (recorded in full in
+\texttt{docs/Revision\_suggestions.tex}) then found three follow-up items,
+none requiring new data collection. This session ran in a sandbox without
+the real monitoring corpus, MSLS/KITTI-360 data, the \texttt{sensnet\_final.pt}
+checkpoint's CUDA execution path, or a live vGPU 3090 connection, so the two
+GPU-backed items (F1, F2) are code-complete and schema-smoke-tested here but
+not yet run against real exports; F3 is a documentation task that can be
+completed on whichever machine holds the relevant output tree.
+
+\begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.14\linewidth}p{0.47\linewidth}@{}}
+\caption{Fresh-review follow-up items registered 3 September 2026 (see
+\texttt{docs/Design.md}, ``Fresh independent review follow-up'').}
+\label{tab:freshreview}\\
+\toprule
+ID & Gap identified & Status & Evidence needed / next step \\
+\midrule
+\endfirsthead
+\toprule
+ID & Gap identified & Status & Evidence needed / next step \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+F1 & Appendix Table~tab:matched\_psnr's ``statistically indistinguishable'' claim rests on rounded point estimates from a 36-paired-outcome sample (12 pairs $\times$ 3 seeds, one backbone, one gallery size) with no formal test or stated power. & \pending & \texttt{src/scripts/significance\_test\_matched\_psnr.py} is written and passes a schema smoke test against synthetic sigma-sweep data (\texttt{make\_synthetic\_sigma\_sweep.py}). Needs to be run against the real \texttt{tomm\_review\_e2\_sigma} sweep's \texttt{per\_query.csv} exports (regenerating the sweep first if it no longer exists on the target machine) to produce exact McNemar $p$-values, bootstrap CIs, and the minimum detectable discordant-pair asymmetry at $n=36$; results integrate into Appendix~5 and soften the main-text/Conclusion wording. \\
+F2 & The appendix's account of the non-reproduced adverse MixVPR result never checks whether the current pipeline is deterministic run-to-run under its own fixed seeds. & \pending & \texttt{src/scripts/check\_run\_determinism.py} is written and passes a smoke test on identical vs.\ differing synthetic CSVs. Needs two fresh real executions of the MixVPR proxy50 cell (same seeds/checkpoint/code revision) on a CUDA machine, diffed by this script; the pass/fail outcome is then stated as one sentence in the appendix MixVPR subsection. \\
+F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/} have no versioned checksum record; this session found none of the large \texttt{tomm\_review\_*} directories present in its own environment. & \pending & Add a provenance table (path, producing git commit SHA, SHA-256) for every export currently cited by a paper table/figure, in this file or a new \texttt{docs/experiment\_provenance.md}. Documentation only; no GPU or new run needed, can be done on whichever machine holds each output tree. \\
 \end{longtable}
 
 \end{document}

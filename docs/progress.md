@@ -344,3 +344,29 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
   需要你提供/决策：是否要联系 4c 的管理员处理驱动问题？在此之前 4c 不会被使用。
   A: 放弃使用4c
 - Hugging Face token 多次意外打印进会话输出【已完成规避，建议你善后】：详见上方"已全部修改"第 70/71 条的安全提醒。token 未泄露到任何提交或文件，只在这次交互式对话的工具输出里出现过；建议你之后去 Hugging Face 账号设置里吊销并重新生成 `.env` 里的 `Huggingface_model_token`。不影响任何已完成的实验，纯粹是善后动作，无需立即处理。
+
+---
+
+## 本轮更新（2026-09-03，后台会话）
+
+95. 已核实 `docs/TOMM_Response_Letter.md` 中三位审稿人的全部意见（R2-1、R2-2、R3-1 至 R3-8）均已在 `paper/main.tex`/`paper/appendix.tex` 中落实，且直接对照论文正文（而非仅信任本文档historical记录）逐条核实通过。
+修改说明：逐条检查 Eq.(2) 的 sigmoid/average-pooling/kernel-stride-padding 定义、unary predictor 架构参数量（87,441）、MSLS 真实 place/GPS 结果、KITTI-360 归因诊断、matched-PSNR 附录小节、margin subgroup 表、case study 图、attacker-aware baseline、mAP/mIoU 联合表、MixVPR 复核段落均已存在于当前编译通过的论文文本中（`git status` 确认 `paper/` submodule 工作区干净，与远端 commit `d2dbf5e` 一致）。结论：审稿信里没有一条意见是论文里还没改的，`docs/Revision_suggestions.tex`（2026-09-01 版本）本身已经得出同样结论，无需再从审稿信里搬运新条目进该文件。
+
+96. 发现本次后台会话运行的沙箱环境与此前 `docs/progress.md` 记录的本机环境完全不同，已在 `docs/Revision_suggestions.tex`（Finding F3）和新的 handoff 文档中记录。
+修改说明：本沙箱只有 C: 盘（无 D:/F:/G:），PyTorch 是 CPU-only build（`2.11.0+cpu`），GPU 为 RTX 4050（6GB，与此前记录的 RTX 3070/vGPU 3090 均不同），`src/outputs/` 下只有历史遗留的小型 `controlled_retrieval*` 测试目录，此前记录的全部 `tomm_review_*` 大型产出目录、`F:\work\datasets\monitoring`、`G:\work\datasets\{msls,kitti360}`、`.env`、以及一个当前存活的 vGPU 3090 连接均不存在。因此本次"本地显卡 smoke test"只能在合成数据上验证代码逻辑，无法复现或扩展任何依赖真实数据/真实 GPU 环境的实验；"准备在 vGPU 上开始实验"被解读为准备好可立即执行的启动方案与命令，而非从本沙箱直接租用/连接一个新的付费实例（此前会话记录显示用户倾向于自己决定何时开机 vGPU 3090）。
+
+97. 已完成一轮全新的独立评审（不继承旧审稿信内容），并把结果写入重写后的 `docs/Revision_suggestions.tex`。
+修改说明：由于审稿信已无可执行条目，按 `.claude/rules/main.md` 的 Fresh Independent Review Protocol，直接对当前论文正文和附录做了一次从零开始的审阅，发现三项值得跟进但均不需要新数据采集的问题：(F1，最高优先级) 附录 `tab:matched_psnr` 的"statistically indistinguishable"结论只是基于 6 个变体在 n=36（12 pairs × 3 seeds，单一 backbone/gallery cell）配对二元结果上四舍五入后完全相同这一现象得出，没有做正式的显著性检验，也没有说明该样本量下检验功效有多低；(F2，中等优先级) 附录中"当前流程不再复现此前审稿人引用的 MixVPR adverse transfer"这一说法诚实但不完整——从未验证当前代码在固定种子下本身是否具有运行间确定性；(F3，编辑级) 本会话在核实上述两项时发现 `src/outputs/` 被 gitignore、且此次会话环境中完全没有真实产出目录，暴露出论文引用的 CSV/JSON 产出目前没有任何跨机器可验证的版本/checksum 记录。三项均已写入 `docs/Revision_suggestions.tex`，并给出各自的完成门槛。论文编译通过（0 错误，仅少量 overfull/underfull hbox 排版提示）。
+
+98. 已在 `docs/Design.md` 追加 F1–F3 的实验计划（不修改已有 E1–E7 历史记录），并给出具体执行命令。
+修改说明：新增"Fresh independent review follow-up (2026-09-03): F1-F3"一节，包含与 E1–E7 相同格式的映射表（gap/evidence needed/planned output），以及 F1（重跑或复用 `tomm_review_e2_sigma` sigma sweep + 跑新脚本）、F2（MixVPR proxy50 cell 重跑两次做确定性对比）的具体命令。明确说明 F1/F2 的底层 benchmark 需要真实数据和 CUDA 环境（本沙箱不具备），但两个新分析脚本本身是纯 CSV 后处理，不需要 GPU。
+
+99. 已实现并本地（合成数据）验证两个新分析脚本：`src/scripts/significance_test_matched_psnr.py` 与 `src/scripts/check_run_determinism.py`。
+修改说明：前者对每个 matched-PSNR target，把每个可调 sigma 变体在其匹配 sigma 下的逐 query Top-1 命中结果与 `global_noise` 按 `(query_id, seed)` 对齐后，计算精确 McNemar 配对检验 p 值、按 query（而非按 query×seed 行）做 cluster bootstrap 95% CI，并报告在当前样本量下达到显著性所需的最小不对称判别对数，直接回答"n=36 时这个检验到底有没有功效"这个论文没有回答的问题。后者对两次重复跑的 `per_query.csv`/`summary.csv` 做数值级 diff（数值列用 `np.isclose` 容差比较，非数值列做字符串比较），用于验证当前流水线在固定种子下是否真的具有运行间确定性。为支撑测试，还新增了 `src/scripts/make_synthetic_sigma_sweep.py` 按真实 schema 生成合成 sigma-sweep 数据（含"tie"模式复现论文里"六个变体四舍五入后完全相同"这一可疑但可解释的模式）。在本沙箱（CPU-only、无真实数据）用合成数据跑通了两条脚本的全部代码路径（含"检测到差异"和"未检测到差异"两种分支），均返回预期的 exit code 与输出；**这两条脚本尚未跑过任何真实数据**，不构成论文证据。同时补上了 `requirements.txt` 里一直缺失但 `matched_psnr_from_sweep.py` 早已依赖的 `pandas`。
+
+100. 已在 `docs/f1_f2_significance_determinism_handoff.md` 写好 F1/F2 的完整执行交接文档，供有真实数据/GPU 访问权限的后续会话或用户直接执行。
+修改说明：文档明确建议优先检查此前记录的本机 RTX 3070 环境（`D:\source\.venv` + `F:/G:` 数据盘）是否仍然可用——如果 `src/outputs/tomm_review_e2_sigma/` 还在，F1 甚至不需要任何新的 GPU 计算，只需直接跑新脚本；只有在该机器不可用时才需要考虑重新租用 vGPU 3090（且按此前会话记录的用户偏好，实例开机这一步留给用户自己决定，本次未从沙箱内尝试连接或租用任何远程 GPU）。文档同时汇总了此前会话踩过的环境坑（`pandas`/`scipy`/`faiss-cpu` 缺失、HF xet 传输后端在代理下卡死等），避免重复踩坑。
+
+101. 已更新 `docs/experiment_progress.tex`，新增 "Table 4: Fresh Independent Review Follow-Up" 记录 F1–F3 当前状态（均为 \pending，代码已完成、合成数据 smoke test 已通过，等待真实数据/GPU 环境执行），并更新了文档标题日期行说明 E1–E7 部分维持不变。编译通过（8 页，0 错误）。
+
+**本轮小结：** 这是一次纯核查 + 新分析工具开发 + 交接文档编写的会话，没有产出任何新的论文可用数字，也没有修改 `paper/` 下任何内容（因为审稿信条目全部已完成，无需改论文）。核心产出是三份文档更新（`Revision_suggestions.tex` 全新独立评审、`Design.md` 追加 F1–F3 计划、`experiment_progress.tex` 新表）、两个新分析脚本 + 一个合成数据生成器（均已 schema smoke test 通过但未跑真实数据）、以及一份供下一次有真实环境访问权限的会话使用的交接文档。下一步需要在拥有真实 monitoring/MSLS/KITTI-360 数据和 CUDA 环境的机器上（优先本机 RTX 3070，其次才考虑重新租用 vGPU 3090）执行 `docs/f1_f2_significance_determinism_handoff.md` 中列出的具体命令，把 F1/F2 的真实结果写回 `paper/appendix.tex`。

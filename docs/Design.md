@@ -186,3 +186,53 @@ but has near-zero attribution agreement, so no sensitivity-map accuracy claim
 is made. The 4c/vGPU launch remains unnecessary for the completed E1/E5
 diagnostics; see `docs/archived/4c_experiment_handoff.md` for the remote
 contract if a future run requires it.
+
+## Fresh independent review follow-up (2026-09-03): F1-F3
+
+All items from `docs/TOMM_Response_Letter.md` (E1-E7 above) are confirmed
+implemented in `paper/main.tex` and `paper/appendix.tex` as of this date,
+checked directly against the manuscript text rather than against prior
+review documents. Per the repository's fresh-review protocol, a new
+independent review of the current manuscript (not the old reviewer letter)
+was run and is recorded in full in `docs/Revision_suggestions.tex`. It found
+three follow-up items, none requiring new data collection, all requiring
+either a rerun of an existing benchmark configuration or a pure
+post-processing analysis over its output:
+
+| ID | Gap identified by the fresh review | Evidence needed | Planned output |
+|---|---|---|---|
+| F1 | The appendix's matched-PSNR "statistically indistinguishable" claim (`tab:matched_psnr`) is asserted from rounded point estimates on a 36-paired-outcome sample (12 pairs x 3 seeds, one backbone, one gallery size), with no formal test and no statement of test power. | Exact McNemar test and a query-level cluster bootstrap CI on the Top-1 difference between each sigma-tunable variant and `global_noise` at each matched-PSNR target, plus the minimum discordant-pair asymmetry that would reach significance at this sample size. | `matched_psnr_significance.csv` from `src/scripts/significance_test_matched_psnr.py`, integrated into Appendix Section 5 and the main-text/Conclusion wording softened to match the tested claim. |
+| F2 | The appendix states the current pipeline no longer reproduces an earlier reviewer-cited adverse MixVPR result, with no root cause identified, but never checks whether the *current* pipeline is even deterministic run-to-run under fixed seeds. | Two independent executions of the same benchmark invocation (same seeds, checkpoint, code revision), at minimum for the MixVPR proxy50 cell, diffed for exact numerical agreement. | A determinism verdict (pass, or a named mismatched field) from `src/scripts/check_run_determinism.py`, stated as one sentence in the appendix MixVPR subsection. |
+| F3 | Paper-facing CSV/JSON exports under `src/outputs/` are git-ignored; this session found none of the large `tomm_review_*` run directories present in its own working environment, with no lightweight versioned record of which run (by checksum) backs which paper table. | A provenance table recording, per export cited by a paper table/figure, its path, producing git commit SHA, and SHA-256 checksum. | New provenance table in `docs/experiment_progress.tex` or a new `docs/experiment_provenance.md`; documentation only, no experiment. |
+
+F1 and F2 both require a machine with the real monitoring corpus, the
+`sensnet_final.pt` checkpoint, and CUDA (the local RTX 3070 machine described
+throughout this file's earlier entries, or a freshly rented vGPU 3090 — not
+this session's own sandbox, which has none of those). The analysis code
+itself (`significance_test_matched_psnr.py`, `check_run_determinism.py`) does
+not need a GPU and has been written and schema-smoke-tested against synthetic
+sigma-sweep data (`src/scripts/make_synthetic_sigma_sweep.py`) in this
+session; only the underlying benchmark reruns that feed it need GPU/data
+access. F3 can be completed by whichever machine currently holds each output
+tree and needs no new computation.
+
+### Execution plan for F1/F2 once real-data access is available
+
+1. **F1.** Re-use the existing `src/outputs/tomm_review_e2_sigma/` sigma-sweep
+   directory (or regenerate it if it no longer exists on the target machine
+   via `run_tomm_review_proxy.py --mode proxy --sigma <S>` for
+   `S in {4,6,8,10,12,16,20,24,28,32,40,50}`, ResNet18, gallery 48, three
+   seeds — this is the exact command already used to build
+   `tab:matched_psnr`). Then run:
+   `python src/scripts/significance_test_matched_psnr.py --sweep_dir <dir> --backbone resnet18 --gallery_size 48 --targets 30 33 36 --compare_against global_noise --output src/outputs/tomm_review_e2_sigma/matched_psnr_significance.csv`.
+   No new GPU inference is required if the sweep directory still exists;
+   only a rerun of the sweep itself (already-completed work) would need GPU.
+2. **F2.** Re-run the MixVPR proxy50 cell twice with identical arguments into
+   two separate output directories, then run:
+   `python src/scripts/check_run_determinism.py <run_a>/per_query.csv <run_b>/per_query.csv`.
+   This does require fresh GPU execution (the point is to test the live
+   pipeline, not archived outputs).
+3. Write the results back into `paper/appendix.tex` (Section 5 for F1, the
+   MixVPR subsection for F2) and adjust the corresponding main-text/Conclusion
+   sentences once real numbers are in hand; do not write placeholder numbers
+   before the runs complete.
