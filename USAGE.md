@@ -389,91 +389,45 @@ Stage 9 触发保护（对本触发词同样生效）：
 
 ## 目标会议和期刊
 
-目标会议或期刊：<The International Conference on Learning Representations (ICLR 2027)>
-<!-- <The International Conference on Learning Representations (ICLR 2027)> -->
+目标会议或期刊：<The International Conference on Learning Representations(ICLR 2027)>
 
 - 所有模型规则都应读取这一行，作为评审标准、scope 检查、格式调整、投稿要求核对和论文修改的目标依据
 - 如果你后续修改这一行，后续评审与修改应自动按新的目标会议或期刊执行
 - 如果这一行为空或缺失，则按论文内容和仓库上下文推断最合理的高水平 venue 标准继续工作
 
-### Venue pivot record (2026-08-08)
-
-Retargeted from ICLR 2027 to IEEE TNNLS. `paper/main.tex` and
-`paper/appendix.tex` were converted from the ICLR `\documentclass{article}`
-+ `iclr2026_conference.sty` template to `\documentclass[journal]{IEEEtran}`,
-using `natbib` (`numbers,sort&compress`) with `IEEEtranN.bst` so the
-existing `\citep`/`\citet` call sites render as IEEE-style numeric bracketed
-citations without needing to change every citation call site. `IEEEtran.cls`
-and `natbib.sty` are bundled under `paper/template/` for offline builds.
-This was explicitly a **format-only** conversion: page length and the
-22-subsection Results-section restructuring are deferred by the author's
-instruction (the paper is expected to eventually split into multiple
-shorter papers, so compressing to fit a single venue's page limit now would
-likely be wasted work). IEEE journals are single-blind (no anonymized
-submission) and use significantly longer review cycles than ICLR; both
-main.pdf and appendix.pdf compiled cleanly with zero LaTeX errors, zero
-missing citations, and zero overfull boxes after the conversion.
-
-### Current venue fork (2026-08-14)
-
-E7 significantly improved both EGM specialists, and the prospective Flickr30K
-confirmation and E6 LFPR cost audit are complete. The current academic-review
-recommendation is therefore **ICLR 2027 primary, IEEE TNNLS fallback**, matching
-the positive-result branch frozen before E7. The manuscript remains in
-IEEEtran until the author explicitly confirms the format migration. The
-remaining ICLR conversion work is double-blind anonymization, the official
-template, and compression to nine main-text pages.
-
-### Pivot record (2026-07-18)
-
-The project pivoted from the CT/chest X-ray mutual-supervision paper
-(archived at `paper/backup/ctxray_full_negative_result_20260718/`, see its
-`README.md`) to a new direction: **consensus/correctness-gated
-self-distillation for a Vision-Language Model**, reusing infrastructure from
-the sibling repo `HKVLM` (Qwen2.5-VL, Grounding DINO, RefCOCO caches, POPE
-hallucination pipeline) without modifying that repo. Rationale and literature
-grounding: `docs/Design.md` Section 10, `docs/ideas.txt`.
-
-- **Target venue**: ICLR 2027. Abstract deadline **2026-09-11**, full paper
-  deadline **2026-09-16** (AoE; corrected against ICLR's official 2027 author
-  guidelines on 2026-08-14). This is the nearest confirmed deadline for a
-  general-ML venue at the time of the pivot.
-- **Fallback**: ICML 2027 (real ML conference, not the Minority Languages
-  one of the same acronym). Its 2027 deadline was not yet officially
-  announced as of 2026-07-18; historically late January (e.g. 2026-01-28),
-  so an unconfirmed estimate only, not a committed date. Use as a fallback
-  if the ICLR 2027 timeline proves infeasible once real experiments start.
-- `paper/`, `src/`, and `docs/revision_suggestions.tex` in this repo are now
-  repurposed for the VLM paper; the CT/X-ray manuscript is archived, not
-  deleted, and remains available for a separate future submission if desired.
-
 ### 一键复制 LaTeX 输出的提示词（直接输入 Claude 对话框）
 
 ```text
-根据当前新的审稿意见 @docs\revision_suggestions.tex 继续当前 paper\ 中论文的修改 （论文的revision cycle）, 如果审稿意见中需要补充实验，则首先在 [Design.md](c:/source/BodhiNet/docs/Design.md) 中列出实验计划，然后写实验需要的代码。借助本地显卡可以完成smoke test, 然后git push到repo。然后更新进度到 @docs\progress.md 上。 并且在 [experiment_progress.tex](c:/source/BodhiNet/docs/experiment_progress.tex) 更新进度表(next step plan), 然后开始在  4c 上开始实验. 实验开展后，通过 docs\  文件交接给claude code 进行接下来的实验监控。
+根据当前新的审稿意见 @docs\RevisionSuggestions.tex 修改论文（或者继续当前 revision cycle）, 如果审稿意见中需要补充实验，则首先在 @docs\Design.md 中列出实验计划，然后写实验需要的代码。借助本地显卡可以完成smoke test, 然后git push到repo。最后更新进度到 @docs\progress.md 上，在 @docs\ExperimentProgress.tex 中更新计划（按照第一张表的格式更新具体修改项还有完成百分比等信息，在next step plan更新正在跑的实验，还有所有准备完成的实验，包括完成百分比，预估完成的新西兰时间）。然后开始在vGPU 3090准备实验，实验准备好后 告知我开卡。
 
-h800 无卡模式已经开机, 代码在H800无卡模式下git push代码，同时在H800 下准备实验需要的数据，等待所有代码和数据在H800上准备好后，告知我开卡。
-vGPU 无卡模式已经开机, 代码在vGPU无卡模式下git push代码，同时在vGPU 下准备实验需要的数据，等待所有代码和数据在vGPU上准备好后，告知我开卡。
-PRO 6000 无卡模式已经开机, 代码在5090无卡模式下git push代码，同时在PRO 6000 下准备实验需要的数据，等待所有代码和数据在PRO 6000上准备好后，告知我开卡。
 
-先检查 docs/ 下的 docs\Design.md docs\ideas.txt docs\progress.md等文件，准备需要做的实验.
-H800 GPU已开. 先检查哪些需要做的实验已经在之前做了，然后开始未作的实验，在需要最大化限度的压榨显卡性能（显存80G），开始实验（可以多开Screen并行实验，使得显存达到最大化使用限度）。 实验设定10分钟定时巡检，完成后拉回实验结果同时H800关机，避免扣费。 
+核对已经完成的论文（在 @paper\ 中）和 @docs\RevisionSuggestions.tex 还有之前记录的进度文件
+  @docs\ExperimentProgress.tex @docs/progress.md  还有实验记录 核对还有哪些
+  @docs\RevisionSuggestions.tex 提到的论文修改还没有修改 更新到 @docs\ExperimentProgress.tex
+  @docs\progress.md 后继续修改，同时检查vGPU实验 是否都覆盖了修改意见需要做的实验 记得移走  @docs\ExperimentProgress.tex 中的 表中的已经完成的修改和实验 只保留正在进行和未完成的实验  next step plan的实验进度表需要
+包括完成百分比，预估完成的新西兰时间，备注等信息
 
-vGPU 3090已开，需要最大化限度的压榨显卡性能（显存48G），开始实验（可以多开Screen并行实验，使得显存达到最大化使用限度）。 实验设定10分钟定时巡检，完成后拉回实验结果同时vGPU关机，避免扣费。 登录信息在  C:\source.env     然后完成结果回填，论文修改 然后更新进度到 @docs\progress.md 上。 并且在 [experiment_progress.tex](d:/source/PPEDCRF/docs/experiment_progress.tex) 更新所有表 
+H800无卡模式已开，代码在H800无卡模式下git push代码，同时在H800 下准备实验需要的数据，等待所有代码和数据在H800上准备好后，告知我开卡。
+PRO 6000无卡模式已开，代码在无卡模式下git push代码，同时在PRO 6000 下准备实验需要的数据，等待所有代码和数据在PRO 6000上准备好后，告知我开卡。
 
-PRO 6000 已开，需要最大化限度的压榨显卡性能（显存96G），开始实验（可以多开Screen并行实验，使得显存达到最大化使用限度）。 实验设定10分钟定时巡检，完成后拉回实验结果同时PRO 6000关机，避免扣费.
+H800 GPU已开，需要最大化限度的压榨显卡性能（显存80G），开始实验（可以多开Screen并行实验，使得显存达到最大化使用限度）。 实验设定10分钟定时巡检，完成后拉回实验结果同时H800关机，避免扣费。
 
- 4c 实验的结果写回论文，同时更新 docs\experiment_progress.tex 的 Table 1  Revision Suggestions Completion Status 和  Table 2  Next-Step Plan 还有 docs\progress.md。
 
-实验完成后，结果回填论文，再次检查docs\revision_suggestions.tex，以便能达到论文中所有提出的审稿意见都得到了解决。
+vGPU 3090已开，需要最大化限度的压榨显卡性能（显存48G），开始实验（可以多开Screen并行实验，使得显存达到最大化使用限度）。 实验设定10分钟定时巡检，完成后拉回实验结果同时vGPU 3090关机，避免扣费。
+vGPU 3090登录信息：运行时读取 `C:\work\9\saveway.txt` 中“vGPU 3090”标记下方两行（SSH登录行和密码行）；禁止复制到代码、规则、日志、报告或聊天。
 
-核对当前的论文(在 paper\ 下面) 和审稿意见 @docs\revision_suggestions.tex , 列出来哪些还没修改，然后开始修改，如果还有实验，更新 最新的信息到 @docs\experiment_progress.tex 的所有表里面. 最后告知还有哪些没修改，没修改的原因. 更新到 @docs\progress.md。
+PRO 6000已开，需要最大化限度的压榨显卡性能（显存96G），开始实验（可以多开Screen并行实验，使得显存达到最大化使用限度）,登录信息C:\work\9\saveway.txt。 实验设定10分钟定时巡检，完成后拉回实验结果同时PRO 6000关机，避免扣费。
+
+实验完成后，结果回填论文，再次检查 @docs\RevisionSuggestions.tex ，以便能达到论文中所有提出的审稿意见都得到了解决。
+
+
+回顾之前的实验进度 给我实验进度表 还有下一步计划实验的表  表里包括实验的意义
 ```
 
 若希望 Claude 在右栏生成**全 LaTeX 格式、可一键复制**的评审内容，在对话框中输入：
 
 ```text
-请根据 <The International Conference on Learning Representations (ICLR 2027)> 的投稿要求对这篇论文进行完整学术评审，并将所有评审意见和修改建议以完整的可以一键复制的 LaTeX 格式写入docs\revision_suggestions.tex。
+请根据 <The International Conference on Learning Representations(ICLR 2027)> 的投稿要求对这篇论文进行完整学术评审，并将所有评审意见和修改建议以完整的可以一键复制的 LaTeX 格式覆盖写入到 @docs\RevisionSuggestions.tex 。
 ```
 
-先修正 E4 分割预处理，然后用上述 proxy12/proxy50 数字整体替换论文中的旧 retrieval 表格和叙述   其中环境用  D:\source\.venv  
+> **提示**：Claude 网页端（claude.ai）和 VS Code 插件的代码块右上角均有"Copy"按钮，上述提示词可确保内容以单个完整代码块输出，点击即可全文复制。
