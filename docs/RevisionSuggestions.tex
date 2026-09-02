@@ -15,54 +15,92 @@ This review first checked, directly against the current \texttt{paper/main.tex}
 and \texttt{paper/appendix.tex} content (not against prior review documents),
 whether every point raised by the three ACM TOMM reviewers in
 \texttt{docs/TOMM\_Response\_Letter.md} is already reflected in the
-manuscript. It is. Reviewer 2's two comments (R2-1, R2-2) and Reviewer 3's
-eight comments (R3-1 through R3-8) all correspond to experiments E1--E7,
-and each is present in the built manuscript with real numbers: the official
-MSLS real-place retrieval benchmark and its cross-time subtasks (E1), the
-matched-PSNR/effective-MSE sweep (E2), the constrained attacker-aware
-baseline (E3), the co-audited detection mAP@50/segmentation mIoU table (E4),
-the KITTI-360 mask-backed attribution diagnostic (E5), the margin-subgroup
-analysis and retrieval case-study figure (E6), and the corrected MixVPR
-transfer diagnosis (E7). No sentence of the reviewer letter identifies a gap
-that is still open in the manuscript as built. \textbf{There is therefore
-nothing left to port from the reviewer letter into this document}; the
-previous version of this file (dated 2026-09-01) had already reached the
-same conclusion, and nothing in the manuscript has regressed since.
+manuscript. The earlier conclusion that every reviewer request was complete
+was too strong. The core of Reviewer 2's two comments (R2-1, R2-2) and
+Reviewer 3's eight comments (R3-1 through R3-8) is now represented by real
+manuscript material: the official MSLS real-place retrieval benchmark and its
+cross-time subtasks (E1), the matched-PSNR sweep (E2), the constrained
+attacker-aware baseline (E3), the co-audited detection mAP@50/segmentation
+mIoU table (E4), the KITTI-360 mask-backed attribution diagnostic (E5), the
+margin-subgroup analysis and retrieval case-study figure (E6), and the
+re-audited MixVPR transfer diagnosis (E7). However, several requested
+sub-points were only partially addressed in the previous manuscript. The
+current pass either adds the requested evidence or states the remaining
+boundary explicitly in the paper. The status below is the status after this
+pass; the separate fresh-review findings F1--F3 remain active afterward.
 
-Per the repository's own workflow rule, once a revision-guidance file has no
-remaining actionable items, the next step is a fresh independent review of
-the manuscript on its own merits, ignoring prior review history. That review
-follows below and replaces the previous content of this file.
+\begin{longtable}{p{0.13\linewidth}p{0.36\linewidth}p{0.40\linewidth}}
+\toprule
+Item & Evidence already present & Resolution and remaining boundary \\
+\midrule
+R2-1 & MSLS supplies true place identities, GPS metadata, a 1000-image
+gallery, and official cross-time directions. & The manuscript now explicitly
+states that E1 is not a complete nuisance-condition evaluation: the subset is
+mostly Forward/day, covers two cities, uses one attacker, and has empty
+season/weather fields. No universal claim is made for unseen conditions;
+broader nuisance-condition coverage remains optional future work. \\
+R2-2 & The paper includes PSNR-matched sigma-tunable variants, mask-guided
+baselines, an attacker-aware diagnostic, and same-image mAP@50/mIoU. & The
+paper now gives the PSNR--MSE--energy equivalence for fixed-size 8-bit frames
+and retains the explicit quality mismatch for untuned deterministic baselines.
+The deterministic baselines are not claimed to dominate at equal quality;
+independent per-query energy values are not available in the aggregate table. \\
+R3-3/R3-4 & Unary-only/no-DCRF ablations and the matched-PSNR table are
+present, and the fixed-budget 6 dB statement is qualified. & The paper now
+states the effective NCP weight explicitly and replaces the inferential
+``statistically indistinguishable'' wording with a descriptive no-separation
+statement. A formal paired test remains as fresh-review Finding F1, rather
+than as an unsupported claim in the paper. \\
+R3-8 & The current MixVPR rerun, margin analysis, and attacker-dependent
+scope qualification are reported. & The earlier adverse result is not
+reproduced, so no mitigation experiment was run. The paper now explicitly
+states that the proposed margin-aware mitigation is unvalidated and limits
+the cross-backbone conclusion to the observed diagnosis; a future mitigation
+study remains outside the current evidence. \\
+\bottomrule
+\end{longtable}
+
+R3-1, R3-2, R3-5, R3-6, and R3-7 are substantively addressed by the current
+implementation notes, gallery disclosure, margin diagnostics, and case-study
+figure. They should remain checked during the paper rebuild, but they do not
+currently require a new reviewer-facing experiment. The residual items above
+are the reviewer-letter requirements that were not fully represented in the
+previous version of this file.
+
+After the residual reviewer-letter items above are completed or explicitly
+blocked, the repository's workflow calls for a fresh independent review of the
+manuscript on its own merits, ignoring prior review history. The independent
+findings from this cycle follow below, but they do not supersede the
+reviewer-letter actions that remain open above.
 
 \subsection*{Overall Assessment}
 The manuscript is unusually candid: nearly every quantitative claim carries
 an explicit scope qualification, and the paper's own Appendix
-(Section~5, ``Matched-PSNR/Effective-MSE Comparison'') already runs the
-exact fairness check the original reviewers demanded. That candor is a
-strength. But reading the manuscript fresh, as a new reviewer would, surfaces
-two issues that the manuscript states as fact without the statistical
-apparatus to support the strength of the claim, plus one process gap that
-this fresh-review pass ran into directly. None of these are blocking in the
-sense of requiring new data; all three are answerable from analysis code
-against existing or trivially-rerun outputs.
+(Section~A, ``Matched-PSNR/Effective-MSE Comparison'') already runs a
+descriptive fairness check of the kind the original reviewers demanded. That
+candor is a strength. But reading the manuscript fresh, as a new reviewer,
+surfaces two issues that the manuscript states too strongly without the
+statistical apparatus to support the claim, plus one process gap that this
+fresh-review pass ran into directly. None of these are blocking in the sense
+of requiring a new method, but the first two require real exports or a clear
+scope limitation before they can be closed.
 
 \subsection*{Finding F1 (Major): the matched-PSNR null result is asserted, not tested}
 \label{sec:f1}
-Appendix Table~\texttt{tab:matched\_psnr} and the surrounding text state that
-at every matched PSNR target, six sigma-tunable variants (\texttt{full},
-\texttt{no\_temporal}, \texttt{no\_ncp}, \texttt{unary\_only},
-\texttt{no\_dcrf}, \texttt{global\_noise}) are ``statistically
-indistinguishable'' in Top-1. The evidence given for this is that their
-seed-averaged Top-1 values round to the same three decimal digits. That is
-evidence of a small \emph{point-estimate} difference, not a statistical test
-of indistinguishability, and the underlying sample is only 12 paired
-locations $\times$ 3 seeds $=$ 36 paired binary retrieval outcomes per cell,
-restricted to one backbone (ResNet18) and one gallery size (48). This matters
-because this specific comparison is the load-bearing evidence for the
-paper's central repositioning: that PPEDCRF's contribution is better quality
-at matched privacy rather than more privacy at matched quality. A claim that
-important should rest on a real paired test and an explicit statement of how
-much power that test had at this sample size, not on rounding.
+Appendix Table~\texttt{tab:matched\_psnr} and the surrounding text now avoid
+the stronger phrase ``statistically indistinguishable'' and instead report
+identical displayed Top-1 point estimates for six sigma-tunable variants
+(\texttt{full}, \texttt{no\_temporal}, \texttt{no\_ncp}, \texttt{unary\_only},
+\texttt{no\_dcrf}, \texttt{global\_noise}) at the three targets. This is an
+appropriate descriptive correction, but it is not a statistical test of
+equivalence. The underlying sample is only 12 paired locations $\times$ 3
+seeds $=$ 36 paired binary retrieval outcomes per cell, restricted to one
+backbone (ResNet18) and one gallery size (48). This matters because this
+comparison is the load-bearing evidence for the paper's central
+repositioning: that PPEDCRF's contribution is better quality at matched
+privacy rather than more privacy at matched quality. A claim that important
+should rest on a real paired test and an explicit statement of how much power
+that test had at this sample size, not on rounding alone.
 
 \textbf{Required action.} Use the newly added
 \texttt{src/scripts/significance\_test\_matched\_psnr.py} (paired McNemar
@@ -75,7 +113,7 @@ and the minimum discordant-pair asymmetry that would have reached
 significance at $\alpha=0.05$ given the realized 36-pair sample (this last
 number tells the reader directly how much power the comparison had, rather
 than leaving ``statistically indistinguishable'' to be taken on faith).
-Integrate the resulting numbers into Appendix~5 and soften the main-text
+Integrate the resulting numbers into Appendix~A and soften the main-text
 sentence in Section~4.4 (``Fixed-Budget Privacy--Utility and Attacker
 Sensitivity'') and the Conclusion accordingly, e.g. from ``statistically
 indistinguishable'' to ``no significant Top-1 difference was detected by an

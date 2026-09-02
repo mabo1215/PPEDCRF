@@ -370,3 +370,20 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 101. 已更新 `docs/experiment_progress.tex`，新增 "Table 4: Fresh Independent Review Follow-Up" 记录 F1–F3 当前状态（均为 \pending，代码已完成、合成数据 smoke test 已通过，等待真实数据/GPU 环境执行），并更新了文档标题日期行说明 E1–E7 部分维持不变。编译通过（8 页，0 错误）。
 
 **本轮小结：** 这是一次纯核查 + 新分析工具开发 + 交接文档编写的会话，没有产出任何新的论文可用数字，也没有修改 `paper/` 下任何内容（因为审稿信条目全部已完成，无需改论文）。核心产出是三份文档更新（`Revision_suggestions.tex` 全新独立评审、`Design.md` 追加 F1–F3 计划、`experiment_progress.tex` 新表）、两个新分析脚本 + 一个合成数据生成器（均已 schema smoke test 通过但未跑真实数据）、以及一份供下一次有真实环境访问权限的会话使用的交接文档。下一步需要在拥有真实 monitoring/MSLS/KITTI-360 数据和 CUDA 环境的机器上（优先本机 RTX 3070，其次才考虑重新租用 vGPU 3090）执行 `docs/f1_f2_significance_determinism_handoff.md` 中列出的具体命令，把 F1/F2 的真实结果写回 `paper/appendix.tex`。
+
+## 本轮更新（2026-09-03，TOMM 审稿意见补充修订）
+
+102. 【已完成】已将 `docs/TOMM_Response_Letter.md` 中此前被高估为“全部完成”的子意见重新审计，并更新 `docs/RevisionSuggestions.tex` 记录真实完成状态。
+修改说明：明确区分 R2-1 的 MSLS/大 gallery 证据与仍有限的视角、光照、季节、天气覆盖，区分 R2-2 的匹配 PSNR 与未调优的确定性基线，记录 R3-3/R3-4 的统计检验缺口和 R3-8 的 mitigation 未验证状态，同时保留 F1–F3 新一轮问题。
+
+103. 【已完成】已按上述 TOMM 子意见修改 `paper/main.tex` 与 `paper/appendix.tex`，并同步修订 `docs/ExperimentProgress.tex` 的对应表述。
+修改说明：新增 NCP 实际有效权重 $\alpha p_t^2/(\max(p_t)+\epsilon)$，补充固定尺寸 8-bit 帧中 PSNR、MSE 与总平方误差能量的等价关系，将 matched-PSNR 结论改为非推断性的“显示精度下无可测分离”，并明确 MSLS 条件覆盖边界及 MixVPR mitigation 尚无实验证据；`paper/build.bat` 已重新编译 `main.pdf`、`appendix.pdf` 和 `titlepage.pdf`，均无致命错误。
+
+104. 【部分完成/待真实数据】F1 正式配对显著性检验、F2 当前 MixVPR 流程双次确定性复跑和 F3 论文引用产出的跨机器 checksum 记录仍未完成。
+修改说明：本机已确认缺少此前 `tomm_review_*` 原始导出和 `F:\work\datasets` 数据目录，因此不能伪造 McNemar p 值、bootstrap 区间、确定性结果或 provenance checksum；下一步需在持有真实导出/数据和 CUDA 环境的机器上执行 `docs/f1_f2_significance_determinism_handoff.md`，再决定是否把真实统计结果写回论文。
+
+**本轮小结：** 已完成 TOMM 审稿意见中可由现有证据支持的论文修改，并将不能由当前环境验证的内容改为明确限制；论文 PDF 已成功重建，剩余 F1–F3 因真实实验产出和跨机器 provenance 缺失而暂时阻塞，不能视为已完成。
+## 本轮补充（2026-09-03，vGPU 3090 实验启动）
+
+105. 【进行中】已检查并确认 vGPU 3090 实例可连接，CUDA、PyTorch、实验依赖、monitoring 数据、utility 子集、MixVPR 权重和 checkpoint 均已就绪，并已启动 F1 sigma sweep 与 F2 MixVPR 双次确定性复跑。
+修改说明：F1 使用 `f1_sigma` screen，当前已完成 5/12 个 sigma 点并运行 sigma=16；F2 使用 `f2_determinism` screen，run A 已完成 3750 条 per-query 记录，run B 正在运行。两项均写入新的远端输出目录，不覆盖已有结果；待 CSV 生成后拉回本地执行统计、确定性比较和 provenance checksum，再决定是否写回论文。
