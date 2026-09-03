@@ -441,3 +441,14 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 119. 【部分完成】更新 `docs/ExperimentProgress.tex`，记录 PRO 6000 no-card 准备完成状态和下次开机后的开卡回顾顺序，并完成 LaTeX 编译校验。
 修改说明：第一张 ICME 计划表已按实际准备状态更新 M2/M3/M4/M8 完成百分比；Next-Step Schedule 新增 PRO 6000 no-card code/data gate（100\%）和 GPU-on handoff replay（0\%），明确下次开机必须依次复核 `nvidia-smi`、root commit、paper gitlink、`50_cpu_gates_ready`、临时认证文件和三份 MSLS manifest 审计，再启动实验。更新已提交并推送至 `origin/main` 的 `af885ff`，`docs/build.bat ExperimentProgress` 编译通过。PRO 6000 端口在补同步该文档时暂时不可达，故远端最后一次已核验提交为 `61d613b`；下一次开机后先执行 `git pull --ff-only`，再复核数据门禁和该计划文件。
 本轮小结：本地与中心仓库已保存最新进度，PRO 6000 的实验数据不会因文档同步失败而被覆盖；远端文档快进同步暂时阻塞，原因是 SSH 端口不可达，下一步在开机后完成补同步并回顾 GPU-on handoff。
+
+## 本轮更新（2026-09-04，vGPU 3090 GPU-on，M2/M4 实验启动）
+
+120. 【进行中】PRO 6000 最后已知 SSH 端口（`connect.westc.seetacloud.com:48305`）开机后仍被拒绝连接，按你的决定改用已开卡的 vGPU 3090（`connect.westd.seetacloud.com:22766`，48GB）继续 ICME 2027 M2/M3/M4 revision cycle。
+修改说明：vGPU 3090 上原有工作树停留在 TOMM 周期的 detached commit `5ccb2ac`，缺少 ICME 脚本；已备份该未跟踪 `src/` 为 `src_backup_5ccb2ac_20260903/`，`git fetch` + `git checkout -B main origin/main` 后确认工作树对齐 `eb275e4`（含 `run_icme2027_mask_intervention.py`/`run_icme2027_sequence_retrieval.py`/`audit_geotagged_manifest.py`）。从备份恢复了 `src/models/vpr_cache`（CosPlace/MixVPR 权重，86MB）、`src/outputs/sensnet_final.pt` checkpoint 与三个 third-party VPR 仓库；Patch-NetVLAD 的 `mapillary_WPCA4096.pth.tar`（327MB）已随备份一并复原，无需重新下载。
+
+121. 【已修复】发现并修复两个导致 CosPlace/MixVPR/Patch-NetVLAD 全部启动失败的真实 bug。
+修改说明：(1) `cp -a $BK/third_party/X src/third_party/X` 在目标目录已由 git checkout 预先创建为空目录的情况下，会把源目录复制成目标目录的子目录（如 `third_party/CosPlace/CosPlace/`），导致三个骨干全部 `ModuleNotFoundError`/`FileNotFoundError`；已 `rm -rf` 后重新以正确的扁平结构复制，`cosplace_model`/`models/backbones/resnet.py`/`patchnetvlad` 均已在预期路径下验证存在。(2) M4 sequence retrieval 默认 `--min_frames 8`，但当前 monitoring proxy（4198 文件、600 clip）实测 592/600 个 clip 只有 7 帧，导致"Unable to discover 12 paired locations from 2 candidates"；已改用 `--base_clip_len 7 --clip_lengths 1 2 4 7 --min_frames 7` 重新启动。两处修复后 M2 的 cosplace/mixvpr/patchnetvlad 与 M4 的 resnet18/mixvpr 均已重新进入 RUNNING 状态（M2 resnet18 首次启动即成功，156 行）。
+
+122. 【进行中】MSLS 最小实验包（本地 `tmp/pro6000_msls_subset.tar.gz`，160MB，原为 PRO 6000 准备）本机到 vGPU 3090 的直传速度约 8KB/s（预计需时约 5 小时），已确认本机当前对 GitHub/HuggingFace 的直接出站访问也被阻断（`curl`/`huggingface_hub` 均超时，WSL 网关上未探测到可用本地代理端口），因此本轮无法复用此前"经 HuggingFace 私有数据集仓库中转"的加速路径。已让该 scp 在后台继续传输，不阻塞 M2/M4；M3（manifest audit + geotagged VPR benchmark）将在传输完成后启动。
+修改说明：M2（4 backbones: resnet18/mixvpr/cosplace/patchnetvlad）与 M4（2 backbones: resnet18/mixvpr）已在 6 个独立 screen 会话中并行运行，`OMP_NUM_THREADS=12`/`MKL_NUM_THREADS=12` 限制线程避免 96 核争用；已设置 10 分钟巡检节奏监控 GPU 利用率、job 状态与 MSLS 传输进度，完成后将回填结果、关闭 vGPU 3090 并更新论文与 `docs/ExperimentProgress.tex`。

@@ -289,9 +289,22 @@ def normalized_embeddings(
     images: torch.Tensor,
     device: torch.device,
     input_size: int,
+    batch_size: int = 32,
 ) -> torch.Tensor:
-    x = preprocess_for_embed(images.to(device), input_size)
-    emb = embedder(x)
+    """Embed images in fixed-size chunks rather than one forward pass.
+
+    Some attacker backbones (e.g. Patch-NetVLAD, whose patch-level dense
+    descriptors are far larger per image than a global-pooled CNN embedding)
+    OOM on a single unbatched forward pass once the gallery reaches official
+    MSLS scale (1000 images), even though the same call is fine at the
+    smaller proxy-benchmark gallery sizes (<=100). Chunking keeps peak
+    activation memory bounded by batch_size regardless of total gallery size.
+    """
+    chunks = []
+    for start in range(0, images.size(0), batch_size):
+        x = preprocess_for_embed(images[start : start + batch_size].to(device), input_size)
+        chunks.append(embedder(x))
+    emb = torch.cat(chunks, dim=0)
     return F.normalize(emb, dim=1)
 
 
