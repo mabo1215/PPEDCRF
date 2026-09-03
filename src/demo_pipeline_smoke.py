@@ -1,3 +1,18 @@
+"""NOT a scientific evaluation entry point.
+
+This script wires the DCRF/NCP/noise-injection pipeline together on
+synthetic random frames using an UNTRAINED, RANDOM unary network
+(``RandomUntrainedUnaryNet`` below returns ``torch.randn`` for every input,
+regardless of image content). It exists only to smoke-test that the module
+plumbing runs end to end (shapes, device placement, the refine/allocate/apply
+call sequence).
+
+None of this paper's reported numbers come from this script. Every real
+evaluation (proxy12/50 retrieval, MSLS, the M2/M3/M4 GPU experiments) loads
+the trained checkpoint via ``main.load_sensnet_checkpoint`` and runs one of
+the dedicated ``scripts/run_*.py`` runners instead.
+"""
+
 from __future__ import annotations
 
 from typing import List, Optional
@@ -8,10 +23,11 @@ from privacy.NCP import NCPAllocator, NCPConfig
 from privacy.noise_injector import NoiseInjector, NoiseConfig
 
 
-class DummySensitiveRegionNet(torch.nn.Module):
-    """
-    Placeholder sensitive-region network.
-    Replace this with your actual sensitive background predictor.
+class RandomUntrainedUnaryNet(torch.nn.Module):
+    """Returns random logits regardless of input; plumbing smoke-test only.
+
+    Not connected to any trained checkpoint or paper result -- see the
+    module docstring above.
     """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -28,7 +44,7 @@ def process_clip(
     device = frames[0].device
     print(f"[process_clip] num_frames={len(frames)} device={device}")
 
-    sens_net = DummySensitiveRegionNet().to(device).eval()
+    sens_net = RandomUntrainedUnaryNet().to(device).eval()
     crf = DynamicCRF(DynamicCRFConfig(n_iters=5, spatial_weight=2.0, temporal_weight=2.0))
     ncp = NCPAllocator(NCPConfig(alpha=1.0), class_sensitivity=None)
     injector = NoiseInjector(NoiseConfig(mode="indexed_gaussian", sigma=8.0, seed=1234))
@@ -67,6 +83,9 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     T, B, H, W = 4, 1, 384, 640
     frames = [torch.rand(B, 3, H, W, device=device) * 255.0 for _ in range(T)]
-    print("[run_eval] running process_clip on random demo clip...")
+    print(
+        "[demo_pipeline_smoke] NOT a scientific run: random frames, "
+        "untrained random unary network, no paper result depends on this."
+    )
     out = process_clip(frames)
-    print(f"[run_eval] got {len(out)} protected frames, first frame shape={tuple(out[0].shape)}")
+    print(f"[demo_pipeline_smoke] got {len(out)} protected frames, first frame shape={tuple(out[0].shape)}")

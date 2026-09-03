@@ -39,7 +39,7 @@ Pre-trained model: [mabo1215/ppedcrf-sensnet](https://huggingface.co/mabo1215/pp
     |   `-- config.py
     |-- main.py
     |-- requirements.txt
-    |-- run_eval.py
+    |-- demo_pipeline_smoke.py  (plumbing smoke test only; not a scientific entry point)
     `-- run_train.py
 ```
 
