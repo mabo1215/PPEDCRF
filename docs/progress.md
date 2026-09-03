@@ -433,3 +433,7 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 117. 【进行中】根据 ICME 2027 新审稿意见完成本轮 revision cycle 的计划登记、代码实现和论文收窄。
 修改说明：在 `docs/Design.md` 登记 M1--M9 计划；新增 M2 energy-preserving spatial intervention、M3 manifest coverage audit、M4 sequence retrieval runner；本地 RTX 3070 CUDA smoke 全部通过；主稿、补充材料和匿名 title page 改为 IEEE conference，主稿 PDF 6 页、supplement 8 页；`docs/ExperimentProgress.tex` 增加百分比和 NZST 时间计划；新增 vGPU no-card handoff。远端真实实验尚未运行，待用户开卡后先执行 manifest audit，再跑 M2/M3/M4；当前不写入任何新实验数字。
 本轮小结：论文已改为 frame-level heuristic sanitization framing，indexed Gaussian 取代 cumulative Wiener 误述，旧 TOMM 记录保留为历史；论文子仓库已推送 commit `30c5f76`，根仓库已推送 revision commit `a315880`（handoff 元数据提交为 `e465a46`）；远端实验仍待 vGPU 3090 开卡。
+
+118. 【已准备完成，待开卡】在 PRO 6000 无卡模式下完成 ICME 2027 实验代码与数据准备，并启用 AutoDL academic network acceleration 进行大文件断点下载。
+修改说明：PRO 6000 工作树已同步根仓库 commit `ee2e0f3` 与论文 gitlink `30c5f76`；CosPlace、MixVPR、Patch-NetVLAD 已锁定指定 revision；monitoring proxy 已通过 SHA-256 校验并解包为 4,198 个文件，MSLS 最小实验包包含 3,364 个文件且归档 SHA-256 校验通过，checkpoint、utility 子集（602 个文件）和 VPR 权重均已就位；三个 manifest 均完成实际审计，o2n/n2o coverage gate 通过，all manifest 的唯一提示是当前最小子集未覆盖两个 city strata，不能替代完整分层实验；Python 编译门禁通过，PRO 6000 明确为 `no-card`，临时认证文件已清理。5090 端点当前不可达，但 `origin/main` 已包含其最新代码状态，因此未覆盖或回退该提交。
+本轮小结：所有实验代码、代理数据、权重、manifest 和 CPU-only 门禁已在 PRO 6000 准备完成；尚未启动任何 GPU 实验。下一步请开卡后先复核 GPU 可见性，再运行已登记的 M2/M3/M4 实验，并在完整分层数据覆盖确认前不把当前 all 子集提示写成论文结论。
