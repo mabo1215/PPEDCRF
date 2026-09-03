@@ -19,6 +19,7 @@
 \newcommand{\deferred}{\textcolor{RunOrange}{Deferred}}
 \newcommand{\blocked}{\textcolor{PendRed}{\textbf{Blocked}}}
 \newcommand{\skipped}{Skipped (optional)}
+\newcommand{\partialstatus}{\textcolor{RunOrange}{\textbf{Partial}}}
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
@@ -234,7 +235,7 @@ ID & Gap identified & Status & Evidence needed / next step \\
 \endlastfoot
 F1 & Appendix Table~tab:matched\_psnr's descriptive no-separation wording is based on rounded point estimates from a 36-paired-outcome sample (12 pairs $\times$ 3 seeds, one backbone, one gallery size) with no formal test or stated power. & \done & The real vGPU sigma sweep covers all 12 prescribed points. The paired analysis reports zero discordant outcomes, exact McNemar $p=1.0$, query-cluster bootstrap 95\% CI $[0.000,0.000]$ for all 15 comparisons, and a minimum significant asymmetry of six pairs; the result and its limited power are integrated into the main text and Appendix~A. \\
 F2 & The appendix's account of the non-reproduced adverse MixVPR result never checks whether the current pipeline is deterministic run-to-run under its own fixed seeds. & \done & Two independent real-GPU MixVPR proxy50 runs with the same code tree, checkpoint, gallery construction, and seeds were compared. The checker found agreement within $\mathrm{rtol}=10^{-6}$ and $\mathrm{atol}=10^{-9}$ for all 3,750 rows and 20 columns; the pass is stated in the appendix. \\
-F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/} have no versioned checksum record. & \partial & \texttt{docs/experiment\_provenance.md} records the remote revision and hashes for all reachable proxy12/proxy50, E2, F1, F2, and E4 exports, and verifies the pulled F1/F2 copies. E1 MSLS and E5 KITTI-360 manifest/export files are absent from the reachable tree; restore those files and add their SHA-256 values to close this documentation gate. \\
+F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/} have no versioned checksum record. & \partialstatus & \texttt{docs/experiment\_provenance.md} records the remote revision and hashes for all reachable proxy12/proxy50, E2, F1, F2, and E4 exports, and verifies the pulled F1/F2 copies. E1 MSLS and E5 KITTI-360 manifest/export files are absent from the reachable tree; restore those files and add their SHA-256 values to close this documentation gate. \\
 \end{longtable}
 
 \end{document}

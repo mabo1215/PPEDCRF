@@ -399,3 +399,6 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 109. 【部分完成】已新增 `docs/experiment_provenance.md`，记录远端实验提交、源文件哈希及当前可访问 proxy12/proxy50、E2、F1、F2、E4 导出的 SHA-256，并核对 F1/F2 本地副本与远端一致。
 修改说明：当前可连接的 vGPU 输出树没有 E1 MSLS 与 E5 KITTI-360 的 manifest/result 导出，因此这两部分 checksum 仍不能补写；文档和 `docs/RevisionSuggestions.tex` 已将其明确标记为剩余边界，不能用推测值替代。下一步是恢复这两类原始导出后补充文件级哈希，再关闭 F3 provenance 门槛。
+
+110. 【待后续解决】已记录 F3 的具体闭环方案：优先从原 RTX 3070、备份盘或 vGPU 持久化目录恢复 E1 MSLS 与 E5 KITTI-360 的真实导出；若原始导出无法恢复，则严格按论文当前协议重新构建 manifest、运行 benchmark/attribution validation，并重新核对论文数字。
+修改说明：E1 需要保存 `manifest_all/o2n/n2o` 及 metadata、各次 `geotagged_vpr_per_query.csv`、`manifest_gate.json`、`run_metadata.json` 和汇总 CSV/JSON；E5 需要保存 manifest 及 metadata、`unary_attribution.csv`、`summary.json`、mask-backed checkpoint 和训练 metadata。恢复或重跑后，逐文件记录代码 commit、关键脚本 SHA-256、checkpoint SHA-256、数据集版本和导出文件 SHA-256，补入 `docs/experiment_provenance.md`，再将 F3 状态改为已完成。当前仅记录计划，未将缺失导出标记为完成。

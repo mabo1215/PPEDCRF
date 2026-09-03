@@ -9,6 +9,14 @@ run F1/F2 immediately without re-deriving anything. See
 `docs/Revision_suggestions.tex` (Findings F1/F2) and `docs/Design.md`
 ("Fresh independent review follow-up") for why these are needed.
 
+**Completion update (2026-09-03):** The handoff plan was executed on the
+reachable vGPU 3090. F1 completed the real 12-point sigma sweep and produced
+15 paired comparisons; F2 completed two real MixVPR proxy50 runs and passed
+the determinism checker for all 3,750 rows and 20 columns. The resulting
+paper updates are complete. The remaining provenance work is tracked in
+`docs/experiment_provenance.md`; E1 MSLS and E5 KITTI-360 exports were not
+present on the reachable machine.
+
 Both items are **cheap** relative to the earlier E1-E7 revision cycle:
 neither needs new datasets, and F1 in particular may need zero new GPU time
 if its input sweep still exists on disk.
