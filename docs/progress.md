@@ -437,3 +437,7 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 118. 【已准备完成，待开卡】在 PRO 6000 无卡模式下完成 ICME 2027 实验代码与数据准备，并启用 AutoDL academic network acceleration 进行大文件断点下载。
 修改说明：PRO 6000 工作树已同步根仓库 commit `ee2e0f3` 与论文 gitlink `30c5f76`；CosPlace、MixVPR、Patch-NetVLAD 已锁定指定 revision；monitoring proxy 已通过 SHA-256 校验并解包为 4,198 个文件，MSLS 最小实验包包含 3,364 个文件且归档 SHA-256 校验通过，checkpoint、utility 子集（602 个文件）和 VPR 权重均已就位；三个 manifest 均完成实际审计，o2n/n2o coverage gate 通过，all manifest 的唯一提示是当前最小子集未覆盖两个 city strata，不能替代完整分层实验；Python 编译门禁通过，PRO 6000 明确为 `no-card`，临时认证文件已清理。5090 端点当前不可达，但 `origin/main` 已包含其最新代码状态，因此未覆盖或回退该提交。
 本轮小结：所有实验代码、代理数据、权重、manifest 和 CPU-only 门禁已在 PRO 6000 准备完成；尚未启动任何 GPU 实验。下一步请开卡后先复核 GPU 可见性，再运行已登记的 M2/M3/M4 实验，并在完整分层数据覆盖确认前不把当前 all 子集提示写成论文结论。
+
+119. 【部分完成】更新 `docs/ExperimentProgress.tex`，记录 PRO 6000 no-card 准备完成状态和下次开机后的开卡回顾顺序，并完成 LaTeX 编译校验。
+修改说明：第一张 ICME 计划表已按实际准备状态更新 M2/M3/M4/M8 完成百分比；Next-Step Schedule 新增 PRO 6000 no-card code/data gate（100\%）和 GPU-on handoff replay（0\%），明确下次开机必须依次复核 `nvidia-smi`、root commit、paper gitlink、`50_cpu_gates_ready`、临时认证文件和三份 MSLS manifest 审计，再启动实验。更新已提交并推送至 `origin/main` 的 `af885ff`，`docs/build.bat ExperimentProgress` 编译通过。PRO 6000 端口在补同步该文档时暂时不可达，故远端最后一次已核验提交为 `61d613b`；下一次开机后先执行 `git pull --ff-only`，再复核数据门禁和该计划文件。
+本轮小结：本地与中心仓库已保存最新进度，PRO 6000 的实验数据不会因文档同步失败而被覆盖；远端文档快进同步暂时阻塞，原因是 SSH 端口不可达，下一步在开机后完成补同步并回顾 GPU-on handoff。
