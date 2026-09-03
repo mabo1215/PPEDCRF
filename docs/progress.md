@@ -506,7 +506,7 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 修改说明：额外尝试了一次 20-query/20-step（生产参数）的本机计时校准，但该进程长时间处于 Linux `D`（不可中断磁盘等待）状态、5 分钟内 CPU 时间仅增长几秒，判断是本机 WSL 对 G: 盘的 9p 网络挂载导致图像读取 I/O 瓶颈（而非 GPU 计算瓶颈），已终止该校准进程，不作为可信的 GPU 耗时依据；远端主机使用本地磁盘，预期不会复现此瓶颈。
 
 138. 【已完成】将新脚本代码、`docs/Design.md` 计划章节、新增的 vGPU 3090 交接文档 `docs/archived/icme2027_m33_whitebox_msls_handoff.md` 一并提交并推送到 `origin/main`。
-修改说明：交接文档记录了远端项目根目录（`/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF`，来自 2026-09-04 会话最近一次真实运行的 `run_metadata.json` 中的 manifest 绝对路径）、三份 manifest 相对路径（`data/msls/manifest_{all,o2n,n2o}.jsonl`）、checkpoint sha256、SSH 连接信息（来自 `.env`，未写入明文密码）、启动前置检查命令、三条实验命令（每份 manifest 各一次，`--variants full --include_attacker_aware`）、完成门槛（三次全部 EXIT_CODE=0、`attacker_aware` 行全部有限值、`run_metadata.json` 字段齐全）和论文回写规则（仅作为独立白盒诊断小节回写附录，不并入现有黑盒六骨干主表）。commit SHA 见下方"本轮小结"。
+修改说明：交接文档记录了远端项目根目录（`/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF`，来自 2026-09-04 会话最近一次真实运行的 `run_metadata.json` 中的 manifest 绝对路径）、三份 manifest 相对路径（`data/msls/manifest_{all,o2n,n2o}.jsonl`）、checkpoint sha256、SSH 连接信息（来自 `.env`，未写入明文密码）、启动前置检查命令、三条实验命令（每份 manifest 各一次，`--variants full --include_attacker_aware`）、完成门槛（三次全部 EXIT_CODE=0、`attacker_aware` 行全部有限值、`run_metadata.json` 字段齐全）和论文回写规则（仅作为独立白盒诊断小节回写附录，不并入现有黑盒六骨干主表）。commit SHA 为 `8f623e0`（已推送至 `origin/main`）。
 
 139. 【已完成】更新 `docs/ExperimentProgress.tex`：M3 行的"Remaining gaps"改写为区分(i)（数据获取阻塞，本轮确认仍未解决，具体原因记录为"仅 Manila/Toronto 两城有实际图像"）与(ii)（代码已实现、本机 smoke test 通过、待 vGPU 3090 开卡执行）；Next-Step Schedule 表新增一行"ICME-M3.3 白盒攻击者 × 真实 MSLS"，状态待开卡，标注约 30-90 分钟的工程量级预估（非精确测量，原因见交接文档）。
 修改说明：详见下方本轮小结与该文件的实际 diff。

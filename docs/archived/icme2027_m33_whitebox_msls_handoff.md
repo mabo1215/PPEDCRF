@@ -40,9 +40,8 @@ an option, not decided unilaterally.
 - Target branch: `main`
 - New code: `attacker_aware` variant support added to
   `src/scripts/run_geotagged_vpr_benchmark.py` (see `docs/Design.md`
-  "ICME-M3.3" section for the design). Committed and pushed before this
-  handoff was written; the exact commit SHA is in `docs/progress.md`'s entry
-  for this session.
+  "ICME-M3.3" section for the design). Committed and pushed as `8f623e0`
+  before this handoff was written.
 - Remote project root (from the last real vGPU 3090 run, 2026-09-04):
   `/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF`
 - Remote MSLS manifests (already transferred and sha256-verified in the
