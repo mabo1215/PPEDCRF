@@ -8,231 +8,129 @@
 
 \begin{document}
 
-\section*{Independent Review --- ACM TOMM Revision Cycle (Fresh Review, 2026-09-03)}
+\section*{Independent Review --- ACM TOMM Revision Cycle (Fresh Review, 2026-09-03, Round 2)}
 
-\subsection*{Disposition of \texttt{docs/TOMM\_Response\_Letter.md}}
-This review first checked, directly against the current \texttt{paper/main.tex}
-and \texttt{paper/appendix.tex} content (not against prior review documents),
-whether every point raised by the three ACM TOMM reviewers in
-\texttt{docs/TOMM\_Response\_Letter.md} is already reflected in the
-manuscript. The earlier conclusion that every reviewer request was complete
-was too strong. The core of Reviewer 2's two comments (R2-1, R2-2) and
-Reviewer 3's eight comments (R3-1 through R3-8) is now represented by real
-manuscript material: the official MSLS real-place retrieval benchmark and its
-cross-time subtasks (E1), the matched-PSNR sweep (E2), the constrained
-attacker-aware baseline (E3), the co-audited detection mAP@50/segmentation
-mIoU table (E4), the KITTI-360 mask-backed attribution diagnostic (E5), the
-margin-subgroup analysis and retrieval case-study figure (E6), and the
-re-audited MixVPR transfer diagnosis (E7). However, several requested
-sub-points were only partially addressed in the previous manuscript. The
-current pass either adds the requested evidence or states the remaining
-boundary explicitly in the paper. The status below is the status after this
-pass; the fresh-review findings are updated below: F1 and F2 are now closed by
-real outputs, while F3 remains a provenance-documentation item.
+\subsection*{Scope of this pass}
+This review ignores all prior review history, including the previous
+Findings F1--F3 in this file (matched-PSNR significance, run-to-run
+determinism, and cross-machine provenance checksums), which were already
+resolved or explicitly bounded in the prior cycle and are not revisited here.
+Instead, this pass re-reads \texttt{paper/main.tex} and
+\texttt{paper/appendix.tex} from scratch, as a new reviewer would, against
+the target venue declared in \texttt{USAGE\_claude.md}: ACM Transactions on
+Multimedia Computing, Communications, and Applications (ACM TOMM). Both files
+were also rebuilt with \texttt{paper/build.bat} (0 LaTeX errors, 4 BibTeX
+warnings, no undefined references) before this review was written, so all
+findings below are checked against the currently compiling manuscript.
 
-\begin{longtable}{p{0.13\linewidth}p{0.36\linewidth}p{0.40\linewidth}}
-\toprule
-Item & Evidence already present & Resolution and remaining boundary \\
-\midrule
-R2-1 & MSLS supplies true place identities, GPS metadata, a 1000-image
-gallery, and official cross-time directions. & The manuscript now explicitly
-states that E1 is not a complete nuisance-condition evaluation: the subset is
-mostly Forward/day, covers two cities, uses one attacker, and has empty
-season/weather fields. No universal claim is made for unseen conditions;
-broader nuisance-condition coverage remains optional future work. \\
-R2-2 & The paper includes PSNR-matched sigma-tunable variants, mask-guided
-baselines, an attacker-aware diagnostic, and same-image mAP@50/mIoU. & The
-paper now gives the PSNR--MSE--energy equivalence for fixed-size 8-bit frames
-and retains the explicit quality mismatch for untuned deterministic baselines.
-The deterministic baselines are not claimed to dominate at equal quality;
-independent per-query energy values are not available in the aggregate table. \\
-R3-3/R3-4 & Unary-only/no-DCRF ablations and the matched-PSNR table are
-present, and the fixed-budget 6 dB statement is qualified. & The paper now
-states the effective NCP weight explicitly and replaces the inferential
-``statistically indistinguishable'' wording with a descriptive no-separation
-statement. The real paired follow-up found no discordant outcomes (exact
-McNemar $p=1.0$ and bootstrap 95\% CI $[0.000,0.000]$ for all 15 tested
-comparisons), with the limited-power boundary stated explicitly. \\
-R3-8 & The current MixVPR rerun, margin analysis, and attacker-dependent
-scope qualification are reported. & The earlier adverse result is not
-reproduced, so no mitigation experiment was run. A duplicate real-GPU
-MixVPR proxy50 execution is nevertheless consistent under the current
-checker. The paper explicitly states that the proposed margin-aware
-mitigation remains unvalidated and limits the cross-backbone conclusion to
-the observed diagnosis; a future mitigation study remains outside the
-current evidence. \\
-\bottomrule
-\end{longtable}
+This pass verified, line by line, that every internal numeric claim in the
+abstract, main text, tables, and appendix is self-consistent (e.g., the
+5.97\,dB PSNR gap, the 20/1/3 and 23/1/0 backbone--gallery delta counts, the
+PSNR--MSE conversions in Table~\texttt{tab:matched\_psnr}, and the margin
+subgroup sample-size arithmetic) and found no discrepancies beyond the two
+issues below. Both issues are fixable without new experiments and have
+already been corrected in this pass.
 
-R3-1, R3-2, R3-5, R3-6, and R3-7 are substantively addressed by the current
-implementation notes, gallery disclosure, margin diagnostics, and case-study
-figure. They should remain checked during the paper rebuild, but they do not
-currently require a new reviewer-facing experiment. The residual reviewer-
-letter items above are now either represented by the paper or explicitly
-bounded.
+\subsection*{Finding G1 (Critical): double-blind anonymity violation via a self-identifying checkpoint repository name}
+\label{sec:g1}
+The manuscript is submitted under acmart's \texttt{anonymous} review mode
+(\texttt{documentclass[manuscript,screen,review,anonymous]\{acmart\}}), and
+all author, affiliation, and contact information is correctly commented out
+in both \texttt{main.tex} and \texttt{appendix.tex}. However, the
+\emph{rendered} text of both files named an actual, identifiable Hugging
+Face account: \texttt{main.tex} (Reproducibility audit paragraph) and
+\texttt{appendix.tex} (E5 diagnostic section) both referred to ``the public
+\texttt{mabo1215/ppedcrf-sensnet} checkpoint.'' This is not a commented-out
+line; it compiles into the PDF exactly as written. An ACM TOMM editor or
+reviewer performing even a cursory anonymity check (e.g., searching the PDF
+or pasting suspicious tokens into a search engine) could de-anonymize the
+submission from this single username, which is a plausible desk-reject or
+editorial-flag condition for a venue that enforces double-blind review. This
+is the same category of leak that double-blind checklists specifically ask
+authors to self-audit (code repository names, dataset hosting account names,
+model hub usernames), and it is exactly the kind of leak that survives
+casual proofreading because the surrounding sentence reads naturally.
 
-The repository's workflow therefore calls for a fresh independent review of
-the manuscript on its own merits, ignoring prior review history. The
-independent findings from this cycle follow below; F1 and F2 have since been
-closed by real vGPU outputs, while F3 remains open only for the missing
-cross-machine provenance records.
+\textbf{Required action and resolution.} Both occurrences were replaced with
+venue-neutral phrasing that preserves the scientific content of the claim
+(that a second, independently hosted copy of the checkpoint was audited and
+found bit-identical to the local one) without naming the hosting account:
+``the publicly hosted checkpoint released alongside this submission
+(repository name withheld for double-blind review).'' No other occurrences
+of author names, affiliations, institutional emails, or identifiable GitHub
+usernames were found in the rendered text of either file; the only other
+matches (in \texttt{main.tex}'s commented-out \texttt{Code:} line and in
+\texttt{paper/backup/main\_010324.tex}, an inactive backup file not included
+in the build) do not compile into the submitted PDF.
 
-\subsection*{Overall Assessment}
-The manuscript is unusually candid: nearly every quantitative claim carries
-an explicit scope qualification, and the paper's own Appendix
-(Section~A, ``Matched-PSNR/Effective-MSE Comparison'') already runs a
-descriptive fairness check of the kind the original reviewers demanded. That
-candor is a strength. But reading the manuscript fresh, as a new reviewer,
-surfaces two issues that the manuscript initially stated too strongly without
-the statistical apparatus to support the claim, plus one process gap that this
-fresh-review pass ran into directly. The current pass closes the first two with
-real outputs and a bounded interpretation; the remaining item is a
-provenance-documentation gap.
+\textbf{Completion gate.} Satisfied. \texttt{grep} over the rendered text of
+\texttt{paper/main.tex} and \texttt{paper/appendix.tex} for the account name,
+common author names, and institutional affiliations returns no remaining
+matches, and both files rebuild cleanly.
 
-\subsection*{Finding F1 (Major): the matched-PSNR null result required a paired test}
-\label{sec:f1}
-Appendix Table~\texttt{tab:matched\_psnr} and the surrounding text now avoid
-the stronger phrase ``statistically indistinguishable'' and instead report
-identical displayed Top-1 point estimates for six sigma-tunable variants
-(\texttt{full}, \texttt{no\_temporal}, \texttt{no\_ncp}, \texttt{unary\_only},
-\texttt{no\_dcrf}, \texttt{global\_noise}) at the three targets. This is an
-appropriate descriptive correction, but it is not a statistical test of
-equivalence. The underlying sample is only 12 paired locations $\times$ 3
-seeds $=$ 36 paired binary retrieval outcomes per cell, restricted to one
-backbone (ResNet18) and one gallery size (48). The real follow-up analysis now
-reports zero discordant pairs, exact McNemar $p=1.0$, and a query-cluster
-bootstrap 95\% CI of $[0.000,0.000]$ for all 15 variant--target comparisons;
-the smallest significant asymmetry at $n=36$ is six discordant pairs. This
-matters because this
-comparison is the load-bearing evidence for the paper's central
-repositioning: that PPEDCRF's contribution is better quality at matched
-privacy rather than more privacy at matched quality. A claim that important
-should rest on a real paired test and an explicit statement of how much power
-that test had at this sample size, not on rounding alone.
+\subsection*{Finding G2 (Moderate): arithmetic error in the Gaussian-mechanism calibration example}
+\label{sec:g2}
+Section~3.2 (``NCP Control and DP-Style Calibration'') fixes
+$\delta=10^{-5}$ and states $\sqrt{2\log(1.25/\delta)}\approx 4.73$, then
+uses this to claim that $\sigma_0=8$ corresponds to
+$(\varepsilon,\delta)\approx(0.59,10^{-5})$. Recomputing the stated
+expression with $\delta=10^{-5}$ gives
+$\sqrt{2\ln(1.25/10^{-5})}=\sqrt{2\ln(125000)}=\sqrt{2\times 11.736}=\sqrt{23.472}\approx 4.845$,
+not 4.73; with the clipping bound $C=1$ as described in the same paragraph,
+this gives $\varepsilon\approx 4.845/8\approx 0.606$, not 0.59. The error is
+self-contained (the derived $\varepsilon$ is internally consistent with the
+paper's own, incorrect, 4.73 constant, so it is not visible from the
+surrounding text alone), but a reviewer with a differential-privacy
+background who recomputes the one worked example the paper provides for its
+central calibration rule would find it wrong, which undermines confidence in
+Eq.~(5) even though the equation itself is written correctly. This is a
+pure arithmetic slip, not a methodological problem, and needs no new
+experiment to fix.
 
-\textbf{Required action and resolution.} We ran the newly added
-\texttt{src/scripts/significance\_test\_matched\_psnr.py} (paired McNemar
-exact test plus a query-level cluster bootstrap CI) against the real
-12-point sigma sweep. For every matched-PSNR target and each of the five
-variants compared against \texttt{global\_noise}, the exact $p$-value is 1.0,
-the bootstrap 95\% CI is $[0.000,0.000]$, and there are zero discordant pairs;
-the minimum significant asymmetry is six of 36 pairs. These results are now
-reported in Appendix~A and the main-text/Conclusion wording has been updated
-to describe a non-rejection result rather than equivalence. The analysis
-remains restricted to one backbone/gallery cell, as specified by the original
-completion gate.
+\textbf{Required action and resolution.} Recomputed the constant precisely
+($\sqrt{2\log(1.25/10^{-5})}=4.8448\ldots$) and corrected both numbers in
+Section~3.2: the constant is now reported as $\approx 4.84$ and the derived
+operating point as $(\varepsilon,\delta)\approx(0.61,10^{-5})$. No other
+Gaussian-mechanism arithmetic (the PSNR--MSE conversions in
+Table~\texttt{tab:matched\_psnr}, or the 5.97\,dB PSNR-gap statement in
+Section~4.4) uses this constant, so no other passage required a matching
+correction.
 
-\textbf{Completion gate.} Satisfied. A regenerated
-\texttt{matched\_psnr\_significance.csv} exists with McNemar $p$-values and
-bootstrap CIs for every
-(\texttt{target\_psnr}, variant) pair currently in Table~\texttt{tab:matched\_psnr}
-and is written back into the appendix table or its surrounding text; the
-main-text and Conclusion wording is updated to match the tested claim rather
-than the rounded point estimate.
-
-\subsection*{Finding F2 (Moderate): the current pipeline's own run-to-run determinism is verified}
-\label{sec:f2}
-Appendix Section~``MixVPR Margin Diagnosis and Mitigation Status'' reports
-that the current proxy50 run no longer reproduces an adverse MixVPR transfer
-result the reviewers cited, and states plainly that no preserved copy of the
-earlier run exists to identify why. That is an honest account of a run that
-already happened, but it leaves a more basic and directly answerable question
-unaddressed: is the \emph{current} code, given its fixed seeds
-$\{1234,1235,1236\}$ and current checkpoint, even deterministic from one
-execution to the next? If it is, the earlier discrepancy is confidently
-attributable to a prior code or checkpoint change rather than to
-non-reproducibility of the present numbers, which is a materially stronger
-statement to be able to make about every other result in the paper. If it is
-not, that is itself an important, currently undocumented limitation that
-would affect the credibility of every seed-averaged table in the manuscript,
-not just the MixVPR cell.
-
-\textbf{Required action and resolution.} We ran the newly added
-\texttt{src/scripts/check\_run\_determinism.py} on two independent real-GPU
-MixVPR proxy50 executions using the same code tree, checkpoint, gallery
-construction, and seeds. The checker found exact agreement within
-$\mathrm{rtol}=10^{-6}$ and $\mathrm{atol}=10^{-9}$ for all 3,750 rows and 20
-columns. The appendix now attributes the earlier discrepancy to a prior code
-or checkpoint state rather than current run-to-run nondeterminism, while
-acknowledging that the earlier state itself is unavailable.
-
-\textbf{Completion gate.} Satisfied. A determinism-check run (real GPU
-execution, not a schema smoke test) produced two independent output directories for
-at least the MixVPR proxy50 cell, \texttt{check\_run\_determinism.py} has been
-run against them, and its outcome (pass or a named mismatch) is stated in the
-appendix.
-
-\subsection*{Finding F3 (Editorial, no experiment required): paper-facing CSVs are not provenance-checked across machines}
-\label{sec:f3}
-This review pass discovered, while trying to verify the two findings above
-against the manuscript's backing data, that \texttt{src/outputs/} is
-git-ignored and that the paper-facing runs were stored on a different machine.
-The F1 sigma sweep and F2 duplicate runs have now been pulled from the vGPU
-machine and independently hashed. The older proxy12/proxy50 and E4 outputs
-remain remote-only but have captured remote SHA-256 values. The E1 MSLS and
-E5 KITTI-360 manifest/export files are not present in the reachable output
-tree, so their provenance cannot honestly be completed in this pass. This is
-not a defect in the manuscript, but it was a real gap in the revision
-process: without a lightweight, versioned record of exactly which run (by
-checksum) produced each paper-facing number, a future session on a different
-machine could not verify a table without re-obtaining the full multi-gigabyte
-output tree. The new record closes that gap for every reachable export.
-
-\textbf{Required action and partial resolution.} The new
-\texttt{docs/experiment\_provenance.md} records the remote code revision,
-source-file hashes, and SHA-256 values for every currently reachable
-proxy12/proxy50, E2, F1, F2, and E4 CSV/JSON export; local copies of F1 and F2
-are checked against the remote hashes. The same record names the E1 MSLS and
-E5 KITTI-360 exports as unavailable rather than inventing checksums. This is
-therefore a partial completion pending those two missing export trees.
-
-The original required action was to add a short provenance table to
-\texttt{docs/experiment\_progress.tex} (or a new
-\texttt{docs/experiment\_provenance.md}) recording, for every CSV or JSON
-export currently cited by a paper table (proxy12, proxy50, the E1 MSLS
-manifests, the E2 sigma-sweep directories, the E4 utility manifests, the E5
-KITTI-360 diagnostic), its output path, the code revision (git commit SHA)
-that produced it, and a SHA-256 checksum of the file. This is a documentation
-task, not a new experiment, and can be completed on whichever machine
-currently holds each output tree.
-
-\textbf{Completion gate.} Partially satisfied. The provenance table exists
-and covers every reachable paper-facing export, but the gate remains open
-until the missing E1 MSLS and E5 KITTI-360 export files are restored and
-hashed.
+\textbf{Completion gate.} Satisfied. Section~3.2 now reports $\approx 4.84$
+and $(\varepsilon,\delta)\approx(0.61,10^{-5})$, and \texttt{paper/main.tex}
+rebuilds with 0 LaTeX errors.
 
 \subsection*{Non-findings (explicitly checked and not flagged)}
-For completeness: this review also checked, and found adequately handled,
-several things a fresh reviewer would normally probe. The near-identical
-mAP@50/mIoU values across module ablations in Table~\texttt{tab:e4seg} are
-already explained as mirroring the retrieval-side ablation's weak
-separation rather than left unexplained. The MSLS cross-time direction
-dependence (\texttt{o2n} favorable, \texttt{n2o} adverse) is already stated
-plainly rather than cherry-picked. The attacker-aware baseline in
-Appendix~F is already correctly scoped as a white-box diagnostic upper
-bound rather than a comparable defense. No action is requested on these
+This pass also specifically checked, and found correct, the following
+items that are common failure points in papers with many revision rounds:
+the internal arithmetic of every PSNR-gap and PSNR--MSE statement in
+Sections~4.3--4.4 and Appendix~A/C; the backbone--gallery delta sign counts
+reported in the abstract, main text, and conclusion against the raw
+Table~\texttt{tab:robustness} and Table~\texttt{tab:large50} entries; the
+margin-subgroup sample-size arithmetic in
+Table~\texttt{tab:margin\_subgroups} and its MixVPR-only restriction; the
+E4 mAP@50/mIoU numbers quoted in the main-text prose against
+Table~\texttt{tab:e4seg} and the appendix's same-image segmentation
+paragraph; and the equation numbering assumed by the standalone appendix's
+plain-text ``Eq.~(2)'' reference, which correctly resolves to the DCRF
+refinement equation under the acmart build. No action is requested on these
 points.
 
 \subsection*{Priority Order for This Cycle}
 \begin{enumerate}
-    \item F1 (matched-PSNR significance test) --- highest priority, because
-    it is the direct evidentiary basis for the paper's central repositioned
-    claim.
-    \item F2 (determinism check) --- second priority, because a negative
-    result would have paper-wide implications, though the current text is
-    not making a false claim, only an unverified one.
-    \item F3 (provenance checksums) --- lowest priority, a process
-    improvement rather than a manuscript defect, but cheap to complete and
-    valuable given this session's own experience.
+    \item G1 (double-blind anonymity leak) --- highest priority, because an
+    unresolved anonymity violation is a submission-blocking editorial issue
+    independent of scientific content.
+    \item G2 (calibration arithmetic) --- lower priority, a self-contained
+    numeric correction with no effect on any reported experimental result.
 \end{enumerate}
 
-F1 and F2 were executed on the reachable vGPU 3090 using the real monitoring
-corpus, CUDA PyTorch, the recorded checkpoint, and fixed seeds
-$\{1234,1235,1236\}$. F1 covered all 12 prescribed sigma points and produced
-15 paired comparisons; F2 compared two independent MixVPR proxy50 outputs
-with 3,750 rows and 20 columns. The analysis scripts were also smoke-tested
-locally, and their real-data results are integrated into the paper. Only F3's
-missing E1/E5 provenance remains open; no claim is made that the current
-record is a substitute for those missing exports.
+Both findings were resolved directly in this cycle without new experiments,
+data collection, or GPU access; the fixes are edits to
+\texttt{paper/main.tex} and \texttt{paper/appendix.tex} only, and both files
+were rebuilt successfully after the edits. No actionable items remain in
+this review as of this writing; the next cycle should begin with another
+fresh independent review pass rather than continuing this file, per the
+repository's revision-loop protocol.
 
 \end{document}

@@ -402,3 +402,25 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 110. 【待后续解决】已记录 F3 的具体闭环方案：优先从原 RTX 3070、备份盘或 vGPU 持久化目录恢复 E1 MSLS 与 E5 KITTI-360 的真实导出；若原始导出无法恢复，则严格按论文当前协议重新构建 manifest、运行 benchmark/attribution validation，并重新核对论文数字。
 修改说明：E1 需要保存 `manifest_all/o2n/n2o` 及 metadata、各次 `geotagged_vpr_per_query.csv`、`manifest_gate.json`、`run_metadata.json` 和汇总 CSV/JSON；E5 需要保存 manifest 及 metadata、`unary_attribution.csv`、`summary.json`、mask-backed checkpoint 和训练 metadata。恢复或重跑后，逐文件记录代码 commit、关键脚本 SHA-256、checkpoint SHA-256、数据集版本和导出文件 SHA-256，补入 `docs/experiment_provenance.md`，再将 F3 状态改为已完成。当前仅记录计划，未将缺失导出标记为完成。
+
+---
+
+## 本轮更新（2026-09-03，逐条核对 TOMM 审稿信 + RevisionSuggestions 并启动第二轮独立评审）
+
+111. 【已完成】修复 `docs/ExperimentProgress.tex` 编译失败问题。
+修改说明：第 237 行 F3 状态用了 LaTeX 内置数学符号命令 `\partial`（∂）而非该文件自定义的状态宏（`\done`/`\pending`/`\blocked` 等），在文本模式下触发 `! Missing $ inserted.` 致命错误。新增 `\newcommand{\partialstatus}{\textcolor{RunOrange}{\textbf{Partial}}}` 并替换该处引用，`docs/build.bat` 两个文件均编译通过。
+
+112. 【已核实】逐条对照当前 `paper/main.tex`/`paper/appendix.tex` 正文（而非仅信任历史记录）核实 `docs/TOMM_Response_Letter.md` 三位审稿人全部意见与 `docs/RevisionSuggestions.tex` 的 F1/F2/F3：确认 TOMM 信中 R2-1、R2-2、R3-1 至 R3-8 均已在正文/附录中落实且如实标注剩余边界；F1（matched-PSNR McNemar/bootstrap 检验）与 F2（determinism check）在附录第 311–318、351 行有真实数字支撑，属已完成；F3（E1 MSLS / E5 KITTI-360 跨机器 checksum）经核实本次会话环境（仅 C 盘、无 `.env`、无 vGPU 连接、`src/outputs/` 下无 `tomm_review_e1_msls*`/`tomm_review_e5_kitti360*`）无法补齐，按你的决定先搁置，定性为流程/文档缺口而非论文缺陷。
+
+113. 【已完成】按你的决定启动新一轮（第二轮）独立评审，直接复核编译后的 `main.pdf`/`appendix.pdf` 及其 `.tex` 源码，发现并当场修复两个问题。
+修改说明：(G1，Critical) 论文以 acmart `anonymous` 模式双盲投稿，作者信息已正确注释，但 `paper/main.tex:395` 与 `paper/appendix.tex:178` 的**未注释、会渲染进 PDF**的正文中出现了真实可识别的 Hugging Face 用户名 `mabo1215`（"the public `mabo1215/ppedcrf-sensnet` checkpoint"），构成双盲匿名性泄露，属于编辑层面可能导致拒稿的严重问题；已改写为"the publicly hosted checkpoint released alongside this submission (repository name withheld for double-blind review)"，`grep` 确认正文中再无该用户名或其他作者/机构信息残留（仅剩 `main.tex` 中本就注释掉的 `Code:` 行和不参与编译的 `paper/backup/main_010324.tex`，均不影响渲染）。(G2，Moderate) Section 3.2 的 DP 标定示例存在算术错误：文中称 $\delta=10^{-5}$ 时 $\sqrt{2\log(1.25/\delta)}\approx 4.73$、$\sigma_0=8$ 对应 $(\varepsilon,\delta)\approx(0.59,10^{-5})$，但用 PowerShell 精确重算得 $\sqrt{2\ln(125000)}\approx 4.8448$、对应 $\varepsilon\approx0.6056$；已将两处数字改为 `4.84` 与 `(0.61, 10^{-5})`，该常数未在论文其他任何 PSNR/MSE 计算中复用，无需连带修改。两处修复后 `paper/build.bat` 与 `docs/build.bat` 均重新编译通过（0 LaTeX 错误）。评审全文已重写进 `docs/RevisionSuggestions.tex`（Fresh Review, Round 2），本轮结论为"无剩余待办项"。
+
+**本轮小结：** 本轮是一次纯核查 + 复审会话：修复了一个文档编译 bug、确认了 TOMM 信与上一轮评审的完成状态（F3 按你的决定搁置）、并完成了新一轮独立评审，当场修复了一个双盲匿名性泄露（高优先级）和一个 DP 标定算术错误（中优先级）。两处修复均不需要新实验或真实数据/GPU 环境，`paper/` 与 `docs/` 下的 PDF 均已重新生成并编译通过。
+
+114. 【已完成】按你的指令继续推进 `docs/RevisionSuggestions.tex`，确认 G1/G2 均已落地后追加一轮独立复核（Round 3），未发现新的可执行论文问题。
+修改说明：复核内容包括——`paper/build/main.blg`/`appendix.blg` 中剩余的 4 条 BibTeX warning 逐条核实，均为源本身确无页码/卷号信息（`goodfellow2015explaining`/`madry2018towards` 是不分页的 ICLR 论文，`mcpherson2016defeating` 是 arXiv 预印本），不是可修的数据缺失；`main.log`/`appendix.log` 无未定义引用或未定义文献；`paper/figs/` 中 9 张被 `main.tex`/`appendix.tex` 实际引用的图片全部存在。因此判定 `docs/RevisionSuggestions.tex` 当前确无剩余可执行项，符合该文件自身"下一轮应开始全新独立评审"的结论。
+
+115. 【已完成，纯仓库整理，不影响论文内容】清理 `paper/figs/` 根目录下 8 个未被任何 `.tex` 文件引用的遗留图片，移入 `paper/figs/legacy/`。
+修改说明：`baseline_param_sweep.jpg`、`privacy_utility_tradeoff_page-0001.jpg`、`retrieval_robustness_topk.jpg`（未拆分版，已被 `_top`/`_bottom` 取代）、`architecture_of_solution_2.png`、`mot_org_ppedcrf_blur.png`、`mot_org_ppedcrf_noise.png`、`mot_org_ppedcrf_overlay.png`、`mot_org_resized.png` 是历次图表重绘留下的旧版本，延续此前 m3 条目的清理惯例移入 `legacy/`；`figs/` 根目录现只保留正文和附录实际引用的 9 个文件（另有 1 个 `retrieval_case_study.json` 是配套的 case-study 元数据，非图片）。移动后重新编译 `paper/build.bat`，`main.pdf`/`appendix.pdf` 均正常生成，无报错。
+
+**本轮小结：** 已完成用户要求的"按 `docs/RevisionSuggestions.tex` 继续修改直到全部完毕"：G1/G2 确认已落地，追加的第三轮独立复核未发现新的论文级问题，`docs/RevisionSuggestions.tex` 当前处于"无剩余可执行项"的收口状态。顺带清理了 `paper/figs/` 下的遗留图片文件（不改动论文内容）。
