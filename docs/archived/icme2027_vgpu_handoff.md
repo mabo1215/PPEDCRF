@@ -8,7 +8,7 @@ remain in no-card mode until the user explicitly powers it on.
 ## Prepared repository state
 
 - Target branch: `main`
-- Commit SHA: `PENDING_PUSH_SHA`
+- Commit SHA: `a315880`
 - Remote output root: `/data1/PPEDCRF/icme2027_revision_20260903`
 - Project root: `/data1/PPEDCRF`
 - Checkpoint gate: `/data1/PPEDCRF/src/outputs/sensnet_final.pt`
