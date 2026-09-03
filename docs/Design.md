@@ -205,18 +205,16 @@ post-processing analysis over its output:
 | F2 | The appendix states the current pipeline no longer reproduces an earlier reviewer-cited adverse MixVPR result, with no root cause identified, but never checks whether the *current* pipeline is even deterministic run-to-run under fixed seeds. | Two independent executions of the same benchmark invocation (same seeds, checkpoint, code revision), at minimum for the MixVPR proxy50 cell, diffed for exact numerical agreement. | A determinism verdict (pass, or a named mismatched field) from `src/scripts/check_run_determinism.py`, stated as one sentence in the appendix MixVPR subsection. |
 | F3 | Paper-facing CSV/JSON exports under `src/outputs/` are git-ignored; this session found none of the large `tomm_review_*` run directories present in its own working environment, with no lightweight versioned record of which run (by checksum) backs which paper table. | A provenance table recording, per export cited by a paper table/figure, its path, producing git commit SHA, and SHA-256 checksum. | New provenance table in `docs/experiment_progress.tex` or a new `docs/experiment_provenance.md`; documentation only, no experiment. |
 
-F1 and F2 both require a machine with the real monitoring corpus, the
-`sensnet_final.pt` checkpoint, and CUDA (the local RTX 3070 machine described
-throughout this file's earlier entries, or a freshly rented vGPU 3090 — not
-this session's own sandbox, which has none of those). The analysis code
-itself (`significance_test_matched_psnr.py`, `check_run_determinism.py`) does
-not need a GPU and has been written and schema-smoke-tested against synthetic
-sigma-sweep data (`src/scripts/make_synthetic_sigma_sweep.py`) in this
-session; only the underlying benchmark reruns that feed it need GPU/data
-access. F3 can be completed by whichever machine currently holds each output
-tree and needs no new computation.
+F1 and F2 required a machine with the real monitoring corpus, the
+`sensnet_final.pt` checkpoint, and CUDA. That execution requirement was met on
+the reachable vGPU 3090 on 2026-09-03. The analysis code itself
+(`significance_test_matched_psnr.py`, `check_run_determinism.py`) remains
+GPU-free and was also schema-smoke-tested against synthetic sigma-sweep data
+(`src/scripts/make_synthetic_sigma_sweep.py`). F3 is documented in
+`docs/experiment_provenance.md`; it remains partial because the E1 MSLS and E5
+KITTI-360 export trees were not present on the reachable machine.
 
-### Execution plan for F1/F2 once real-data access is available
+### Execution record for F1/F2 (completed 2026-09-03)
 
 1. **F1.** Re-use the existing `src/outputs/tomm_review_e2_sigma/` sigma-sweep
    directory (or regenerate it if it no longer exists on the target machine
@@ -236,3 +234,11 @@ tree and needs no new computation.
    MixVPR subsection for F2) and adjust the corresponding main-text/Conclusion
    sentences once real numbers are in hand; do not write placeholder numbers
    before the runs complete.
+
+The plan was executed on the vGPU 3090. F1 completed all 12 sigma points and
+produced 15 paired comparisons, each with 36 pairs, zero discordant pairs,
+exact McNemar $p=1.0$, and a query-cluster bootstrap 95% CI of `[0.000,0.000]`;
+the minimum significant asymmetry was six pairs. F2 compared two independent
+MixVPR proxy50 runs and found agreement within `rtol=1e-6` and `atol=1e-9`
+for all 3,750 rows and 20 columns. The results are integrated into the paper
+and tracked in `docs/progress.md`.

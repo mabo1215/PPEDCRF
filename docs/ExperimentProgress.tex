@@ -210,13 +210,10 @@ All items in Tables 1--3 above, and every point in
 current \texttt{paper/main.tex}/\texttt{paper/appendix.tex} text in this
 session and confirmed complete with no regression. A fresh independent
 review of the manuscript on its own merits (recorded in full in
-\texttt{docs/Revision\_suggestions.tex}) then found three follow-up items,
-none requiring new data collection. This session ran in a sandbox without
-the real monitoring corpus, MSLS/KITTI-360 data, the \texttt{sensnet\_final.pt}
-checkpoint's CUDA execution path, or a live vGPU 3090 connection, so the two
-GPU-backed items (F1, F2) are code-complete and schema-smoke-tested here but
-not yet run against real exports; F3 is a documentation task that can be
-completed on whichever machine holds the relevant output tree.
+\texttt{docs/Revision\_suggestions.tex}) then found three follow-up items.
+F1 and F2 have now been executed on a reachable vGPU 3090 with real
+monitoring data and the recorded checkpoint; F3 is partially documented and
+remains open only for the missing E1 MSLS and E5 KITTI-360 export trees.
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.14\linewidth}p{0.47\linewidth}@{}}
 \caption{Fresh-review follow-up items registered 3 September 2026 (see
@@ -235,9 +232,9 @@ ID & Gap identified & Status & Evidence needed / next step \\
 \endfoot
 \bottomrule
 \endlastfoot
-F1 & Appendix Table~tab:matched\_psnr's descriptive no-separation wording is based on rounded point estimates from a 36-paired-outcome sample (12 pairs $\times$ 3 seeds, one backbone, one gallery size) with no formal test or stated power. & \pending & \texttt{src/scripts/significance\_test\_matched\_psnr.py} is written and passes a schema smoke test against synthetic sigma-sweep data (\texttt{make\_synthetic\_sigma\_sweep.py}). Needs to be run against the real \texttt{tomm\_review\_e2\_sigma} sweep's \texttt{per\_query.csv} exports (regenerating the sweep first if it no longer exists on the target machine) to produce exact McNemar $p$-values, bootstrap CIs, and the minimum detectable discordant-pair asymmetry at $n=36$; results may be added to Appendix~A if the inferential claim is restored. \\
-F2 & The appendix's account of the non-reproduced adverse MixVPR result never checks whether the current pipeline is deterministic run-to-run under its own fixed seeds. & \pending & \texttt{src/scripts/check\_run\_determinism.py} is written and passes a smoke test on identical vs.\ differing synthetic CSVs. Needs two fresh real executions of the MixVPR proxy50 cell (same seeds/checkpoint/code revision) on a CUDA machine, diffed by this script; the pass/fail outcome is then stated as one sentence in the appendix MixVPR subsection. \\
-F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/} have no versioned checksum record; this session found none of the large \texttt{tomm\_review\_*} directories present in its own environment. & \pending & Add a provenance table (path, producing git commit SHA, SHA-256) for every export currently cited by a paper table/figure, in this file or a new \texttt{docs/experiment\_provenance.md}. Documentation only; no GPU or new run needed, can be done on whichever machine holds each output tree. \\
+F1 & Appendix Table~tab:matched\_psnr's descriptive no-separation wording is based on rounded point estimates from a 36-paired-outcome sample (12 pairs $\times$ 3 seeds, one backbone, one gallery size) with no formal test or stated power. & \done & The real vGPU sigma sweep covers all 12 prescribed points. The paired analysis reports zero discordant outcomes, exact McNemar $p=1.0$, query-cluster bootstrap 95\% CI $[0.000,0.000]$ for all 15 comparisons, and a minimum significant asymmetry of six pairs; the result and its limited power are integrated into the main text and Appendix~A. \\
+F2 & The appendix's account of the non-reproduced adverse MixVPR result never checks whether the current pipeline is deterministic run-to-run under its own fixed seeds. & \done & Two independent real-GPU MixVPR proxy50 runs with the same code tree, checkpoint, gallery construction, and seeds were compared. The checker found agreement within $\mathrm{rtol}=10^{-6}$ and $\mathrm{atol}=10^{-9}$ for all 3,750 rows and 20 columns; the pass is stated in the appendix. \\
+F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/} have no versioned checksum record. & \partial & \texttt{docs/experiment\_provenance.md} records the remote revision and hashes for all reachable proxy12/proxy50, E2, F1, F2, and E4 exports, and verifies the pulled F1/F2 copies. E1 MSLS and E5 KITTI-360 manifest/export files are absent from the reachable tree; restore those files and add their SHA-256 values to close this documentation gate. \\
 \end{longtable}
 
 \end{document}

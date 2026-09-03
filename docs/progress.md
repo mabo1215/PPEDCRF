@@ -387,3 +387,15 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 105. 【进行中】已检查并确认 vGPU 3090 实例可连接，CUDA、PyTorch、实验依赖、monitoring 数据、utility 子集、MixVPR 权重和 checkpoint 均已就绪，并已启动 F1 sigma sweep 与 F2 MixVPR 双次确定性复跑。
 修改说明：F1 使用 `f1_sigma` screen，当前已完成 5/12 个 sigma 点并运行 sigma=16；F2 使用 `f2_determinism` screen，run A 已完成 3750 条 per-query 记录，run B 正在运行。两项均写入新的远端输出目录，不覆盖已有结果；待 CSV 生成后拉回本地执行统计、确定性比较和 provenance checksum，再决定是否写回论文。
+
+106. 【暂时阻塞】本次巡检无法重新连接原 vGPU 3090 实例：首次连接超时，随后 SSH 端口 22766 拒绝连接。
+修改说明：DNS 仍解析到 `36.103.198.204`，但当前无法读取 screen、日志或实验输出，因此不能判断 F1/F2 是否在断联前完成；恢复同一实例或提供新的 SSH 主机/端口后，应先检查远端 screen 和输出目录，再决定是否续跑，避免覆盖已有结果。
+
+107. 【已核查】已从 WSL Ubuntu 再次测试 vGPU 连接，DNS 解析正常但 SSH 端口 22766 仍被拒绝。
+修改说明：WSL 直接调用 `ssh` 的结果与 PowerShell 一致，排除了本机 shell/WSL 路由问题；下一步需要在 vGPU 服务端恢复实例或确认新的 SSH 端口后再继续实验巡检。
+
+108. 【已完成】已通过 WSL 重新连接 vGPU 3090，并完成 F1 matched-PSNR 配对检验与 F2 MixVPR 确定性复跑。
+修改说明：远端确认 NVIDIA GeForce RTX 3090（48 GiB，驱动 580.82.09）；F1 的 12 个 sigma 点全部完成，15 个 variant-target 配对均为 36 对、0 个 discordant pair、精确 McNemar $p=1.0$、query-cluster bootstrap 95% CI 为 $[0.000,0.000]$，达到显著性所需的最小不对称为 6 对。F2 的两次真实 GPU MixVPR proxy50 输出均有 3,750 行、20 列，`check_run_determinism.py` 在 rtol=$10^{-6}$、atol=$10^{-9}$ 下通过；结果已拉回本地，并写入论文正文、附录和 `docs/RevisionSuggestions.tex`。
+
+109. 【部分完成】已新增 `docs/experiment_provenance.md`，记录远端实验提交、源文件哈希及当前可访问 proxy12/proxy50、E2、F1、F2、E4 导出的 SHA-256，并核对 F1/F2 本地副本与远端一致。
+修改说明：当前可连接的 vGPU 输出树没有 E1 MSLS 与 E5 KITTI-360 的 manifest/result 导出，因此这两部分 checksum 仍不能补写；文档和 `docs/RevisionSuggestions.tex` 已将其明确标记为剩余边界，不能用推测值替代。下一步是恢复这两类原始导出后补充文件级哈希，再关闭 F3 provenance 门槛。
