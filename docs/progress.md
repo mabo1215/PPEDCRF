@@ -432,4 +432,4 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 117. 【进行中】根据 ICME 2027 新审稿意见完成本轮 revision cycle 的计划登记、代码实现和论文收窄。
 修改说明：在 `docs/Design.md` 登记 M1--M9 计划；新增 M2 energy-preserving spatial intervention、M3 manifest coverage audit、M4 sequence retrieval runner；本地 RTX 3070 CUDA smoke 全部通过；主稿、补充材料和匿名 title page 改为 IEEE conference，主稿 PDF 6 页、supplement 8 页；`docs/ExperimentProgress.tex` 增加百分比和 NZST 时间计划；新增 vGPU no-card handoff。远端真实实验尚未运行，待用户开卡后先执行 manifest audit，再跑 M2/M3/M4；当前不写入任何新实验数字。
-本轮小结：论文已改为 frame-level heuristic sanitization framing，indexed Gaussian 取代 cumulative Wiener 误述，旧 TOMM 记录保留为历史；下一步是提交并 push，然后等待 vGPU 3090 开卡。
+本轮小结：论文已改为 frame-level heuristic sanitization framing，indexed Gaussian 取代 cumulative Wiener 误述，旧 TOMM 记录保留为历史；论文子仓库已推送 commit `30c5f76`，根仓库已推送 revision commit `a315880`（handoff 元数据提交为 `e465a46`）；远端实验仍待 vGPU 3090 开卡。
