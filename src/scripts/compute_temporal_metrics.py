@@ -120,7 +120,7 @@ def process_clip_variant(
         class_sensitivity=ncfg.get("class_sensitivity", {}),
     )
     injector = NoiseInjector(NoiseConfig(
-        mode="wiener",
+        mode="indexed_gaussian",
         sigma=sigma,
         clamp_min=0.0,
         clamp_max=255.0,

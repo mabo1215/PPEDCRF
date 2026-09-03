@@ -1,4 +1,4 @@
-"""Run the ACM TOMM review-cycle proxy ablation and retrieval diagnostics.
+"""Run the ICME 2027 review-cycle proxy ablation and retrieval diagnostics.
 
 This script addresses reviewer requests R2-2 and R3-3/R3-7/R3-8 on the
 controlled paired-scene proxy benchmark.  It deliberately keeps proxy results
@@ -79,7 +79,7 @@ REVIEW_VARIANTS = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="TOMM review-cycle proxy ablation and per-query diagnostics."
+        description="ICME 2027 review-cycle proxy ablation and per-query diagnostics."
     )
     parser.add_argument("--mode", choices=("smoke", "proxy"), default="smoke")
     parser.add_argument("--config", default="src/config/config.yaml")
@@ -505,7 +505,7 @@ def run_proxy(args: argparse.Namespace) -> Path:
     sensnet = load_sensnet_checkpoint(args.checkpoint, device)
 
     selection = {
-        "review_cycle": "TOMM-2026-08-30",
+        "review_cycle": "ICME-2027",
         "benchmark": "controlled paired-scene proxy",
         "pairs": pairs,
         "hard_distractors": hard_meta,
@@ -658,7 +658,7 @@ def run_proxy(args: argparse.Namespace) -> Path:
     write_json(
         output_dir / "run_metadata.json",
         {
-            "review_cycle": "TOMM-2026-08-30",
+            "review_cycle": "ICME-2027",
             "mode": "proxy",
             "device": str(device),
             "backbones": args.backbones,

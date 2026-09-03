@@ -32,7 +32,7 @@ ppedcrf:
     class_sensitivity: {}   # example: {0: 0.2, 1: 1.0}
 
   noise:
-    mode: "wiener"          # "gaussian" | "wiener"
+    mode: "indexed_gaussian" # "gaussian" | "indexed_gaussian" ("wiener" is a compatibility alias)
     sigma: 8.0
     clamp_min: 0.0
     clamp_max: 255.0

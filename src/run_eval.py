@@ -31,7 +31,7 @@ def process_clip(
     sens_net = DummySensitiveRegionNet().to(device).eval()
     crf = DynamicCRF(DynamicCRFConfig(n_iters=5, spatial_weight=2.0, temporal_weight=2.0))
     ncp = NCPAllocator(NCPConfig(alpha=1.0), class_sensitivity=None)
-    injector = NoiseInjector(NoiseConfig(mode="wiener", sigma=8.0, seed=1234))
+    injector = NoiseInjector(NoiseConfig(mode="indexed_gaussian", sigma=8.0, seed=1234))
 
     prev_prob = None
     protected_frames: List[torch.Tensor] = []

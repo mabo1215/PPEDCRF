@@ -93,7 +93,7 @@ box(X_RIGHT, Y_R2, BOX_W, BOX_H, C["ncp"],
 
 box(X_MID,   Y_R2, BOX_W, BOX_H, C["noise"],
     "Gaussian Noise",
-    ["DP-style calibrated", r"$\eta_t \sim \mathcal{N}(0,\,\sigma_0^2)$"],
+    ["Gaussian-inspired calibrated", r"$\eta_t \sim \mathcal{N}(0,\,\sigma_0^2)$"],
     eq=r"$\alpha_t \odot p_t \odot \eta_t$")
 
 box(X_LEFT,  Y_R2, BOX_W, BOX_H, C["output"],

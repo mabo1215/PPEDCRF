@@ -28,6 +28,75 @@
 \begin{document}
 \maketitle
 
+\section*{ICME 2027 Revision Cycle --- Next-Step Plan}
+
+This is the active plan for the independent ICME 2027 review recorded in
+\texttt{docs/RevisionSuggestions.tex}. The main paper has been reframed as
+frame-level release-side sanitization and the experiments below are separated
+from the historical TOMM cycle. Percentages describe repository completion,
+not scientific completion; no smoke or proxy-only result is eligible for a
+real-place claim.
+
+\begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
+\caption{Active ICME 2027 revision-cycle plan and next steps (3 September
+2026, New Zealand Standard Time).}
+\label{tab:icme-next-step}\\
+\toprule
+ID & Review gap & Status & Next step / completion gate \\
+\midrule
+\endfirsthead
+\toprule
+ID & Review gap & Status & Next step / completion gate \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+M1 & IEEE format, six-page limit, and double-blind anonymity & \textbf{80\% complete} & Main, supplement, and title page now compile as anonymous IEEE conference documents; the main PDF is six pages on letter paper. Run the official 2027 PDF checker and final metadata/font audit when the 2027 kit is published; estimate 3 September 2026, 20:00 NZST for the local audit. \\
+M2 & Unary-map validity and spatial causality & \textbf{45\% complete} & Energy-preserving intervention runner is implemented and passed CUDA smoke with 12 rows. After the vGPU is powered on, run learned, uniform, rolled, and permuted same-energy controls; require finite rows and relative energy error at most $10^{-6}$ before any paper writeback. Estimate within 4 hours after GPU-on. \\
+M3 & Geographic ground truth and MSLS coverage & \textbf{55\% complete} & Manifest coverage audit is implemented and passed smoke. Run the audit first, then the largest available official MSLS manifests with ResNet18, CosPlace, MixVPR, and Patch-NetVLAD where weights are available; retain place-cluster intervals and mark narrow condition coverage. Estimate audit within 15 minutes after GPU-on and inference within 8 hours after GPU-on. \\
+M4 & Frame-versus-sequence threat-model mismatch & \textbf{55\% complete} & Current manuscript claims are frame-level; the sequence runner covers clip lengths 1/2/4/8, first/mean/max/best-frame pooling, flicker, and perturbation stability, and passed CUDA smoke with 144 rows. Run the real monitoring proxy after GPU-on; restore sequence-level language only if the complete output is finite and interpretable. Estimate within 4 hours after GPU-on. \\
+M5 & Matched privacy--utility comparison & \textbf{60\% complete} & Existing matched-PSNR result remains a non-rejection, and M2 exports realized MSE, support energy, coverage, and clipping statistics. Add only complete remote intervention summaries; do not claim matched-quality superiority. Estimate within 1 day after GPU-on. \\
+M6 & Differential-privacy ambiguity & \textbf{80\% complete} & Main text now calls the quantity a Gaussian-inspired calibration index, defines $C$ as an engineering scale, and documents indexed Gaussian noise rather than a cumulative Wiener process. Final consistency grep and PDF text audit are planned for 3 September 2026, 20:00 NZST. \\
+M7 & Cluster-aware statistical units & \textbf{35\% complete} & Existing F1 analysis is query-cluster aware; M2/M3 aggregation still needs query/place-cluster bootstrap summaries and a multiple-comparison statement. Complete after the corresponding remote exports arrive; estimate within 1 day after GPU-on. \\
+M8 & Reproducibility and artifact audit & \textbf{50\% complete} & Venue-neutral metadata, manifest audit, smoke outputs, and the vGPU handoff are prepared. Add commit and SHA-256 records for every paper-facing export after the run; no credentials or machine-local secrets may enter the repository. Estimate within 1 day after GPU-on. \\
+M9 & Organization and presentation & \textbf{60\% complete} & Main paper is reduced to the six-page baseline and extended matrices/figures remain in the supplement. Perform final visual inspection, official-template check, and supplement cross-reference audit after the experimental decision point; estimate within 1 day after GPU-on. \\
+\end{longtable}
+
+\section*{ICME 2027 Next-Step Schedule}
+
+The following schedule records what is already prepared and what is waiting
+for the vGPU 3090. The remote runs are intentionally not started while the
+instance is in no-card mode.
+
+\begin{longtable}{@{}p{0.16\linewidth}p{0.13\linewidth}p{0.12\linewidth}p{0.18\linewidth}p{0.31\linewidth}@{}}
+\caption{ICME 2027 prepared experiments and estimated New Zealand completion
+times. Estimates begin when the user confirms that the vGPU 3090 is powered
+on and the data/checkpoint gates pass.}
+\label{tab:icme-schedule}\\
+\toprule
+Experiment & Status & \% complete & Est. completion (NZST) & Next action / output \\
+\midrule
+\endfirsthead
+\toprule
+Experiment & Status & \% complete & Est. completion (NZST) & Next action / output \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+Local CUDA smoke suite & \done & 100\% & 3 Sep 2026, 19:30 & M2, M3, and M4 smoke gates pass on the RTX 3070; outputs are engineering checks only. \\
+ICME-M2 spatial intervention & \pending & 45\% & Within 4 h after GPU-on & Run four energy-preserving controls on the monitoring proxy; write CSV/JSON only after the energy and finite-value gates pass. \\
+ICME-M3 manifest coverage audit & \pending & 55\% & Within 15 min after GPU-on & Audit official MSLS manifests before model loading; report city, subtask, viewpoint, illumination, season, weather, positives, and path-disjointness. \\
+ICME-M3 expanded MSLS VPR & \pending & 35\% & Within 8 h after GPU-on & Run available multiple attackers and aggregate uncertainty by place cluster; no result is paper-facing if coverage is narrow or a gate fails. \\
+ICME-M4 sequence retrieval proxy & \pending & 55\% & Within 4 h after GPU-on & Run clip lengths 1/2/4/8 with four pooling strategies and temporal metrics; preserve the frame-level wording unless this complete proxy is interpretable. \\
+Cluster-aware summaries and checksums & \pending & 20\% & Within 1 day after GPU-on & Bootstrap by query/place cluster, record code revision and SHA-256 values, and decide whether any complete export supports paper writeback. \\
+\end{longtable}
+
 \section*{PPEDCRF ACM TOMM Revision Cycle --- Next-Step Plan}
 
 This table is the active plan for the review letter in

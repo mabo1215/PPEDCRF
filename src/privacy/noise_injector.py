@@ -12,8 +12,10 @@ class NoiseConfig:
 
     mode:
       - "gaussian": independent Gaussian noise per frame
-      - "wiener":  reproducible pseudo Wiener-style per-frame noise via seed offset
-                 (upgradeable to a true cumulative Wiener process if desired)
+      - "indexed_gaussian": reproducible independent Gaussian noise per frame,
+                            indexed by ``seed + t_index``
+      - "wiener": deprecated compatibility alias for ``indexed_gaussian``;
+                  it is not a cumulative Wiener process
 
     sigma: noise std in pixel domain (0~255 scale)
     clamp_min/max: output clamp range
@@ -77,7 +79,7 @@ class NoiseInjector:
         if self.cfg.mode == "gaussian":
             noise = self._seeded_randn_like(frame, g) * float(self.cfg.sigma)
 
-        elif self.cfg.mode == "wiener":
+        elif self.cfg.mode in {"wiener", "indexed_gaussian"}:
             if g is not None:
                 g.manual_seed(int(self.cfg.seed) + int(t_index))
             noise = self._seeded_randn_like(frame, g) * float(self.cfg.sigma)

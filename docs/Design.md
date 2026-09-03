@@ -242,3 +242,90 @@ the minimum significant asymmetry was six pairs. F2 compared two independent
 MixVPR proxy50 runs and found agreement within `rtol=1e-6` and `atol=1e-9`
 for all 3,750 rows and 20 columns. The results are integrated into the paper
 and tracked in `docs/progress.md`.
+
+## ICME 2027 revision-cycle plan (2026-09-03)
+
+This is the active plan for the independent ICME 2027 review recorded in
+`docs/RevisionSuggestions.tex`. The prior TOMM plans remain historical
+evidence. No result from a smoke run, partial run, failed gate, or proxy-only
+run may be written into the paper as real-place or sensitivity validation.
+
+### Review-to-work mapping
+
+| ID | Review finding | Action | Evidence and completion gate |
+|---|---|---|---|
+| ICME-M1 | The default artifact is ACM/TOMM, 17 pages plus an 11-page appendix, rather than an IEEE conference submission. | Convert main, appendix, titlepage, and build defaults to anonymous IEEE conference mode; remove ACM/TOMM metadata and reduce the main paper to the final ICME limit when the 2027 kit is released. | Both sources compile with the IEEE template; PDF page count, fonts, letter size, metadata, anonymity, and final page limit are checked. |
+| ICME-M2 | The unary map is near-constant or has negative attribution agreement, and current ablations do not identify DCRF/NCP gains. | Add an energy-preserving spatial intervention benchmark comparing the learned support with uniform, deterministic shifted, and seed-controlled spatially permuted support. | Manifest-driven per-query CSV with support statistics, effective MSE, Top-k, margins, and a gate requiring finite values and equalized perturbation energy. No map-validity claim is allowed unless a held-out attack-derived reference improves. |
+| ICME-M3 | Synthetic pairs have no geographic ground truth; MSLS coverage is limited to two cities, one attacker, and narrow conditions. | Re-run the existing geotagged runner on the largest available official MSLS manifests, with multiple attacker backbones and condition/city strata. Add a manifest-coverage audit before inference. | Manifest passes place-label, path-disjointness, city/condition coverage, and positive-gallery gates; report cluster-aware per-place intervals. Missing data remains a stated limitation. |
+| ICME-M4 | The paper claims video-sequence protection while retrieval evaluates only one sanitized middle frame. | Reframe current paper claims as frame-level release-side sanitization; prepare a sequence-level benchmark runner for clip lengths 1, 2, 4, and 8 as the next remote experiment. | Current paper must not claim sequence-level retrieval protection. Sequence runner smoke must verify pooled frame embeddings, best-frame attacker, temporal metrics, and output schema before vGPU use. |
+| ICME-M5/M6 | Fixed-budget baselines are not matched, and epsilon/sigma is only a heuristic. | Keep current matched-PSNR result as a non-rejection; add realized perturbation statistics to the intervention output and revise text to call calibration an index, not DP. | No new numerical DP guarantee. Every output records full-frame MSE, support MSE, support coverage, clipping rate, and effective standard-deviation summaries. |
+| ICME-M7 | McNemar currently mixes query clusters and seeds. | Add cluster-aware post-processing for intervention and future geotagged results; use query/place as the independent unit and seeds only as within-cluster variation. | Output states cluster count, seed count, bootstrap/permutation procedure, confidence level, and multiple-comparison policy. |
+| ICME-M8/M9 | Paper-facing outputs are ignored, paths are machine-local, and TOMM identifiers remain in scripts. | Make new scripts venue-neutral, write relative-path manifests and SHA-256 records, and update the paper only from complete exports. | Python compile, local CUDA smoke, deterministic synthetic test, and a remote handoff manifest all pass. |
+
+### Experiment ICME-M2: energy-preserving spatial intervention
+
+The intervention isolates whether spatial placement, rather than only total
+noise energy, explains retrieval changes. For each query frame, the runner
+computes the released effective weight w = p times s, then creates:
+
+1. the current learned support;
+2. a uniform map with the same mean effective weight;
+3. a deterministic spatial roll of the effective map with the same histogram;
+4. a deterministic flattened permutation of the effective map with identical
+   total energy.
+
+All conditions use the same source frame, gallery, attacker, seeds, and
+noise-draw convention. The primary output is a per-query table containing
+Top-1/5/10, correct rank, correct-versus-hardest-negative margin, full-frame
+MSE, effective support MSE, support coverage, clipping fraction, and map
+mean/std. The intervention gate passes only when all rows are finite and the
+energy-preserving controls are numerically verified within a relative
+tolerance of 10^-6. These controls test spatial causality; they do not
+validate the unary predictor against ground-truth sensitivity.
+
+### Experiment ICME-M3: expanded real-place MSLS audit
+
+Use the already registered official MSLS manifests and the existing
+manifest-driven geotagged evaluator. Before GPU inference, run a coverage
+audit that reports query count, gallery count, positive count per query,
+city counts, subtask counts, viewpoint, illumination, season, weather, and
+query/gallery path overlap. Run ResNet18 plus available dedicated VPR
+backbones (CosPlace, MixVPR, and Patch-NetVLAD) at the same seeds and variant.
+Aggregate uncertainty by place cluster, not by seed-expanded rows. The run is
+paper-eligible only if the manifest gate and all requested backbone cells pass.
+
+### Experiment ICME-M4: sequence-level retrieval preparation
+
+The new runner will evaluate sanitized query clips at lengths 1, 2, 4, and 8.
+For each clip it will report first-frame, mean-pooling, max-pooling, and
+best-frame retrieval, plus temporal flicker and perturbation-stability
+metrics. The current release-side method remains frame-level in the paper
+until this experiment completes. The smoke mode uses synthetic clips and a
+download-free embedder; the real mode uses the monitoring proxy and records
+that it is still a proxy rather than geographic ground truth.
+
+### Code and smoke-test sequence
+
+1. Add the ICME-M2 intervention runner and the ICME-M4 sequence runner under
+   `src/scripts/`, with English-only code, deterministic seeds, and explicit
+   `scientific_evidence=false` in smoke output.
+2. Patch the noise-mode documentation and runner metadata so the existing
+   indexed per-frame Gaussian process is not called a cumulative Wiener
+   process, while preserving backward compatibility for old exports.
+3. Run `py_compile`, unit-level synthetic checks, and CUDA smoke on the local
+   GPU. Smoke output must remain outside paper writeback.
+4. Prepare a vGPU 3090 no-card handoff containing the pushed commit, exact
+   command lines, output root, checkpoint/data gates, and estimated runtime.
+5. After the user powers on the vGPU, execute only the complete gated runs,
+   then aggregate by place/query cluster and decide whether any paper
+   writeback is scientifically justified.
+
+### Paper writeback policy for this cycle
+
+The immediate text revision may narrow unsupported claims and change the title
+to match frame-level evaluation. Existing numerical results remain unchanged
+unless regenerated by a complete gate-passing run. ICME-M2 output can support
+an intervention statement but cannot turn a structural mask into sensitivity
+ground truth. ICME-M3 output can support broader real-place claims only after
+manifest and coverage gates pass. ICME-M4 output can restore sequence-level
+language only after a real sequence-level attacker result is complete.

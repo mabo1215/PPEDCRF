@@ -303,7 +303,7 @@ def run_geotagged(args: argparse.Namespace) -> Path:
     write_json(
         output_dir / "run_metadata.json",
         {
-            "review_cycle": "TOMM-2026-08-30",
+            "review_cycle": "ICME-2027",
             "mode": "geotagged",
             "device": str(device),
             "manifest": str(Path(args.manifest).resolve()),

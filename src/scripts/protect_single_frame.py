@@ -56,7 +56,7 @@ def main() -> None:
     parser.add_argument("--resize-h", type=int, default=384, help="Resize height for processing.")
     parser.add_argument("--resize-w", type=int, default=640, help="Resize width for processing.")
     parser.add_argument("--noise-sigma", type=float, default=None, help="Override noise sigma for the protection step.")
-    parser.add_argument("--noise-mode", type=str, default=None, choices=["gaussian", "wiener"], help="Override noise mode for the protection step.")
+    parser.add_argument("--noise-mode", type=str, default=None, choices=["gaussian", "indexed_gaussian", "wiener"], help="Override the noise mode for the protection step.")
     parser.add_argument("--device", type=str, default=None, help="Torch device to use (cpu or cuda).")
     args = parser.parse_args()
 

@@ -424,3 +424,12 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 修改说明：`baseline_param_sweep.jpg`、`privacy_utility_tradeoff_page-0001.jpg`、`retrieval_robustness_topk.jpg`（未拆分版，已被 `_top`/`_bottom` 取代）、`architecture_of_solution_2.png`、`mot_org_ppedcrf_blur.png`、`mot_org_ppedcrf_noise.png`、`mot_org_ppedcrf_overlay.png`、`mot_org_resized.png` 是历次图表重绘留下的旧版本，延续此前 m3 条目的清理惯例移入 `legacy/`；`figs/` 根目录现只保留正文和附录实际引用的 9 个文件（另有 1 个 `retrieval_case_study.json` 是配套的 case-study 元数据，非图片）。移动后重新编译 `paper/build.bat`，`main.pdf`/`appendix.pdf` 均正常生成，无报错。
 
 **本轮小结：** 已完成用户要求的"按 `docs/RevisionSuggestions.tex` 继续修改直到全部完毕"：G1/G2 确认已落地，追加的第三轮独立复核未发现新的论文级问题，`docs/RevisionSuggestions.tex` 当前处于"无剩余可执行项"的收口状态。顺带清理了 `paper/figs/` 下的遗留图片文件（不改动论文内容）。
+
+116. 【已完成】根据 IEEE International Conference on Multimedia and Expo (ICME 2027) 投稿方向和当前仓库证据，完成一轮独立、完整的学术评审，并覆盖重写 `docs/RevisionSuggestions.tex`。
+修改说明：评审文件明确标注 ICME 2027 官方页面目前尚未发布完整 paper kit，采用官方 ICME 历届作者指南作为暂行格式基线；逐项核查 ACM TOMM 版式与篇幅、双盲匿名、敏感性图有效性、代理数据与 MSLS 地理真值、帧级/序列级威胁模型、匹配 PSNR、统计独立单元、差分隐私表述、复现性和 BibTeX/展示问题，并给出 M1--M9 的严重性、证据、验收条件和最小重投清单。该轮结论为“当前版本拒稿，完成重大修订后重投”；未修改论文正文。
+
+**本轮小结：** 已按 ICME 2027 目标完成独立评审文件覆盖写入；`docs/RevisionSuggestions.tex` 为英文-only、可直接复制的完整 LaTeX，并已成功编译为临时 7 页 letter-size 校验 PDF，未发现中文混入或 LaTeX 致命错误。
+
+117. 【进行中】根据 ICME 2027 新审稿意见完成本轮 revision cycle 的计划登记、代码实现和论文收窄。
+修改说明：在 `docs/Design.md` 登记 M1--M9 计划；新增 M2 energy-preserving spatial intervention、M3 manifest coverage audit、M4 sequence retrieval runner；本地 RTX 3070 CUDA smoke 全部通过；主稿、补充材料和匿名 title page 改为 IEEE conference，主稿 PDF 6 页、supplement 8 页；`docs/ExperimentProgress.tex` 增加百分比和 NZST 时间计划；新增 vGPU no-card handoff。远端真实实验尚未运行，待用户开卡后先执行 manifest audit，再跑 M2/M3/M4；当前不写入任何新实验数字。
+本轮小结：论文已改为 frame-level heuristic sanitization framing，indexed Gaussian 取代 cumulative Wiener 误述，旧 TOMM 记录保留为历史；下一步是提交并 push，然后等待 vGPU 3090 开卡。

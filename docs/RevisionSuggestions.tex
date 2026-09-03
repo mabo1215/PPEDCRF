@@ -1,136 +1,438 @@
 \documentclass[11pt]{article}
-
 \usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
 \usepackage{amsmath,amssymb}
-\usepackage{booktabs}
-\usepackage{longtable}
+\usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
 
+\setlist{nosep,leftmargin=*}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+
+\title{Independent Academic Review and Revision Plan\\
+for IEEE International Conference on Multimedia and Expo (ICME 2027)}
+\author{}
+\date{September 3, 2026}
+
 \begin{document}
+\maketitle
 
-\section*{Independent Review --- ACM TOMM Revision Cycle (Fresh Review, 2026-09-03, Round 2)}
+\section*{Review Basis and Scope}
 
-\subsection*{Scope of this pass}
-This review ignores all prior review history, including the previous
-Findings F1--F3 in this file (matched-PSNR significance, run-to-run
-determinism, and cross-machine provenance checksums), which were already
-resolved or explicitly bounded in the prior cycle and are not revisited here.
-Instead, this pass re-reads \texttt{paper/main.tex} and
-\texttt{paper/appendix.tex} from scratch, as a new reviewer would, against
-the target venue declared in \texttt{USAGE\_claude.md}: ACM Transactions on
-Multimedia Computing, Communications, and Applications (ACM TOMM). Both files
-were also rebuilt with \texttt{paper/build.bat} (0 LaTeX errors, 4 BibTeX
-warnings, no undefined references) before this review was written, so all
-findings below are checked against the currently compiling manuscript.
+This is an independent, venue-driven review of the current repository state. It
+was conducted directly from \texttt{paper/main.tex},
+\texttt{paper/appendix.tex}, the generated main and appendix PDFs,
+\texttt{paper/ref.bib}, the exported evaluation tables, and the implementation
+under \texttt{src/}. Previous review history was not used as evidence of
+completion.
 
-This pass verified, line by line, that every internal numeric claim in the
-abstract, main text, tables, and appendix is self-consistent (e.g., the
-5.97\,dB PSNR gap, the 20/1/3 and 23/1/0 backbone--gallery delta counts, the
-PSNR--MSE conversions in Table~\texttt{tab:matched\_psnr}, and the margin
-subgroup sample-size arithmetic) and found no discrepancies beyond the two
-issues below. Both issues are fixable without new experiments and have
-already been corrected in this pass.
+The official ICME 2027 page currently lists the conference for July 13--17,
+2027 in Xiamen, China, but says that more details are still to come. Therefore,
+the final 2027 call for papers and paper kit must be checked again before
+submission. The official ICME 2026 call confirms that multimedia analysis,
+image and video processing, multimedia security and privacy, quality
+assessment, multimodal media, and related AI and machine-learning topics are
+in scope. The available official ICME author instructions from a prior edition
+are used as a conservative format baseline: English letter-size PDF, official
+IEEE template, regular-paper limit of six pages including references,
+double-blind review, and an abstract of approximately 100--150 words. Those
+instructions also describe optional supplementary material with a 20 MB limit.
+These historical requirements are not asserted as the final 2027 rules.
 
-\subsection*{Finding G1 (Critical): double-blind anonymity violation via a self-identifying checkpoint repository name}
-\label{sec:g1}
-The manuscript is submitted under acmart's \texttt{anonymous} review mode
-(\texttt{documentclass[manuscript,screen,review,anonymous]\{acmart\}}), and
-all author, affiliation, and contact information is correctly commented out
-in both \texttt{main.tex} and \texttt{appendix.tex}. However, the
-\emph{rendered} text of both files named an actual, identifiable Hugging
-Face account: \texttt{main.tex} (Reproducibility audit paragraph) and
-\texttt{appendix.tex} (E5 diagnostic section) both referred to ``the public
-\texttt{mabo1215/ppedcrf-sensnet} checkpoint.'' This is not a commented-out
-line; it compiles into the PDF exactly as written. An ACM TOMM editor or
-reviewer performing even a cursory anonymity check (e.g., searching the PDF
-or pasting suspicious tokens into a search engine) could de-anonymize the
-submission from this single username, which is a plausible desk-reject or
-editorial-flag condition for a venue that enforces double-blind review. This
-is the same category of leak that double-blind checklists specifically ask
-authors to self-audit (code repository names, dataset hosting account names,
-model hub usernames), and it is exactly the kind of leak that survives
-casual proofreading because the surrounding sentence reads naturally.
+Official sources:
+\begin{itemize}
+  \item ICME 2027 event page: \href{https://ieee-cas.org/event/conference/2027-ieee-international-conference-multimedia-expo-icme}{official event page}.
+  \item ICME 2026 call for papers: \href{https://ieee-cas.org/files/ieeecass/2025-12/icme-2026-cfp.pdf}{official call for papers}.
+  \item ICME author and submission instructions: \href{https://2020.ieeeicme.org/www.2020.ieeeicme.org/index.php/author-information-and-submission-instructions/index.html}{official author instructions}.
+\end{itemize}
 
-\textbf{Required action and resolution.} Both occurrences were replaced with
-venue-neutral phrasing that preserves the scientific content of the claim
-(that a second, independently hosted copy of the checkpoint was audited and
-found bit-identical to the local one) without naming the hosting account:
-``the publicly hosted checkpoint released alongside this submission
-(repository name withheld for double-blind review).'' No other occurrences
-of author names, affiliations, institutional emails, or identifiable GitHub
-usernames were found in the rendered text of either file; the only other
-matches (in \texttt{main.tex}'s commented-out \texttt{Code:} line and in
-\texttt{paper/backup/main\_010324.tex}, an inactive backup file not included
-in the build) do not compile into the submitted PDF.
+\section*{Overall Recommendation}
 
-\textbf{Completion gate.} Satisfied. \texttt{grep} over the rendered text of
-\texttt{paper/main.tex} and \texttt{paper/appendix.tex} for the account name,
-common author names, and institutional affiliations returns no remaining
-matches, and both files rebuild cleanly.
+\textbf{Recommendation: Reject in the current form; encourage resubmission after
+major revision.} Confidence: high.
 
-\subsection*{Finding G2 (Moderate): arithmetic error in the Gaussian-mechanism calibration example}
-\label{sec:g2}
-Section~3.2 (``NCP Control and DP-Style Calibration'') fixes
-$\delta=10^{-5}$ and states $\sqrt{2\log(1.25/\delta)}\approx 4.73$, then
-uses this to claim that $\sigma_0=8$ corresponds to
-$(\varepsilon,\delta)\approx(0.59,10^{-5})$. Recomputing the stated
-expression with $\delta=10^{-5}$ gives
-$\sqrt{2\ln(1.25/10^{-5})}=\sqrt{2\ln(125000)}=\sqrt{2\times 11.736}=\sqrt{23.472}\approx 4.845$,
-not 4.73; with the clipping bound $C=1$ as described in the same paragraph,
-this gives $\varepsilon\approx 4.845/8\approx 0.606$, not 0.59. The error is
-self-contained (the derived $\varepsilon$ is internally consistent with the
-paper's own, incorrect, 4.73 constant, so it is not visible from the
-surrounding text alone), but a reviewer with a differential-privacy
-background who recomputes the one worked example the paper provides for its
-central calibration rule would find it wrong, which undermines confidence in
-Eq.~(5) even though the equation itself is written correctly. This is a
-pure arithmetic slip, not a methodological problem, and needs no new
-experiment to fix.
+The work addresses an ICME-relevant privacy problem and reports a potentially
+useful spatially weighted perturbation. Nevertheless, the current manuscript
+is not a compliant ICME submission and its central mechanistic claim is not
+established. The generated main paper is a 17-page ACM TOMM manuscript and the
+appendix is an additional 11-page ACM document. The main PDF contains ACM CCS
+material, ACM reference-format front matter, and TOMM metadata. More
+importantly, the supplied unary sensitivity checkpoint is near-constant on
+the monitoring data, while the KITTI-360 structural-support diagnostic has
+negative attribution agreement. Thus, the evidence does not show that DCRF
+and NCP respond to a meaningful privacy sensitivity signal.
 
-\textbf{Required action and resolution.} Recomputed the constant precisely
-($\sqrt{2\log(1.25/10^{-5})}=4.8448\ldots$) and corrected both numbers in
-Section~3.2: the constant is now reported as $\approx 4.84$ and the derived
-operating point as $(\varepsilon,\delta)\approx(0.61,10^{-5})$. No other
-Gaussian-mechanism arithmetic (the PSNR--MSE conversions in
-Table~\texttt{tab:matched\_psnr}, or the 5.97\,dB PSNR-gap statement in
-Section~4.4) uses this constant, so no other passage required a matching
-correction.
+The most defensible current result is narrower: on a small synthetic retrieval
+proxy, a particular spatially weighted Gaussian perturbation reduces ResNet18
+retrieval at a particular visual-quality level. The manuscript also reports
+heterogeneous transfer, an adverse real-world condition, nearly identical
+module ablations, and no matched-PSNR privacy advantage over global noise.
+These limitations must shape the contribution and claims.
 
-\textbf{Completion gate.} Satisfied. Section~3.2 now reports $\approx 4.84$
-and $(\varepsilon,\delta)\approx(0.61,10^{-5})$, and \texttt{paper/main.tex}
-rebuilds with 0 LaTeX errors.
+\subsection*{Reviewer scorecard}
 
-\subsection*{Non-findings (explicitly checked and not flagged)}
-This pass also specifically checked, and found correct, the following
-items that are common failure points in papers with many revision rounds:
-the internal arithmetic of every PSNR-gap and PSNR--MSE statement in
-Sections~4.3--4.4 and Appendix~A/C; the backbone--gallery delta sign counts
-reported in the abstract, main text, and conclusion against the raw
-Table~\texttt{tab:robustness} and Table~\texttt{tab:large50} entries; the
-margin-subgroup sample-size arithmetic in
-Table~\texttt{tab:margin\_subgroups} and its MixVPR-only restriction; the
-E4 mAP@50/mIoU numbers quoted in the main-text prose against
-Table~\texttt{tab:e4seg} and the appendix's same-image segmentation
-paragraph; and the equation numbering assumed by the standalone appendix's
-plain-text ``Eq.~(2)'' reference, which correctly resolves to the DCRF
-refinement equation under the acmart build. No action is requested on these
-points.
+The following scores are an internal review assessment on a 1--10 scale, where
+10 is strongest. They are not an official ICME 2027 scoring rubric because the
+2027 paper kit is not yet available.
 
-\subsection*{Priority Order for This Cycle}
+\begin{itemize}
+  \item Scope fit: 7/10. Multimedia privacy and visual place retrieval are
+  relevant to the ICME scope.
+  \item Technical correctness: 3/10. The implemented perturbation is
+  reproducible in principle, but the sensitivity-map premise and the temporal
+  interpretation are not currently validated.
+  \item Novelty: 5/10. The combination of spatial weighting, recurrent
+  refinement, and retrieval evaluation is plausible, but the module-specific
+  contribution is not identified by the current ablations.
+  \item Significance: 4/10. The empirical effect may be useful under a narrow
+  threat model, but current transfer and real-world evidence do not support a
+  broad privacy claim.
+  \item Experimental strength: 3/10. The proxy is controlled but synthetic;
+  MSLS is narrow; and the matched-quality result is statistically null under
+  the reported design.
+  \item Clarity: 5/10. The paper documents many details, but ACM/TOMM
+  material, legacy experiments, and frame--sequence language obscure the
+  evidence hierarchy.
+  \item Reproducibility: 3/10. Important checkpoints and outputs are not
+  directly auditable from the repository, and one evaluator path uses a random
+  placeholder model.
+  \item Reviewer confidence: 9/10. The recommendation is supported by the
+  generated PDFs, source audit, implementation audit, and exported results.
+\end{itemize}
+
+\subsection*{Strengths}
+
+\begin{itemize}
+  \item The threat model is concrete: a background-based visual-place
+  retrieval attacker rather than an unspecified privacy adversary.
+  \item The paper provides useful implementation details for the recurrence,
+  NCP weighting, noise scale, clipping, seeds, galleries, and attackers.
+  \item Negative findings are disclosed, including the weak checkpoint,
+  negative KITTI-360 attribution diagnostic, and matched-quality null result.
+  \item The MSLS experiment uses official place labels and exposes an
+  important O2N failure mode.
+  \item The manuscript distinguishes Gaussian-inspired calibration from a
+  formal differential-privacy guarantee; this distinction should be retained.
+\end{itemize}
+
+\section*{Technical Summary}
+
+PPEDCRF predicts a spatial mask, refines it with a recurrent spatial-temporal
+module, converts it to a non-central perturbation weight, and adds Gaussian
+noise. The reported update is approximately
+\[
+p_t^{(k+1)} =
+\operatorname{sigmoid}\left(
+u_t + \lambda_s\bigl(S(p_t^{(k)})-p_t^{(k)}\bigr)
++ \lambda_\tau\bigl(\hat p_{t-1}-p_t^{(k)}\bigr)
+\right),
+\]
+with a 3 by 3 average-pooling operator, reflection padding, and five
+iterations. NCP gives the effective weight
+\[
+w_t = \alpha \odot p_t
+= \alpha \frac{p_t^2}{\max(p_t)+\epsilon}.
+\]
+The Gaussian-inspired scale is
+\[
+\sigma_0(\epsilon,\delta)
+= C \sqrt{2\log(1.25/\delta)}/\epsilon,
+\]
+but the paper explicitly disclaims a formal privacy guarantee.
+
+The main controlled proxy contains 12 synthetic locations, a candidate pool of
+120 images, 36 hard distractors, a middle-frame query, three seeds, and
+galleries of 12, 24, and 48 images. In proxy12, raw ResNet18 Top-1 is 0.833,
+PPEDCRF is 0.722 plus or minus 0.048 at 36.17 dB PSNR and 0.945 SSIM for
+nominal \texttt{sigma0=8}. Global Gaussian noise is 0.639 plus or minus
+0.127 at 30.20 dB PSNR and 0.827 SSIM. The principal module ablations are
+nearly identical after rounding.
+
+Across eight attacker backbones and three gallery sizes, the robustness table
+contains 20 negative, one tied, and three positive PPEDCRF-minus-raw cells.
+The proxy50 result contains 23 negative cells, one tie, and no positive cells.
+On MSLS, the appendix reports all-condition raw versus sanitized Top-1 of
+0.170 versus 0.152, while O2N changes from 0.140 to 0.168 and N2O changes
+from 0.155 to 0.137. The KITTI-360 diagnostic reports approximately
+minus 0.00024 Spearman correlation, 0.0497 top-10 overlap, and 0.0947
+top-10-percent energy overlap.
+
+\section*{Major Findings and Required Revisions}
+
+\paragraph{M1 -- Blocking format, length, and anonymity}
+
+The default build compiles the ACM branch of a conditional ACM/IEEE source.
+The main PDF is ACM journal style, 17 pages, and carries ACM and TOMM
+front matter. This is incompatible with the historical ICME baseline.
+
+\begin{itemize}
+  \item Obtain and follow the official ICME 2027 paper kit when released.
+  Until then, use the official IEEE ICME conference template as the working
+  baseline.
+  \item Build a two-column IEEE conference PDF, within the final page limit
+  including references. Treat the current appendix as supplementary material
+  only if the 2027 rules allow it.
+  \item Remove ACM journal metadata, CCS concepts, ACM reference-format text,
+  TOMM submission language, and all venue-specific build labels.
+  \item Enforce double-blind anonymity in the title block, acknowledgments,
+  self-citations, artifact links, file metadata, and supplements.
+  \item Shorten the approximately 227-word abstract to about 100--150 words,
+  or to the exact 2027 limit.
+  \item Run the official PDF compliance check and verify letter size, fonts,
+  margins, hyperlinks, figure legibility, and final page count.
+\end{itemize}
+
+A six-page paper cannot retain the current narrative in full. The main paper
+should prioritize the threat model, one validated mechanism claim, one primary
+real benchmark, matched baselines, and limitations. Long matrices, logs, and
+diagnostics should move to permitted supplementary material.
+
+\paragraph{M2 -- Critical validity of the unary sensitivity map}
+
+The provenance notes state that the original checkpoint has a null mask root
+and near-constant probabilities on the monitoring data. The KITTI-360
+structural-support target is explicitly not privacy-sensitivity ground truth,
+and its attribution agreement is negative or approximately zero. These facts
+undermine the central interpretation of PPEDCRF. The nearly identical
+full/no-temporal/no-NCP/unary-only/no-DCRF rows also fail to identify which
+module causes the observed effect.
+
+Required experiment package:
+
 \begin{enumerate}
-    \item G1 (double-blind anonymity leak) --- highest priority, because an
-    unresolved anonymity violation is a submission-blocking editorial issue
-    independent of scientific content.
-    \item G2 (calibration arithmetic) --- lower priority, a self-contained
-    numeric correction with no effect on any reported experimental result.
+  \item Define sensitivity operationally as a target tied to the threat model:
+  retrieval-score change, local embedding gradient, leave-one-region-out
+  retrieval impact, or another defensible privacy-risk proxy.
+  \item Train or calibrate the map without evaluation leakage and test it on
+  held-out locations, cities, and attacker architectures.
+  \item Report calibration, rank correlation, top-k overlap, energy
+  concentration, confidence intervals, and spatial visualizations.
+  \item Compare uniform noise, random fixed masks, center masks, saliency
+  masks, and learned masks with DCRF and NCP disabled.
+  \item Preserve total perturbation energy while permuting the spatial map.
+  This intervention tests whether location matters beyond noise magnitude.
+  \item If validation fails, reframe the method as heuristic spatial weighting
+  and remove unsupported sensitivity-guided or privacy-optimal language.
 \end{enumerate}
 
-Both findings were resolved directly in this cycle without new experiments,
-data collection, or GPU access; the fixes are edits to
-\texttt{paper/main.tex} and \texttt{paper/appendix.tex} only, and both files
-were rebuilt successfully after the edits. No actionable items remain in
-this review as of this writing; the next cycle should begin with another
-fresh independent review pass rather than continuing this file, per the
-repository's revision-loop protocol.
+State exactly whether each headline checkpoint was trained, frozen, randomly
+initialized, or substituted. A semantic structural mask may be a useful
+diagnostic, but it is not privacy-sensitivity ground truth without a validated
+bridge.
+
+\paragraph{M3 -- Critical evaluation validity and geographic ground truth}
+
+Proxy12 and proxy50 construct synthetic locations by image similarity. They
+have no GPS or place identity, so retrieval changes do not by themselves
+demonstrate geographic location privacy. MSLS is the strongest current result,
+but it covers only 200 queries, a shared 1000-image gallery, two cities, one
+main attacker family, one nominal noise level, and limited conditions. The
+adverse O2N result is important: sanitization increases Top-1 from 0.140 to
+0.168.
+
+Required revisions:
+
+\begin{enumerate}
+  \item Make an official place-labeled benchmark the primary evaluation.
+  Report exact filtering, split, query, gallery, and place counts with no
+  scene leakage.
+  \item Expand cities, day and night, season, weather, viewpoint, and time
+  gap where supported. Show per-condition results before aggregation.
+  \item Evaluate several attacker encoders and retrieval protocols on the real
+  benchmark, including clearly labeled black-box transfer and white-box
+  settings.
+  \item Report Recall@1, Recall@5, Recall@10, or the selected primary metric,
+  together with quality metrics and uncertainty clustered by place.
+  \item Keep the synthetic proxies as supplementary stress tests and document
+  every pair-construction choice.
+  \item Analyze O2N per city and condition. If protection is not consistent,
+  narrow the claim to conditional risk reduction.
+\end{enumerate}
+
+Do not call a synthetic similarity decrease geographic privacy without evidence
+on place-labeled data.
++
+
+\paragraph{M4 -- Major frame versus sequence mismatch}
+
+The title and abstract claim video-sequence protection, but controlled retrieval
+uses one middle frame and no sequence-level attacker. An attacker can sample
+multiple released frames, average embeddings, or select the least perturbed
+frame. The temporal notation therefore overstates the evaluated threat model.
+
+The implementation's mode named "wiener" resets a seeded generator and draws
+fresh Gaussian noise per frame; it is not a cumulative Wiener process. Rename
+the process or implement the claimed stochastic process exactly.
+
+Choose one path:
+\begin{itemize}
+  \item Reframe the work as frame-level background retrieval sanitization and
+  describe temporal processing only as an optional consistency prior; or
+  \item Add sequence-level attacks for clip lengths 1, 2, 4, and 8, several
+  sampling strategies, embedding pooling, temporal attention, and a
+  best-frame attacker. Report retrieval, flicker, and temporal-consistency
+  metrics.
+\end{itemize}
+
+In either case define the released object, clip length, initialization, causal
+state, attacker access, and exact noise process.
+
+\paragraph{M5 -- Major matched privacy--utility comparison}
+
+The default PPEDCRF point is 36.17 dB PSNR and 0.945 SSIM, versus 30.20 dB
+and 0.827 for global Gaussian noise, 28.08 dB and 0.897 for blur, and
+26.07 dB and 0.858 for mosaic. Different quality levels do not establish a
+same-quality privacy advantage. The matched-PSNR sweep reports identical
+rounded Top-1 values for all six sigma variants. Fifteen comparisons with
+global noise have zero discordant pairs, exact McNemar $p=1.0$, and a
+query-cluster bootstrap interval of $[0,0]$. This supports no detectable
+difference under the current design, not superiority.
+
+Required revisions:
+\begin{enumerate}
+  \item Tune PPEDCRF, global noise, blur, mosaic, random masks, and claimed
+  competitors to common PSNR or MSE targets on identical pairs and seeds.
+  \item Plot full privacy--quality curves with uncertainty over independent
+  locations. Report unrounded metrics and effect sizes.
+  \item Report perturbation energy, affected-pixel fraction, effective
+  standard-deviation quantiles, and clipping or saturation rates.
+  \item Distinguish Figure 5's visual setting \texttt{sigma0=24} from the
+  headline setting \texttt{sigma0=8}.
+  \item Use trade-off or conditional-benefit language unless a matched-quality
+  improvement is statistically established.
+\end{enumerate}
+
+\paragraph{M6 -- Major differential-privacy ambiguity}
+
+The calibration resembles a Gaussian mechanism expression, but the manuscript
+does not specify adjacency, sensitivity of the complete release mechanism,
+model-output clipping, temporal composition, or the effect of a data-dependent
+mask. Pixel clipping to $[0,255]$ is not by itself a sensitivity proof.
+Because NCP multiplies the base noise by the predicted mask, nominal
+\texttt{sigma0} is not the released per-pixel standard deviation.
+
+The current disclaimer is correct and should be made consistent throughout the
+title, abstract, equations, captions, and conclusion. The preferred revision
+is to call the quantity a Gaussian-inspired noise calibration index, define it
+operationally, and report realized noise statistics. If a formal guarantee is
+intended, define neighboring inputs, full-mechanism sensitivity, clipping,
+composition, mask leakage, and all assumptions, then prove or correctly
+account for the stated bound. Explicitly distinguish empirical retrieval
+protection, perceptual obfuscation, and formal differential privacy.
+
+\paragraph{M7 -- Major statistical unit and multiple comparisons}
+
+The proxy12 table has 12 query locations and three seeds, hence 36
+query--seed rows. McNemar analysis appears to treat these rows as independent,
+while the bootstrap is clustered by 12 queries. Seeds do not create new
+locations. The inference is therefore inconsistent.
+
+Recompute using location or query cluster as the independent unit. Aggregate
+or model seeds within cluster, use paired cluster bootstrap, permutation, or a
+mixed-effects model, and state the estimand, resampling scheme, confidence
+level, and sidedness. If McNemar is retained, apply it to a pre-specified
+query-level paired outcome. Correct for backbone, gallery, condition, and
+baseline multiplicity, or label those analyses exploratory. Reassess the
+claim that six discordant pairs suffice because that threshold depends on the
+independent-unit definition. For proxy50 use intervals over 50 locations. For
+MSLS cluster by place identity.
+
+\paragraph{M8 -- Major reproducibility and artifact audit}
+
+Important checkpoints, outputs, third-party trees, and PDFs are ignored by
+Git, while provenance contains machine-local paths such as
+\texttt{/root/autodl-tmp/...}. \texttt{src/run\_eval.py} constructs a random
+\texttt{DummySensitiveRegionNet} placeholder, and
+\texttt{src/config/config.yaml} has \texttt{mask\_root: null} despite the
+checkpoint-backed narrative. Evaluation scripts contain hard-coded TOMM
+review-cycle identifiers. The smoke test is effectively always passing.
+
+Provide an anonymous artifact or reviewer package with relative paths,
+checkpoint and output hashes, data manifests, split definitions, pinned
+dependencies, GPU and preprocessing details, deterministic settings, exact
+commands, expected outputs, and a raw-output-to-table verifier. Separate
+smoke-only random models from scientific commands. Add tests for checkpoint
+loading, tensor shapes, deterministic seeds, clipping, temporal-state reset,
+baseline matching, and metric aggregation. Remove private credentials and
+machine paths.
+
+\paragraph{M9 -- Moderate organization and presentation}
+
+The manuscript mixes legacy utility experiments, proxy results, MSLS, KITTI-360
+diagnostics, matched-PSNR tests, qualitative figures, and handoff notes. Put
+the threat model, valid mechanism evidence, primary real benchmark, matched
+curves, and limitations in the main paper. Move legacy tables, full transfer
+matrices, provenance logs, extended sweeps, and diagnostic notes to permitted
+supplementary material. Describe VOC segmentation and COCO detection as
+separate utility experiments. Define whether plus-or-minus values are seed
+standard deviations, standard errors, or confidence intervals. Explain the
+raw-versus-three-seed sample-count difference in the margin analysis. Feature
+the O2N adverse case and negative KITTI-360 diagnostic rather than hiding them
+in a limitations footnote.
+
+\section*{Additional Technical Comments}
+
+\begin{enumerate}
+  \item The DCRF update is called mean-field-inspired but has no energy
+  derivation. Supply the derivation or rename it a recurrent refinement
+  module. Report the stability range of $\lambda_s$ and $\lambda_\tau$ and
+  sensitivity to iteration count.
+  \item Specify tensor dimensions, mask resolution, normalization range, noise
+  units, clipping order, frame-boundary handling, and the meaning of $C$.
+  \item Report NCP support area, effective noise quantiles, and clipping
+  frequency; visual plausibility is not privacy evidence.
+  \item Label the white-box sign-gradient experiment as a separate threat
+  model and do not compare it directly with black-box results.
+  \item Add recent multimedia-privacy, visual-place-recognition, retrieval-
+  aware sanitization, video-protection, and privacy--utility literature.
+  Position against methods sharing the same attacker and release model.
+  \item Complete BibTeX metadata for entries producing missing pages, volume,
+  or number warnings, and add persistent identifiers where available.
+  \item Remove every TOMM reference from comments, output directories,
+  experiment identifiers, captions, and PDF metadata before submission.
+  \item Add limitations on domain shift, multiple-frame access, attacker
+  adaptation, place-label dependence, absence of formal DP, and failed map
+  validation.
+\end{enumerate}
+
+\section*{Minimum Revision Package}
+
+Before resubmission, the following are required:
+\begin{enumerate}
+  \item A double-blind, two-column IEEE conference PDF built from the official
+  ICME 2027 template, within the published limit including references.
+  \item A title, abstract, and threat model that honestly identify frame-level
+  or sequence-level release and attacker access.
+  \item Either held-out validation of the sensitivity map or a complete
+  heuristic-sanitizer reframe with unsupported causal claims removed.
+  \item A primary public place-labeled evaluation across cities and conditions,
+  multiple attackers, and cluster-aware uncertainty.
+  \item Matched-quality privacy--utility curves, unrounded effect sizes, and
+  realized perturbation statistics for all important baselines.
+  \item Correct location-level inference, a multiplicity policy, and explicit
+  separation of seed variability from data uncertainty.
+  \item An anonymous one-command artifact with manifests, hashes, pinned
+  environments, deterministic tests, and exact table regeneration.
+  \item A concise failure-analysis section centered on the negative map
+  diagnostic, adverse MSLS O2N result, and matched-PSNR null result.
+\end{enumerate}
+
+\section*{Final Assessment}
+
+PPEDCRF addresses an appropriate ICME topic and may contain a useful
+engineering direction for spatially selective visual perturbation. The current
+version, however, is an ACM journal manuscript rather than a compliant ICME
+paper, and its central sensitivity-guided mechanism is not validated. The
+evaluation does not yet provide a fair, statistically identified,
+place-labeled privacy--utility result supporting the breadth of the claims.
+
+The recommended decision is therefore \textbf{reject in the current form, with
+encouragement to resubmit after major revision}. The paper could become
+competitive if the authors validate the map or narrow the claim, make the real
+benchmark primary, add matched and cluster-aware evidence, resolve the
+frame--sequence threat model, and submit a reproducible anonymous IEEE paper.
 
 \end{document}
