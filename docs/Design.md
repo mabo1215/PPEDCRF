@@ -329,3 +329,73 @@ an intervention statement but cannot turn a structural mask into sensitivity
 ground truth. ICME-M3 output can support broader real-place claims only after
 manifest and coverage gates pass. ICME-M4 output can restore sequence-level
 language only after a real sequence-level attacker result is complete.
+
+## ICME-M3.3: white-box sign-gradient attacker on the real MSLS benchmark (2026-09-04)
+
+`docs/RevisionSuggestions.tex` Additional Technical Comment 4 requires the
+white-box sign-gradient attacker to be reported as a separate threat model
+rather than compared directly with the black-box results, and
+`docs/ExperimentProgress.tex`'s M3 row records this as the one still-open,
+concretely GPU-blocked gap: the constrained sign-gradient optimizer
+(`optimize_attacker_aware_query` in `src/scripts/run_tomm_review_proxy.py`,
+already integrated into the paper for the synthetic proxy benchmark in
+Appendix~F) has never been run against the real place-labeled MSLS benchmark.
+
+**Data status (checked this session):** the full official MSLS `train_val`
+metadata for all 25 cities is present locally, but only Manila and Toronto
+have their per-city `images/` folders actually downloaded (other 23 cities
+have only the four metadata CSVs, no images). A larger multi-city manifest
+(M3 remaining gap "(i)") therefore remains genuinely data-blocked pending a
+further multi-gigabyte per-city download and is not attempted in this round;
+it stays a documented limitation. This experiment scopes to gap "(ii)" only,
+which needs no new data acquisition.
+
+**Design:** extend `run_geotagged_vpr_benchmark.py` with an `attacker_aware`
+variant that mirrors the proxy's protocol exactly (same optimizer, same
+default steps=20/step_size=1.0/linf=8.0, ResNet18 only, since the proxy
+result this must stay comparable to was itself ResNet18-only). For each
+query, the target embedding is the first gallery item sharing the query's
+official `place_id` (in `place_id` order, deterministic). The white-box
+optimizer needs the un-batched gallery embedding matrix up front to pick this
+target, which is computed via the already-chunked `normalized_embeddings`
+helper (32-image chunks) rather than `eval.retrieval_attack.build_gallery_embeddings`,
+because the latter does one unbatched forward pass over the full gallery and
+is the same OOM pattern already fixed once for the geotagged 1000-image
+gallery (commit `c7dde50`); reusing the chunked path avoids reintroducing it,
+even though ResNet18 alone is unlikely to trip it.
+
+**Completion gate:** every attacker_aware row must have finite PSNR/MSE and a
+finite retrieval margin; `run_metadata.json` records
+`attacker_backbone`, `attacker_steps`, `attacker_step_size`, `attacker_linf`,
+and keeps `scientific_evidence=true` only for this being a real MSLS run (not
+smoke). This result is written into the paper as a separate white-box
+diagnostic (an upper bound under adaptive knowledge of the exact release
+mechanism and target gallery item), explicitly not pooled with or compared
+against the black-box backbone-transfer table, per the review's instruction.
+
+**Smoke test (local RTX 3070, synthetic + tiny real subset):** verify the new
+variant dispatch, target-selection logic, and output schema on synthetic
+tensors, then on the first 5 real queries of the existing `manifest_all`
+MSLS manifest with `--seeds` limited to one dummy value (the variant is
+deterministic and ignores seed). This is an integration check only;
+`scientific_evidence=false` for the smoke output, and no number from it may
+reach the paper.
+
+**Full run (vGPU 3090, pending GPU-on):** run `--include_attacker_aware` for
+`resnet18` against all three existing gate-passing manifests
+(`manifest_all.jsonl`, `manifest_o2n.jsonl`, `manifest_n2o.jsonl`, 200 queries
+/ 1000-gallery each, already used for the M3 six-backbone table), alongside
+the existing black-box variant set so the two conditions are exported from
+the same run. Estimated cost: 600 queries total, 20 PGD-style steps each,
+ResNet18 forward+backward per step — the proxy-scale precedent for the
+identical optimizer was a few minutes for 50 queries, so this is expected to
+finish in well under 30 minutes of GPU time; it is bundled into the same
+vGPU 3090 session as any other queued ICME work rather than justifying its
+own power-on cycle by itself.
+
+**Paper writeback:** only after the full run's completion gate passes. Add
+one appendix subsection reporting attacker_aware Top-1/margin against the
+raw and `full` (PPEDCRF) rows on the same manifests, with the same
+diagnostic-not-comparable framing already used for the proxy version, and one
+sentence in the main-text M3 discussion cross-referencing it. No change to
+the black-box six-backbone headline table.

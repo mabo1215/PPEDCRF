@@ -33,6 +33,7 @@ sys.path.insert(0, str(SRC_ROOT))
 sys.path.insert(0, str(SCRIPT_ROOT))
 
 from datasets.driving_clip_dataset import _read_image, _resize_if_needed  # noqa: E402
+from eval.metrics import psnr_torch  # noqa: E402
 from eval.retrieval_attack import (  # noqa: E402
     RetrievalConfig,
     default_input_size_for_backbone,
@@ -42,6 +43,8 @@ from main import load_sensnet_checkpoint  # noqa: E402
 from run_tomm_review_proxy import (  # noqa: E402
     VARIANT_LABELS,
     detailed_retrieval,
+    normalized_embeddings,
+    optimize_attacker_aware_query,
     protect_review_clip,
 )
 from utils.config import load_yaml  # noqa: E402
@@ -62,6 +65,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--variants", nargs="+", default=["full"])
     parser.add_argument("--smoke_queries", type=int, default=3)
     parser.add_argument("--smoke_size", type=int, default=64)
+    parser.add_argument(
+        "--include_attacker_aware",
+        action="store_true",
+        help=(
+            "Add a white-box sign-gradient variant (same optimizer as the "
+            "proxy benchmark's attacker_aware). Reported as a separate "
+            "diagnostic threat model, never pooled with the black-box rows."
+        ),
+    )
+    parser.add_argument("--attacker_backbone", default="resnet18")
+    parser.add_argument("--attacker_steps", type=int, default=20)
+    parser.add_argument("--attacker_step_size", type=float, default=1.0)
+    parser.add_argument("--attacker_linf", type=float, default=8.0)
     return parser.parse_args()
 
 
@@ -287,6 +303,71 @@ def run_geotagged(args: argparse.Namespace) -> Path:
                     )
                 rows.extend(qrows)
 
+        if args.include_attacker_aware and backbone == args.attacker_backbone:
+            with torch.no_grad():
+                gallery_emb = normalized_embeddings(embedder, gallery_tensor, device, rcfg.input_size)
+            aware_images: List[torch.Tensor] = []
+            aware_quality: Dict[str, Dict[str, float]] = {}
+            for index, query_id in enumerate(query_ids):
+                target_place = positive_place[query_id]
+                positive_indices = [
+                    j for j, gallery_id in enumerate(gallery_ids) if gallery_place[gallery_id] == target_place
+                ]
+                if not positive_indices:
+                    raise ValueError(f"No positive gallery item for attacker-aware query {query_id}.")
+                aware = optimize_attacker_aware_query(
+                    query_images[index],
+                    gallery_emb[positive_indices[0]],
+                    embedder,
+                    device,
+                    rcfg.input_size,
+                    args.attacker_steps,
+                    args.attacker_step_size,
+                    args.attacker_linf,
+                )
+                aware_images.append(aware)
+                aware_quality[query_id] = {
+                    "psnr_mean": psnr_torch(query_images[index], aware),
+                    "effective_mse": float(torch.mean((aware - query_images[index]).float().square()).item()),
+                    "support_mse": float(torch.mean((aware - query_images[index]).float().square()).item()),
+                    "support_coverage": 1.0,
+                }
+            aware_rows = detailed_retrieval(
+                torch.stack(aware_images),
+                query_ids,
+                gallery_tensor,
+                gallery_ids,
+                embedder,
+                device,
+                rcfg.input_size,
+                quality_by_query=aware_quality,
+                positive_place_by_query=positive_place,
+                gallery_place_by_id=gallery_place,
+            )
+            for row, record in zip(aware_rows, records):
+                row.update(
+                    {
+                        "variant": "attacker_aware",
+                        "label": VARIANT_LABELS["attacker_aware"],
+                        "seed": "deterministic",
+                        "backbone": backbone,
+                        "gallery_size": len(gallery_ids),
+                        "place_id": record["place_id"],
+                        "city": record.get("city", ""),
+                        "subtask": record.get("subtask", ""),
+                        "side": record.get("side", ""),
+                        "captured_at": record.get("captured_at", ""),
+                        "viewpoint": record.get("viewpoint", ""),
+                        "illumination": record.get("illumination", ""),
+                        "season": record.get("season", ""),
+                        "weather": record.get("weather", ""),
+                        "attacker_steps": int(args.attacker_steps),
+                        "attacker_step_size": float(args.attacker_step_size),
+                        "attacker_linf": float(args.attacker_linf),
+                    }
+                )
+            rows.extend(aware_rows)
+
     write_csv(output_dir / "geotagged_vpr_per_query.csv", rows)
     write_json(
         output_dir / "manifest_gate.json",
@@ -310,6 +391,18 @@ def run_geotagged(args: argparse.Namespace) -> Path:
             "backbones": args.backbones,
             "variants": args.variants,
             "seeds": args.seeds,
+            "attacker_aware_requested": bool(args.include_attacker_aware),
+            "attacker_backbone": args.attacker_backbone if args.include_attacker_aware else None,
+            "attacker_steps": int(args.attacker_steps) if args.include_attacker_aware else None,
+            "attacker_step_size": float(args.attacker_step_size) if args.include_attacker_aware else None,
+            "attacker_linf": float(args.attacker_linf) if args.include_attacker_aware else None,
+            "attacker_aware_note": (
+                "White-box sign-gradient diagnostic against a fixed target gallery "
+                "embedding; a separate threat model, not comparable to the black-box "
+                "backbone-transfer rows."
+                if args.include_attacker_aware
+                else None
+            ),
             "scientific_evidence": True,
         },
     )
