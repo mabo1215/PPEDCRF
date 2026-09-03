@@ -18,6 +18,7 @@ docs/academic-research-skills/
 *.pdf
 submit/
 USAGE.md
+tmp/
 
 # LaTeX / BibTeX
 *.bib
