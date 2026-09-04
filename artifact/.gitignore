@@ -1,0 +1,3 @@
+# build products (regenerate with build_artifact.sh)
+results/
+MANIFEST.sha256

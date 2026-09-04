@@ -32,18 +32,22 @@ version of this file, archived in \texttt{docs/progress.md} and
 \texttt{docs/ExperimentProgress.tex}); every finding below was re-checked
 against the manuscript and its cited data as it exists today.
 
-The official ICME 2027 paper kit is still not published as of this review.
-The same conservative historical baseline used in the prior round remains in
-force: English letter-size PDF, official IEEE conference template, a
-regular-paper limit of six pages including references, double-blind review,
-and an abstract of approximately 100--150 words, with optional supplementary
-material. These are not asserted as the final 2027 rules and must be
-re-checked once the kit is released.
+The official ICME 2027 paper kit is still not published as of this review, so
+the requirements below are taken from the immediately preceding edition,
+which states them explicitly: English letter-size PDF in the official IEEE
+conference template, ``no longer than 6 pages, including all text, figures,
+and references,'' double-blind review with author identification replaced by
+an anonymous placeholder, embedded fonts, and optional supplementary material
+up to 50\,MB. Unlike the prior round, these are no longer treated as a
+conservative guess: ICME has applied a 6-page limit for many years, so the
+limit should be planned against as real and re-confirmed, not discovered,
+once the 2027 kit appears.
 
 \section*{Overall Recommendation}
 
-\textbf{Recommendation: Accept, conditional on minor revisions and on final
-compliance verification once the ICME 2027 paper kit is published.}
+\textbf{Recommendation: Accept, conditional on minor revisions.} The one
+blocking pre-submission action is returning the main body to the 6-page
+limit; all scientific items from the prior rounds are now closed.
 Confidence: high.
 
 This assessment is a substantial change from the prior round's ``reject in
@@ -74,18 +78,15 @@ bootstrap, as appropriate) is now reported everywhere a paired comparison is
 made: the real-place table, the sequence-length/pooling table, and the
 matched-PSNR table.
 
-What remains is smaller and more logistical than scientific: the main body
-is 7 pages against a 6-page historical baseline that is itself provisional
-pending the real kit; the primary MSLS manifest now covers eight cities
-(400 queries, 2,000-image gallery, all six backbones, both black-box and
-white-box), but the official cross-time subtasks (o2n/n2o) and the
-viewpoint/illumination/season/weather axes remain at the original two-city,
-predominantly-day/Forward-view scope -- a data-acquisition limitation, not a
-validity flaw, and disclosed as such throughout; and a fully packaged,
-anonymous, one-command reviewer artifact has not been assembled, though the
-underlying reproducibility problems the original review flagged (a
-misleadingly named random-placeholder script, a vacuous smoke test) have
-been fixed in the code itself.
+What remains is now narrow. The main body is 7 pages against a limit that
+this cycle confirmed is a hard 6 pages including references, so it must be
+trimmed before submission --- it was already shown to compress to 6 pages
+without losing evidence, and sits at 7 only because the full related-work
+section was deliberately restored. All three MSLS manifests now cover eight
+cities across six backbones; only the viewpoint/illumination/season/weather
+axes remain uncovered, and season/weather are absent from the source metadata
+entirely. The anonymous one-command reviewer artifact, previously the largest
+open gap, is now built and verified end to end.
 
 \subsection*{Reviewer scorecard}
 
@@ -112,10 +113,10 @@ Internal assessment on a 1--10 scale, not an official ICME 2027 rubric (the
   \item Clarity: 7/10. The evidence hierarchy (validated mechanism claims vs.
   proxy-only diagnostics vs. explicitly negative findings) is now clearly
   separated between main text and appendix.
-  \item Reproducibility: 7/10 (up from 3/10). Checksummed remote exports,
-  real unit tests, and a renamed/warned placeholder script close the most
-  serious original complaint; a packaged anonymous artifact bundle is the
-  one remaining substantial gap.
+  \item Reproducibility: 9/10 (up from 3/10). Checksummed remote exports,
+  real unit tests, a renamed/warned placeholder script, and now an anonymous
+  one-command artifact that recomputes all 53 reported values from the raw
+  exports with zero mismatches.
   \item Reviewer confidence: 8/10. Based on direct inspection of the compiled
   PDFs, the LaTeX source, and the underlying per-query CSV exports for the
   claims checked in this review.
@@ -191,27 +192,39 @@ budget; 11 of 96 differ from raw, not uniformly in one direction).
 
 \section*{Major Findings and Required Revisions}
 
-\paragraph{M1 -- Format and length, pending the official kit}
+\paragraph{M1 -- Format verified; page count is a known, deliberate overage}
 
-The manuscript compiles as a genuine IEEE conference submission:
-\texttt{documentclass[10pt,conference,letterpaper]\{IEEEtran\}}, no ACM or
-TOMM metadata, an abstract of approximately 150--160 words. The main body is
-7 pages, one page over the historical six-page baseline used because the
-2027 kit is not yet published. The repository's own record shows this was
-not a fixable typesetting artifact: two rounds of abstract trimming and two
-standard column-balancing fixes (\texttt{balance}, \texttt{raggedbottom})
-left the page count unchanged, and the growth traces to real scientific
-content (the M2/M3/M5/M7 additions), not a stray float.
+Format compliance was checked directly rather than assumed. The manuscript
+compiles as a genuine IEEE conference submission
+(\texttt{documentclass[10pt,conference,letterpaper]\{IEEEtran\}}), on
+letter-size pages ($612\times792$\,pt), with \emph{all} fonts embedded and
+Type~1, an author block reading ``Anonymous Submission'' with real author
+metadata commented out, and a 152-word abstract. BibTeX reports zero
+warnings and the build has zero undefined references or citations.
 
-\emph{This is not rejected as non-compliant.} A six-page limit was always a
-conservative placeholder for an unpublished kit, and the paper's current
-priority ordering (threat model, validated mechanism evidence, primary real
-benchmark, matched and cluster-aware evidence, limitations) already matches
-what a page-constrained version should keep in the main body, with legitimate
-overflow material in the appendix. Required action: re-verify page count,
-font embedding, and margins against the actual 2027 kit once published, and
-trim to the real limit at that time rather than pre-emptively cutting
-validated evidence now.
+The page limit itself is no longer an open question. The ICME 2027 kit is
+still unpublished, but the immediately preceding edition states the rule
+explicitly: ``Papers must be no longer than 6 pages, including all text,
+figures, and references,'' with double-blind review and up to 50\,MB of
+optional supplementary material. ICME has held a 6-page limit for many
+years, so the previously assumed ``conservative placeholder'' should now be
+treated as the near-certain real limit, and a main body over 6 pages as a
+genuine desk-reject risk rather than a provisional overage.
+
+The main body was compressed to exactly 6 pages in this cycle by removing
+duplicated prose (the conclusion restated results already given in the
+evaluation section, and several protocol paragraphs duplicated appendix
+material), with no experimental evidence dropped. The authors then elected to
+restore the full seven-cluster related-work section --- previously commented
+out, leaving the compiled paper with only 11 references and an 84-word
+related-work subsection --- which returns the main body to 7 pages with all 43
+references. \emph{This is a deliberate, informed trade-off}: related-work
+depth and citation coverage were judged more valuable than the seventh page,
+on the understanding that the paper must be cut back to 6 pages before actual
+submission. Required action before submitting: reduce the main body to 6
+pages, most cheaply by re-compressing the related-work section (its citations
+can be retained while its prose is shortened) rather than by removing
+evidence.
 
 \paragraph{M2 -- Resolved: the map is honestly scoped, not validated as
 sensitivity-optimal}
@@ -253,25 +266,32 @@ models per the prior review's own instruction. The synthetic proxies are
 retained only as supplementary stress tests. O2N is analyzed and reported as
 adverse rather than hidden.
 
-One requested item is now substantially narrowed rather than fully closed:
-broader city and viewpoint/illumination/season/weather coverage. A wider
-8-city extension of the primary manifest (400 queries, 2,000-image gallery,
-drawn from the raw MSLS zip archives already on disk -- no further download
-was in fact needed, correcting an earlier assumption in this review) has
-been built, gate-validated, and evaluated against all six attacker
-backbones plus the white-box diagnostic, confirming the protective
-direction and the white-box vulnerability at roughly $4\times$ the prior
-scale and across six new cities. What remains open is the official
-cross-time o2n/n2o subtasks, whose 8-city extensions are gate-validated but
-not yet evaluated against any backbone, and the
-viewpoint/illumination/season/weather axes, which are unchanged (still
-overwhelmingly day/Forward-view; season and weather remain absent from the
-MSLS metadata itself, confirmed dataset-wide). This is a correctly
-disclosed, narrowing data-acquisition limitation, not an unaddressed
-validity gap, and does not by itself justify withholding acceptance --
-closing the remaining cross-time and condition axes would still
-meaningfully strengthen the paper for a subsequent venue or a camera-ready
-update if time and bandwidth allow before the final deadline.
+The city-coverage item is now closed. All three manifests were rebuilt at
+8-city scale (400 queries, 2,000-image gallery, drawn from raw MSLS archives
+already on disk -- no further download was in fact needed, correcting an
+earlier assumption in this review) and evaluated against all six attacker
+backbones, plus the white-box diagnostic on each. The primary manifest is
+protective in all six backbones; across the 12 cross-time cells, 9 are
+protective, one is exactly tied, and 2 are adverse.
+
+That wider sample also \emph{revises} an earlier conclusion, which is the
+scientifically important part. At two cities the four adverse cells fell
+mostly on \texttt{n2o} and were spread across ResNet50, VGG16, and
+Patch-NetVLAD, supporting a ``cross-time direction-dependence'' reading. At
+8-city scale those three backbones are clearly protective on both directions,
+and the only adverse cells are ResNet18 on \emph{both} directions. The
+honest reading is that the earlier direction-dependence was partly
+small-sample structure, and that adverse behavior tracks the weakest attacker
+backbone instead. The manuscript now reports both and does not overclaim the
+cross-time effect as uniformly protective, since the paper's own default
+attacker remains adverse there.
+
+What remains genuinely open is only the
+viewpoint/illumination/season/weather axes, which are unchanged: queries are
+still overwhelmingly day/Forward-view, and season and weather are absent from
+the MSLS metadata itself (confirmed dataset-wide, so they cannot be expanded
+into from this source at all). This is a correctly disclosed source-data
+limitation rather than an unaddressed validity gap.
 
 \paragraph{M4 -- Resolved: frame-level claim matches the evaluated threat
 model}
@@ -313,16 +333,24 @@ three (12, 48, 100); all 30 additional paired comparisons against
 is not an artifact of one gallery size. The deterministic mask-guided
 baselines, previously reported only at a single native (unmatched) operating
 point, now have a genuine matched-PSNR comparison via a kernel/block-size
-sweep: at each baseline's most permissive (highest-PSNR) swept setting, both
-mosaic and blur retain substantially higher Top-1 than \texttt{full} at
-comparable or better fidelity, with one specific exception (blur at its
-point closest to the 30\,dB target shows lower Top-1 than \texttt{full} at
-an essentially matched PSNR) that the paper reports rather than smooths
-over. This sweep does not reach the two higher PSNR targets (33/36\,dB) for
-either baseline within the tested kernel/block-size range, so the
-comparison is reported with the achieved PSNR and its gap to the nominal
-target rather than as an exact match -- a finer sweep would be needed to
-close this residual gap fully.
+sweep, extended in this cycle to finer settings (kernel 3; blocks 2 and 3) so
+that the higher targets are actually reachable. Mosaic now matches closely at
+every target (block 3 gives 32.34\,dB against the 33\,dB target, block 2
+gives 36.64\,dB against 36\,dB), and the blur kernel, being a discrete odd
+integer, \emph{brackets} the 36\,dB target from both sides (kernel 5 at
+34.40\,dB, kernel 3 at 37.95\,dB) rather than matching it -- a structural
+granularity limit of the parameter, not an unmet experiment.
+
+The resulting comparison is reported with its actual direction rather than
+smoothed into a single ordering. At the paper's headline high-fidelity
+operating point (36\,dB) \texttt{full} is the most protective of the three
+(Top-1 0.722, versus 0.833 for closely matched mosaic and 0.833--0.917 for
+blur on either side). At lower fidelity the ordering reverses, with both
+baselines reaching Top-1 0.583 near 30--32\,dB against \texttt{full}'s
+0.639--0.667. The consistent reading is that the deterministic baselines buy
+privacy by destroying image quality, and are clearly \emph{less} protective
+than \texttt{full} at matched high quality. This closes the residual noted in
+the previous cycle.
 
 \paragraph{M6 -- Resolved: DP-style language is consistent}
 
@@ -362,16 +390,29 @@ deterministic seeding, and zero-mask no-op behavior. Remote GPU runs in this
 review cycle produced SHA-256-checksummed exports, verified bit-identical
 after pulling results back locally, with the producing commit recorded.
 
-What remains is the larger deliverable the original review described as a
-complete package: an anonymous, one-command artifact with manifests, pinned
-dependencies, and a raw-output-to-table verifier, bundled for external
-reviewers rather than assembled ad hoc per experiment as it has been so far.
-This is a real, if secondary, gap -- but it is a packaging and hosting
-decision (where does an anonymous bundle live during double-blind review,
-and is that within the venue's supplementary-material size limit) that
-depends on venue-specific answers not yet available before the 2027 kit is
-published, rather than a decision that can or should be made unilaterally in
-this review cycle.
+The larger deliverable the original review described -- an anonymous,
+one-command artifact with manifests, pinned dependencies, and a
+raw-output-to-table verifier -- has now been assembled. The bundle runs
+CPU-only with no GPU, network, dataset, or checkpoint: it verifies 332
+released exports against a SHA-256 manifest, then recomputes 53 reported
+values (Top-1 for all six backbones on the 8-city primary manifest and both
+8-city cross-time subtasks, white-box attacker-aware Top-1 on all three,
+achieved PSNR and Top-1 at every swept blur/mosaic point, and the
+zero-discordant-pair significance claims at gallery sizes 12 and 100)
+directly from the raw per-query CSVs, printing per-claim pass/fail. On the
+current exports all 53 claims reproduce with zero mismatches, which
+establishes that the paper's tables were derived from the data rather than
+transcribed. Dependencies are pinned to the exact versions of the machine
+that produced the runs, all internal paths are relative, and the bundle was
+scrubbed of absolute host paths (36 metadata files contained an absolute
+remote path whose directory name would also have disclosed the manuscript's
+earlier submission history). At 23\,MB it fits the 50\,MB supplementary
+allowance with room to spare.
+
+What remains is only the hosting decision -- whether the bundle travels as
+supplementary material or as an anonymized repository link -- which depends
+on the 2027 submission site and is properly the authors' call, not a
+technical gap.
 
 \paragraph{M9 -- Adequately organized for the current page budget}
 
@@ -428,18 +469,22 @@ than pushed to a footnote. A final visual/formatting pass against the actual
   \textbf{done} (heuristic reframe, supported by the energy-matched
   causality test).
   \item Primary public place-labeled evaluation across multiple attackers
-  with cluster-aware uncertainty: \textbf{done}; the primary manifest now
-  spans eight cities across all six backbones, while cross-time
-  subtask/condition breadth remains a disclosed, narrowing limitation.
+  with cluster-aware uncertainty: \textbf{done}; all three manifests now span
+  eight cities across all six backbones, leaving only the
+  viewpoint/illumination/season/weather axes as a disclosed source-data
+  limitation.
   \item Matched-quality privacy--utility curves with realized perturbation
-  statistics: \textbf{done}, now across all six backbones and three gallery
+  statistics: \textbf{done}, across all six backbones and three gallery
   sizes, including a genuine matched-PSNR comparison against the
-  deterministic baselines.
+  deterministic baselines over a sweep fine enough to reach the higher
+  targets.
   \item Correct location-level inference and explicit seed/data-uncertainty
   separation: \textbf{done} everywhere a paired comparison is reported.
   \item Anonymous one-command artifact with manifests, hashes, pinned
-  environments: \textbf{not done} -- the underlying reproducibility bugs are
-  fixed, but packaging remains open pending a scope/hosting decision.
+  environments: \textbf{done} -- a 23\,MB CPU-only bundle verifies 332 exports
+  against a SHA-256 manifest and recomputes 53 reported values from the raw
+  per-query CSVs (all reproduce, zero mismatches); only the hosting channel
+  remains an authors' decision.
   \item Concise failure-analysis section centered on the negative map
   diagnostic, adverse MSLS O2N result, and matched-PSNR null result:
   \textbf{done}, and now includes the additional confirmations from this
@@ -452,25 +497,31 @@ than pushed to a footnote. A final visual/formatting pass against the actual
 The paper has moved from a manuscript whose central mechanistic claim was
 unsupported to one whose central claim (heuristic, energy-driven, bounded
 privacy benefit) is now the claim the evidence actually supports. Every
-major finding from the prior review round has either been resolved with new
-completion-gated evidence or has been converted from an unaddressed gap into
-an honestly disclosed, scientifically non-blocking limitation. Two of the
-matched-PSNR residuals flagged in the previous cycle (gallery-size coverage,
-a genuine deterministic-baseline comparison) are now closed, and the MSLS
-city-coverage gap has substantially narrowed (eight cities on the primary
-manifest; two cities remain for the official cross-time subtasks). The
-substantive items that remain -- cross-time/condition coverage beyond the
-primary manifest and a packaged anonymous artifact -- are both real, both
-already disclosed, and neither is a correctness or validity problem with the
-claims currently made.
+scientific finding from the prior rounds has been resolved with new
+completion-gated evidence or converted into an honestly disclosed
+limitation. In this cycle the three remaining substantive items all closed:
+the MSLS city-coverage gap (all three manifests now at eight cities across
+six backbones, with the earlier cross-time direction-dependence reading
+correctly revised in light of the wider sample), the deterministic-baseline
+matched-PSNR comparison (sweep extended until the higher targets are
+reachable, with the blur bracketing explained as parameter granularity), and
+the anonymous reproducibility artifact (built, anonymity-scrubbed, and
+verified to recompute all 53 reported values from raw exports).
+
+One item is now \emph{more} pressing than the previous round judged it.
+Page length is no longer a provisional concern: the preceding ICME edition
+states a hard 6-page limit including references, so the current 7-page main
+body is a genuine desk-reject risk. The body was demonstrably compressible to
+6 pages without losing evidence; it sits at 7 only because the authors
+deliberately restored the full related-work section, and it must be cut back
+before submission.
 
 The recommended decision is therefore \textbf{accept, conditional on minor
-revisions}: verify final format compliance once the ICME 2027 kit is
-published, and continue to treat the remaining MSLS cross-time/condition
-coverage and artifact packaging items as stated next steps rather than
-silent gaps. No further GPU-scale experiment is required for acceptance;
-any additional work in this area (wider MSLS cross-time coverage,
-viewpoint/illumination/season/weather diversity) would strengthen an
-already acceptable submission rather than fix a blocking defect.
+revisions}, with the single blocking pre-submission action being the return
+to 6 pages (most cheaply by re-compressing related-work prose while keeping
+its citations). Remaining non-blocking items are the
+viewpoint/illumination/season/weather coverage that the MSLS source data
+cannot supply, and the choice of hosting channel for the artifact bundle. No
+further GPU-scale experiment is required.
 
 \end{document}

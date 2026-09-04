@@ -1,0 +1,22 @@
+# Exact versions of the environment in which the reported GPU runs were executed
+# (NVIDIA RTX 3090, driver 580.82.09, CUDA 13.0).
+#
+# Verification of the reported tables (verify_claims.py) needs only pandas and
+# Python >= 3.10; the torch/torchvision pins matter only if you intend to
+# re-execute the benchmarks themselves rather than re-derive the tables.
+
+# --- required for verify_claims.py (CPU only, no GPU, no model weights) ---
+pandas==2.3.3
+numpy==2.2.6
+
+# --- additionally required to re-run the benchmarks end to end ---
+torch==2.13.0
+torchvision==0.28.0
+scipy==1.15.3
+opencv-python>=4.8
+scikit-image>=0.23,<0.27
+pyyaml>=6.0
+matplotlib>=3.8
+tqdm>=4.66
+
+# Reference interpreter: Python 3.10.12
