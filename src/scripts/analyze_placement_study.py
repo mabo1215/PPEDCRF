@@ -53,8 +53,10 @@ def analyse(df: pd.DataFrame) -> List[Dict[str, object]]:
     df = df.copy()
     df["hit"] = (df["correct_rank"] == 1).astype(int)
     out: List[Dict[str, object]] = []
-    for backbone, dfb in df.groupby("backbone"):
+    for (run_id, backbone), dfb in df.groupby(["run_id", "backbone"]):
         ref = dfb[dfb.placement == REFERENCE].set_index(["query_id", "seed"])["hit"]
+        if ref.index.has_duplicates:
+            raise SystemExit(f"duplicate (query,seed) within run {run_id}/{backbone}")
         for placement, dfp in dfb.groupby("placement"):
             if placement == REFERENCE:
                 continue
@@ -72,6 +74,7 @@ def analyse(df: pd.DataFrame) -> List[Dict[str, object]]:
                 diffs.setdefault(str(q), []).append(int(dv))
             lo, hi = cluster_bootstrap_ci(diffs)
             out.append({
+                "run_id": run_id,
                 "backbone": backbone,
                 "placement": placement,
                 "n_pairs": int(len(common)),
@@ -101,7 +104,14 @@ def main() -> None:
     args = ap.parse_args()
     root = Path(args.study_root)
 
-    frames = [pd.read_csv(p) for p in sorted(root.rglob("per_query.csv"))]
+    frames = []
+    for path in sorted(root.rglob("per_query.csv")):
+        sub = pd.read_csv(path)
+        # query ids are synthetic pair identifiers (loc_000, ...) and are reused
+        # across benchmarks, so rows must be tagged by their source run or the
+        # 12-pair and 50-pair experiments silently merge.
+        sub["run_id"] = str(path.parent.relative_to(root))
+        frames.append(sub)
     if not frames:
         raise SystemExit(f"no per_query.csv under {root}")
     df = pd.concat(frames, ignore_index=True)
@@ -109,15 +119,15 @@ def main() -> None:
           f"{df.placement.nunique()} placements, {df.backbone.nunique()} backbones")
 
     # energy gate: every placement must carry the learned map's energy
-    gate = df.groupby(["backbone", "query_id", "seed"])["effective_weight_energy"]
-    rel = gate.transform(lambda s: (s - s.iloc[0]).abs() / max(abs(s.iloc[0]), 1e-12))
+    gate = df.groupby(["run_id", "backbone", "query_id", "seed"])["effective_weight_energy"]
+    rel = gate.transform(lambda s: (s - s.mean()).abs() / max(abs(s.mean()), 1e-12))
     worst = float(rel.max())
     print(f"energy-conservation gate: max relative error = {worst:.2e}")
     if worst > 1e-3:
         raise SystemExit("ENERGY GATE FAILED - placements are not energy-matched")
 
     rows = analyse(df)
-    res = pd.DataFrame(rows).sort_values(["backbone", "placement"])
+    res = pd.DataFrame(rows).sort_values(["run_id", "backbone", "placement"])
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     res.to_csv(args.output, index=False)
 
