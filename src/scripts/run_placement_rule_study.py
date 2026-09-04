@@ -70,6 +70,7 @@ PLACEMENT_LABELS = {
     "random_fixed": "fixed random field",
     "oracle_grad": "attacker-gradient oracle",
     "anti_oracle_grad": "attacker-gradient anti-oracle",
+    "segmentation": "semantic background (DeepLabV3)",
 }
 PLACEMENTS = tuple(PLACEMENT_LABELS)
 
@@ -129,6 +130,41 @@ def random_fixed_map(frame: torch.Tensor, seed: int) -> torch.Tensor:
     field = F.interpolate(coarse, size=(height, width), mode="bilinear",
                           align_corners=False)
     return field.to(frame.device).clamp_min(0.0)
+
+
+_SEG_MODEL = {}
+_SEG_CACHE = {}
+
+
+def segmentation_map(frame: torch.Tensor, key: str) -> torch.Tensor:
+    """Background probability from an off-the-shelf semantic segmentation model.
+
+    This is the placement a practitioner implementing the stated strategy --
+    perturb the background scene, preserve foreground objects -- would actually
+    build, using a pretrained model rather than a hand-designed prior. The
+    torchvision DeepLabV3 head is trained on COCO with VOC labels, whose
+    ``background`` class is precisely the scene structure (buildings, road,
+    sky, vegetation) that carries the location signal.
+    """
+    if key in _SEG_CACHE:
+        return _SEG_CACHE[key]
+    if "m" not in _SEG_MODEL:
+        import torchvision
+        from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
+        weights = DeepLabV3_ResNet50_Weights.DEFAULT
+        model = torchvision.models.segmentation.deeplabv3_resnet50(weights=weights)
+        _SEG_MODEL["m"] = model.eval().to(frame.device)
+        _SEG_MODEL["t"] = weights.transforms()
+    with torch.no_grad():
+        x = _SEG_MODEL["t"](frame / 255.0)
+        logits = _SEG_MODEL["m"](x)["out"]
+        prob_bg = torch.softmax(logits, dim=1)[:, 0:1]
+        prob_bg = F.interpolate(prob_bg, size=frame.shape[-2:], mode="bilinear",
+                                align_corners=False)
+    out = prob_bg.clamp_min(0.0).detach()
+    if len(_SEG_CACHE) < 4096:
+        _SEG_CACHE[key] = out
+    return out
 
 
 def attacker_gradient_map(
@@ -371,6 +407,8 @@ def main() -> None:
                                 raw = center_map(frame)
                             elif placement == "random_fixed":
                                 raw = random_fixed_map(frame, seed)
+                            elif placement == "segmentation":
+                                raw = segmentation_map(frame, f"{query_id}::{t}")
                             elif placement in ("oracle_grad", "anti_oracle_grad"):
                                 with torch.enable_grad():
                                     g = attacker_gradient_map(
