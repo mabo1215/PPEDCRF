@@ -330,9 +330,7 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 # 未修改或部分修改
 
-- E1 更广条件覆盖【可选后续】：`all`、`o2n`、`n2o` 已完成，但当前 MSLS 子集仍主要是 day/Forward-view，season/weather 字段为空，且只使用一个 attacker backbone；后续可扩展更多城市、视角、照明、季节、天气和 attacker 组合，当前论文已如实注明该范围限制，不阻塞本轮审稿修改。
-- ICME-M3 更大规模 MSLS manifest【可选后续，非阻塞】：本地 `G:\work\datasets\msls\extracted\train_val\` 下有全部 25 个城市的官方元数据，但只有 Manila、Toronto 两城实际下载了图像文件夹，扩城需要额外下载数十 GB 按城市图像包，本轮未尝试。论文已如实披露此为数据获取限制。不需要你立即决策；如果你希望后续扩展更多城市，请告知优先下载哪些城市（可参考已探测到的城市文件大小：moscow 73M、budapest 58M、melbourne 56M、phoenix 46M、ottawa 36M、bangkok 34M 等，均比 manila/toronto 小很多，下载成本较低）。
-- ICME-M5 matched-PSNR 扩展至更多 gallery size【可选后续，非阻塞】：本轮已把 sigma sweep 扩展到全部 6 个 backbone，但仍只用 gallery_size=48 一个取值；若你希望扩展 gallery size 轴，也是纯 GPU 计算任务，可在下次开卡时一并进行。
+- E1 更广条件覆盖【可选后续】：主 manifest（`all`/`all8`）现已扩展到 8 城市、400 query、2000 gallery，且已用全部 6 个 attacker backbone 验证（见下方 148 号条目）；`o2n8`/`n2o8` 8 城扩展 manifest 已构建并通过 gate，但尚未跑任何 backbone。当前 MSLS 子集仍主要是 day/Forward-view，season/weather 字段为空（已确认这是 MSLS 数据集本身的元数据缺失，非本仓库的提取问题）。论文已如实注明该范围限制，不阻塞本轮审稿修改。
 - ICME-M1 页数与官方 2027 kit 核实【外部阻塞，非你可决策】：main.pdf 当前 7 页（非目标的 6 页），已确认是真实内容量而非排版问题，本轮决定接受；ICME 2027 官方 paper kit 尚未发布，最终页数/格式核实需等官方 kit 发布后再做，不需要你现在决策。
 
 # 遗留问题
@@ -552,3 +550,24 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 **进行中，本对话结束时仍未完成**：新增 6 城市图像（4088 个文件，159MB tar.gz）正通过 16 路并行分片 scp 传往 vGPU 3090（无卡模式，网络较慢），传输状态需查看交接文档里的检查命令；3 份 manifest 的 gzip 压缩版（合计约 117MB）尚未传输；vGPU 侧尚未解压/验证/跑 manifest 审计；`launch_session3.sh`（16 个 screen：N1 6 骨干黑盒 + N1 白盒 + N3 5 骨干白盒 + N2 两个 gallery size + N5 blur/mosaic）尚未部署到 vGPU。**vGPU 3090 仍在无卡模式，尚未告知用户开卡**——全部数据就绪并在远端审计通过后才应该请求开卡。
 
 **本轮小结（2026-09-04，vGPU 3090 第二次开卡：M3.3+M5+M7+独立评审重置）：** 用户要求最大化压榨已开卡的 vGPU 3090 并多开 Screen 并行、10 分钟定时巡检、完成后立即拉回结果并关机避免扣费，随后把结果回填论文并重新核查评审意见文件。除计划内的 M3.3（真实 MSLS 白盒攻击者）外，主动识别并同时执行了 M5（matched-PSNR 6 骨干扩展）以更充分利用单次开卡的算力；等待 GPU 期间在本地并行完成了 M7 的 M4 cluster bootstrap（纯 CPU、无需等待）。8 个并行 screen 全部 EXIT_CODE=0，259 个文件 SHA-256 全部核验通过，vGPU 3090 已确认关机停止计费。三项新证据（M3.3 真实数据白盒攻击、M5 六骨干 matched-PSNR 复现、M7 的 M4 cluster bootstrap）均已写入论文正文/附录并重新编译通过（`main.pdf` 7 页、`appendix.pdf` 12 页，0 错误）。基于当前论文状态执行了完整独立评审重置，`docs/RevisionSuggestions.tex` 结论从"reject in current form"提升为"accept, conditional on minor revisions"，剩余开放项仅为：(1) 等待 ICME 2027 官方 paper kit 发布后做最终页数/格式核实；(2) MSLS 更广城市/条件覆盖（已如实披露为数据获取限制，非有效性缺陷）；(3) 匿名一键复现 artifact 打包（需要用户就范围和托管方式决策，非本轮可单方面完成）。
+
+## 本轮更新（2026-09-04，vGPU 3090 第三次开卡：N1-N5 全部完成并写回论文，与另一会话排队共享显卡）
+
+148. 【已完成】147 号条目记录的后台传输已在本对话中续传完成：8 路并行分片 scp（从 16 路降为 8 路，避开此前遇到的 SSH 并发连接数限制）补完剩余 3/16 分片，sha256 与本地完全一致；随后发现并修复一个此前遗漏的真实数据缺口——远端 vGPU 上的 Manila/Toronto 图像子集是旧的 200-query manifest 对应的子集，与新的 400-query manifest 引用的 2711 个 Manila/Toronto 路径并不完全重合（差 162 个文件，42 Manila + 120 Toronto），已计算精确差集、确认本地全部存在、打包（6.4MB）单独传输补齐，随后 all8/o2n8/n2o8 三份 manifest 在远端 audit 全部通过（valid=True, coverage_gate=True, queries=400, gallery=2000）。远端代码同时发现落后本地 4 个 commit（缺 N3/N5 代码与两个性能修复），已 `git pull --ff-only` 对齐并 `py_compile` 验证。
+修改说明：这是一次纯数据传输 + 环境对齐会话，无 GPU 计算，为后续开卡做好完整前置准备。
+
+149. 【已完成】用户明确要求本次实验排在同一张 vGPU 3090 上另一个正在运行的会话（10 个 `e2-*-coco`/`e2-*-mot20` screen，GPU 利用率 99%）之后，该会话结束后立即自动开始，不要与之抢显卡。实现了一个持续轮询的排队等待器（每 2 分钟查一次远端 `screen -ls`，命中 0 个匹配后再等 30 秒二次确认避免误判），命中后自动部署并启动 `launch_session3.sh` 的全部 16 路 screen（N1 6 骨干黑盒 + N1 白盒 + N3 5 骨干白盒 + N2 两个 gallery size + N5 blur/mosaic）。
+修改说明：等待期间未让本地/远端非 GPU 环节空闲——数据传输、manifest 补齐、代码对齐均在等待队列的同时完成，队列一清空即可立即开跑，零 GPU 空闲衔接时间。
+
+150. 【已完成】设置 10 分钟定时巡检监控全部 16 路 screen；巡检脚本第一版有一个自身 bug（用输出目录路径而非真实 `screen -dmS` 名称做匹配，导致误报 15/16"崩溃"），已定位并修正（同时验证了远端 16 个 screen 和 GPU 显存占用确认全部真实在跑，此前误报不是真崩溃）。修正后的巡检发现一个真实 bug：`n2_g12`（gallery_size=12=num_queries，无需额外 distractor）反复以 `RuntimeError: No matching monitoring sequences were selected` 崩溃——`MonitoringClipDataset` 把调用方主动传入的空 `clip_ids=[]`（合法的"零 distractor"请求）与"传了非空列表但一个都没匹配上"混为一谈。已定位根因、一行修复（`src/datasets/monitoring_clip_dataset.py`，仅在 `clip_ids` 非空却无匹配时才报错），本地验证下游 `build_gallery_tensor` 对零 distractor 场景本就能正确处理，提交推送 `520b180`，远端 `git pull` 后只 kill+重启了 `n2_g12` 这一路 screen，其余 15 路全程未受影响。重启后验证 `n2_g12` 第一个 sigma 点立即成功（300 行输出，exit=0）。
+修改说明：这是本轮唯一发现的真实 bug；其余 15 路全部一次性顺利跑完。
+
+151. 【已完成】全部 16 路 screen 于约 32 分钟内（16:04:53 启动，16:36:02 确认全部完成）以 EXIT_CODE=0 收尾，0 个真实失败、0 个真实崩溃。结果（238 个文件，13MB）已用远端生成的 237 文件 SHA-256 清单本地核验，0 个不匹配。**未执行 `shutdown -h now`**——因为显卡是与另一用户会话共享的（虽然该会话本身已结束，但用户此前的指令是"排队后自动开始"而非"完成后关机"，且本节复用了同一张卡；是否关机留给用户决定），GPU 已空闲（0%、0MiB）但仍在计费，已用 PushNotification 告知用户。
+修改说明：全部实验产出保存于本地 `src/outputs/icme2027_revision_20260904_session3/`。
+
+152. 【已完成】将 N1（8 城市黑盒 6 骨干 + 白盒扩展）、N3（原 2 城 3-manifest 白盒扩展至另 5 个骨干）、N2（matched-PSNR 扩展至 gallery=12/100）、N5（blur/mosaic 核大小/block 大小扫描，用 `deterministic_baseline_psnr_match.py` 做最近邻 PSNR 匹配，此脚本未被 launch 脚本自动串联，本轮手动补跑）四组结果分析并回写论文。
+修改说明：N1 核心发现——`all8` manifest（8 城市、400 query、2000 gallery）上全部 6 个骨干均为保护性方向（6/6 负 Δ），与旧 2 城 `all` 行已有的 6/6 负 Δ 方向一致，将该结论的证据规模扩大约 4 倍并新增 6 个此前未覆盖的城市（含首次出现的南半球/中东城市与夜间样本）；`o2n8`/`n2o8` 已建好并通过 gate 但本轮未跑，不虚报覆盖范围。N1 白盒（all8, ResNet18）：attacker-aware Top-1 归零（0.210 raw / 0.196 full / 0.000 aware），与 2 城结果一致。N3：新增 15 个（5 骨干 × 3 manifest）白盒攻击者结果，attacker-aware Top-1 全部落在 0.000–0.055，将白盒脆弱性发现从 ResNet18-only 扩展到全部 6 个骨干。N2：gallery=12/100 各 15 组新比较（共 30 组）与 global_noise 的差异检验全部 0 个不一致对，与 gallery=48 的既有"无可测差异"结论一致，把该结论从单一 gallery size 扩展到三个（12/48/100）。N5：在可扫描的核大小/block 大小范围内做了真正的 PSNR 匹配比较（此前只有单一 unmatched 操作点）；发现即使在各自最"温和"（PSNR 最高）的扫描点，mosaic（block=4, 31.74dB）与 blur（kernel=5, 34.40dB，仅达 30dB 邻近目标）的 Top-1 仍普遍高于 full（即隐私保护更弱），但 blur 在最接近 30dB 目标的点（kernel=11, 30.61dB）反而 Top-1 略低于 full——如实报告了这一方向不一致，未过度归纳为单一结论；33/36dB 两个更高目标在当前扫描粒度下两种确定性基线均无法真正达到（有诚实披露的 PSNR gap）。全部写入 `paper/appendix.tex`（新增 Table~tab:e1_wide8、tab:msls_whitebox_ext、tab:matched_psnr_gallery、tab:deterministic_matched_psnr 及对应小节）与 `paper/main.tex`（E1 段落、Conclusion 第四条发现、limitations 段三处措辞更新）。重新编译：`paper/build.bat` 全部通过，0 LaTeX 错误、0 未定义引用、0 BibTeX warning；`main.pdf` 仍为 7 页（未增长），`appendix.pdf` 从 12 页增至 13 页。
+
+153. 【已完成】更新 `docs/ExperimentProgress.tex`：新增一行记录本轮 Session 3（N1-N5）的完整过程和结果；`ICME-M3 expanded MSLS VPR` 行的"Remaining gap"更新为反映 N1 已解决 `all` 分支的城市/规模限制，`o2n`/`n2o` 仍待办。`docs/build.bat ExperimentProgress` 编译通过。同步清理 `docs/progress.md`"未修改或部分修改"一节中已被 N1/N2 解决的两条条目（更大规模 MSLS manifest、matched-PSNR gallery size 扩展）。
+
+**本轮小结：** 本次是继续 147 号条目（此前会话中断在"数据传输中、未开卡"状态）的完整收尾：先续传并补齐一个此前未被发现的真实数据缺口（Manila/Toronto 子集不完整），对齐远端代码，然后按用户指令排队等待另一用户会话让出共享的 vGPU 3090、零延迟自动开跑 16 路 N1/N2/N3/N5 实验。过程中巡检脚本自身有一处 bug 已定位修正（避免了误判为大规模崩溃），并发现修复了一个真实的数据集边界条件 bug（`gallery_size=num_queries` 时的零 distractor 崩溃），只重启受影响的一路 screen。全部 16 路最终 EXIT_CODE=0，SHA-256 校验通过。四组结果已诚实回写论文（包括如实披露未能达到的 PSNR 目标、方向不完全一致的发现），论文重新编译 0 错误、页数稳定（main 7 页不变，appendix 12→13 页）。因显卡与另一用户会话共享，本轮未自动关机，已用推送通知告知用户由其决定何时关机。

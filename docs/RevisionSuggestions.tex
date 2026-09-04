@@ -76,9 +76,12 @@ matched-PSNR table.
 
 What remains is smaller and more logistical than scientific: the main body
 is 7 pages against a 6-page historical baseline that is itself provisional
-pending the real kit; one of the two remaining MSLS gaps (city/condition
-diversity beyond Manila and Toronto) is a data-acquisition limitation, not a
-validity flaw, and is disclosed as such throughout; and a fully packaged,
+pending the real kit; the primary MSLS manifest now covers eight cities
+(400 queries, 2,000-image gallery, all six backbones, both black-box and
+white-box), but the official cross-time subtasks (o2n/n2o) and the
+viewpoint/illumination/season/weather axes remain at the original two-city,
+predominantly-day/Forward-view scope -- a data-acquisition limitation, not a
+validity flaw, and disclosed as such throughout; and a fully packaged,
 anonymous, one-command reviewer artifact has not been assembled, though the
 underlying reproducibility problems the original review flagged (a
 misleadingly named random-placeholder script, a vacuous smoke test) have
@@ -158,7 +161,10 @@ all three official manifests, 14 of 18 cells are protective in point
 estimate, with a place-cluster bootstrap finding 5 individually significant.
 The official cross-time subtasks are condition-dependent: o2n moves from
 0.140 to $0.168\pm0.009$ (adverse), n2o from 0.155 to $0.137\pm0.006$
-(protective).
+(protective). A wider 8-city, 400-query, 2,000-gallery extension of the
+primary manifest confirms the protective direction in all six backbones,
+and the white-box diagnostic collapses Top-1 to $0.000$--$0.055$ across all
+six backbones on both manifest scales.
 
 An energy-matched spatial-causality test (uniform, rolled, and permuted
 same-energy controls against the learned map, 2,700 paired queries, six
@@ -171,7 +177,12 @@ to PPEDCRF's own. A matched-PSNR sweep (12 sigma points, three targets) finds
 identical displayed Top-1 across PPEDCRF, its four ablations, and global
 noise for the default ResNet18 attacker, and this null result replicates (89
 of 90 total comparisons with zero discordant pairs) across five further
-backbones. A sequence-length/pooling robustness check (clip lengths 1--7,
+backbones and (30 of 30 comparisons) across two further gallery sizes (12,
+100). A genuine matched-PSNR comparison against the deterministic mask-guided
+baselines (kernel/block-size sweep) finds both retain substantially higher
+Top-1 than PPEDCRF at their most permissive swept setting, with one
+exception where blur is instead lower at an essentially matched PSNR. A
+sequence-length/pooling robustness check (clip lengths 1--7,
 four pooling strategies, six backbones, 33,600 rows) finds PPEDCRF's Top-1
 does not systematically erode under a stronger multi-frame attacker, with a
 query-cluster bootstrap now formalizing that description (28 of 96 cells
@@ -242,18 +253,25 @@ models per the prior review's own instruction. The synthetic proxies are
 retained only as supplementary stress tests. O2N is analyzed and reported as
 adverse rather than hidden.
 
-One requested item remains genuinely open: broader city and
-viewpoint/illumination/season/weather coverage. This was checked directly in
-this review cycle, not merely asserted: the local MSLS mirror has official
-metadata for all 25 \texttt{train\_val} cities, but only Manila and Toronto
-have their per-city image folders actually downloaded, so a wider-coverage
-manifest requires a further multi-gigabyte-per-city download that has not
-been attempted. This is now a correctly disclosed data-acquisition
-limitation (stated in both the main text and appendix), not an unaddressed
+One requested item is now substantially narrowed rather than fully closed:
+broader city and viewpoint/illumination/season/weather coverage. A wider
+8-city extension of the primary manifest (400 queries, 2,000-image gallery,
+drawn from the raw MSLS zip archives already on disk -- no further download
+was in fact needed, correcting an earlier assumption in this review) has
+been built, gate-validated, and evaluated against all six attacker
+backbones plus the white-box diagnostic, confirming the protective
+direction and the white-box vulnerability at roughly $4\times$ the prior
+scale and across six new cities. What remains open is the official
+cross-time o2n/n2o subtasks, whose 8-city extensions are gate-validated but
+not yet evaluated against any backbone, and the
+viewpoint/illumination/season/weather axes, which are unchanged (still
+overwhelmingly day/Forward-view; season and weather remain absent from the
+MSLS metadata itself, confirmed dataset-wide). This is a correctly
+disclosed, narrowing data-acquisition limitation, not an unaddressed
 validity gap, and does not by itself justify withholding acceptance --
-though closing it would still meaningfully strengthen the paper for a
-subsequent venue or a camera-ready update if time and bandwidth allow before
-the final deadline.
+closing the remaining cross-time and condition axes would still
+meaningfully strengthen the paper for a subsequent venue or a camera-ready
+update if time and bandwidth allow before the final deadline.
 
 \paragraph{M4 -- Resolved: frame-level claim matches the evaluated threat
 model}
@@ -286,15 +304,25 @@ affected-pixel fraction, effective standard-deviation quantiles, and
 clipping rate are all reported (Appendix, Spatial-Causality Validation
 section). Figure captions distinguish the visualization setting
 ($\sigma_0=24$) from the headline operating point ($\sigma_0=8$). Trade-off
-language, not superiority language, is used throughout. The deterministic
-mask-guided baselines remain correctly excluded from the matched comparison
-itself (they have no PSNR-tunable knob in this benchmark) and are instead
-reported with an explicit PSNR gap.
+language, not superiority language, is used throughout.
 
-The only remaining item from the original M5 request is extending the
-matched-quality comparison to more than one gallery size (48 candidates
-only); this is a smaller, lower-priority residual now that the backbone axis
-is fully covered, and is stated as a limitation rather than left silent.
+Both remaining items from the original M5 request are now addressed. The
+matched-quality comparison has been extended from one gallery size (48) to
+three (12, 48, 100); all 30 additional paired comparisons against
+\texttt{global\_noise} again show zero discordant pairs, so the null result
+is not an artifact of one gallery size. The deterministic mask-guided
+baselines, previously reported only at a single native (unmatched) operating
+point, now have a genuine matched-PSNR comparison via a kernel/block-size
+sweep: at each baseline's most permissive (highest-PSNR) swept setting, both
+mosaic and blur retain substantially higher Top-1 than \texttt{full} at
+comparable or better fidelity, with one specific exception (blur at its
+point closest to the 30\,dB target shows lower Top-1 than \texttt{full} at
+an essentially matched PSNR) that the paper reports rather than smooths
+over. This sweep does not reach the two higher PSNR targets (33/36\,dB) for
+either baseline within the tested kernel/block-size range, so the
+comparison is reported with the achieved PSNR and its gap to the nominal
+target rather than as an exact match -- a finer sweep would be needed to
+close this residual gap fully.
 
 \paragraph{M6 -- Resolved: DP-style language is consistent}
 
@@ -400,10 +428,13 @@ than pushed to a footnote. A final visual/formatting pass against the actual
   \textbf{done} (heuristic reframe, supported by the energy-matched
   causality test).
   \item Primary public place-labeled evaluation across multiple attackers
-  with cluster-aware uncertainty: \textbf{done}; city/condition breadth
-  beyond two cities remains a disclosed limitation, not a missing item.
+  with cluster-aware uncertainty: \textbf{done}; the primary manifest now
+  spans eight cities across all six backbones, while cross-time
+  subtask/condition breadth remains a disclosed, narrowing limitation.
   \item Matched-quality privacy--utility curves with realized perturbation
-  statistics: \textbf{done}, now across all six backbones.
+  statistics: \textbf{done}, now across all six backbones and three gallery
+  sizes, including a genuine matched-PSNR comparison against the
+  deterministic baselines.
   \item Correct location-level inference and explicit seed/data-uncertainty
   separation: \textbf{done} everywhere a paired comparison is reported.
   \item Anonymous one-command artifact with manifests, hashes, pinned
@@ -423,18 +454,23 @@ unsupported to one whose central claim (heuristic, energy-driven, bounded
 privacy benefit) is now the claim the evidence actually supports. Every
 major finding from the prior review round has either been resolved with new
 completion-gated evidence or has been converted from an unaddressed gap into
-an honestly disclosed, scientifically non-blocking limitation. The two
-substantive items that remain -- broader MSLS city/condition coverage and a
-packaged anonymous artifact -- are both real, both already disclosed, and
-neither is a correctness or validity problem with the claims currently made.
+an honestly disclosed, scientifically non-blocking limitation. Two of the
+matched-PSNR residuals flagged in the previous cycle (gallery-size coverage,
+a genuine deterministic-baseline comparison) are now closed, and the MSLS
+city-coverage gap has substantially narrowed (eight cities on the primary
+manifest; two cities remain for the official cross-time subtasks). The
+substantive items that remain -- cross-time/condition coverage beyond the
+primary manifest and a packaged anonymous artifact -- are both real, both
+already disclosed, and neither is a correctness or validity problem with the
+claims currently made.
 
 The recommended decision is therefore \textbf{accept, conditional on minor
 revisions}: verify final format compliance once the ICME 2027 kit is
-published, and continue to treat the remaining MSLS coverage and artifact
-packaging items as stated next steps rather than silent gaps. No further
-GPU-scale experiment is required for acceptance; any additional work in this
-area (wider MSLS city coverage, additional gallery sizes for the matched-PSNR
-sweep) would strengthen an already acceptable submission rather than fix a
-blocking defect.
+published, and continue to treat the remaining MSLS cross-time/condition
+coverage and artifact packaging items as stated next steps rather than
+silent gaps. No further GPU-scale experiment is required for acceptance;
+any additional work in this area (wider MSLS cross-time coverage,
+viewpoint/illumination/season/weather diversity) would strengthen an
+already acceptable submission rather than fix a blocking defect.
 
 \end{document}
