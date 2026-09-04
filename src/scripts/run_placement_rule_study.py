@@ -291,7 +291,7 @@ def main() -> None:
                 per_placement_clips: Dict[str, List[torch.Tensor]] = {
                     k: [] for k in args.placements}
                 for q_index, query_id in enumerate(query_ids):
-                    frames = query_clips[q_index]
+                    frames = query_clips[query_id]
                     crf, ncp, _ = build_modules(cfg, device, seed)
                     prev = None
                     learned_maps: List[torch.Tensor] = []
@@ -337,7 +337,7 @@ def main() -> None:
                             else:
                                 raise ValueError(f"unknown placement {placement}")
                             maps.append(renormalise_to_energy(raw, target_sq))
-                        per_placement_clips[placement].append((q_index, maps))
+                        per_placement_clips[placement].append((query_id, maps))
 
                     if grad_map_ref is not None:
                         stats = sensitivity_stats(grad_map_ref, learned_maps[0])
@@ -351,14 +351,14 @@ def main() -> None:
                 for placement in args.placements:
                     protected_frames: List[torch.Tensor] = []
                     qual: Dict[str, Dict[str, float]] = {}
-                    for q_index, maps in per_placement_clips[placement]:
-                        frames = query_clips[q_index]
+                    for q_id, maps in per_placement_clips[placement]:
+                        frames = query_clips[q_id]
                         clip = _protect_with_weight(frames, maps, cfg, device, seed)
                         mid = clip[clip.size(0) // 2]
                         protected_frames.append(mid)
                         orig = frames.detach().float().cpu()
                         eff = torch.stack([m.squeeze(0).cpu() for m in maps]).float()
-                        qual[query_ids[q_index]] = {
+                        qual[q_id] = {
                             "psnr_mean": float(np.mean([
                                 psnr_torch(orig[i], clip[i]) for i in range(orig.size(0))])),
                             "effective_weight_energy": float(eff.square().mean().item()),
