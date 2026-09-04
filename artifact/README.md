@@ -1,8 +1,9 @@
-# PPEDCRF — Anonymous Reproducibility Artifact
+# Reproducibility Artifact
 
 This bundle lets a reviewer confirm, without a GPU and without model weights,
 that every number in the paper's tables was derived from the released raw
-experiment outputs rather than transcribed by hand.
+experiment outputs rather than transcribed by hand. It currently verifies 76
+reported values.
 
 ## One command
 
@@ -22,6 +23,14 @@ model checkpoint are required for this path.
 
 `verify_claims.py` recomputes, straight from the raw per-query exports:
 
+- **Placement-rule study**: pooled Top-1 for all eight energy-matched
+  placements on both checkpoints, including the attacker-gradient oracle and
+  its anti-oracle.
+- **High-budget reversal**: the three cluster-robust significant results in
+  which edge placement beats uniform, with their bootstrap intervals.
+- **Attacker-sensitivity statistics**: the gradient coefficient of variation,
+  the top-decile energy captured by the oracle and by the learned map, and
+  their rank correlation --- the numbers behind the mechanistic account.
 - **Wider 8-city primary manifest** (`all8`, 400 queries / 2,000-image
   gallery): raw and sanitized Top-1 for all six attacker backbones.
 - **8-city cross-time subtasks** (`o2n8`, `n2o8`): the same six backbones on
@@ -49,6 +58,10 @@ results/
                            deterministic blur/mosaic sweep
   session4/                8-city cross-time manifests, white-box on those,
                            finer deterministic sweep, merged sweep analysis
+  placement_study/         eight energy-matched placements, released checkpoint
+  placement_study_maskbacked/  the same, mask-supervised checkpoint
+  placement_sigma_sweep/   placements across sigma_0 in {4,16,32,50}
+  placement_highsigma_50pair/  high-budget runs at 50-pair scale
 ```
 
 All paths inside the bundle are relative; nothing refers to an absolute

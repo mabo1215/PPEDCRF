@@ -16,6 +16,7 @@ printed with the expected and recomputed values.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -79,6 +80,44 @@ GEOTAGGED_CLAIMS = [
     ("all8 white-box aware", "session3/n1_whitebox/geotagged_vpr_per_query.csv", "attacker_aware", 0.0000),
     ("o2n8 white-box aware", "session4/n6_whitebox/o2n8/geotagged_vpr_per_query.csv", "attacker_aware", 0.0025),
     ("n2o8 white-box aware", "session4/n6_whitebox/n2o8/geotagged_vpr_per_query.csv", "attacker_aware", 0.0125),
+]
+
+
+# Placement-rule study: pooled Top-1 per placement, per checkpoint.
+# (label, results subdir, placement, value printed in the paper)
+PLACEMENT_CLAIMS = [
+    ("constant/uniform",      "placement_study", "uniform", 0.6475),
+    ("constant/learned",      "placement_study", "learned", 0.6475),
+    ("constant/anti-oracle",  "placement_study", "anti_oracle_grad", 0.6448),
+    ("constant/oracle",       "placement_study", "oracle_grad", 0.6585),
+    ("constant/saliency",     "placement_study", "saliency", 0.6776),
+    ("constant/centre",       "placement_study", "center", 0.6639),
+    ("constant/random",       "placement_study", "random_fixed", 0.6885),
+    ("constant/edge",         "placement_study", "edge", 0.7022),
+    ("selective/uniform",     "placement_study_maskbacked", "uniform", 0.6421),
+    ("selective/learned",     "placement_study_maskbacked", "learned", 0.6749),
+    ("selective/anti-oracle", "placement_study_maskbacked", "anti_oracle_grad", 0.6421),
+    ("selective/oracle",      "placement_study_maskbacked", "oracle_grad", 0.6393),
+    ("selective/saliency",    "placement_study_maskbacked", "saliency", 0.6803),
+    ("selective/centre",      "placement_study_maskbacked", "center", 0.6585),
+    ("selective/random",      "placement_study_maskbacked", "random_fixed", 0.6749),
+    ("selective/edge",        "placement_study_maskbacked", "edge", 0.6885),
+]
+
+# The three cluster-robust significant high-budget results, all favouring edge
+# placement. (label, subdir, expected delta, expected CI low, expected CI high)
+HIGH_SIGMA_CLAIMS = [
+    ("edge sigma50 constant",  "placement_highsigma_50pair/final/sigma_50",      -0.1400, -0.2467, -0.0400),
+    ("edge sigma32 selective", "placement_highsigma_50pair/maskbacked/sigma_32", -0.0867, -0.1733, -0.0067),
+    ("edge sigma50 selective", "placement_highsigma_50pair/maskbacked/sigma_50", -0.1333, -0.2533, -0.0133),
+]
+
+# Attacker-sensitivity statistics underpinning the mechanistic account.
+SENSITIVITY_CLAIMS = [
+    ("gradient CV",                 "grad_cv", 1.115, 0.05),
+    ("top-decile energy (oracle)",  "grad_energy_top10pct_oracle", 0.677, 0.02),
+    ("top-decile energy (learned)", "grad_energy_top10pct_learned", 0.099, 0.02),
+    ("Spearman learned vs grad",    "spearman_learned_vs_grad", 0.009, 0.02),
 ]
 
 # Deterministic-baseline matched-PSNR table: (label, sweep dir, point, variant, psnr, top1)
@@ -161,6 +200,73 @@ def main() -> int:
               f"discordant_total={total} any_significant={any_sig}")
         if not ok:
             failures.append(f"{label}: discordant={total} significant={any_sig}")
+
+
+    print("\n== Placement-rule study: pooled Top-1 per placement ==")
+    for label, subdir, placement, expected in PLACEMENT_CLAIMS:
+        paths = sorted((root / subdir).rglob("per_query.csv"))
+        if not paths:
+            failures.append(f"{label}: no per_query.csv under {subdir}")
+            print(f"  MISSING  {label}")
+            continue
+        df = pd.concat([pd.read_csv(x) for x in paths], ignore_index=True)
+        sub = df[df.placement == placement]
+        if sub.empty:
+            failures.append(f"{label}: placement absent")
+            print(f"  FAIL  {label}: placement absent")
+            continue
+        checked += 1
+        got = float((sub["correct_rank"] == 1).mean())
+        ok = abs(got - expected) <= args.tolerance
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label:24s} paper={expected:.4f} recomputed={got:.4f}")
+        if not ok:
+            failures.append(f"{label}: paper={expected:.4f} recomputed={got:.4f}")
+
+    print("\n== High-budget reversal: edge placement beats uniform ==")
+    for label, subdir, exp_d, exp_lo, exp_hi in HIGH_SIGMA_CLAIMS:
+        path = root / subdir / "significance.csv"
+        try:
+            r = load(path)
+        except FileNotFoundError as exc:
+            failures.append(f"{label}: {exc}")
+            print(f"  MISSING  {label}")
+            continue
+        row = r[r.placement == "edge"]
+        if row.empty:
+            failures.append(f"{label}: no edge row")
+            print(f"  FAIL  {label}: no edge row")
+            continue
+        row = row.iloc[0]
+        checked += 1
+        ok = (abs(float(row.top1_diff) - exp_d) <= 0.002
+              and abs(float(row.bootstrap_ci_low) - exp_lo) <= 0.01
+              and abs(float(row.bootstrap_ci_high) - exp_hi) <= 0.01
+              and bool(row.cluster_robust_significant))
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label:24s} paper=({exp_d:+.4f}, [{exp_lo:.3f},{exp_hi:.3f}]) "
+              f"recomputed=({float(row.top1_diff):+.4f}, [{float(row.bootstrap_ci_low):.3f},"
+              f"{float(row.bootstrap_ci_high):.3f}]) sig={bool(row.cluster_robust_significant)}")
+        if not ok:
+            failures.append(f"{label}: mismatch or not cluster-robust significant")
+
+    print("\n== Attacker-sensitivity statistics ==")
+    sens_paths = sorted((root / "placement_study").rglob("sensitivity_stats.jsonl"))
+    if not sens_paths:
+        failures.append("sensitivity stats: no sensitivity_stats.jsonl found")
+        print("  MISSING  sensitivity_stats.jsonl")
+    else:
+        recs = [json.loads(l) for p in sens_paths for l in p.open(encoding="utf-8") if l.strip()]
+        sdf = pd.DataFrame(recs)
+        for label, col, expected, tol in SENSITIVITY_CLAIMS:
+            if col not in sdf:
+                failures.append(f"{label}: column {col} absent")
+                print(f"  FAIL  {label}: column absent")
+                continue
+            checked += 1
+            got = float(sdf[col].mean())
+            ok = abs(got - expected) <= tol
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:28s} paper={expected:.3f} recomputed={got:.3f}")
+            if not ok:
+                failures.append(f"{label}: paper={expected:.3f} recomputed={got:.3f}")
 
     print(f"\n{checked} claims checked, {len(failures)} mismatch(es).")
     if failures:

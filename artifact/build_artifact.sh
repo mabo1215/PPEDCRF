@@ -10,10 +10,15 @@ REPO_ROOT="$(cd .. && pwd)"
 
 echo "== collecting exports (CSV/JSON/status only; no images or weights) =="
 rm -rf results
-for s in session3 session4; do
-  src="$REPO_ROOT/src/outputs/icme2027_revision_20260904_$s"
+for s in session3 session4 \
+         placement_study placement_study_maskbacked \
+         placement_sigma_sweep placement_highsigma_50pair; do
+  case "$s" in
+    session*) src="$REPO_ROOT/src/outputs/icme2027_revision_20260904_$s" ;;
+    *)        src="$REPO_ROOT/src/outputs/icme2027_$s" ;;
+  esac
   [ -d "$src" ] || { echo "missing $src" >&2; exit 1; }
-  find "$src" -type f \( -name '*.csv' -o -name '*.json' -o -name 'DONE_STATUS.txt' -o -name '*.sha256' \) -print0 |
+  find "$src" -type f \( -name '*.csv' -o -name '*.json' -o -name 'DONE_STATUS.txt' -o -name '*.sha256' -o -name '*.jsonl' \) -print0 |
     while IFS= read -r -d '' f; do
       rel="${f#"$src"/}"
       mkdir -p "results/$s/$(dirname "$rel")"
@@ -21,7 +26,7 @@ for s in session3 session4; do
     done
 done
 
-echo "== scrubbing absolute/host paths for double-blind anonymity =="
+echo "== scrubbing absolute/host paths =="
 python3 - <<'PY'
 import json, re, pathlib
 n = 0
