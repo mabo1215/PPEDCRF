@@ -117,6 +117,36 @@ MSLS_PLACEMENT_CLAIMS = [
     ("msls/edge",         "placement_msls/final", "edge", 0.2000),
     ("msls/centre",       "placement_msls/final", "center", 0.2042),
     ("msls/segmentation", "placement_msls/segmentation", "segmentation", 0.1942),
+    # Three placements driven by published segmentation models, each paired
+    # against a uniform control inside its own run.
+    ("msls/segfcn uniform",   "placement_msls/segfcn", "uniform", 0.1950),
+    ("msls/deeplabv3",        "placement_msls/segfcn", "segmentation", 0.1942),
+    ("msls/fcn-resnet50",     "placement_msls/segfcn", "segmentation_fcn", 0.1958),
+    ("msls/segade uniform",   "placement_msls/segade", "uniform", 0.1950),
+    ("msls/segformer-ade20k", "placement_msls/segade", "segmentation_ade", 0.1950),
+]
+
+# How much spatial selectivity each placement rule expresses, as the share of
+# squared weight carried by the top decile of pixels (uniform = 0.100 exactly).
+CONCENTRATION_CLAIMS = [
+    ("edge",         "edge",         0.839),
+    ("centre",       "center",       0.649),
+    ("saliency",     "saliency",     0.353),
+    ("fixed random", "random_fixed", 0.242),
+    ("uniform",      "uniform",      0.100),
+]
+
+# Controlled retrieval task with an exactly known Jacobian. The identity check
+# is a bound on measured/predicted displacement; the advantage claims are the
+# oracle's Top-1 difference against uniform at a given clean-task difficulty.
+KNOWN_JACOBIAN_IDENTITY = (0.95, 1.02)
+KNOWN_JACOBIAN_CLAIMS = [
+    ("oracle advantage, clean 0.86", "linear", 1.0, -1.0, -0.423),
+    ("oracle advantage, clean 0.34", "linear", 1.5, -1.0, -0.149),
+    ("oracle advantage, clean 0.12", "linear", 2.0, -1.0, -0.042),
+    ("oracle advantage, clean 0.03", "linear", 3.0, -1.0, +0.001),
+    ("clipping halves it, clean 0.86", "linear", 1.0, 2.0, -0.329),
+    ("nonlinear encoder, clean 0.70", "nonlinear", 1.0, -1.0, -0.373),
 ]
 
 # Sensitivity statistics replicated on real imagery.
@@ -291,6 +321,70 @@ def main() -> int:
             if not ok:
                 failures.append(f"{label}: paper={expected:.3f} recomputed={got:.3f}")
 
+
+    print("\n== Placement-rule concentration (top-decile energy share) ==")
+    cpath = root / "placement_msls" / "concentration_cheap.jsonl"
+    if not cpath.is_file():
+        failures.append("concentration: concentration_cheap.jsonl absent")
+        print("  MISSING  concentration_cheap.jsonl")
+    else:
+        conc = {r["placement"]: r for r in
+                (json.loads(l) for l in cpath.open(encoding="utf-8") if l.strip())}
+        for label, key, expected in CONCENTRATION_CLAIMS:
+            if key not in conc:
+                failures.append(f"concentration/{label}: absent")
+                print(f"  FAIL  concentration/{label}: absent")
+                continue
+            checked += 1
+            got = float(conc[key]["top_decile_energy_share_mean"])
+            ok = abs(got - expected) <= 0.005
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:16s} "
+                  f"paper={expected:.3f} recomputed={got:.3f}")
+            if not ok:
+                failures.append(f"concentration/{label}: "
+                                f"paper={expected:.3f} recomputed={got:.3f}")
+
+    print("\n== Controlled study with a known Jacobian ==")
+    kj_dir = root / "known_jacobian"
+    kj = [json.loads(l) for f in sorted(kj_dir.glob("*.jsonl"))
+          for l in f.open(encoding="utf-8") if l.strip()] if kj_dir.is_dir() else []
+    if not kj:
+        failures.append("known Jacobian: no exports found")
+        print("  MISSING  known_jacobian/*.jsonl")
+    else:
+        ratios = [r["mean_sq_displacement"] / r["predicted_sq_displacement"]
+                  for r in kj if r["clip"] < 0 and r.get("nonlinear") is not True
+                  and r["predicted_sq_displacement"] > 0]
+        checked += 1
+        lo, hi = KNOWN_JACOBIAN_IDENTITY
+        ok = bool(ratios) and min(ratios) >= lo and max(ratios) <= hi
+        print(f"  {'OK  ' if ok else 'FAIL'}  first-order identity   "
+              f"paper=[{lo:.2f},{hi:.2f}] recomputed="
+              f"[{min(ratios):.3f},{max(ratios):.3f}] over {len(ratios)} cells")
+        if not ok:
+            failures.append("known Jacobian: first-order identity outside bound")
+        for label, kind, nuis, clip, expected in KNOWN_JACOBIAN_CLAIMS:
+            want_nl = (kind == "nonlinear")
+            # The budget sweep reuses nuisance 1.5 at several sigmas, so the
+            # cell must be pinned on sigma as well as on nuisance and clip.
+            sel = [r for r in kj if bool(r.get("nonlinear")) == want_nl
+                   and abs(r["nuisance"] - nuis) < 1e-9
+                   and abs(r["clip"] - clip) < 1e-9
+                   and abs(r["sigma"] - 0.35) < 1e-9]
+            u = [r["top1"] for r in sel if r["placement"] == "uniform"]
+            o = [r["top1"] for r in sel if r["placement"] == "oracle"]
+            if not u or not o:
+                failures.append(f"known Jacobian/{label}: cell absent")
+                print(f"  FAIL  {label}: cell absent")
+                continue
+            checked += 1
+            got = sum(o) / len(o) - sum(u) / len(u)
+            ok = abs(got - expected) <= 0.02
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:32s} "
+                  f"paper={expected:+.3f} recomputed={got:+.3f}")
+            if not ok:
+                failures.append(f"known Jacobian/{label}: "
+                                f"paper={expected:+.3f} recomputed={got:+.3f}")
 
     print("\n== Real place-labelled MSLS: placement null ==")
     for label, subdir, placement, expected in MSLS_PLACEMENT_CLAIMS:
