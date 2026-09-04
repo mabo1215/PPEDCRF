@@ -286,6 +286,33 @@ def main() -> None:
         for item in gallery
     }
 
+    # The gallery list is identical for every query line (this manifest
+    # format shares one gallery pool across all queries), so build it -- and
+    # resolve every gallery path -- exactly once. Rebuilding it per query
+    # (as the previous version did) made this O(num_queries * max_gallery)
+    # relativize()/Path.resolve() calls; at 400 queries x 2000 gallery items
+    # that is 800,000 filesystem round-trips on a WSL-mounted network drive,
+    # which took over an hour to reach 13% completion before this fix.
+    gallery_records = [
+        {
+            "gallery_id": gallery_id,
+            "path": relativize(item["image_path"], root),
+            "place_id": item["place_id"],
+            "city": item["city"],
+            "side": item["side"],
+            "captured_at": item["captured_at"],
+            "latitude": item["latitude"],
+            "longitude": item["longitude"],
+            "sequence_id": item["sequence_id"],
+            "frame_number": item["frame_number"],
+            "viewpoint": item["viewpoint"],
+            "illumination": item["illumination"],
+            "season": item["season"],
+            "weather": item["weather"],
+        }
+        for gallery_id, item in gallery_by_id.items()
+    ]
+
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="\n") as handle:
@@ -307,25 +334,7 @@ def main() -> None:
                 "season": query["season"],
                 "weather": query["weather"],
                 "subtask": SUBTASK_ALIASES[args.subtask.lower()],
-                "gallery": [
-                    {
-                        "gallery_id": gallery_id,
-                        "path": relativize(item["image_path"], root),
-                        "place_id": item["place_id"],
-                        "city": item["city"],
-                        "side": item["side"],
-                        "captured_at": item["captured_at"],
-                        "latitude": item["latitude"],
-                        "longitude": item["longitude"],
-                        "sequence_id": item["sequence_id"],
-                        "frame_number": item["frame_number"],
-                        "viewpoint": item["viewpoint"],
-                        "illumination": item["illumination"],
-                        "season": item["season"],
-                        "weather": item["weather"],
-                    }
-                    for gallery_id, item in gallery_by_id.items()
-                ],
+                "gallery": gallery_records,
             }
             handle.write(json.dumps(record, sort_keys=True) + "\n")
 
