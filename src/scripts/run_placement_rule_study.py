@@ -443,12 +443,28 @@ def main() -> None:
                         protected_frames.append(mid)
                         orig = frames.detach().float().cpu()
                         eff = torch.stack([m.squeeze(0).cpu() for m in maps]).float()
+                        # Weight-space energy is matched by construction, but what
+                        # actually reaches the image can differ: concentrating a
+                        # fixed budget raises per-pixel amplitude, and the excess
+                        # is lost when the result clips against the pixel range.
+                        # Measuring both separates "placement" from "delivered
+                        # distortion", which are not the same control variable.
+                        rmin = float(cfg["ppedcrf"]["noise"]["clamp_min"])
+                        rmax = float(cfg["ppedcrf"]["noise"]["clamp_max"])
+                        clipped = ((clip <= rmin + 1e-6) | (clip >= rmax - 1e-6)).float()
+                        w = eff.flatten()
+                        k = max(1, int(0.10 * w.numel()))
+                        top_share = float(
+                            torch.topk(w, k).values.square().sum()
+                            / w.square().sum().clamp_min(1e-12))
                         qual[q_id] = {
                             "psnr_mean": float(np.mean([
                                 psnr_torch(orig[i], clip[i]) for i in range(orig.size(0))])),
                             "effective_weight_energy": float(eff.square().mean().item()),
                             "effective_mse": float(
                                 (clip.float() - orig).square().mean().item()),
+                            "clipping_fraction": float(clipped.mean().item()),
+                            "weight_top10pct_share": top_share,
                         }
                     extra = {}
                     if geotagged:
