@@ -507,6 +507,92 @@ than pushed to a footnote. A final visual/formatting pass against the actual
   sequence-length cluster bootstrap).
 \end{enumerate}
 
+\section*{TIFS Readiness Assessment (4 September 2026)}
+
+This section supersedes the ICME-oriented judgements above. The target venue
+is now IEEE TIFS, the manuscript has been reframed around the energy-matched
+protocol, and the evidence base changed substantially. The assessment below is
+deliberately unflattering: it is an estimate of what TIFS reviewers would do
+with the manuscript as it stands today.
+
+\subsection*{Estimated outcome}
+
+\textbf{Major revision at best; rejection is the more likely first-round
+outcome.} This is \emph{not} a weak-accept. The reason is a single structural
+mismatch: the paper's claims are about a \emph{class} of spatially selective
+privacy mechanisms, while its evidence comes entirely from mechanisms and
+placement rules the authors constructed themselves, evaluated on a mined
+proxy benchmark.
+
+\subsection*{Blocking issues}
+
+\paragraph{B1 -- No published mechanism is ever tested.}
+Of the eight placements evaluated, saliency, edge, centre-bias and fixed-random
+are \emph{proxies we constructed}, not systems from the literature; the learned
+map is our own, and the released checkpoint of it is degenerate. A reviewer
+will reasonably ask which published spatially selective privacy method was
+actually run through the protocol, and at present the answer is none. This is
+the single most damaging gap, because the generality claim rests on it.
+
+\paragraph{B2 -- The placement evidence is on a synthetic proxy, not real
+geographic data.}
+Verified directly against the exports: the placement study's per-query records
+carry no \texttt{place\_id}, \texttt{city}, or \texttt{subtask} field. Every
+placement result -- including the headline null, the oracle result, and the
+high-budget reversal -- comes from the mined paired-scene corpus with
+synthetic \texttt{loc\_xxx} identifiers. The real place-labeled MSLS benchmark
+is used only for the black-box and white-box transfer results, which are now
+supplementary. The obvious reviewer question, whether the placement null
+survives on real geo-labeled data, is currently unanswerable from our data.
+
+\paragraph{B3 -- Neither checkpoint is a well-designed selective privacy
+mechanism.}
+The released checkpoint's map is constant, which the paper now discloses. The
+mask-supervised checkpoint is genuinely non-uniform, but it was trained on
+KITTI-360 structural masks for the E5 attribution diagnostic, not designed as
+a privacy-sensitivity predictor. A reviewer may therefore characterise the
+whole testbed as a strawman, and the negative result as uninformative about
+mechanisms that were actually engineered for this purpose.
+
+\subsection*{Secondary weaknesses}
+
+\begin{itemize}
+  \item The direction-versus-location account is qualitative. No linearisation
+  argument, bound, or controlled synthetic check with a known Jacobian is
+  given, so it reads as an interpretation rather than a result.
+  \item Sample sizes remain small (36--150 paired observations per comparison).
+  \item Scope is one task, one modality, and one attacker family (cosine
+  similarity over fixed embeddings).
+  \item The manuscript is structurally unbalanced: the method section still
+  occupies space proportionate to a proposed mechanism, when the mechanism's
+  role is now to be falsified.
+\end{itemize}
+
+\subsection*{Required work, in priority order}
+
+\begin{enumerate}
+  \item \textbf{Run the placement protocol on the real MSLS benchmark.} Closes
+  B2. The manifests, imagery, and checkpoints already exist; the study script
+  needs a geotagged data path alongside its current proxy path. Cheap relative
+  to its value.
+  \item \textbf{Put at least one published selective mechanism through the
+  protocol.} Closes B1 and is what actually determines TIFS viability. Requires
+  obtaining or reimplementing an external method, so it is the largest item.
+  \item \textbf{Formalise the mechanistic account.} A first-order argument plus
+  a synthetic experiment with a known Jacobian would convert an interpretation
+  into a result. No GPU required.
+  \item \textbf{Rebalance the manuscript} so the method section is proportionate
+  to its role as a testbed.
+\end{enumerate}
+
+Items 1 and 3 are within reach and would move the paper from the rejection
+boundary into credible major-revision territory. Item 2 is what would make it
+competitive for acceptance. If item 2 is judged not worth the effort, the
+honest conclusion is that this work fits PoPETs better than TIFS: that venue
+accepts ``we propose a test and demonstrate it on our own system'' without
+requiring coverage of the published literature, and the three PoPETs-mandatory
+sections are already drafted.
+
 \section*{Final Assessment}
 
 The paper has moved from a manuscript whose central mechanistic claim was

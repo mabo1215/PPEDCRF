@@ -53,6 +53,10 @@ from scripts.run_tomm_review_proxy import (  # noqa: E402
     _build_proxy_data,
     detailed_retrieval,
 )
+from scripts.run_geotagged_vpr_benchmark import (  # noqa: E402
+    load_image,
+    load_manifest,
+)
 from eval.metrics import psnr_torch  # noqa: E402
 from utils.config import load_yaml  # noqa: E402
 
@@ -224,7 +228,13 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Placement-rule study (energy-matched).")
     p.add_argument("--config", default="src/config/config.yaml")
     p.add_argument("--checkpoint", default="src/outputs/sensnet_final.pt")
-    p.add_argument("--monitoring_root", required=True)
+    p.add_argument("--monitoring_root", default="",
+                   help="mined paired-scene corpus (proxy mode)")
+    p.add_argument("--manifest", default="",
+                   help="real place-labelled MSLS manifest (geotagged mode); "
+                        "mutually exclusive with --monitoring_root")
+    p.add_argument("--root", default="",
+                   help="image root the manifest paths resolve against")
     p.add_argument("--output_dir", required=True)
     p.add_argument("--backbones", nargs="+", default=["resnet18"])
     p.add_argument("--placements", nargs="+", default=list(PLACEMENTS))
@@ -260,8 +270,29 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[placement] device={device}")
 
-    data = _build_proxy_data(args, device)
-    pairs, _hard, query_ids, query_clips, _raw, gallery_by_id, distractors = data
+    geotagged = bool(args.manifest)
+    if geotagged:
+        # Real place-labelled evaluation: each query is a single frame and
+        # correctness is decided by the official place id, not by a mined pair.
+        records, gallery_records = load_manifest(args.manifest, args.root)
+        resize_hw = (int(args.resize_h), int(args.resize_w))
+        geo_gallery_ids = sorted(gallery_records)
+        geo_gallery_tensor = torch.stack(
+            [load_image(gallery_records[g]["path"], resize_hw) for g in geo_gallery_ids])
+        query_ids = [r["query_id"] for r in records]
+        # one-frame "clips" so the placement machinery below is unchanged
+        query_clips = {r["query_id"]: load_image(r["query_path"], resize_hw).unsqueeze(0)
+                       for r in records}
+        positive_place = {r["query_id"]: r["place_id"] for r in records}
+        gallery_place = {g: rec["place_id"] for g, rec in gallery_records.items()}
+        print(f"[placement] geotagged mode: {len(query_ids)} queries, "
+              f"{len(geo_gallery_ids)} gallery, "
+              f"{len(set(positive_place.values()))} place ids")
+    else:
+        if not args.monitoring_root:
+            raise SystemExit("either --manifest or --monitoring_root is required")
+        data = _build_proxy_data(args, device)
+        pairs, _hard, query_ids, query_clips, _raw, gallery_by_id, distractors = data
 
     from main import load_sensnet_checkpoint  # noqa: E402
     sensnet = load_sensnet_checkpoint(args.checkpoint, device)
@@ -289,9 +320,12 @@ def main() -> None:
                                topk=(1, 5, 10))
         embedder = make_default_embedder(rcfg).eval().to(device)
         for gallery_size in sorted(args.gallery_sizes):
-            gallery_tensor, gallery_ids = build_gallery_tensor(
-                gallery_frame_by_id=gallery_by_id, query_ids=query_ids,
-                distractor_ids=distractors, gallery_size=int(gallery_size))
+            if geotagged:
+                gallery_tensor, gallery_ids = geo_gallery_tensor, geo_gallery_ids
+            else:
+                gallery_tensor, gallery_ids = build_gallery_tensor(
+                    gallery_frame_by_id=gallery_by_id, query_ids=query_ids,
+                    distractor_ids=distractors, gallery_size=int(gallery_size))
             gallery_emb = build_gallery_embeddings(rcfg, embedder, gallery_tensor)
 
             for seed in args.seeds:
@@ -310,7 +344,12 @@ def main() -> None:
                         strength = ncp.allocate(refined)
                         learned_maps.append((refined * strength).clamp_min(0.0))
 
-                    pos_idx = [i for i, g in enumerate(gallery_ids) if g == query_id]
+                    if geotagged:
+                        want = positive_place[query_id]
+                        pos_idx = [i for i, g in enumerate(gallery_ids)
+                                   if gallery_place.get(g) == want]
+                    else:
+                        pos_idx = [i for i, g in enumerate(gallery_ids) if g == query_id]
                     target_emb = gallery_emb[pos_idx[0]] if pos_idx else gallery_emb[0]
 
                     grad_map_ref = None
@@ -373,10 +412,14 @@ def main() -> None:
                             "effective_mse": float(
                                 (clip.float() - orig).square().mean().item()),
                         }
+                    extra = {}
+                    if geotagged:
+                        extra = {"positive_place_by_query": positive_place,
+                                 "gallery_place_by_id": gallery_place}
                     qrows = detailed_retrieval(
                         torch.stack(protected_frames), query_ids, gallery_tensor,
                         gallery_ids, embedder, device, input_size=rcfg.input_size,
-                        quality_by_query=qual)
+                        quality_by_query=qual, **extra)
                     for qrow in qrows:
                         qrow.update({"placement": placement,
                                      "label": PLACEMENT_LABELS[placement],
