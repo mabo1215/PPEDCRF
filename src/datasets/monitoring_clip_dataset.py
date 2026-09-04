@@ -81,7 +81,7 @@ class MonitoringClipDataset(Dataset):
         else:
             clip_id_set = set(clip_ids)
             self.clip_ids = [clip_id for clip_id in available_ids if clip_id in clip_id_set]
-        if not self.clip_ids:
+        if clip_ids is not None and len(clip_ids) > 0 and not self.clip_ids:
             raise RuntimeError("No matching monitoring sequences were selected.")
 
         self.sequence_paths = {clip_id: self._select_view(indexed[clip_id]) for clip_id in self.clip_ids}
