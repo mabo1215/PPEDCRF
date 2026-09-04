@@ -241,6 +241,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--resize_w", type=int, default=320)
     p.add_argument("--seeds", type=int, nargs="+", default=[1234, 1235, 1236])
     p.add_argument("--energy_tolerance", type=float, default=1e-4)
+    p.add_argument("--sigma", type=float, default=None,
+                   help="override the perturbation budget sigma_0")
     return p.parse_args()
 
 
@@ -248,6 +250,12 @@ def main() -> None:
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cfg = load_yaml(args.config)
+    if args.sigma is not None:
+        import copy as _copy
+        cfg = _copy.deepcopy(cfg)
+        cfg["ppedcrf"]["noise"] = dict(cfg["ppedcrf"]["noise"])
+        cfg["ppedcrf"]["noise"]["sigma"] = float(args.sigma)
+        print(f"[placement] sigma override -> {args.sigma}")
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[placement] device={device}")
