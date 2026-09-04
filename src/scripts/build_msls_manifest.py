@@ -99,6 +99,33 @@ def find_image(images_dir: Path, key: str) -> Path:
     raise FileNotFoundError(f"Could not resolve MSLS image key {key!r} under {images_dir}")
 
 
+def index_images_dir(images_dir: Path) -> dict[str, Path]:
+    """One directory listing instead of one stat() per metadata row.
+
+    ``find_image`` doing an individual ``Path.is_file()`` check per row is
+    fine on a local filesystem, but on a WSL-mounted network drive each
+    stat() carries tens-to-hundreds of ms of round-trip latency; across tens
+    of thousands of metadata rows per city this dominated the build (110
+    minutes observed for a 2-city / ~31k-image build). A single directory
+    scan replaces that with one syscall per city/side.
+    """
+    index: dict[str, Path] = {}
+    for entry in images_dir.iterdir():
+        if entry.is_file():
+            index[entry.stem] = entry
+    return index
+
+
+def find_image_cached(images_dir: Path, key: str, index: Mapping[str, Path]) -> Path:
+    stem = Path(key).stem if Path(key).suffix else key
+    hit = index.get(stem)
+    if hit is not None:
+        return hit
+    # Fall back to the slow path only for the rare miss (e.g. a key whose
+    # extension-bearing form doesn't match the cached stem).
+    return find_image(images_dir, key)
+
+
 def load_side(city_root: Path, side: str, split: str, requested_subtask: str, include_panos: bool) -> list[dict]:
     side_root = city_root / side
     post_rows = read_csv_rows(side_root / "postprocessed.csv")
@@ -112,6 +139,7 @@ def load_side(city_root: Path, side: str, split: str, requested_subtask: str, in
 
     raw_by_key = {row_key(row): row for row in raw_rows}
     seq_by_key = {row_key(row): row for row in seq_rows}
+    image_index = index_images_dir(side_root / "images")
     records: list[dict] = []
     for index, post in enumerate(post_rows):
         key = row_key(post)
@@ -136,7 +164,7 @@ def load_side(city_root: Path, side: str, split: str, requested_subtask: str, in
         records.append(
             {
                 "key": key,
-                "image_path": str(find_image(side_root / "images", key)),
+                "image_path": str(find_image_cached(side_root / "images", key, image_index)),
                 "place_id": f"{city_root.name}:{cluster}",
                 "latitude": latitude,
                 "longitude": longitude,

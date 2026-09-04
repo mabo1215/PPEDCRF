@@ -121,6 +121,20 @@ def parse_args() -> argparse.Namespace:
         "run (used for the matched-operating-point sigma sweep, R2-2/R3-3/R3-4). "
         "Leave unset to use the config's default sigma.",
     )
+    parser.add_argument(
+        "--blur_kernel_size",
+        type=int,
+        default=None,
+        help="Override the masked_blur kernel size (default 21) for the "
+        "deterministic-baseline matched-PSNR sweep. Leave unset for the default.",
+    )
+    parser.add_argument(
+        "--mosaic_block_size",
+        type=int,
+        default=None,
+        help="Override the masked_mosaic block size (default 12) for the "
+        "deterministic-baseline matched-PSNR sweep. Leave unset for the default.",
+    )
     return parser.parse_args()
 
 
@@ -205,6 +219,8 @@ def protect_review_clip(
     variant: str,
     seed: int,
     allow_ssim_fallback: bool = False,
+    blur_kernel_size: int | None = None,
+    mosaic_block_size: int | None = None,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """Protect a clip and return quality/energy diagnostics."""
     dcfg = cfg["ppedcrf"]["dynamic_crf"]  # type: ignore[index]
@@ -240,9 +256,13 @@ def protect_review_clip(
             unary, crf, ncp, prev_prob, variant
         )
         if variant == "masked_blur":
-            protected = apply_masked_blur(frame, mask)
+            protected = apply_masked_blur(
+                frame, mask, kernel_size=blur_kernel_size if blur_kernel_size is not None else 21
+            )
         elif variant == "masked_mosaic":
-            protected = apply_masked_mosaic(frame, mask)
+            protected = apply_masked_mosaic(
+                frame, mask, block_size=mosaic_block_size if mosaic_block_size is not None else 12
+            )
         elif variant == "global_noise":
             protected = injector.apply(frame, torch.ones_like(mask), torch.ones_like(mask), t_index=t)
         else:
@@ -538,7 +558,9 @@ def run_proxy(args: argparse.Namespace) -> Path:
             quality_for_variant: Dict[str, Dict[str, float]] = {}
             for query_id in query_ids:
                 clip, metrics = protect_review_clip(
-                    query_clips[query_id], sensnet, cfg, device, variant, int(seed)
+                    query_clips[query_id], sensnet, cfg, device, variant, int(seed),
+                    blur_kernel_size=args.blur_kernel_size,
+                    mosaic_block_size=args.mosaic_block_size,
                 )
                 frame = select_eval_frame(clip)
                 images.append(frame)
@@ -677,6 +699,8 @@ def run_proxy(args: argparse.Namespace) -> Path:
             "backbones": args.backbones,
             "seeds": args.seeds,
             "sigma": float(cfg["ppedcrf"]["noise"]["sigma"]),
+            "blur_kernel_size": int(args.blur_kernel_size) if args.blur_kernel_size is not None else 21,
+            "mosaic_block_size": int(args.mosaic_block_size) if args.mosaic_block_size is not None else 12,
             "variants": list(REVIEW_VARIANTS),
             "scientific_evidence": False,
             "attacker_aware_requested": bool(args.include_attacker_aware),
