@@ -72,6 +72,7 @@ PLACEMENT_LABELS = {
     "anti_oracle_grad": "attacker-gradient anti-oracle",
     "segmentation": "semantic background (DeepLabV3)",
     "segmentation_fcn": "semantic background (FCN-ResNet50)",
+    "segmentation_ade": "scene structure (SegFormer/ADE20K)",
 }
 PLACEMENTS = tuple(PLACEMENT_LABELS)
 
@@ -135,6 +136,51 @@ def random_fixed_map(frame: torch.Tensor, seed: int) -> torch.Tensor:
 
 _SEG_MODEL = {}
 _SEG_CACHE = {}
+
+
+# ADE20K classes that make up the built scene: these are the pixels a
+# scene-privacy method is actually trying to protect, and unlike VOC's single
+# "background" label they are named explicitly by the taxonomy.
+_ADE_SCENE_CLASSES = ("building", "sky", "road", "tree", "sidewalk", "wall",
+                      "house", "skyscraper", "grass", "plant", "earth", "path",
+                      "fence")
+
+
+def segmentation_map_ade(frame: torch.Tensor, key: str) -> torch.Tensor:
+    """Scene-structure probability from SegFormer trained on ADE20K.
+
+    This is the closest available instantiation of the published strategy: a
+    pretrained model with a taxonomy that names the built environment
+    directly, rather than inferring it from the complement of VOC objects.
+    """
+    ck = "ade::" + key
+    if ck in _SEG_CACHE:
+        return _SEG_CACHE[ck]
+    if "ade" not in _SEG_MODEL:
+        from transformers import SegformerForSemanticSegmentation
+        mid = "nvidia/segformer-b0-finetuned-ade-512-512"
+        m = SegformerForSemanticSegmentation.from_pretrained(mid)
+        _SEG_MODEL["ade"] = m.eval().to(frame.device)
+        lbl = m.config.id2label
+        _SEG_MODEL["ade_ids"] = [i for i, v in lbl.items()
+                                 if v.split(",")[0].strip() in _ADE_SCENE_CLASSES]
+        mean = torch.tensor([0.485, 0.456, 0.406], device=frame.device).view(1, 3, 1, 1)
+        std = torch.tensor([0.229, 0.224, 0.225], device=frame.device).view(1, 3, 1, 1)
+        _SEG_MODEL["ade_norm"] = (mean, std)
+    mean, std = _SEG_MODEL["ade_norm"]
+    with torch.no_grad():
+        x = F.interpolate(frame / 255.0, size=(512, 512), mode="bilinear",
+                          align_corners=False)
+        x = (x - mean) / std
+        logits = _SEG_MODEL["ade"](pixel_values=x).logits
+        prob = torch.softmax(logits, dim=1)
+        scene = prob[:, _SEG_MODEL["ade_ids"]].sum(dim=1, keepdim=True)
+        scene = F.interpolate(scene, size=frame.shape[-2:], mode="bilinear",
+                              align_corners=False)
+    out = scene.clamp_min(0.0).detach()
+    if len(_SEG_CACHE) < 8192:
+        _SEG_CACHE[ck] = out
+    return out
 
 
 def segmentation_map_fcn(frame: torch.Tensor, key: str) -> torch.Tensor:
@@ -438,6 +484,8 @@ def main() -> None:
                                 raw = segmentation_map(frame, f"{query_id}::{t}")
                             elif placement == "segmentation_fcn":
                                 raw = segmentation_map_fcn(frame, f"{query_id}::{t}")
+                            elif placement == "segmentation_ade":
+                                raw = segmentation_map_ade(frame, f"{query_id}::{t}")
                             elif placement in ("oracle_grad", "anti_oracle_grad"):
                                 with torch.enable_grad():
                                     g = attacker_gradient_map(
