@@ -71,6 +71,7 @@ PLACEMENT_LABELS = {
     "oracle_grad": "attacker-gradient oracle",
     "anti_oracle_grad": "attacker-gradient anti-oracle",
     "segmentation": "semantic background (DeepLabV3)",
+    "segmentation_fcn": "semantic background (FCN-ResNet50)",
 }
 PLACEMENTS = tuple(PLACEMENT_LABELS)
 
@@ -134,6 +135,32 @@ def random_fixed_map(frame: torch.Tensor, seed: int) -> torch.Tensor:
 
 _SEG_MODEL = {}
 _SEG_CACHE = {}
+
+
+def segmentation_map_fcn(frame: torch.Tensor, key: str) -> torch.Tensor:
+    """Same strategy, a second published architecture.
+
+    Running two independent segmentation models answers whether the
+    segmentation result is a property of the strategy or of one particular
+    network.
+    """
+    ck = "fcn::" + key
+    if ck in _SEG_CACHE:
+        return _SEG_CACHE[ck]
+    if "fcn" not in _SEG_MODEL:
+        from torchvision.models.segmentation import FCN_ResNet50_Weights, fcn_resnet50
+        w = FCN_ResNet50_Weights.DEFAULT
+        _SEG_MODEL["fcn"] = fcn_resnet50(weights=w).eval().to(frame.device)
+        _SEG_MODEL["fcn_t"] = w.transforms()
+    with torch.no_grad():
+        logits = _SEG_MODEL["fcn"](_SEG_MODEL["fcn_t"](frame / 255.0))["out"]
+        prob_bg = torch.softmax(logits, dim=1)[:, 0:1]
+        prob_bg = F.interpolate(prob_bg, size=frame.shape[-2:], mode="bilinear",
+                                align_corners=False)
+    out = prob_bg.clamp_min(0.0).detach()
+    if len(_SEG_CACHE) < 8192:
+        _SEG_CACHE[ck] = out
+    return out
 
 
 def segmentation_map(frame: torch.Tensor, key: str) -> torch.Tensor:
@@ -409,6 +436,8 @@ def main() -> None:
                                 raw = random_fixed_map(frame, seed)
                             elif placement == "segmentation":
                                 raw = segmentation_map(frame, f"{query_id}::{t}")
+                            elif placement == "segmentation_fcn":
+                                raw = segmentation_map_fcn(frame, f"{query_id}::{t}")
                             elif placement in ("oracle_grad", "anti_oracle_grad"):
                                 with torch.enable_grad():
                                     g = attacker_gradient_map(
