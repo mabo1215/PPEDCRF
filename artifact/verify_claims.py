@@ -104,6 +104,29 @@ PLACEMENT_CLAIMS = [
     ("selective/edge",        "placement_study_maskbacked", "edge", 0.6885),
 ]
 
+
+# Real place-labelled MSLS replication of the placement null.
+# (label, results subdir, placement, Top-1 printed in the paper)
+MSLS_PLACEMENT_CLAIMS = [
+    ("msls/uniform",      "placement_msls/final", "uniform", 0.1950),
+    ("msls/oracle",       "placement_msls/final", "oracle_grad", 0.1942),
+    ("msls/learned",      "placement_msls/final", "learned", 0.1958),
+    ("msls/random",       "placement_msls/final", "random_fixed", 0.1958),
+    ("msls/saliency",     "placement_msls/final", "saliency", 0.1958),
+    ("msls/anti-oracle",  "placement_msls/final", "anti_oracle_grad", 0.1975),
+    ("msls/edge",         "placement_msls/final", "edge", 0.2000),
+    ("msls/centre",       "placement_msls/final", "center", 0.2042),
+    ("msls/segmentation", "placement_msls/segmentation", "segmentation", 0.1942),
+]
+
+# Sensitivity statistics replicated on real imagery.
+MSLS_SENSITIVITY_CLAIMS = [
+    ("msls gradient CV",                 "grad_cv", 1.012, 0.05),
+    ("msls top-decile (oracle)",         "grad_energy_top10pct_oracle", 0.647, 0.02),
+    ("msls top-decile (learned)",        "grad_energy_top10pct_learned", 0.094, 0.02),
+    ("msls Spearman learned vs grad",    "spearman_learned_vs_grad", 0.020, 0.02),
+]
+
 # The three cluster-robust significant high-budget results, all favouring edge
 # placement. (label, subdir, expected delta, expected CI low, expected CI high)
 HIGH_SIGMA_CLAIMS = [
@@ -265,6 +288,47 @@ def main() -> int:
             got = float(sdf[col].mean())
             ok = abs(got - expected) <= tol
             print(f"  {'OK  ' if ok else 'FAIL'}  {label:28s} paper={expected:.3f} recomputed={got:.3f}")
+            if not ok:
+                failures.append(f"{label}: paper={expected:.3f} recomputed={got:.3f}")
+
+
+    print("\n== Real place-labelled MSLS: placement null ==")
+    for label, subdir, placement, expected in MSLS_PLACEMENT_CLAIMS:
+        paths = sorted((root / subdir).rglob("per_query.csv"))
+        if not paths:
+            failures.append(f"{label}: no per_query.csv under {subdir}")
+            print(f"  MISSING  {label}")
+            continue
+        df = pd.concat([pd.read_csv(x) for x in paths], ignore_index=True)
+        sub = df[df.placement == placement]
+        if sub.empty:
+            failures.append(f"{label}: placement absent")
+            print(f"  FAIL  {label}: placement absent")
+            continue
+        checked += 1
+        got = float((sub["correct_rank"] == 1).mean())
+        ok = abs(got - expected) <= args.tolerance
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label:22s} paper={expected:.4f} recomputed={got:.4f}")
+        if not ok:
+            failures.append(f"{label}: paper={expected:.4f} recomputed={got:.4f}")
+
+    print("\n== Real MSLS: attacker-sensitivity replication ==")
+    msls_sens = sorted((root / "placement_msls/final").rglob("sensitivity_stats.jsonl"))
+    if not msls_sens:
+        failures.append("msls sensitivity: file not found")
+        print("  MISSING  msls sensitivity_stats.jsonl")
+    else:
+        recs = [json.loads(l) for p in msls_sens for l in p.open(encoding="utf-8") if l.strip()]
+        sdf = pd.DataFrame(recs)
+        for label, col, expected, tol in MSLS_SENSITIVITY_CLAIMS:
+            if col not in sdf:
+                failures.append(f"{label}: column absent")
+                print(f"  FAIL  {label}: column absent")
+                continue
+            checked += 1
+            got = float(sdf[col].mean())
+            ok = abs(got - expected) <= tol
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:32s} paper={expected:.3f} recomputed={got:.3f}")
             if not ok:
                 failures.append(f"{label}: paper={expected:.3f} recomputed={got:.3f}")
 

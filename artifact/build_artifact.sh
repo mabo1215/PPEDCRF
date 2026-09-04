@@ -12,7 +12,8 @@ echo "== collecting exports (CSV/JSON/status only; no images or weights) =="
 rm -rf results
 for s in session3 session4 \
          placement_study placement_study_maskbacked \
-         placement_sigma_sweep placement_highsigma_50pair; do
+         placement_sigma_sweep placement_highsigma_50pair \
+         placement_msls; do
   case "$s" in
     session*) src="$REPO_ROOT/src/outputs/icme2027_revision_20260904_$s" ;;
     *)        src="$REPO_ROOT/src/outputs/icme2027_$s" ;;
