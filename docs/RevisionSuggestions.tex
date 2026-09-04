@@ -526,6 +526,37 @@ proxy benchmark.
 
 \subsection*{Blocking issues}
 
+\paragraph{Status update (2026-09-05): B1 partially closed, B2 closed, B3 open.}
+B2 is closed: the placement null now replicates on the real place-labelled
+MSLS benchmark (400 queries, 2,000-image gallery, 277 official place ids,
+1,200 paired observations per comparison), with every difference from uniform
+inside $\pm0.01$ Top-1 and the sensitivity statistics reproducing almost
+item-for-item.
+
+B1 is partially closed. Three placement rules driven by published pretrained
+models -- DeepLabV3-ResNet50, FCN-ResNet50 and SegFormer-B0/ADE20K, spanning
+two different label taxonomies whose maps correlate only 0.55--0.75 -- all
+give the same null. A literature search for a published spatially selective
+location-privacy mechanism that both emits per-pixel placement weights and
+released code found none, and the paper now reports that as a finding. What
+remains unavailable is a re-run of a specific published system, so B1 is
+mitigated rather than closed.
+
+Two items from ``Required work'' are now done. Item~1 (real MSLS) is complete.
+Item~3 (formalise the mechanistic account) is complete and went further than
+asked: besides the first-order derivation, a controlled retrieval task with an
+exactly known Jacobian verifies the displacement identity to within 4\%, shows
+the oracle advantage it predicts is real, and then removes that advantage by
+switching on a bounded output range and realistic task difficulty while ruling
+out linearisation error. The controlled model does \emph{not} reproduce the
+null quantitatively -- matched to the benchmark's observed accuracy drop it
+still predicts about $-0.15$ against a measured $-0.0008$ -- and that gap is
+reported in the paper rather than tuned away. Item~4 (rebalance the
+manuscript) is done: the method section was compressed to match its role as a
+testbed, bringing the paper back to the 13-page limit.
+
+B3 is untouched.
+
 \paragraph{B1 -- No published mechanism is ever tested.}
 Of the eight placements evaluated, saliency, edge, centre-bias and fixed-random
 are \emph{proxies we constructed}, not systems from the literature; the learned
