@@ -116,6 +116,7 @@ def resolve_path(path_value: str, root: str) -> Path:
 def load_manifest(path: str, root: str) -> Tuple[List[dict], Dict[str, dict]]:
     records: List[dict] = []
     gallery_by_id: Dict[str, dict] = {}
+    gallery_raw_by_id: Dict[str, Tuple[str, str]] = {}
     query_ids: set[str] = set()
     query_paths: set[str] = set()
     with Path(path).open("r", encoding="utf-8") as handle:
@@ -143,26 +144,37 @@ def load_manifest(path: str, root: str) -> Tuple[List[dict], Dict[str, dict]]:
                     if key not in gallery_item:
                         raise ValueError(f"Query {query_id} gallery item is missing '{key}'.")
                 gallery_id = str(gallery_item["gallery_id"])
-                gallery_path = resolve_path(str(gallery_item["path"]), root)
+                raw_path = str(gallery_item["path"])
+                raw_place = str(gallery_item["place_id"])
+                # The manifest format shares one gallery pool across every query
+                # line (see build_msls_manifest.py / build_kitti360_unary_manifest.py),
+                # so the same gallery_id legitimately recurs across queries -- at
+                # official-MSLS scale (e.g. 400 queries x 2000 gallery items),
+                # thousands of times each. Compare against the cached raw fields
+                # from the first occurrence (cheap) instead of re-resolving and
+                # re-stat()-ing the path on every recurrence: on a WSL-mounted
+                # network drive that resolve()/is_file() pair costs tens of ms,
+                # and doing it 800,000 times instead of 2,000 measurably stalls
+                # both this audit and the actual benchmark run.
+                cached_raw = gallery_raw_by_id.get(gallery_id)
+                if cached_raw is not None:
+                    if cached_raw != (raw_path, raw_place):
+                        raise ValueError(
+                            f"Gallery id {gallery_id} maps to inconsistent records: "
+                            f"{cached_raw} vs {(raw_path, raw_place)}"
+                        )
+                    normalized_gallery.append(gallery_by_id[gallery_id])
+                    continue
+                gallery_path = resolve_path(raw_path, root)
+                if not gallery_path.is_file():
+                    raise FileNotFoundError(f"Gallery image does not exist: {gallery_path}")
                 gallery_record = {
                     "gallery_id": gallery_id,
                     "path": str(gallery_path),
-                    "place_id": str(gallery_item["place_id"]),
+                    "place_id": raw_place,
                 }
-                # The manifest format shares one gallery pool across every query
-                # line (see build_msls_manifest.py / build_kitti360_unary_manifest.py),
-                # so the same gallery_id legitimately recurs across queries. Only
-                # reject it if a later occurrence disagrees with the first one.
-                existing = gallery_by_id.get(gallery_id)
-                if existing is not None and existing != gallery_record:
-                    raise ValueError(
-                        f"Gallery id {gallery_id} maps to inconsistent records: "
-                        f"{existing} vs {gallery_record}"
-                    )
-                if existing is None:
-                    if not gallery_path.is_file():
-                        raise FileNotFoundError(f"Gallery image does not exist: {gallery_path}")
-                    gallery_by_id[gallery_id] = gallery_record
+                gallery_by_id[gallery_id] = gallery_record
+                gallery_raw_by_id[gallery_id] = (raw_path, raw_place)
                 normalized_gallery.append(gallery_record)
             place_id = str(item["place_id"])
             if not any(g["place_id"] == place_id for g in normalized_gallery):
