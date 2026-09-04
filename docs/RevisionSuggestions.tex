@@ -202,7 +202,17 @@ Type~1, an author block reading ``Anonymous Submission'' with real author
 metadata commented out, and a 152-word abstract. BibTeX reports zero
 warnings and the build has zero undefined references or citations.
 
-The page limit itself is no longer an open question. The ICME 2027 kit is
+\emph{Venue changed.} The manuscript now targets IEEE TIFS rather than ICME,
+which changes every constraint in this item: review is single-anonymized (so
+the anonymous author block was wrong and real authorship is restored), the
+initial-submission limit is 13 double-column pages \emph{including appendices
+and references}, and supplementary material is capped at 6 pages. The paper
+has been converted to \texttt{IEEEtran journal}, the core appendices merged
+into the body at exactly 13 pages, and the supporting material split into a
+6-page supplement. Both build with zero BibTeX warnings and zero undefined
+references. The ICME discussion below is retained for provenance.
+
+The ICME page limit itself was no longer an open question. The ICME 2027 kit is
 still unpublished, but the immediately preceding edition states the rule
 explicitly: ``Papers must be no longer than 6 pages, including all text,
 figures, and references,'' with double-blind review and up to 50\,MB of
@@ -243,12 +253,17 @@ same-energy control). Combined, these two results support exactly the
 language the paper now uses -- ``heuristic, quality-preserving weighting,''
 not ``privacy-optimal placement.''
 
-No further action is required for M2 to be publication-ready. A natural but
-optional follow-up (not required for this venue) would be to attempt the
-originally requested map recalibration against an explicit
-retrieval-sensitivity target (M2 items 1--2 in the prior review), since the
-current work has only tested and rejected the naive alternative, not
-attempted a validated replacement.
+\emph{Superseded by a later finding.} The energy-matched null this verdict
+rested on has since been shown to be largely an artifact: the released
+checkpoint's map is numerically constant (unary range $[0.4991,0.5015]$,
+spatial CV $6\times10^{-4}$, support coverage $1.000$), so redistributing it
+uniformly, cyclically or by permutation are all near-no-ops. The paper now
+says so explicitly and rebuilds the placement claim on eight independently
+constructed placements over two checkpoints, an attacker-gradient oracle, and
+a budget sweep. The map-recalibration follow-up suggested here was in effect
+performed, by evaluating a second mask-supervised checkpoint whose map is
+genuinely selective: it does not beat uniform either, and is significantly
+worse on one backbone.
 
 \paragraph{M3 -- Substantially resolved; one disclosed data limitation
 remains}
