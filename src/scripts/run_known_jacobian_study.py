@@ -235,7 +235,13 @@ def evaluate(enc: "Encoder", norms: torch.Tensor, weights: torch.Tensor,
         # what separates the true positive from its strongest competitor.
         with torch.no_grad():
             sims = emb @ (clean / clean.norm().clamp_min(1e-12))
-            rival = int(torch.argsort(sims, descending=True)[1].item())
+            # The best competitor must exclude the positive itself. Taking the
+            # second-ranked item instead silently returns the positive whenever
+            # it is not already ranked first, which makes the discriminative
+            # direction the zero vector and delivers no perturbation at all.
+            sims_rival = sims.clone()
+            sims_rival[0] = float("-inf")
+            rival = int(torch.argmax(sims_rival).item())
             d_emb = emb[0] - emb[rival]
             direction = -(d_emb @ enc.A) if not enc.nonlinear else -(d_emb @ enc.W2 @ (
                 (1.0 - torch.tanh((q @ enc.A.T) / enc.scale) ** 2) / enc.scale
