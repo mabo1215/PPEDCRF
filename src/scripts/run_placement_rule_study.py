@@ -31,7 +31,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 import torch
@@ -315,6 +315,173 @@ def sensitivity_stats(grad_map: torch.Tensor, learned: torch.Tensor) -> Dict[str
 
 # --------------------------------------------------------------------------
 
+# --------------------------------------------------------------------------
+# perturbation operators
+#
+# The placement study asks where a fixed budget should go. It holds the
+# operator fixed at additive isotropic Gaussian noise, which is what the
+# selective-privacy literature overwhelmingly uses. The first-order account
+# says that for such an operator placement can only set how far the embedding
+# moves, never in which direction, because an isotropic draw has no preferred
+# direction to begin with. That predicts something testable: give the operator
+# spatial structure, and placement should regain leverage it does not have
+# here. These operators exist to test that, at matched delivered distortion.
+# --------------------------------------------------------------------------
+
+OPERATORS = {
+    "gaussian": "additive isotropic Gaussian (the literature's operator)",
+    "correlated": "additive spatially correlated Gaussian",
+    "blur": "selective low-pass, placed by the weight map",
+    "mosaic": "selective block quantisation, placed by the weight map",
+    "sign_grad": "deterministic sign along the attacker gradient",
+}
+
+
+def _box_blur(x: torch.Tensor, k: int) -> torch.Tensor:
+    """Separable box blur, reflect-padded, applied per channel."""
+    if k <= 1:
+        return x
+    pad = k // 2
+    c = x.shape[1]
+    ker = torch.ones(c, 1, 1, k, device=x.device, dtype=x.dtype) / k
+    y = F.pad(x, (pad, pad, 0, 0), mode="reflect")
+    y = F.conv2d(y, ker, groups=c)
+    ker = ker.transpose(-1, -2).contiguous()
+    y = F.pad(y, (0, 0, pad, pad), mode="reflect")
+    return F.conv2d(y, ker, groups=c)
+
+
+def _block_average(x: torch.Tensor, block: int) -> torch.Tensor:
+    """Mosaic: average within non-overlapping blocks, then expand back."""
+    if block <= 1:
+        return x
+    h, w = x.shape[-2:]
+    ph, pw = (-h) % block, (-w) % block
+    y = F.pad(x, (0, pw, 0, ph), mode="replicate")
+    y = F.avg_pool2d(y, block)
+    y = F.interpolate(y, scale_factor=block, mode="nearest")
+    return y[..., :h, :w]
+
+
+def operator_delta(
+    frame: torch.Tensor,
+    weight: torch.Tensor,
+    operator: str,
+    sigma: float,
+    generator: torch.Generator,
+    grad_dir: Optional[torch.Tensor] = None,
+    blur_kernel: int = 9,
+    mosaic_block: int = 8,
+    corr_kernel: int = 5,
+) -> torch.Tensor:
+    """The unscaled perturbation this operator would apply under ``weight``.
+
+    Returned before distortion matching: the caller rescales it so that every
+    operator delivers the same measured MSE, which is what makes a comparison
+    across operators a comparison of structure rather than of budget.
+    """
+    if operator == "gaussian":
+        eps = torch.randn(frame.shape, generator=generator,
+                          dtype=frame.dtype, device="cpu").to(frame.device)
+        return weight * eps * sigma
+    if operator == "correlated":
+        eps = torch.randn(frame.shape, generator=generator,
+                          dtype=frame.dtype, device="cpu").to(frame.device)
+        eps = _box_blur(eps, corr_kernel)
+        std = eps.std().clamp_min(1e-8)
+        return weight * (eps / std) * sigma
+    if operator == "blur":
+        return weight * (_box_blur(frame, blur_kernel) - frame)
+    if operator == "mosaic":
+        return weight * (_block_average(frame, mosaic_block) - frame)
+    if operator == "sign_grad":
+        if grad_dir is None:
+            raise ValueError("sign_grad requires an attacker gradient direction")
+        return weight * torch.sign(grad_dir) * sigma
+    raise ValueError(f"unknown operator {operator}")
+
+
+def apply_at_matched_mse(
+    frame: torch.Tensor,
+    raw_delta: torch.Tensor,
+    target_mse: float,
+    clamp_min: float,
+    clamp_max: float,
+    iters: int = 40,
+) -> Tuple[torch.Tensor, float]:
+    """Scale a perturbation so the released frame has a prescribed MSE.
+
+    Matching nominal weight energy is not the same as matching what reaches
+    the image: concentrated placements lose part of their budget at the pixel
+    clamp, a confound this study previously reported rather than removed.
+    Solving for the gain that hits a target measured MSE removes it, and is
+    the only defensible way to compare operators whose distortion profiles
+    differ by construction.
+    """
+    def mse_at(gain: float) -> Tuple[torch.Tensor, float]:
+        out = (frame + gain * raw_delta).clamp(clamp_min, clamp_max)
+        return out, float((out - frame).square().mean())
+
+    _, m1 = mse_at(1.0)
+    if m1 <= 1e-12:
+        return frame.clone(), 0.0
+    lo, hi = 0.0, 1.0
+    _, mhi = mse_at(hi)
+    # Clipping makes MSE sublinear in the gain, so grow the bracket instead of
+    # assuming the unclipped square-law scaling holds.
+    while mhi < target_mse and hi < 1e4:
+        hi *= 2.0
+        _, mhi = mse_at(hi)
+    for _ in range(iters):
+        mid = 0.5 * (lo + hi)
+        _, m = mse_at(mid)
+        if m < target_mse:
+            lo = mid
+        else:
+            hi = mid
+    out, achieved = mse_at(0.5 * (lo + hi))
+    return out, achieved
+
+
+@torch.no_grad()
+def _protect_with_operator(
+    frames: torch.Tensor,
+    weight_maps: Sequence[torch.Tensor],
+    operator: str,
+    sigma: float,
+    clamp_min: float,
+    clamp_max: float,
+    seed: int,
+    device: torch.device,
+    reference_mse: Optional[List[float]] = None,
+) -> Tuple[torch.Tensor, List[float]]:
+    """Release frames through one operator at a prescribed per-frame MSE.
+
+    When ``reference_mse`` is None the frames are released at the operator's
+    own natural scale and the achieved MSE is returned, which is how the
+    reference condition establishes the target every other condition is then
+    matched to.
+    """
+    out: List[torch.Tensor] = []
+    achieved: List[float] = []
+    for t_index in range(frames.size(0)):
+        frame = frames[t_index : t_index + 1].to(device).float()
+        w = weight_maps[t_index].to(device)
+        g = torch.Generator(device="cpu")
+        g.manual_seed(int(seed) + int(t_index))
+        raw = operator_delta(frame, w, operator, sigma, g)
+        if reference_mse is None:
+            released = (frame + raw).clamp(clamp_min, clamp_max)
+            mse = float((released - frame).square().mean())
+        else:
+            released, mse = apply_at_matched_mse(
+                frame, raw, reference_mse[t_index], clamp_min, clamp_max
+            )
+        out.append(released.squeeze(0).cpu())
+        achieved.append(mse)
+    return torch.stack(out, dim=0), achieved
+
+
 @torch.no_grad()
 def _protect_with_weight(
     frames: torch.Tensor,
@@ -347,6 +514,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output_dir", required=True)
     p.add_argument("--backbones", nargs="+", default=["resnet18"])
     p.add_argument("--placements", nargs="+", default=list(PLACEMENTS))
+    p.add_argument("--operator", default="legacy",
+                   choices=["legacy"] + list(OPERATORS),
+                   help="perturbation operator; 'legacy' keeps the original "
+                        "energy-matched additive-Gaussian release path, any "
+                        "other value releases every condition at the MSE the "
+                        "uniform Gaussian reference delivers")
     p.add_argument("--num_queries", type=int, default=12)
     p.add_argument("--pair_pool_size", type=int, default=240)
     p.add_argument("--max_gallery", type=int, default=48)
@@ -510,12 +683,35 @@ def main() -> None:
                         sens_fh.flush(); os.fsync(sens_fh.fileno())
 
                 # --- protect, evaluate, write incrementally ---
+                rmin_cfg = float(cfg["ppedcrf"]["noise"]["clamp_min"])
+                rmax_cfg = float(cfg["ppedcrf"]["noise"]["clamp_max"])
+                sigma_cfg = float(cfg["ppedcrf"]["noise"]["sigma"])
+                # When operators are compared, every condition is released at
+                # the MSE the reference condition (uniform placement, additive
+                # Gaussian) delivers on the same frames. Matching on measured
+                # distortion rather than on nominal weight energy is what makes
+                # the comparison one of structure instead of budget.
+                ref_mse_by_query: Dict[str, List[float]] = {}
+                if args.operator != "legacy":
+                    ref_maps = dict(per_placement_clips[args.placements[0]])
+                    for q_id, maps in per_placement_clips[args.placements[0]]:
+                        _, mses = _protect_with_operator(
+                            query_clips[q_id], maps, "gaussian", sigma_cfg,
+                            rmin_cfg, rmax_cfg, seed, device, reference_mse=None)
+                        ref_mse_by_query[q_id] = mses
+
                 for placement in args.placements:
                     protected_frames: List[torch.Tensor] = []
                     qual: Dict[str, Dict[str, float]] = {}
                     for q_id, maps in per_placement_clips[placement]:
                         frames = query_clips[q_id]
-                        clip = _protect_with_weight(frames, maps, cfg, device, seed)
+                        if args.operator == "legacy":
+                            clip = _protect_with_weight(frames, maps, cfg, device, seed)
+                        else:
+                            clip, _ = _protect_with_operator(
+                                frames, maps, args.operator, sigma_cfg,
+                                rmin_cfg, rmax_cfg, seed, device,
+                                reference_mse=ref_mse_by_query[q_id])
                         mid = clip[clip.size(0) // 2]
                         protected_frames.append(mid)
                         orig = frames.detach().float().cpu()
@@ -553,6 +749,7 @@ def main() -> None:
                         quality_by_query=qual, **extra)
                     for qrow in qrows:
                         qrow.update({"placement": placement,
+                                     "operator": args.operator,
                                      "label": PLACEMENT_LABELS[placement],
                                      "backbone": backbone, "seed": int(seed),
                                      "gallery_size": int(gallery_size)})

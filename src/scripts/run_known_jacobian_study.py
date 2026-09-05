@@ -137,6 +137,48 @@ class Encoder:
         return J.norm(dim=0)
 
 
+def draw_perturbation(weights: torch.Tensor, sigma: float, operator: str,
+                      sens: torch.Tensor, direction: torch.Tensor,
+                      generator: torch.Generator) -> torch.Tensor:
+    """Spend a fixed budget through different perturbation operators.
+
+    Placement decides *where* the budget goes; the operator decides what kind
+    of displacement that budget can buy. The first-order argument says
+    placement controls only the magnitude of the embedding displacement, and
+    that for isotropic noise its direction is arbitrary within the Jacobian's
+    column space regardless of placement. If that is the reason placement does
+    not pay, then giving the operator directional structure -- correlating the
+    noise spatially, or choosing its sign -- should restore placement's
+    leverage. This function is what lets that be tested rather than assumed.
+
+    Every operator is rescaled to deliver the same input-space energy, so the
+    comparison is between operators at matched distortion, not between budgets.
+    """
+    n = weights.numel()
+    if operator == "isotropic":
+        eps = torch.randn(n, generator=generator)
+    elif operator == "correlated":
+        # Smooth white noise along the pixel index, giving the perturbation a
+        # spatial covariance instead of an identity one.
+        raw = torch.randn(n + 16, generator=generator)
+        eps = raw.unfold(0, 17, 1).mean(dim=1)[:n]
+    elif operator == "sign_aligned":
+        # Deterministic sign chosen along the discriminative direction: the
+        # operator now supplies the direction that isotropic noise cannot.
+        eps = torch.sign(direction)
+    elif operator == "sign_random":
+        # Control for sign_aligned: same deterministic magnitude profile, but
+        # a direction unrelated to the task. Separates "being deterministic"
+        # from "being aligned".
+        eps = torch.sign(torch.randn(n, generator=generator))
+    else:
+        raise ValueError(f"unknown operator {operator}")
+    delta = weights * eps
+    target = sigma * math.sqrt(float(weights.square().sum()))
+    cur = float(delta.norm())
+    return delta * (target / cur) if cur > 1e-12 else delta
+
+
 def placements(norms: torch.Tensor, energy: float,
                generator: torch.Generator) -> dict[str, torch.Tensor]:
     """Energy-matched weight vectors, all with sum of squares equal to energy."""
@@ -157,7 +199,8 @@ def placements(norms: torch.Tensor, energy: float,
 def evaluate(enc: "Encoder", norms: torch.Tensor, weights: torch.Tensor,
              sigma: float, gallery: int, trials: int,
              generator: torch.Generator, clip: float | None = None,
-             nuisance: float = 0.0) -> dict[str, float]:
+             nuisance: float = 0.0, operator: str = "isotropic"
+             ) -> dict[str, float]:
     """Top-1 accuracy and mean squared embedding displacement under a placement.
 
     ``nuisance`` is the view-to-view variation between two images of the same
@@ -188,8 +231,17 @@ def evaluate(enc: "Encoder", norms: torch.Tensor, weights: torch.Tensor,
         emb = emb / emb.norm(dim=1, keepdim=True).clamp_min(1e-12)
         q = places[0] + torch.randn(n, generator=generator) * nuisance
         clean = enc(q.unsqueeze(0))[0]
-        eps = torch.randn(n, generator=generator) * sigma
-        released = q + weights * eps
+        # The discriminative direction the operator may or may not exploit:
+        # what separates the true positive from its strongest competitor.
+        with torch.no_grad():
+            sims = emb @ (clean / clean.norm().clamp_min(1e-12))
+            rival = int(torch.argsort(sims, descending=True)[1].item())
+            d_emb = emb[0] - emb[rival]
+            direction = -(d_emb @ enc.A) if not enc.nonlinear else -(d_emb @ enc.W2 @ (
+                (1.0 - torch.tanh((q @ enc.A.T) / enc.scale) ** 2) / enc.scale
+            ).unsqueeze(1).mul(enc.A))
+        released = q + draw_perturbation(weights, sigma, operator, norms,
+                                         direction, generator)
         if clip is not None:
             released = released.clamp(-clip, clip)
         delta = released - q
@@ -236,6 +288,8 @@ def main() -> int:
     ap.add_argument("--nonlinear", action="store_true",
                     help="use a smooth nonlinear encoder, so the Jacobian is "
                          "exact only locally, as in a real image encoder")
+    ap.add_argument("--operators", nargs="+", default=["isotropic"],
+                    help="perturbation operators to compare at matched energy")
     ap.add_argument("--nuisance", type=float, default=1.0,
                     help="view-to-view variation between two images of the "
                          "same place; 0 makes the query its own positive")
@@ -261,30 +315,31 @@ def main() -> int:
             energy = float(args.n_pixels)
             for clip in args.clips:
                 c = None if clip < 0 else clip
-                for name, w in placements(sens, energy, g).items():
-                    r = evaluate(enc, sens, w, args.sigma, args.gallery,
-                                 args.trials, g, clip=c,
-                                 nuisance=args.nuisance)
-                    rows.append({
-                        "seed": seed,
-                        "alignment": alignment,
-                        "clip": clip,
-                        "sigma": args.sigma,
-                        "placement": name,
-                        "nonlinear": bool(args.nonlinear),
-                        "nuisance": args.nuisance,
-                        "top_decile_share": achieved,
-                        **r,
-                    })
-                    print(
-                        f"seed={seed} align={alignment:.2f} "
-                        f"clip={'none' if c is None else f'{c:g}'} {name:>12}: "
-                        f"top1={r['top1']:.4f} (clean {r['clean_top1']:.4f}) "
-                        f"E||df||^2={r['mean_sq_displacement']:.1f} "
-                        f"(1st-order {r['predicted_sq_displacement']:.1f}) "
-                        f"delivered={r['delivered_input_energy']:.1f}",
-                        flush=True,
-                    )
+                for operator in args.operators:
+                    for name, w in placements(sens, energy, g).items():
+                        r = evaluate(enc, sens, w, args.sigma, args.gallery,
+                                     args.trials, g, clip=c,
+                                     nuisance=args.nuisance, operator=operator)
+                        rows.append({
+                            "seed": seed,
+                            "alignment": alignment,
+                            "clip": clip,
+                            "sigma": args.sigma,
+                            "placement": name,
+                            "operator": operator,
+                            "nonlinear": bool(args.nonlinear),
+                            "nuisance": args.nuisance,
+                            "top_decile_share": achieved,
+                            **r,
+                        })
+                        print(
+                            f"seed={seed} nuis={args.nuisance:.1f} "
+                            f"clip={'none' if c is None else f'{c:g}'} "
+                            f"{operator:>13} {name:>12}: "
+                            f"top1={r['top1']:.4f} (clean {r['clean_top1']:.4f}) "
+                            f"delivered={r['delivered_input_energy']:.1f}",
+                            flush=True,
+                        )
 
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -294,8 +349,11 @@ def main() -> int:
 
     # Summary: the displacement identity, then the retrieval consequence.
     print("\n--- first-order identity, unbounded case (measured / predicted) ---")
+    # The identity is a statement about isotropic additive noise; the other
+    # operators deliberately violate its premise, so they are excluded here.
     ratios = [r["mean_sq_displacement"] / r["predicted_sq_displacement"]
-              for r in rows if r["predicted_sq_displacement"] > 0 and r["clip"] < 0]
+              for r in rows if r["predicted_sq_displacement"] > 0 and r["clip"] < 0
+              and r.get("operator", "isotropic") == "isotropic"]
     if ratios:
         print(f"  ratio over {len(ratios)} cells: "
               f"min={min(ratios):.4f} max={max(ratios):.4f}")
@@ -303,27 +361,29 @@ def main() -> int:
     order = ("uniform", "oracle", "anti_oracle", "random")
     for clip in args.clips:
         tag = "unbounded" if clip < 0 else f"clipped at +/-{clip:g}"
-        print(f"\n--- Top-1 by alignment, {tag} (lower = better privacy) ---")
-        print(f"  {'align':>6} " + "".join(f"{p:>13}" for p in order)
-              + f"{'oracle-unif':>14}")
-        for alignment in args.alignments:
-            cells = {}
+        print(f"\n--- Top-1 by operator, {tag} (lower = better privacy) ---")
+        print(f"  {'operator':>13} {'clean':>7} "
+              + "".join(f"{p:>11}" for p in order) + f"{'oracle-unif':>13}")
+        for operator in args.operators:
+            cells, clean = {}, []
             for p in order:
-                v = [r["top1"] for r in rows if r["alignment"] == alignment
+                v = [r["top1"] for r in rows if r["operator"] == operator
                      and r["placement"] == p and r["clip"] == clip]
                 cells[p] = sum(v) / len(v) if v else float("nan")
-            print(f"  {alignment:>6.2f} "
-                  + "".join(f"{cells[p]:>13.4f}" for p in order)
-                  + f"{cells['oracle'] - cells['uniform']:>+14.4f}")
-
+            cl = [r["clean_top1"] for r in rows if r["operator"] == operator
+                  and r["clip"] == clip]
+            clean = sum(cl) / len(cl) if cl else float("nan")
+            print(f"  {operator:>13} {clean:>7.4f} "
+                  + "".join(f"{cells[p]:>11.4f}" for p in order)
+                  + f"{cells['oracle'] - cells['uniform']:>+13.4f}")
         eng = {}
-        for p in order:
-            v = [r["delivered_input_energy"] for r in rows if r["placement"] == p
-                 and r["clip"] == clip]
-            eng[p] = sum(v) / len(v) if v else float("nan")
+        for operator in args.operators:
+            v = [r["delivered_input_energy"] for r in rows
+                 if r["operator"] == operator and r["clip"] == clip]
+            eng[operator] = sum(v) / len(v) if v else float("nan")
         print("  delivered input energy (nominal budget "
               f"{args.n_pixels * args.sigma ** 2:.0f}): "
-              + "  ".join(f"{p}={eng[p]:.0f}" for p in order))
+              + "  ".join(f"{o}={eng[o]:.0f}" for o in args.operators))
 
     print(f"\nwrote {out}")
     return 0
