@@ -140,6 +140,36 @@ CONCENTRATION_CLAIMS = [
 # is a bound on measured/predicted displacement; the advantage claims are the
 # oracle's Top-1 difference against uniform at a given clean-task difficulty.
 KNOWN_JACOBIAN_IDENTITY = (0.95, 1.02)
+
+# Operators at matched delivered MSE on the real benchmark.
+# (label, subdir, uniform Top-1, edge minus uniform)
+OPERATOR_CLAIMS = [
+    ("op sigma8 gaussian",    "operator_study/sigma8_gaussian",    0.1950, +0.0025),
+    ("op sigma8 correlated",  "operator_study/sigma8_correlated",  0.1892, -0.0008),
+    ("op sigma8 blur",        "operator_study/sigma8_blur",        0.1975, +0.0100),
+    ("op sigma8 mosaic",      "operator_study/sigma8_mosaic",      0.2000, -0.0075),
+    ("op sigma32 gaussian",   "operator_study/sigma32_gaussian",   0.1592, -0.0433),
+    ("op sigma32 correlated", "operator_study/sigma32_correlated", 0.0650, +0.0167),
+    ("op sigma32 blur",       "operator_study/sigma32_blur",       0.1025, +0.0500),
+    ("op sigma32 mosaic",     "operator_study/sigma32_mosaic",     0.0525, +0.1150),
+]
+
+# The strictly correct oracle, placing by the margin gradient.
+MARGIN_CLAIMS = [
+    ("margin/uniform",       "uniform",            0.1950),
+    ("margin/margin oracle", "margin_oracle",      0.1867),
+    ("margin/similarity",    "oracle_grad",        0.1942),
+    ("margin/anti-margin",   "anti_margin_oracle", 0.1942),
+]
+
+# Operators in the controlled model, at matched delivered energy and the
+# easiest task setting. (label, operator, uniform Top-1)
+CONTROLLED_OPERATOR_CLAIMS = [
+    ("controlled isotropic",    "isotropic",    0.832),
+    ("controlled correlated",   "correlated",   0.843),
+    ("controlled sign-random",  "sign_random",  0.845),
+    ("controlled sign-aligned", "sign_aligned", 0.001),
+]
 KNOWN_JACOBIAN_CLAIMS = [
     ("oracle advantage, clean 0.86", "linear", 1.0, -1.0, -0.423),
     ("oracle advantage, clean 0.34", "linear", 1.5, -1.0, -0.149),
@@ -385,6 +415,72 @@ def main() -> int:
             if not ok:
                 failures.append(f"known Jacobian/{label}: "
                                 f"paper={expected:+.3f} recomputed={got:+.3f}")
+
+    print("\n== Operators at matched delivered MSE (real benchmark) ==")
+    for label, subdir, exp_u, exp_d in OPERATOR_CLAIMS:
+        f = root / subdir / "per_query.csv"
+        if not f.is_file():
+            failures.append(f"{label}: {subdir}/per_query.csv absent")
+            print(f"  MISSING  {label}")
+            continue
+        r = pd.read_csv(f)
+        hit = (r.correct_rank == 1).astype(float)
+        u = float(hit[r.placement == "uniform"].mean())
+        e = float(hit[r.placement == "edge"].mean())
+        checked += 1
+        ok = abs(u - exp_u) <= 0.002 and abs((e - u) - exp_d) <= 0.002
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label:22s} "
+              f"paper=({exp_u:.4f}, {exp_d:+.4f}) recomputed=({u:.4f}, {e - u:+.4f})")
+        if not ok:
+            failures.append(f"{label}: paper=({exp_u:.4f},{exp_d:+.4f}) "
+                            f"recomputed=({u:.4f},{e - u:+.4f})")
+
+    print("\n== Placement by the margin gradient ==")
+    mf = root / "margin_oracle" / "per_query.csv"
+    if not mf.is_file():
+        failures.append("margin oracle: per_query.csv absent")
+        print("  MISSING  margin_oracle/per_query.csv")
+    else:
+        mr = pd.read_csv(mf)
+        mhit = (mr.correct_rank == 1).astype(float)
+        for label, placement, expected in MARGIN_CLAIMS:
+            sel = mhit[mr.placement == placement]
+            if sel.empty:
+                failures.append(f"{label}: no rows")
+                print(f"  FAIL  {label}: no rows")
+                continue
+            checked += 1
+            got = float(sel.mean())
+            ok = abs(got - expected) <= 0.002
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:22s} "
+                  f"paper={expected:.4f} recomputed={got:.4f}")
+            if not ok:
+                failures.append(f"{label}: paper={expected:.4f} recomputed={got:.4f}")
+
+    print("\n== Operators in the controlled model (matched energy) ==")
+    co_dir = root / "known_jacobian_operators"
+    co = [json.loads(l) for f in sorted(co_dir.glob("*.jsonl"))
+          for l in f.open(encoding="utf-8") if l.strip()] if co_dir.is_dir() else []
+    if not co:
+        failures.append("controlled operators: no exports found")
+        print("  MISSING  known_jacobian_operators/*.jsonl")
+    else:
+        easiest = min(r["nuisance"] for r in co)
+        for label, operator, expected in CONTROLLED_OPERATOR_CLAIMS:
+            sel = [r["top1"] for r in co if r["operator"] == operator
+                   and r["placement"] == "uniform" and r["clip"] < 0
+                   and abs(r["nuisance"] - easiest) < 1e-9]
+            if not sel:
+                failures.append(f"{label}: cell absent")
+                print(f"  FAIL  {label}: cell absent")
+                continue
+            checked += 1
+            got = sum(sel) / len(sel)
+            ok = abs(got - expected) <= 0.01
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:24s} "
+                  f"paper={expected:.3f} recomputed={got:.3f}")
+            if not ok:
+                failures.append(f"{label}: paper={expected:.3f} recomputed={got:.3f}")
 
     print("\n== Real place-labelled MSLS: placement null ==")
     for label, subdir, placement, expected in MSLS_PLACEMENT_CLAIMS:
