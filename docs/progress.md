@@ -691,3 +691,19 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 193. 【已完成】artifact 验证器 **106 → 122 项**,新增算子×预算 8 格、margin oracle 4 格、受控模型算子 4 格,全部从原始导出复现、0 处不符。
 
 194. 【遗留】**页数**:加入算子结果后正文为 14 页,超 TIFS 上限 1 页;补充材料已在自身 6 页上限。已删除的都是真正冗余或被取代的内容(被算子章节取代的确定性基线 matched-PSNR 节、正文里与散文重复的 proxy12 robustness 表、重复的 matched-PSNR 段落)。**再压就要动非冗余内容了,需要你决定**:是按 TIFS 超页收费投,还是指定砍掉某部分。
+
+## 本轮更新（2026-09-05，第二次主线重构：从「放哪」改为「放什么」）
+
+195. 【已完成】**改主线前先备份**:在 paper 子模块打了带注释的 tag `pre-operator-pivot` 并推送(可用 `git checkout pre-operator-pivot -- main.tex` 完整还原),同时把改前的 .tex 存到 `docs/archive/main_pre_operator_pivot.tex`。
+
+196. 【已完成】**标题改为** `Not Where, but What: Operator Choice in Spatially Selective Visual Location Privacy`。新主线:一个选择性机制做两个决策——预算放**哪**、预算花在**什么**上;文献学习、调参、消融第一个,第二个则不加说明地沿用(几乎永远是加性各向同性高斯噪声)。论文现在两条轴都测,并报告二者行为**完全不同**。
+
+197. 【已完成】重写:标题、摘要、引言的核心提问、scope 段、贡献列表、结论。算子章节从机理讨论里提出来,与其他结果并列(现位于预算扫描之后、机理之前),更名为 §The Operator Is the Live Variable;机理小节更名为 §Why Allocation Is the Wrong Variable,开头明确它现在要同时解释两件事;原 §Primary Result 改为 §First Axis;原 §Second Result 改为 §Matched Quality: the Mechanism Against One Other Operator,因为在新框架下它就是算子比较的一个特例(对手算子是全局高斯噪声)。
+
+198. 【已完成】**修正一个我自己编的数字**:scope 段我原写"约 150 组配对比较",没有依据。已改为精确表述——核心放置研究 98 组(两 checkpoint × 六骨干),外加真实基准上的 23 组(MSLS 八放置 7、分割类三次运行 5、margin oracle 3、算子研究 8),逐个从分析文件核对过。
+
+199. 【已完成】**压回 13 页**(TIFS 上限,含附录与参考文献),0 LaTeX 错误、0 未定义引用、0 overfull box。这轮压缩的都是**改主线本身让出来的合并空间**,不是删证据:matched-quality 节不再重复 ablation 表里的同一组数字而改为引用;伪代码块随方法章节降格为测试床而删除(它只是把已有公式再复述一遍);附录里重复正文的攻击者敏感度统计改为指向正文;确定性基线与 matched-PSNR 两个附录改为让位于算子章节(后者按投递 MSE 精确匹配,前者只能近似匹配 PSNR)。ablation 表由全宽改单栏(resizebox),消掉了最后一个 overfull box。
+
+200. 【已完成】改后全文一致性核验:`alg:ppedcrf`、`tab:robustness`、`tab:deterministic_matched_psnr` 三个被删对象的引用与标签均为 0(无悬空),无残留的"仅放置"旧框架表述,artifact 验证器 122 项仍全部复现、0 处不符。
+
+**本轮小结（改主线）：** 算子结果确实比放置结果更强,主线随之改为「不是放哪,而是放什么」。新框架下最有力的一句是:文献的通行做法是固定算子、优化敏感度图,**这恰好是在优化不起作用的变量、同时固定住真正起作用的那个**;而我们自己的测试床正是该做法的一个实例,这解释了为什么它的图退化成常数却几乎没有代价。同时如实保留了不利于新主线的边界——在保画质工作点上,**任何**算子都同样无效,算子的三倍杠杆只在预算大到已经损害画质之后才出现,论文对此明确写了"我们不声称选对算子就解决了问题"。
