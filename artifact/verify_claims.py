@@ -136,6 +136,16 @@ CONCENTRATION_CLAIMS = [
     ("uniform",      "uniform",      0.100),
 ]
 
+# Direction, optimised against surrogates and evaluated on a held-out
+# attacker at the operating point's delivered MSE. (label, condition, Top-1)
+TRANSFER_CLAIMS = [
+    ("isotropic control", "isotropic",  0.1900),
+    ("1 surrogate",       "transfer_1", 0.1450),
+    ("2 surrogates",      "transfer_2", 0.1125),
+    ("3 surrogates",      "transfer_3", 0.0625),
+    ("white box",         "white_box",  0.0000),
+]
+
 # Controlled retrieval task with an exactly known Jacobian. The identity check
 # is a bound on measured/predicted displacement; the advantage claims are the
 # oracle's Top-1 difference against uniform at a given clean-task difficulty.
@@ -415,6 +425,36 @@ def main() -> int:
             if not ok:
                 failures.append(f"known Jacobian/{label}: "
                                 f"paper={expected:+.3f} recomputed={got:+.3f}")
+
+    print("\n== Direction transfer to a held-out attacker ==")
+    tf = root / "direction_transfer" / "per_query.csv"
+    if not tf.is_file():
+        failures.append("direction transfer: per_query.csv absent")
+        print("  MISSING  direction_transfer/per_query.csv")
+    else:
+        tr = pd.read_csv(tf)
+        hit = (tr.correct_rank == 1).astype(float)
+        mses = tr.effective_mse
+        checked += 1
+        matched = float(mses.max() - mses.min()) <= 1e-3
+        print(f"  {'OK  ' if matched else 'FAIL'}  delivered MSE matched across "
+              f"conditions: [{float(mses.min()):.4f}, {float(mses.max()):.4f}]")
+        if not matched:
+            failures.append("direction transfer: delivered MSE not matched")
+        for label, cond, expected in TRANSFER_CLAIMS:
+            sel = hit[tr.condition == cond]
+            if sel.empty:
+                failures.append(f"transfer/{label}: no rows")
+                print(f"  FAIL  transfer/{label}: no rows")
+                continue
+            checked += 1
+            got = float(sel.mean())
+            ok = abs(got - expected) <= 0.002
+            print(f"  {'OK  ' if ok else 'FAIL'}  {label:20s} "
+                  f"paper={expected:.4f} recomputed={got:.4f} (n={len(sel)})")
+            if not ok:
+                failures.append(f"transfer/{label}: paper={expected:.4f} "
+                                f"recomputed={got:.4f}")
 
     print("\n== Operators at matched delivered MSE (real benchmark) ==")
     for label, subdir, exp_u, exp_d in OPERATOR_CLAIMS:
