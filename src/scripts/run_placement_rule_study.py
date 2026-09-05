@@ -73,6 +73,8 @@ PLACEMENT_LABELS = {
     "segmentation": "semantic background (DeepLabV3)",
     "segmentation_fcn": "semantic background (FCN-ResNet50)",
     "segmentation_ade": "scene structure (SegFormer/ADE20K)",
+    "margin_oracle": "attacker margin gradient (positive minus best rival)",
+    "anti_margin_oracle": "inverse of the attacker margin gradient",
 }
 PLACEMENTS = tuple(PLACEMENT_LABELS)
 
@@ -260,6 +262,35 @@ def attacker_gradient_map(
     target = target_embedding / target_embedding.norm().clamp_min(1e-12)
     similarity = (emb.flatten() * target.flatten()).sum()
     grad, = torch.autograd.grad(similarity, probe)
+    return grad.abs().sum(dim=1, keepdim=True).detach()
+
+
+def margin_gradient_map(
+    frame: torch.Tensor,
+    embedder: torch.nn.Module,
+    positive: torch.Tensor,
+    negative: torch.Tensor,
+    input_size: Tuple[int, int],
+) -> torch.Tensor:
+    """Per-pixel sensitivity of the quantity that actually decides Top-1.
+
+    The existing oracle targets the similarity to the correct gallery item.
+    Retrieval, however, is decided by the *margin* between that similarity and
+    the best competitor: a perturbation that lowers both equally changes no
+    ranking. Placing the budget by the margin gradient is therefore the
+    strictly correct oracle, and if even that fails to beat uniform, the
+    remaining objection that we simply built the wrong oracle is closed.
+    """
+    probe = frame.clone().detach().requires_grad_(True)
+    resized = F.interpolate(probe / 255.0, size=input_size, mode="bilinear",
+                            align_corners=False)
+    emb = embedder(resized)
+    emb = emb / emb.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+    pos = positive / positive.norm().clamp_min(1e-12)
+    neg = negative / negative.norm().clamp_min(1e-12)
+    margin = ((emb.flatten() * pos.flatten()).sum()
+              - (emb.flatten() * neg.flatten()).sum())
+    grad, = torch.autograd.grad(margin, probe)
     return grad.abs().sum(dim=1, keepdim=True).detach()
 
 
@@ -633,6 +664,24 @@ def main() -> None:
                     else:
                         pos_idx = [i for i, g in enumerate(gallery_ids) if g == query_id]
                     target_emb = gallery_emb[pos_idx[0]] if pos_idx else gallery_emb[0]
+                    # The best competitor from a different place: the item the
+                    # margin is actually measured against.
+                    rival_emb = None
+                    if any(p.startswith(("margin_oracle", "anti_margin"))
+                           for p in args.placements):
+                        with torch.no_grad():
+                            qe = embedder(F.interpolate(
+                                frames[frames.size(0) // 2: frames.size(0) // 2 + 1]
+                                .to(device) / 255.0,
+                                size=rcfg.input_size, mode="bilinear",
+                                align_corners=False))
+                            qe = qe / qe.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+                            gnorm = gallery_emb / gallery_emb.norm(
+                                dim=-1, keepdim=True).clamp_min(1e-12)
+                            sims = (gnorm @ qe.flatten()).clone()
+                            for i in pos_idx:
+                                sims[i] = -2.0
+                            rival_emb = gallery_emb[int(torch.argmax(sims).item())]
 
                     grad_map_ref = None
                     for placement in args.placements:
@@ -659,6 +708,15 @@ def main() -> None:
                                 raw = segmentation_map_fcn(frame, f"{query_id}::{t}")
                             elif placement == "segmentation_ade":
                                 raw = segmentation_map_ade(frame, f"{query_id}::{t}")
+                            elif placement in ("margin_oracle", "anti_margin_oracle"):
+                                with torch.enable_grad():
+                                    gm = margin_gradient_map(
+                                        frame, embedder, target_emb, rival_emb,
+                                        rcfg.input_size)
+                                if placement == "margin_oracle":
+                                    raw = gm
+                                else:
+                                    raw = 1.0 / (gm + gm.mean().clamp_min(1e-8))
                             elif placement in ("oracle_grad", "anti_oracle_grad"):
                                 with torch.enable_grad():
                                     g = attacker_gradient_map(
