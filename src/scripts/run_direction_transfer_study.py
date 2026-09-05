@@ -47,6 +47,7 @@ from eval.retrieval_attack import (  # noqa: E402
     build_gallery_embeddings,
     default_input_size_for_backbone,
     make_default_embedder,
+    preprocess_for_embed,
 )
 from scripts.run_geotagged_vpr_benchmark import (  # noqa: E402
     load_image,
@@ -72,9 +73,15 @@ def embed_gallery_batched(cfg, embedder, images: torch.Tensor,
 
 
 def normalised_embedding(embedder, frame: torch.Tensor, input_size) -> torch.Tensor:
-    """Unit-norm embedding of a [0,255] frame, resized to the backbone's input."""
-    x = F.interpolate(frame / 255.0, size=input_size, mode="bilinear",
-                      align_corners=False)
+    """Unit-norm embedding of a [0,255] frame.
+
+    Must use the same preprocessing as the gallery: the shared helper applies
+    ImageNet normalisation after resizing, and embedding queries without it
+    puts query and gallery in different colour spaces, which silently degrades
+    every condition and misdirects the gradient the aligned perturbation
+    follows.
+    """
+    x = preprocess_for_embed(frame, input_size)
     e = embedder(x)
     return e / e.norm(dim=-1, keepdim=True).clamp_min(1e-12)
 
