@@ -728,3 +728,12 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 208. 【遗留】**页数 14 页**,超 TIFS 上限 1 页。本轮已把 matched-quality 小节(在新框架下只是分配比较的特例)折成一段、预算扫描小节压缩并让位于附录。**再压就要动实质内容了,需要你决定**:按超页收费投,还是指定砍掉某部分。
 
 **本轮小结（方向 vs 分配）:** 这一轮的关键不是又跑了实验,而是**在已有数据里发现主线放错了轴**。之前两版主线都在比较"分配的两种方式"(放哪 / 放什么),而白盒结果早就说明真正的杠杆在方向上——只是被写成了一句对照。补上迁移实验后,方向这条轴不再只是诊断:不接触攻击者、同等失真下把 Top-1 砍掉三分之二,且趋势未饱和。同时如实记录了本轮我自己的两处错误(预处理不匹配、误删核心表),两处都是靠交叉核对而不是靠运气发现的。
+
+209. 【已完成】仓库整理(按用户要求,根目录不再新建文件夹):`artifact/` → `src/artifact/`、`tmp/` → `src/tmp/`、`docs/archive/` → `paper/backup/`。三处的注意事项都已处理:
+    - `build_artifact.sh` 里的 `REPO_ROOT="$(cd .. && pwd)"` 假设脚本在仓库根下,移到 `src/artifact/` 后会解析成 `src/src/outputs/`,已改为 `cd ../..` 并加注释;其余脚本用的都是相对路径或 `cd "$(dirname "$0")"`,不受影响。
+    - `.gitignore` 里的 `tmp/` 未做根锚定,同样匹配 `src/tmp/`,525MB 暂存文件仍被忽略,无需改规则。
+    - `paper/` 是子模块(Overleaf 仓)。第一次移动时 `git mv` 把文件按 superproject 文件 stage 到了子模块路径下,导致 superproject 把 `paper` 的 gitlink 标成删除(`D paper`)——**这会破坏子模块引用**,已复位并改为在子模块内单独提交。快照文件现在归属 Overleaf 仓,Overleaf 会列出它们但只编译 `main.tex`。
+    - 迁移后复跑 artifact 验证器:**128 项全部复现、0 处不符**,一键入口 `run_verification.sh` 因使用 `cd "$(dirname "$0")"` 与位置无关。
+    - 注:第 158 条等历史条目里写的 `artifact/` 路径是当时的事实,未改写;当前路径以本条为准。
+
+210. 【已完成】`appendix.tex` 定位澄清:它**不属于投稿件**(正文自带 `\appendices`,其余在 `supplementary.tex`),12 节中 8 节已被覆盖,且正文无任何指向它的悬空引用。但有 4 节是独有的(`Interpretation of the Added Benchmark`、`Scaling Confirmation: 50 Paired Locations`、`Margin-Level Diagnostics and Qualitative Case Study`、`Legacy Detector and Segmentation Utility Track`),故保留为 TIFS 拆分前的完整存档,不再编译。

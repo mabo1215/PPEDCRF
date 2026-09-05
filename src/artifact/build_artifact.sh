@@ -6,7 +6,8 @@
 # to regenerate them before packaging the bundle for submission.
 set -euo pipefail
 cd "$(dirname "$0")"
-REPO_ROOT="$(cd .. && pwd)"
+# This script lives at src/artifact/, so the repository root is two levels up.
+REPO_ROOT="$(cd ../.. && pwd)"
 
 echo "== collecting exports (CSV/JSON/status only; no images or weights) =="
 rm -rf results
