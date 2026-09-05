@@ -1,0 +1,1346 @@
+% IEEE TIFS submission format: two-column journal, single-anonymized review.
+\documentclass[10pt,journal]{IEEEtran}
+\providecommand{\Description}[1]{}
+\setlength{\headheight}{20.5pt}
+% Keep this manuscript standalone: if the appendix is mentioned, use plain text
+% such as "Appendix" instead of cross-document \ref commands to appendix.tex.
+
+\usepackage{qtree}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsfonts}
+\usepackage{mathrsfs}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amscd}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+% No subfigure package is needed in the compact IEEE main paper.
+\usepackage{array}
+\usepackage{algorithm}
+\usepackage{bm}
+\usepackage{comment}
+\usepackage{makecell}
+% IEEEtran supplies the conference caption formatting.
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+
+\usepackage{algpseudocode}
+\usepackage[hidelinks]{hyperref}
+\raggedbottom
+
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{assumption}{Assumption}
+
+\title{Does Placement Matter? Energy-Matched Evaluation of Spatially Selective Location-Privacy Mechanisms}
+% TIFS uses single-anonymized review: reviewers are anonymous, authors are not,
+% so the author block is disclosed rather than withheld.
+\author{Bo~Ma,
+        Weiqi~Yan,
+        and~Jinsong~Wu,~\IEEEmembership{Senior~Member,~IEEE}
+\thanks{B.~Ma is with Resideo Technologies Inc., Scottsdale, AZ, USA, and with
+the Auckland University of Technology, Auckland, New Zealand (e-mail:
+rcn4743@aut.ac.nz).}
+\thanks{W.~Yan is with the Auckland University of Technology, Auckland, New
+Zealand.}
+\thanks{J.~Wu is with the Guilin University of Electronic Technology, Guilin,
+China.}}
+\begin{document}
+\maketitle
+\begin{abstract}
+Many visual privacy mechanisms perturb frames \emph{selectively}, concentrating a fixed noise budget where a learned map deems the image sensitive, and report an improved privacy--utility curve as evidence that the placement is doing the work. That evidence is insufficient: a selective mechanism must also be compared against controls carrying the \emph{same} perturbation energy elsewhere. We propose an energy-matched protocol that redistributes a mechanism's own weights uniformly, cyclically, or by pixel permutation under a verified energy-conservation gate, paired with matched-PSNR comparison against unstructured noise. Applied to a DCRF-guided mechanism built as a testbed, the protocol first exposes that its learned map is numerically constant, so the mechanism performs no spatial selection despite being designed for it --- a defect no privacy--utility curve reveals. On a second checkpoint whose map is genuinely selective, and across eight energy-matched placements including an oracle built from the attacker's own gradients, no placement beats spreading the budget uniformly at the operating point, and at matched quality the mechanism is indistinguishable from global Gaussian noise in 119 of 120 comparisons. A 12.5$\times$ budget sweep locates where selectivity does help: only once the perturbation has already halved retrieval accuracy, and what pays there is alignment with image edges rather than with any sensitivity map. The null is not an artifact of the mined proxy: on a real place-labelled MSLS benchmark (400 queries, 2,000-image gallery, 277 official place identities) every difference from uniform stays inside $\pm0.01$ Top-1, and three independent placement rules driven by published segmentation models behave the same way. A controlled retrieval task with an exactly known Jacobian confirms the first-order prediction to within 4\% and shows the oracle advantage it implies is real, so the null is not an artifact of the algebra: it is produced by a bounded output range and by how little margin the clean task has. Varying the perturbation \emph{operator} instead of its placement, at matched delivered distortion, then locates where the gains actually are: no placement beats uniform under any of four operators at the operating point, but at larger budgets the operator alone moves Top-1 by a factor of three, and the placement effect that finally appears flips sign with the operator, so a rule tuned on one is harmful on another. The usual procedure --- fix the operator at additive Gaussian noise and optimise the map --- optimises the variable that does not matter while holding fixed the one that does. We recommend energy-matched controls, and operator comparison at matched distortion, as standard practice.
+% \vspace{1em}
+% \noindent\textbf{Code:} \url{https://github.com/mabo1215/PPEDCRF}
+\end{abstract}
+
+\section{Introduction}
+Mobile-recorded videos---from dashcams, ADAS platforms, bodycams, drones, and wearable cameras---are routinely uploaded for safety investigation, incident auditing, and model improvement. Stripping explicit metadata such as GPS coordinates is necessary but not sufficient: the background of a single frame may contain distinctive landmarks matchable against large-scale geo-tagged databases.
+
+This paper addresses \emph{location privacy} under a background-based retrieval attacker. The setting differs from face or license-plate anonymization: even with identities hidden, background cues such as buildings, road layouts, signage, and skylines still expose where a video was recorded.
+
+The dominant response is \emph{selective} perturbation: predict which pixels carry the sensitive signal, then concentrate a limited noise budget there, so that quality is spent only where privacy requires it. Such methods are normally validated by showing a better privacy--utility curve than perturbing the whole frame. We observe that this comparison cannot separate two very different explanations of the same curve. A selective mechanism might work because it identified the right pixels, or merely because a spatially concentrated perturbation of a given total energy happens to disturb an embedding as much as a diffuse one --- in which case the learned map is decorative, and any map of equal energy would do.
+
+Distinguishing these requires a control that holds perturbation energy fixed and varies only \emph{where} it lands. To our knowledge such controls are not standard practice in this literature. We therefore ask a methodological question rather than a design one: \textbf{how can we tell whether a spatially selective privacy mechanism derives its protection from its placement at all?}
+
+\paragraph{Threat model and released object.}
+Let $q$ denote a released video frame and $\mathcal{D}=\{(s_i,\ell_i)\}_{i=1}^N$ a gallery of geo-tagged reference images with location labels $\ell_i$. The attacker computes an embedding $f(\cdot)$ and ranks gallery images by similarity $\mathrm{sim}(f(q),f(s_i))$. A retrieval attack succeeds if the correct location appears in the Top-$k$ list. Our defense modifies the released frame before the attacker sees it. The downstream utility target is a detector or segmenter that still operates on the sanitized frame. A short neighboring-frame context may be used internally to stabilize the support estimate, but the primary released object and evaluated attack are frame-level.
+
+\paragraph{Why not encryption?}
+Encryption protects data in transit or at rest, but not the setting where decrypted frames must be processed for auditing, training, or analytics: once a frame reaches a perception module, its background cues are equally available to a retrieval attacker. Our objective is \emph{utility-preserving sanitization}---selectively perturbing the background evidence that drives location retrieval, without the utility loss of global masking or indiscriminate noise.
+
+\paragraph{Scope of the claims.}
+This paper makes an evaluation claim, not a superiority claim. The mechanism we test uses a Gaussian-inspired calibration index to select an image-space noise scale; we do \emph{not} claim a formal $(\varepsilon,\delta)$-DP guarantee, and the index is an engineering control for choosing an operating point rather than a certified budget. We also do not claim that spatial selectivity is useless in general --- our own budget sweep shows it is not. What we establish is narrower and checkable: over eight placement rules, two checkpoints, six attacker backbones and 98 paired comparisons, nothing outperforms uniform spreading \emph{at the quality-preserving operating point}, and the one map with real spatial selectivity performs significantly worse. Placement does become exploitable at large budgets, but only well outside the regime these mechanisms target. A different mechanism or task could behave otherwise; the protocol is offered so that such a claim can be checked rather than assumed.
+
+\begin{comment}
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/twopic_clear.png}
+  \caption{A released video frame can be matched to a geo-tagged reference image through background cues even when explicit metadata are removed.}
+  \Description{A two-panel example showing a released video frame and a visually similar geo-tagged reference image, illustrating that background structures alone can reveal location.}
+  \label{fig:twopic}
+\end{figure*}
+\end{comment}
+
+\subsection{Related Work}
+\textbf{Visual anonymization for multimedia.}
+Visual privacy has been surveyed extensively~\cite{padilla2015visual,ribaric2016deidentification}; classical methods obfuscate foreground entities---mainly faces and license plates---by blurring, pixelation, or cryptographic protocols~\cite{Chamikara2020101951,Li2019212,avidan2007efficient,erkin2009privacy}. Generative approaches instead synthesize de-identified faces: DeepPrivacy~\cite{hukkelaas2019deepprivacy} replaces faces via a pose-conditioned GAN, CIAGAN~\cite{maximov2020ciagan} performs identity swaps preserving expression and pose, and head inpainting~\cite{sun2018natural} avoids the artifacts of na\"{\i}ve blurring. Oh et al.~\cite{oh2016faceless} showed recognition networks can re-identify people even with faces fully occluded, and Zhou and Pun~\cite{zhou2020personal} pixelate bystanders in live streams. All are foreground-centric: none address a sensitive signal residing in the \emph{background scene} that supports geo-localization, the threat model targeted here.
+
+\textbf{Privacy-preserving perception pipelines.}
+A parallel line modifies inputs, training, or intermediate representations to limit leakage: privacy-preserving medical detection~\cite{liu2019privacy}, learned face anonymization that preserves action detection~\cite{ren2018learning}, federated and encrypted inference~\cite{kaissis2020secure}, and GANobfuscator~\cite{xu2019ganobfuscator}, which perturbs images before sharing to block attribute inference. These emphasize downstream utility but again assume a foreground-centric risk, whereas our primary risk is the scene context enabling geo-localization.
+
+\textbf{Visual place recognition and geo-localization.}
+VPR matches a query to geo-tagged references using learned
+descriptors~\cite{lowry2016visual,masone2021survey}, from trainable VLAD
+pooling over deep backbones~\cite{arandjelovic2016netvlad,he2016deep} and
+day--night robustness~\cite{torii201524} to multi-scale patch
+fusion~\cite{hausler2021patchnetvlad} and the stronger
+CosPlace~\cite{berton2022rethinking} and MixVPR~\cite{ali2023mixvpr}. These
+define the attacker side of our threat model: the stronger the embedding, the
+harder any attacker-agnostic defense becomes. We evaluate three dedicated VPR
+embedders alongside classification-style attackers, but not the full design
+space, so ours is bounded transfer evidence rather than universal robustness.
+
+\textbf{Scene-level and location privacy.}
+Point-cloud localization representations can leak detailed scene
+content~\cite{pittaluga2019revealing}, motivating localization that hides
+geometric structure from the server~\cite{speciale2019privacy};
+geo-indistinguishability~\cite{andres2013geo} extends DP to location-based
+services and Shokri et al.~\cite{shokri2011quantifying} quantify location
+privacy against inference attacks. These protect geometric or coordinate-level
+representations, whereas the setting here is the released pixel-domain frame
+against retrieval-based geo-localization.
+
+\textbf{Differential privacy and perturbation-based defenses.}
+DP bounds leakage formally~\cite{dwork2014algorithmic} through the calibrated
+Gaussian mechanism~\cite{balle2018improving}, R\'{e}nyi
+composition~\cite{mironov2017renyi} and DP-SGD~\cite{abadi2016deep}; in
+multimedia, VideoDP~\cite{wang2020videodp} applies DP to video analytics and
+Roy and Boddeti~\cite{roy2019mitigating} limit representation leakage by
+maximum entropy. Perturbation defenses are also studied
+adversarially~\cite{goodfellow2015explaining,madry2018towards}. Our testbed
+uses a Gaussian-inspired calibration index as a strength knob rather than
+claiming end-to-end DP.
+
+\textbf{Conditional random fields for spatial--temporal inference.}
+Efficient mean-field inference for fully connected
+CRFs~\cite{krahenbuhl2011efficient}, CRF-as-RNN~\cite{zheng2015conditional}
+and dense CRFs inside segmentation~\cite{chen2017deeplab} established the
+spatial machinery, and dynamic CRFs~\cite{wang2005dynamic} add temporal edges
+across frames. Our testbed combines mean-field-style spatial smoothing with
+temporal consistency to produce the support maps that guide its perturbation.
+
+\textbf{Privacy--utility trade-off optimization.}
+A growing body of work studies the privacy--utility tension in image and video processing~\cite{wu2018towards}. McPherson et al.~\cite{mcpherson2016defeating} showed that mosaicing and blurring can be inverted by trained networks, motivating more principled perturbation. Across this literature, spatial selectivity is typically validated by a favourable trade-off curve against a non-selective baseline. Our contribution is orthogonal to any particular design: we supply the missing control that holds perturbation energy fixed while varying only its placement, and report what it shows for a mechanism of this family.
+
+
+\subsection{Contributions}
+Our contributions are:
+\begin{itemize}
+    \item \textbf{An energy-matched evaluation protocol} for spatially selective privacy mechanisms. Given any mechanism that emits per-pixel perturbation weights, we construct three controls --- uniform, cyclically shifted, and pixel-permuted --- that preserve the weights' sum of squares exactly, verified by an energy-conservation gate, and compare retrieval outcomes pairwise on identical queries and seeds. Combined with matched-PSNR comparison against unstructured noise, this separates ``the placement matters'' from ``the energy matters.''
+    \item \textbf{Negative results obtained with that protocol.} Applied to PPEDCRF --- a DCRF-guided selective mechanism we implement as a testbed --- the protocol immediately exposes that its released map is a constant, so the mechanism performs no spatial selection at all while still producing a plausible privacy--utility curve. Across eight energy-matched placements on two checkpoints (one constant, one genuinely selective), including an attacker-gradient oracle, no placement beats uniform spreading at the operating point in 98 comparisons, and the genuinely selective map is significantly worse.
+	\item \textbf{The operator, not the placement, is the design variable.} Holding placement fixed and varying what the budget is spent on --- additive Gaussian, spatially correlated, selective low-pass, selective block quantisation --- at matched delivered MSE, the null survives every operator at the operating point, while at larger budgets the operator alone moves Top-1 from 0.159 to 0.053 and the sign of the placement effect reverses between operators. In the controlled model, three operators differing in spatial structure are interchangeable at matched energy whereas one differing in directional control drives Top-1 to 0.001 under uniform placement. This converts the negative result into a design recommendation with a direction.
+	\item \textbf{A mechanistic account, checked against a known Jacobian.} Attacker sensitivity is in fact strongly concentrated (top decile carries 67.7\% of gradient energy), so the null is not explained by homogeneity; rather, gradient magnitude fixes \emph{where} noise goes but not \emph{which direction} it moves the embedding, which is why an optimized white-box perturbation at the same quality succeeds where every placement fails. We test this in a controlled retrieval task whose encoder is known in closed form, so sensitivity is exact rather than estimated. There the first-order prediction is confirmed to within 4\% across 168 cells and the oracle advantage it predicts is large, establishing that the measured null is not an artifact of the algebra; switching on a bounded output range and realistic task difficulty then removes that advantage, while a nonlinear encoder does not, isolating the two causes. The account predicts, and a budget sweep confirms, that placement becomes exploitable only once the perturbation leaves the small-amplitude regime --- that is, only after the image quality these mechanisms exist to preserve has already been spent. The results hold across six attacker backbones, three gallery sizes, a real GPS-labeled MSLS benchmark spanning eight cities, and both threat models, with cluster-aware significance throughout and a one-command artifact that recomputes every reported number from raw outputs.
+\end{itemize}
+
+\section{The Mechanism Under Test}
+\label{sec:method}
+
+To exercise the protocol we need a concrete spatially selective mechanism that
+is representative of the family described above: one that predicts where the
+sensitive signal lies, concentrates a fixed budget there, and exposes the
+per-pixel weights the protocol needs. We build PPEDCRF for this purpose. It is
+deliberately conventional --- a learned support map, temporal smoothing, a
+normalized amplitude rule, and calibrated Gaussian noise --- because the
+question is not whether this particular design is the best of its kind, but
+whether a design of this kind derives its protection from placement at all. A
+mechanism of our own construction also lets us report a negative result
+without misrepresenting anyone else's system.
+
+\subsection{Pipeline Overview}
+PPEDCRF operates on a frame stream $\mathcal{X}=\{I_t\}_{t=1}^T$. Per frame it estimates a candidate background-support map, optionally reuses the previous estimate as a temporal prior, normalizes perturbation strength, and injects indexed Gaussian noise only inside the inferred support, giving the pipeline $I_t \rightarrow u_t \rightarrow p_t \rightarrow \alpha_t \rightarrow I_t'$, where $u_t$ is the unary support logit, $p_t$ the DCRF-refined map, $\alpha_t$ the NCP control map, and $I_t'$ the released frame that the attacker observes.
+
+\begin{comment}
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/architecture_of_solution.png}
+    \caption{Overview of the PPEDCRF pipeline. A unary candidate-support predictor produces per-frame logits, DCRF enforces spatial--temporal consistency, NCP rescales perturbation strength, and indexed Gaussian noise is injected only in the selected background support before release.}
+    \Description{A pipeline diagram with four stages: unary background-sensitivity prediction, dynamic CRF refinement across neighboring frames, normalized control penalty scaling, and selective Gaussian perturbation of the released frame.}
+    \label{fig:arc}
+\end{figure*}
+\end{comment}
+
+\begin{comment}
+\begin{table}[t]
+\centering
+\caption{Compact notation summary.}
+\label{tab:symbols}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth} X}
+\hline
+Symbol & Meaning \\
+\hline
+$I_t$ & Input frame at time $t$. \\
+$u_t$ & Unary candidate-support logit predicted from $I_t$. \\
+$p_t$ & DCRF-refined continuous support map. \\
+$\alpha_t$ & NCP control map that rescales perturbation strength. \\
+$\sigma_0$ & Base indexed-Gaussian noise scale selected by the calibration index. \\
+$I_t'$ & Sanitized frame released to the attacker or downstream model. \\
+$f(\cdot)$ & External retrieval backbone used by the attacker. \\
+$\mathcal{D}$ & Retrieval gallery of candidate reference images. \\
+\hline
+\end{tabularx}
+\end{table}
+\end{comment}
+
+\subsection{DCRF Mask Inference}
+The unary network $g_\theta(\cdot)$ predicts a per-pixel candidate background-support logit
+\begin{equation}
+\label{eq:unary}
+u_t = g_\theta(I_t).
+\end{equation}
+Here $\sigma(z)=1/(1+\exp(-z))$ is the element-wise logistic sigmoid. The
+released unary predictor is a newly implemented lightweight encoder--decoder,
+not an adapted VPR or segmentation backbone but a small encoder--decoder of
+87,441 parameters, trained with binary cross-entropy against pixel-level
+support masks when these are available. The monitoring pool used for retrieval
+has no independent pixel-level support ground truth, so we do not interpret
+the unary output as a validated privacy-sensitivity estimate.
+
+We initialize the continuous candidate-support map as $p_t^{(0)}=\sigma(u_t)$ and refine it with a dynamic CRF using a small number of mean-field iterations that matches the released implementation:
+\begin{equation}
+\label{eq:dcrf}
+p_t^{(k+1)} =
+\sigma\!\left(
+u_t + \lambda_s \big(S(p_t^{(k)}) - p_t^{(k)}\big)
+      + \lambda_\tau \big(\hat{p}_{t-1} - p_t^{(k)}\big)
+\right),
+\end{equation}
+where $S(\cdot)$ is average-pooling-based spatial smoothing with a
+$3\times3$ kernel, stride 1, and reflect padding in the released
+implementation; $\hat{p}_{t-1}$ is the previous refined map warped into frame
+$t$ (or reused directly when optical flow is unavailable), and $\lambda_s,
+\lambda_\tau$ are spatial and temporal weights. We use five mean-field-style
+iterations, $\lambda_s=\lambda_\tau=2$, and no optical-flow warp in the
+reported controlled benchmark. After these fixed iterations, the final
+refined mask is denoted by $p_t$.
+
+
+\subsection{NCP Control and Gaussian-Inspired Calibration}
+The normalized control penalty (NCP) rescales the refined mask rather than redefining the threat model. In the released code, NCP is implemented as a normalized control map
+\begin{equation}
+\label{eq:ncp}
+\alpha_t = \alpha \cdot \frac{p_t}{\max(p_t)+\epsilon},
+\end{equation}
+where $\alpha$ is a global control knob and $\epsilon$ avoids division by zero. Optional class-specific weights can be multiplied into $\alpha_t$ when semantic region labels are available; in the current experiments the control map is derived directly from the refined candidate-support map. In other words, $p_t$ remains the spatial support and $\alpha_t$ only modulates the perturbation amplitude within that support.
+
+Combining Eq.~\eqref{eq:ncp} with Eq.~\eqref{eq:image_noise} gives the
+effective spatial weight
+\begin{equation}
+\label{eq:effective_weight}
+w_t = \alpha_t \odot p_t
+    = \alpha\,\frac{p_t^2}{\max(p_t)+\epsilon}.
+\end{equation}
+The ``penalty'' is therefore a normalization and amplitude-control operation,
+not an additive training loss; $w_t$ is the weight the protocol redistributes.
+
+We use a Gaussian-inspired calibration index to select the base image-space noise level:
+\begin{equation}
+\label{eq:gaussian_calibration}
+\sigma_0(\varepsilon,\delta) =
+\frac{C\sqrt{2\log(1.25/\delta)}}{\varepsilon},
+\end{equation}
+where $C$ is a user-selected image-space scale, not a validated sensitivity
+bound. Equation~\eqref{eq:gaussian_calibration} is a calibration index for
+perturbation strength and is \emph{not} sufficient to claim end-to-end
+differential privacy: no adjacency relation, release sensitivity bound, or
+composition proof is supplied. Here $\varepsilon$ and $\delta$ are index
+parameters only; we fix $\delta=10^{-5}$ and choose $C$ so that $\sigma_0$ is
+in pixel units, making $\sigma_0=8$ the fixed operating point of the retrieval
+runs rather than a certified guarantee. Noise is drawn deterministically per
+frame from a fresh seed offset, not accumulated across frames.
+
+\subsection{Selective Image-Space Perturbation}
+After DCRF and NCP, PPEDCRF perturbs only the inferred candidate background support:
+\begin{equation}
+\label{eq:image_noise}
+I_t' = \mathrm{clip}\!\left(I_t + \alpha_t \odot p_t \odot \eta_t,\ 0,\ 255\right),
+\qquad
+\eta_t \sim \mathcal{N}(0,\sigma_0^2 I).
+\end{equation}
+Equation~\eqref{eq:image_noise} is the released mechanism evaluated in this paper. The implementation indexes each Gaussian draw by the release seed and frame index. The attacker never observes intermediate maps such as $u_t$, $p_t$, or $\alpha_t$; it only observes the sanitized frame $I_t'$ and computes its own embedding $f(I_t')$ for retrieval. The product $\alpha_t \odot p_t$ is intentional: $p_t$ defines where perturbation is allowed, while $\alpha_t$ further increases the amplitude on the highest-confidence sensitive pixels inside that same support.
+
+Selective perturbation matters because global Gaussian noise can damage foreground perception disproportionately, while random masking perturbs many pixels that are irrelevant to location retrieval. PPEDCRF instead concentrates perturbation energy on a candidate background support; temporal reuse is a consistency prior, not a sequence-level privacy guarantee.
+
+\begin{comment}
+\subsection{Algorithm}
+\begin{algorithm}[t]
+\caption{PPEDCRF Release-Side Sanitization}
+\label{alg:ppedcrf}
+\begin{algorithmic}[1]
+\Statex \textbf{Input:} frame stream $\mathcal{X}=\{I_t\}_{t=1}^T$, unary predictor $g_\theta$, DCRF parameters $(\lambda_s,\lambda_\tau)$, NCP scale $\alpha$, base noise scale $\sigma_0$
+\Statex \textbf{Output:} sanitized frames $\mathcal{X}'=\{I_t'\}_{t=1}^T$; each frame is the release object
+\State $\hat{p}_0 \gets \mathbf{0}$
+\For{$t=1$ to $T$}
+    \State $u_t \gets g_\theta(I_t)$
+    \State $p_t \gets \mathrm{DCRFRefine}(u_t,\hat{p}_{t-1})$
+    \State $\alpha_t \gets \alpha \cdot p_t / (\max(p_t)+\epsilon)$
+    \State Sample $\eta_t \sim \mathcal{N}(0,\sigma_0^2 I)$
+    \State $I_t' \gets \mathrm{clip}(I_t + \alpha_t \odot p_t \odot \eta_t, 0, 255)$
+    \State $\hat{p}_t \gets p_t$
+\EndFor
+\State \Return $\mathcal{X}'$
+\end{algorithmic}
+\end{algorithm}
+\end{comment}
+
+On a single monitoring frame at $192\times 320$ resolution, DCRF mask inference and noise injection complete in under 50\,ms on a consumer GPU (NVIDIA GTX 1060), making the pipeline compatible with near-real-time release workflows.
+
+\section{Experimental Evaluation}
+\label{sec:experiments}
+
+\subsection{Experimental Protocol}
+\textbf{Controlled paired-scene retrieval benchmark.}
+To evaluate the background-based retrieval attacker reproducibly, we build a controlled benchmark from a frozen pool of 120 monitoring sequences, taking one representative frame each. A fixed ResNet18~\cite{he2016deep} embedder greedily pairs the most similar sequences into 12 synthetic location pairs, with the gallery view drawn from the first half of one sequence and the query view from the second half of its partner; 36 unused hard distractors, selected by maximum anchor similarity, give galleries of size 12, 24, and 48. Location identifiers are synthetic: the pool has no GPS labels, so this benchmark does not measure recovery of a verified geographic identity. Construction is deterministic and all stochastic results average three noise seeds.
+
+The benchmark is intentionally hard rather than random: across the 12 pairs the anchor cosine similarity averages $\approx$0.99 (0.98--1.00) and the distractors average 0.86 maximum similarity to the paired set (hardest 0.99). We therefore treat it as a hard-negative proxy for location retrieval.
+
+Legacy detector-training results on MOT16/17, Cityscapes, KITTI and VOC2008
+exist in the released repository but reflect a training-time utility pipeline
+and do not bear on the location-retrieval question, so they are not used here.
+For label-backed same-image evidence we instead evaluate the exact sanitized
+frames against 200 indexed VOC segmentation masks and a co-audited 200-image
+COCO detection manifest, using frozen DeepLabV3--ResNet50 and Faster R-CNN
+ResNet50-FPN. Both manifests were audited together, so the mAP and mIoU values
+in the Supplementary Material share one checkpoint, code path and build.
+
+\begin{comment}
+\begin{table}[t]
+\centering
+\caption{E4 same-image utility on 200 indexed VOC segmentation images and 200 COCO detection images at $\sigma_0=8$. The original row is the unsanitized reference; all other rows report metrics on the exact sanitized frames. mAP@50 uses a frozen Faster R-CNN ResNet50-FPN; mIoU uses a frozen DeepLabV3-ResNet50.}
+\label{tab:e4seg}
+\begin{tabular}{lcc}
+\hline
+Method & mAP@50 $\uparrow$ & mIoU $\uparrow$ \\
+\hline
+Original reference & 0.475 & 0.697 \\
+PPEDCRF & 0.429 & 0.669 \\
+w/o temporal consistency & 0.429 & 0.669 \\
+w/o NCP & 0.429 & 0.669 \\
+Unary-only + NCP & 0.429 & 0.669 \\
+No DCRF & 0.428 & 0.669 \\
+Mask-guided blur & 0.402 & 0.626 \\
+Mask-guided mosaic & 0.195 & 0.296 \\
+Global Gaussian noise & 0.352 & 0.632 \\
+\hline
+\end{tabular}
+\end{table}
+\end{comment}
+
+Both agree with the retrieval-side ablation: at this budget the mechanism
+preserves more downstream utility than global noise or the deterministic
+baselines, the module ablations leave same-image utility unchanged at this
+rounding --- mirroring their weak separation on the retrieval side --- and
+mask-guided mosaic loses the most on both tasks, consistent with it being the
+most visually destructive baseline in Table~\ref{tab:ablation}.
+
+\begin{comment}
+\begin{table}[t]
+\centering
+\caption{Datasets and roles in the revised evaluation.}
+\label{tab:datasets}
+\begin{tabular}{p{0.24\linewidth} p{0.68\linewidth}}
+\hline
+Dataset / benchmark & Role in this paper \\
+\hline
+MOT16 / MOT17, Cityscapes, KITTI, VOC2008 & Legacy utility references; not used in this paper. \\
+VOC segmentation (E4) & Same-image downstream utility check on the indexed sanitized query frames. \\
+Controlled paired-scene benchmark & New retrieval, ablation, fixed-budget privacy--utility, and attacker-sensitivity evaluation built from monitoring sequences. \\
+\hline
+\end{tabular}
+\end{table}
+\end{comment}
+
+Unless otherwise stated, frames are resized to $192\times 320$, the attacker uses cosine similarity on fixed embeddings, and privacy is reported as Top-1/5/10 retrieval accuracy. The query is one released frame; neighboring frames feed only the optional temporal support estimate. For query $q_i$ we define the correct-versus-hardest-negative margin $m_i=s(q_i,g_i^+)-\max_{g_j\in\mathcal{G}_i^-}s(q_i,g_j^-)$, positive when the correct item outranks every negative. Perceptual utility uses PSNR and SSIM~\cite{wang2004image}. Raw queries are deterministic; sanitized variants average three noise seeds (1234--1236). All backbone-specific results come from one unified benchmark construction and the same averaging protocol, so attacker families are directly comparable.
+
+\textbf{Scope of this benchmark.} The paired-scene benchmark isolates release-side privacy mechanisms when a full geo-localization dataset is unavailable locally. Anchoring pair mining on ResNet18 similarity improves reproducibility but may bias the benchmark toward retrieval models resembling the anchor embedder; the ResNet50/VGG16 and dedicated VPR transfers (CosPlace, MixVPR, Patch-NetVLAD) partly test this without eliminating it. Results therefore support claims about privacy--utility trade-offs, masking strategy, and attacker sensitivity, but do not prove universal robustness or constitute a formal differential-privacy certificate. Appendix~A provides implementation-alignment notes and a 50-pair confirmation assessing whether the 12-pair conclusions persist on a broader set.
+
+\textbf{External validation on real place identities (E1).} To check that the
+findings are not an artifact of mined proxy pairs, we built gate-passing
+manifests from the official Mapillary Street-Level Sequences
+(MSLS)~\cite{mapillarymsls2020} \texttt{train\_val} release, using its
+official \texttt{unique\_cluster} place label. The primary manifest and the
+two official cross-time subtasks were evaluated against six attacker
+backbones --- ResNet50, VGG16, and the VPR architectures
+CosPlace~\cite{berton2022rethinking}, MixVPR~\cite{ali2023mixvpr}, and
+Patch-NetVLAD~\cite{hausler2021patchnetvlad}, alongside ResNet18 --- first at
+200 queries over a 1000-image two-city gallery, then rebuilt at 8-city,
+400-query, 2,000-gallery scale. On real place data the protective effect is
+directionally consistent with the proxy but far smaller (Top-1 drop 0.018
+versus 0.111); it holds in all six backbones on the wider primary manifest,
+while 2 of 12 cross-time cells remain adverse, both ResNet18. A place-cluster
+bootstrap finds only 5 of the original 18 cells individually significant, so
+we treat cell counts as directional. Queries remain almost entirely
+Forward-view and day, with empty season/weather fields. A white-box
+sign-gradient diagnostic --- a distinct adaptive-attacker threat model, not
+pooled with the black-box results --- collapses Top-1 to $0.000$--$0.055$ on
+every backbone and manifest scale tested. Appendix~A reports all cell-level
+comparisons, coverage gates, and scope.
+
+\textbf{Independent check on the support map itself.} Separately from the
+retrieval protocol, we asked whether the learned map agrees with an
+independent notion of image sensitivity. Retraining a mask-backed predictor on
+KITTI-360 (semantic labels as a structural-support target, not sensitivity
+ground truth) and testing on a held-out sequence yields non-constant maps but
+negative attribution agreement: Spearman $-0.00024$, top-10 overlap 0.0497,
+and 0.0947 of the occlusion-reference energy captured. This is an independent
+negative result consistent with the energy-matched finding below; Appendix~A
+gives the protocol.
+
+\textbf{Comparability across reported tables.} The main retrieval table uses the proxy12 export with three noise seeds, the default ResNet18 attacker, and fixed $\sigma_0=8$; the full cross-backbone/gallery matrix, the proxy50 confirmation, and the matched-PSNR sweep are in Supplementary Material. Because each proxy run shares pair discovery, gallery construction, and seeds across variants, within-run comparisons are directly meaningful.
+
+\subsection{Primary Result: Does Placement Matter?}
+\label{sec:causality}
+
+The protocol's first output on this mechanism is a diagnostic about the
+mechanism itself, and it is worth reporting before any retrieval number. The
+released support map is, numerically, a constant. Across inputs its unary
+sigmoid ranges over $[0.4991, 0.5015]$ with a spatial coefficient of variation
+of $6\times10^{-4}$, and the effective weight $w_t$
+(Eq.~\eqref{eq:effective_weight}) inherits that flatness (support coverage
+$1.000$: every pixel is ``selected''). The mechanism marketed as spatially
+selective performs no spatial selection at all; at this checkpoint it is
+global Gaussian noise scaled by one half.
+
+This matters for how the redistribution controls must be read. Spreading,
+rolling, or permuting an already-flat map returns an essentially identical
+map, so those three controls are near-no-ops here, and the zero-discordant
+outcome they produce follows from the map's degeneracy rather than from any
+fact about placement. We report this explicitly because the opposite reading
+--- treating that null as evidence that location is irrelevant --- would be
+unsupported, and because it is precisely the kind of error the protocol
+exists to prevent. No privacy--utility curve would have revealed this: the
+mechanism still produces a perfectly plausible trade-off plot while its map
+does nothing.
+
+Testing placement therefore requires placements that are genuinely
+non-uniform and independent of the degenerate map. We construct six: the
+learned map, a uniform control, spectral-residual saliency, Sobel edge
+magnitude, a centre-bias prior, and a fixed random field, each renormalised
+to carry exactly the learned map's sum of squared weights (energy-conservation
+gate, worst relative error $3.4\times10^{-5}$). We add two more from the
+attacker's own input gradients: an \emph{oracle} that concentrates the budget
+on the pixels where $|\partial\,\mathrm{cos}(f(x),g^{+})/\partial x|$ is
+largest, and its anti-oracle. If placement can matter at all, the oracle is
+where it should show.
+
+A degenerate map, however, also makes a weak testbed: one could object that
+the learned placement was never given a chance. We therefore repeat the entire
+study on a second checkpoint of the same architecture, trained with structural
+mask supervision, whose map is genuinely non-uniform (coefficient of variation
+$0.158$, versus $6\times10^{-4}$ for the released one). Both studies use 6
+backbones, 3 seeds, and both the 12-pair and 50-pair benchmarks: 2,928 paired
+rows and 49 paired comparisons against the uniform control each.
+
+Table~\ref{tab:placement} reports both. The result is consistent and
+one-directional: \emph{across all 98 comparisons, no placement is ever
+significantly better than uniform}. Several are significantly worse. With the
+degenerate map, edge placement raises Top-1 by $0.067$ on average,
+fixed-random by $0.051$, and the attacker-gradient oracle by $0.028$; none of
+these reaches cluster-robust significance. With the genuinely selective map
+the picture sharpens, and against the mechanism: the learned placement itself
+raises Top-1 by $0.039$ on average and is \emph{significantly} worse than
+uniform on VGG16 ($+0.194$, 95\% CI $[0.028, 0.361]$), as is saliency
+placement on the 50-pair run ($+0.053$, CI $[0.007, 0.113]$). Giving the map
+real spatial selectivity did not help privacy; where it had a measurable
+effect, it hurt.
+
+The attacker-gradient oracle is the most informative row. Even when it is
+allowed to concentrate the entire budget on the pixels the attacker is most
+sensitive to, it lands within noise of uniform ($+0.028$ and $+0.008$ on the
+two checkpoints), and its anti-oracle --- which deliberately avoids those
+pixels --- performs the same ($-0.001$, $-0.003$). At this budget, targeting
+the right pixels and pointedly avoiding them are indistinguishable.
+
+\subsection{The Null Holds on Real Geographic Data}
+\label{sec:msls_placement}
+
+Everything above is measured on the mined paired-scene corpus, whose
+``locations'' are synthetic pair identifiers. That is the obvious place for
+the result to be an artifact, so we repeat the whole study against the real
+place-labelled MSLS benchmark: 400 queries drawn from eight cities, a shared
+2,000-image gallery, 277 official \texttt{unique\_cluster} place identities,
+and correctness decided by place label rather than by pair identity. Each
+comparison now rests on 1,200 paired observations, roughly an order of
+magnitude more than the proxy affords, and the energy-conservation gate passes
+at $5.6\times10^{-7}$.
+
+The null survives intact. Against the uniform reference, no placement differs
+significantly in any of the seven comparisons, and every difference is inside
+$\pm0.01$ Top-1: the attacker-gradient oracle reaches $-0.0008$ ($p=1.00$),
+the learned map, fixed-random and saliency all $+0.0008$, the anti-oracle
+$+0.0025$, edge $+0.0050$, and centre bias $+0.0092$ ($p=0.19$). The
+mechanism's own map is again indistinguishable from spreading the budget
+uniformly, and the oracle again fails to convert its knowledge of the
+attacker into retrieval privacy.
+
+\textbf{Placements driven by published models.} Every placement above is
+either the mechanism's own or a prior we wrote, which is a fair objection to
+the generality of the result. We therefore add placements that neither we nor
+the mechanism designed, taken from off-the-shelf segmentation models trained
+by others. Each implements the strategy this class of mechanism claims to
+follow --- perturb the background scene, spare the foreground objects --- but
+reads the scene through a different published model, so agreement between them
+is evidence about the strategy rather than about one network. Two of them,
+DeepLabV3-ResNet50~\cite{chen2017rethinking} and
+FCN-ResNet50~\cite{long2015fully}, identify the scene as the COCO/VOC
+\texttt{background} class, the complement of the object categories. The third,
+SegFormer-B0~\cite{xie2021segformer} trained on ADE20K~\cite{zhou2017scene},
+instead names the built environment directly,
+and we sum the probabilities of its thirteen scene-structure classes
+(building, sky, road, tree, sidewalk, wall, house, skyscraper, grass, plant,
+earth, path, fence). The two taxonomies are genuinely different readings of
+the same frame: over 60 real query frames their maps correlate $0.69$ on
+average, ranging from $-0.33$ to $0.98$, so this is not one rule
+re-parameterised three times. All three
+discriminate spatially where the released checkpoint does not, with
+coefficient of variation $0.07$--$0.49$ against its $6\times10^{-4}$.
+
+None of them beats uniform. Against the uniform reference within the same run,
+over 1,200 paired observations each: DeepLabV3 $\Delta=-0.0008$ (95\% CI
+$[-0.010, +0.008]$), FCN-ResNet50 $\Delta=+0.0008$ ($[-0.007, +0.008]$), and
+SegFormer/ADE20K $\Delta=0.0000$ ($[-0.009, +0.009]$), every one with exact
+McNemar $p=1.00$; the mechanism's own learned map sits at $+0.0008$ alongside
+them. Per-query energy agrees with the uniform control to a maximum relative
+error of $7\times10^{-7}$ and mean PSNR to $0.02$\,dB, so the comparison is
+between placements and not between budgets.
+
+\textbf{Why we do not simply re-run a published system.} The natural stronger
+test would be to put an existing published mechanism through the protocol, and
+we searched for one. The requirement is specific: the method must emit a
+per-pixel placement decision, so that its weights can be renormalised to a
+common energy, and it must have released code. We did not find a method
+meeting both conditions for this threat model. Recent work targeting
+geolocation privacy optimises a full-image adversarial perturbation rather
+than deciding where to place a budget --- which is the direction-optimising
+setting our white-box baseline already covers, not a placement rule. A 2024
+survey of image privacy protection organises the field by protection level
+rather than by privacy object, does not treat background or geolocation
+privacy as a category, and identifies no spatially selective method with
+released code. Generative anonymisers replace content instead of allocating a
+perturbation budget, so they have no weight map to redistribute.
+
+We regard this as a finding rather than an excuse. The control we propose is
+absent from this literature partly because the literature has not published
+systems in a form where it could be applied. What we can do, and do, is
+instantiate the placement rule with off-the-shelf published models rather than
+priors of our own design, and report that the conclusion is unchanged.
+
+The sensitivity statistics replicate almost exactly, which is what makes the
+mechanistic account portable rather than dataset-specific. On real imagery the
+attacker's per-pixel sensitivity has coefficient of variation $1.01$ (against
+$1.12$ on the proxy) with the top decile carrying $64.7\%$ of gradient energy
+(against $67.7\%$), while the learned map's own top decile captures $9.4\%$
+(against $9.9\%$) --- chance --- at rank correlation $0.020$ (against
+$0.009$). Sensitive pixels are just as concentrated on real geographic data,
+the learned map is just as blind to them, and targeting them is just as
+ineffective.
+
+\subsection{Placement Matters, But Only Outside the Operating
+Regime}
+\label{sec:budget}
+
+Everything above is measured at the mechanism's stated operating point,
+$\sigma_0=8$. Since a null result invites the objection that the budget was
+simply too small for placement to express itself, we repeat the study across
+$\sigma_0 \in \{4, 16, 32, 50\}$ on both checkpoints. The budget is doing real
+work over this range: uniform Top-1 falls monotonically from $0.778$ at
+$\sigma_0=4$ to $0.444$ and $0.361$ at $\sigma_0=50$ on the two checkpoints.
+
+Up to and including the operating point, the null holds: over 56 further
+comparisons at $\sigma_0 \in \{4, 16\}$ and above, no placement is
+significantly better than uniform. At the two largest budgets, however, the
+picture changes, and we report it because it qualifies our own thesis. Running
+$\sigma_0 \in \{32, 50\}$ at the 50-pair scale (150 paired observations per
+comparison) makes edge-magnitude placement \emph{significantly better} than
+uniform in three independent cells: $\Delta=-0.140$ on the released
+checkpoint at $\sigma_0=50$ (33 discordant pairs, $p=3\times10^{-4}$, 95\% CI
+$[-0.247,-0.040]$), and $-0.087$ and $-0.133$ on the mask-supervised
+checkpoint at $\sigma_0=32$ and $50$ (CIs $[-0.173,-0.007]$ and
+$[-0.253,-0.013]$). The attacker-gradient oracle turns consistently negative
+over the same range ($-0.040$ to $-0.060$) without reaching significance.
+
+So placement is not inert in general. It becomes exploitable once the
+perturbation is large enough, and what it must align with is image structure
+--- edges --- rather than the ``sensitive region'' a learned map nominates.
+The practical consequence is unfavourable for this class of design: the regime
+where placement starts to pay is the regime where the frame has already been
+degraded far past the quality these mechanisms exist to preserve. At
+$\sigma_0=50$ the attacker's Top-1 has already halved on its own. Selectivity
+claims are made in the high-quality regime, and that is precisely the regime
+where our data show placement cannot help. Across every budget tested, the
+mechanism's own learned map never beats uniform ($\pm0.000$, $+0.047$,
+$+0.007$).
+
+\begin{table}[t]
+\centering
+\caption{Energy-matched placement rules on two checkpoints of the same mechanism: the released one, whose map is numerically constant, and a mask-supervised one whose map is genuinely selective. $\Delta$ is the mean paired Top-1 difference against the uniform control over 6 backbones, 3 seeds and both benchmarks; \emph{positive $\Delta$ means worse privacy}. $\ast$ marks the only cluster-robust significant results, both of which are harmful. No placement is significantly better than uniform in any of the 98 comparisons.}
+\label{tab:placement}
+\begin{tabular}{lcc}
+\hline
+ & \multicolumn{2}{c}{$\Delta$ vs uniform} \\
+Placement & constant map & selective map \\
+\hline
+anti-oracle (gradient) & $-0.001$ & $-0.003$ \\
+learned support        & $\pm0.000$ & $+0.039^{\ast}$ \\
+oracle (gradient)      & $+0.028$ & $+0.008$ \\
+saliency               & $+0.026$ & $+0.031^{\ast}$ \\
+centre bias            & $+0.030$ & $+0.030$ \\
+fixed random           & $+0.051$ & $+0.039$ \\
+edge magnitude         & $+0.067$ & $+0.052$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Why Placement Does Not Help}
+\label{sec:mechanism}
+
+\textbf{What first-order theory predicts.} It is worth being precise about
+what should happen, because the prediction is the opposite of what we
+measure. Write the attacker embedding as $f$ and the released frame as
+$x+\delta$, with $\delta_i = w_i\varepsilon_i$, $\varepsilon_i$ i.i.d.\
+$\mathcal{N}(0,\sigma^2)$, and the placement fixed by the weights $w$ subject
+to $\sum_i w_i^2 = E$. For small $\delta$, $\Delta f \approx J\delta$ with
+$J=\partial f/\partial x$, so
+\begin{equation}
+\label{eq:displacement}
+\mathbb{E}\lVert \Delta f\rVert^2 \;\approx\; \sigma^2 \sum_i w_i^2\,\lVert J_i\rVert^2 ,
+\end{equation}
+where $J_i$ is the column of $J$ for pixel $i$. Under the fixed-energy
+constraint, the right-hand side is maximised by putting all the weight on the
+pixels of largest $\lVert J_i\rVert$ --- exactly the oracle placement. Since
+we measured that $\lVert J_i\rVert$ is strongly concentrated (top decile
+carrying 67.7\% of the energy), Eq.~\eqref{eq:displacement} predicts a
+substantial oracle advantage. There is none.
+
+\textbf{Why the prediction fails.} Two effects break it, and both are
+measurable. First, the released frame is bounded. The protocol matches
+$\operatorname{mean}(w^2)$ exactly, which absent clipping would force the
+delivered mean squared error to match exactly as well; any observed shortfall
+is therefore energy lost at the clamp. There is such a shortfall, and it grows
+with concentration: on the proxy, saliency delivers MSE 15.13 and edge 15.33
+against uniform's 15.70, up to 3.6\%, while on the real benchmark, where the
+placements we could compare are far less concentrated, it falls to 0.25\%.
+Notably the clipping \emph{fraction} is identical across placements
+($1.91\%$ on the real benchmark), so the loss is in how much energy each
+boundary pixel sheds, not in how many pixels reach the boundary --- a
+distinction worth stating because the fraction alone would suggest, wrongly,
+that clipping is not involved. Second, and more fundamentally,
+Eq.~\eqref{eq:displacement} governs the \emph{magnitude} of the embedding
+displacement, whereas retrieval is decided by rank order. A larger
+$\lVert\Delta f\rVert$ in a direction that does not reorder the gallery
+changes no outcome, and for isotropic $\varepsilon$ the direction of
+$J\delta$ is essentially arbitrary within the column space of $J$ regardless
+of where $\delta$ is placed.
+
+The second point is the one that generalises, and it is what the white-box
+contrast isolates: an optimized perturbation at the same PSNR chooses the
+direction rather than the location, and it succeeds completely.
+
+\textbf{A caveat on our own protocol.} This also qualifies the comparison we
+are making. Energy is matched in \emph{weight} space to a relative error of
+$10^{-7}$, but delivered distortion is not: concentrated placements receive an
+effectively smaller budget. The confound runs in the direction of making
+concentrated placements look worse, so it does not rescue them --- they
+already lose, and on the real benchmark the shortfall is only $0.25\%$ --- but
+the sharper version of the protocol, matching on achieved MSE rather than on
+nominal weight energy, is the one used in Section~\ref{sec:operator} and it
+removes the confound outright. We report the confound rather than leave it for
+a reader to find, and the conclusion is unchanged under either matching rule.
+
+\textbf{How much selectivity is actually being expressed.} A null across
+placement rules invites the objection that the rules were never far from
+uniform to begin with, so we measured how concentrated each one is. Writing
+the top-decile energy share as the fraction of total squared weight carried by
+the 10\% of pixels with the largest weights --- exactly $0.100$ for uniform by
+construction --- the rules span most of the available range: edge $0.839$
+(coefficient of variation $1.77$), centre $0.649$, saliency $0.353$, fixed
+random $0.242$, and the three published segmentation models $0.113$, $0.115$
+and $0.126$.
+
+Two things follow, and they cut in opposite directions. The segmentation
+placements are only mildly selective, and the reason is worth stating plainly:
+on street imagery almost every pixel \emph{is} scene structure, so ``perturb
+the background, spare the foreground'' is close to a no-op there --- the
+strategy has little to work with in the setting where location privacy
+actually matters. That is a limitation of the strategy, not a limitation of
+our test of it. But the objection does not extend to the study as a whole,
+because edge placement concentrates $84\%$ of the budget into a tenth of the
+pixels, an eightfold departure from uniform, and still does not beat uniform
+at the operating point. Strong selectivity was available and tested; it simply
+did not pay until the budget grew large enough to destroy the image anyway.
+
+The oracle's failure is the informative part, because it rules out the
+obvious explanation. One might expect placement to be irrelevant because the
+attacker's sensitivity is spatially homogeneous, leaving nothing to target.
+We measured this and it is false. Per-pixel sensitivity is strongly
+concentrated: its coefficient of variation is $1.12$ (range $0.84$--$2.56$),
+and the top decile of pixels carries $67.7\%$ of the total gradient energy.
+There is a well-defined set of pixels that matter to the attacker.
+
+The learned map is simply blind to it. Its own top decile captures $9.9\%$ of
+the gradient energy --- indistinguishable from the $10\%$ a random decile
+would capture --- and its rank correlation with attacker sensitivity is
+$0.009$ (range $[-0.028, 0.034]$). This is consistent with the independent
+attribution diagnostic reported above, and unsurprising given that the map is
+constant.
+
+Yet the oracle, which by construction places the entire budget on exactly
+those high-sensitivity pixels, still does not beat uniform --- for the two
+reasons derived above.
+
+\textbf{The strictly correct oracle.} That oracle targets the similarity to
+the correct gallery item, but Top-1 is decided by the \emph{margin} between
+that similarity and the best competitor: a perturbation that lowers both
+equally reorders nothing. The oracle that maximises the right objective
+therefore places the budget by the margin gradient, and we ran it. It is
+indeed the better signal --- its point estimate, $-0.0083$, is an order of
+magnitude larger than the similarity oracle's $-0.0008$ and in the favourable
+direction --- but over 1,200 paired observations it does not clear the noise
+floor ($p=0.275$, 95\% CI $[-0.027, +0.009]$). Placing the budget by exactly
+the quantity that decides the outcome, with white-box access to compute it,
+still buys nothing measurable. The objection that we simply built the wrong
+oracle is thereby closed.
+
+\subsection{A controlled check with an exactly known Jacobian}
+\label{sec:known-jacobian}
+
+On real data the account above rests on an estimated Jacobian, so it remains
+an interpretation. We therefore repeat the question in a setting where nothing
+has to be estimated: a retrieval task whose encoder is known in closed form,
+so per-pixel sensitivity is exact and every quantity in
+Eq.~\eqref{eq:displacement} is computable. The encoder's column norms are
+given a heavy-tailed profile matched to the concentration measured on the real
+attacker (top decile carrying $67.7\%$ of sensitivity energy). Queries and
+their positives are two different draws of the same latent place, as in real
+place recognition, and a nuisance parameter sets how far apart those two views
+are and therefore how hard the clean task is. Each cell averages three seeds
+and 600 trials.
+
+The first result is a sanity check that the algebra is right, and it is:
+measured mean squared displacement matches Eq.~\eqref{eq:displacement} to
+within $4\%$ across all 168 cells. The second is that the predicted oracle
+advantage is not merely theoretical. When the clean task is easy, the oracle
+is devastating --- at clean Top-1 $0.86$ it drives retrieval down by $0.42$
+relative to the uniform control at identical energy. So the null we measure on
+images is \emph{not} a consequence of the first-order argument being wrong.
+
+Three candidate explanations for the null can then be switched on
+individually. Bounding the released signal roughly halves the advantage at
+every operating point ($-0.42 \rightarrow -0.33$, $-0.19 \rightarrow -0.07$),
+confirming that concentrated placements shed energy at the clamp rather than
+delivering it. Making the clean retrieval task harder decays it monotonically:
+$-0.42$ at clean Top-1 $0.86$, $-0.15$ at $0.34$, $-0.04$ at $0.12$, and
+$+0.00$ at $0.03$. Replacing the linear encoder with a nonlinear one, so its
+Jacobian is valid only locally, changes nothing ($-0.37$ at clean $0.70$,
+$-0.02$ at clean $0.07$) --- which rules out linearisation error and leaves
+clipping and task difficulty as the operative causes. A budget sweep in the
+same model reproduces the reversal structure we measure on images: the
+advantage grows with $\sigma$, from $+0.02$ at the smallest budget to $-0.22$
+at large budgets.
+
+\textbf{Where the controlled model and the measurement disagree.} It would be
+convenient to stop there, but the calibration does not fully close. Our real
+benchmark has clean Top-1 $0.210$, which the operating point reduces to
+$0.195$ --- a drop of $0.015$. Matching that drop inside the controlled model
+puts it at a setting where the model still predicts an oracle advantage of
+about $-0.15$, whereas the measurement is $-0.0008$ with a 95\% interval of
+$\pm 0.01$. The idealised oracle therefore outperforms the real one by more
+than an order of magnitude.
+
+We report this rather than tune the model until it agrees, because the
+direction of the discrepancy is itself informative. The controlled oracle is
+handed the exact Jacobian; the real one gets a single gradient evaluated at
+the clean frame, which is a weaker guide to where a finite perturbation will
+actually move the embedding. Our real oracle is in fact consistently
+\emph{worse} than uniform across the budget sweep ($+0.028$ at $\sigma_0=16$,
+$+0.111$ at $32$, $+0.084$ at $50$), so on images an attacker-informed
+placement does not merely fail to help --- it preserves retrieval slightly
+better than spreading the budget. The controlled study thus bounds how much a
+placement rule could win with perfect information, and the gap between that
+bound and what we measure is the price of estimating sensitivity from a
+gradient. Either way the practical conclusion is unchanged, and if anything
+strengthened: placement is not where the privacy comes from at the budgets
+these mechanisms operate at.
+
+The contrast with the white-box attacker reported above closes the argument.
+A sign-gradient perturbation at a \emph{comparable PSNR} drives Top-1 to
+$0.000$--$0.055$, because it optimizes the perturbation's direction rather
+than its location. Location without direction achieves nothing; direction
+without any spatial restriction achieves everything.
+
+\subsection{Changing the operator, not the placement}
+\label{sec:operator}
+
+Everything above varies where a budget is spent while holding fixed what it is
+spent on: additive isotropic Gaussian noise, which is the operator this
+literature almost universally uses. That leaves the null open to a reading we
+cannot dismiss from the placement data alone --- perhaps placement is inert
+only because this particular operator is. We therefore add the missing axis
+and vary the operator instead, holding the placement fixed.
+
+Doing so requires a stronger matching rule than the one used so far.
+Comparing operators at equal \emph{nominal} weight energy is meaningless when
+their distortion profiles differ by construction, so every condition in this
+section is released at the MSE the uniform Gaussian reference delivers on the
+same frames, solved per frame by bisection through the pixel clamp. This also
+retires the confound disclosed above: matching delivered distortion rather
+than nominal energy removes the clipping asymmetry outright instead of
+bounding it.
+
+\textbf{In the controlled model.} With the Jacobian known and delivered energy
+identical to within $10^{-5}$, three operators that differ in \emph{spatial}
+structure are interchangeable. Against a clean Top-1 of $0.867$, uniform
+placement gives $0.832$ under isotropic noise, $0.843$ under spatially
+correlated noise, and $0.845$ under a deterministic-magnitude random-sign
+perturbation; what placement buys on top is likewise unchanged ($-0.43$,
+$-0.42$, $-0.48$). A fourth operator, identical in energy but with its sign
+chosen along the discriminative direction, gives $0.001$ --- with uniform
+placement, that is, with no spatial selectivity whatsoever, and placement adds
+nothing further because there is nothing left to remove. Spatial structure in
+the operator is worth as little as spatial structure in the map; directional
+control is worth everything.
+
+\textbf{On real imagery.} We repeat this with four operators on the real MSLS
+benchmark, each placed by the most concentrated rule available (edge,
+top-decile share $0.839$) and by the uniform control, at matched delivered
+MSE (Table~\ref{tab:operator}). At the operating point the null survives every
+one of them: no edge-versus-uniform difference is significant and none exceeds
+$0.01$ in magnitude. The negative result is a property of the regime, not of
+the operator we happened to start with.
+
+At a budget eight times larger, two things appear that the placement-only view
+cannot see. First, the operator now matters a great deal: at identical
+delivered distortion and identical uniform placement, Top-1 ranges from
+$0.159$ under additive noise down to $0.053$ under block quantisation, a
+threefold spread bought purely by changing what the budget is spent on.
+Second, the placement effect that finally emerges is \emph{operator-dependent
+in sign}: concentrating on edges helps under additive noise and hurts under
+low-pass and block quantisation. A placement rule tuned on one operator can
+therefore be actively harmful on another.
+
+\begin{table}[t]
+\centering
+\caption{Perturbation operators at matched delivered MSE on the real
+place-labelled benchmark, 1,200 paired observations per arm. ``Uniform'' is
+Top-1 under the uniform control; $\Delta$ is edge placement minus uniform,
+with \emph{negative meaning better privacy}. $\ast$ marks exact-McNemar
+significance at $\alpha=0.05$. At the operating point no operator makes
+placement matter; at the larger budget the operator changes Top-1 threefold
+and the sign of $\Delta$ reverses between operators.}
+\label{tab:operator}
+\begin{tabular}{llccc}
+\hline
+MSE & Operator & Uniform $\downarrow$ & $\Delta$ (edge) & $p$ \\
+\hline
+15.7 & additive Gaussian    & 0.1950 & $+0.0025$ & 0.82 \\
+15.7 & correlated Gaussian  & 0.1892 & $-0.0008$ & 1.00 \\
+15.7 & selective low-pass   & 0.1975 & $+0.0100$ & 0.18 \\
+15.7 & block quantisation   & 0.2000 & $-0.0075$ & 0.31 \\
+\hline
+241.5 & additive Gaussian   & 0.1592 & $-0.0433^{\ast}$ & $<$0.001 \\
+241.5 & correlated Gaussian & 0.0650 & $+0.0167$ & 0.067 \\
+241.5 & selective low-pass  & 0.1025 & $+0.0500^{\ast}$ & $<$0.001 \\
+241.5 & block quantisation  & 0.0525 & $+0.1150^{\ast}$ & $<$0.001 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{What this says for design.} Read together, the two axes give a
+recommendation with a sign rather than only a warning. At the quality-preserving
+budgets these systems target, no placement rule beats uniform under any
+operator we tested, whereas the choice of operator moves retrieval accuracy by
+a factor of three at matched distortion once the budget is large enough to move
+anything at all. The literature's usual procedure --- fix the operator at
+additive Gaussian noise and optimise the map --- optimises the variable that
+does not matter while holding fixed the one that does. Our own testbed is an
+instance of that procedure, which is why its map turning out to be constant
+cost it so little.
+
+This account also predicts the budget dependence in
+Section~\ref{sec:budget}: Eq.~\eqref{eq:displacement} is a small-perturbation
+statement, so as amplitude grows the response becomes structure-dependent and
+placement acquires leverage --- which is why edge-aligned placement, not
+sensitivity-map placement, is what starts to win at $\sigma_0 \ge 32$. Retrieval privacy in
+the high-quality regime is therefore governed by alignment with the
+embedding's sensitive directions, and spatial selectivity is the wrong control
+variable exactly where these mechanisms operate.
+
+\subsection{Controlled Paired-Scene Retrieval Benchmark}
+Table~\ref{tab:ablation} reports the proxy12 default setting: ResNet18 attacker, gallery size 48, and $\sigma_0=8$. The raw query baseline reaches Top-1 0.833. The mechanism changes this to $0.722\pm0.048$ while preserving 36.17\,dB PSNR and 0.945 SSIM, whereas global Gaussian noise reaches a lower Top-1 ($0.639\pm0.127$) at only 30.20\,dB PSNR and 0.827 SSIM; the deterministic baselines go further still, to 0.583 at 28.08\,dB (blur) and 0.417 at 26.07\,dB (mosaic). The ordering across this table is monotone in distortion: every variant that reduces retrieval more also degrades the image more. Top-10 saturates at 1.000 for all variants at this gallery size, so we report the more discriminative Top-1 and Top-5.
+
+The module ablations are equally uninformative in the same way: removing temporal consistency, replacing NCP with a fixed control map, or dropping DCRF leaves rounded retrieval and quality unchanged. Taken with Section~\ref{sec:causality}, this is not a limitation of the protocol's resolution but the same finding seen from another angle --- at a fixed energy budget, the internal structure of the mechanism has no measurable effect on what the attacker retrieves.
+
+\begin{table*}[t]
+\centering
+\caption{Proxy12 paired-scene benchmark, default setting: ResNet18 attacker, gallery size 48, $\sigma_0=8$, 12 paired locations, and 36 hard distractors. Lower retrieval accuracy indicates stronger privacy. Stochastic variants report mean$\pm$std over three noise seeds; deterministic baselines are exact.}
+\label{tab:ablation}
+\begin{tabular}{lcccc}
+\hline
+Method & Top-1 $\downarrow$ & Top-5 $\downarrow$ & PSNR (dB) $\uparrow$ & SSIM $\uparrow$ \\
+\hline
+Raw query & 0.833 & 1.000 & -- & -- \\
+PPEDCRF & $0.722\pm0.048$ & 1.000 & 36.17 & 0.945 \\
+w/o temporal consistency & $0.722\pm0.048$ & 1.000 & 36.17 & 0.944 \\
+w/o NCP (fixed control) & $0.722\pm0.048$ & 1.000 & 36.17 & 0.944 \\
+Unary-only + NCP & $0.722\pm0.048$ & 1.000 & 36.17 & 0.945 \\
+No DCRF & $0.722\pm0.048$ & 1.000 & 36.17 & 0.944 \\
+Mask-guided blur & 0.583 & 0.917 & 28.08 & 0.897 \\
+Mask-guided mosaic & 0.417 & 0.833 & 26.07 & 0.858 \\
+Global Gaussian noise & $0.639\pm0.127$ & $0.972\pm0.048$ & 30.20 & 0.827 \\
+\hline
+\end{tabular}
+\end{table*}
+
+\subsection{Second Result: Matched Quality Removes the Advantage}
+\label{sec:matched}
+The apparent benefit of selective perturbation is usually read off a
+fixed-budget comparison, so we examine that comparison and then equalize it.
+Table~\ref{tab:ablation} compares variants at the single proxy budget $\sigma_0=8$. There PPEDCRF retains 36.17\,dB PSNR versus 30.20\,dB for global Gaussian noise, but its Top-1 is higher (0.722 versus 0.639); the deterministic baselines reduce Top-1 further still, at 28.08\,dB (blur) and 26.07\,dB (mosaic). These are different operating points: the selective mechanism is simply spending less distortion, and buying less privacy with it. Supplementary Material therefore reports a 12-point matched-PSNR sweep: at the three matched targets, PPEDCRF, its four ablations, and global noise have identical displayed Top-1, and paired analysis finds no discordant outcomes in the 15 comparisons ($n=36$, exact McNemar $p=1.0$, query-cluster bootstrap 95\% CI $[0.000,0.000]$). This is a non-rejection, not proven equivalence: six discordant pairs would be needed for $\alpha=0.05$. Repeating the sweep on the five other backbones (75 comparisons) and at gallery sizes 12 and 100 (30 comparisons) leaves the picture unchanged, with a single non-significant discordant pair (VGG16, 33\,dB) in 120 comparisons. The deterministic baselines are compared at matched distortion in
+Section~\ref{sec:operator}, where they are treated as operators rather than as
+fixed-parameter variants.
+
+Read together with Section~\ref{sec:causality}, the two results close both
+escape routes for a selectivity claim. Holding energy fixed and moving it
+changes nothing; holding quality fixed and comparing against unstructured
+noise also changes nothing. What the mechanism actually delivers is a
+favourable \emph{quality} position at a given nominal noise scale, which is a
+real engineering property but not the privacy property the design was
+motivated by.
+
+\begin{comment}
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/privacy_utility_tradeoff.jpg}
+    \caption{Fixed-budget proxy12 comparison at $\sigma_0=8$ for the ResNet18 attacker and gallery size 48. Lower retrieval accuracy means stronger privacy; higher PSNR means higher visual utility. Error bars show the three-seed retrieval standard deviation when applicable.}
+    \Description{Two scatter plots comparing Top-1 and Top-5 retrieval accuracy with PSNR for PPEDCRF, global Gaussian noise, mask-guided blur, and mask-guided mosaic at a fixed noise budget.}
+    \label{fig:tradeoff}
+\end{figure*}
+\end{comment}
+
+The proxy12 transfer audit varies gallery size and attacker backbone over
+three seeds and eight backbones; the per-cell values are in the released
+artifact. Under ResNet18 the mechanism moves Top-1 from 0.833 to 0.750 at
+gallery 12 and to $0.722\pm0.048$ at galleries 24 and 48. Across the 24
+backbone--gallery cells, 20 are negative, one is tied and three are positive,
+with all three positive cells belonging to ResNet50; VGG16, both CLIP
+variants, CosPlace and Patch-NetVLAD are negative in every condition, and
+CosPlace is stable at $-0.167$ throughout. The proxy50 scaling check is more
+favourable but still not universal: 23 of 24 cells negative, one tied, none
+positive. Transfer is therefore bounded and attacker-dependent rather than
+uniform --- the ResNet50 cells are why it should not be presented as
+attacker-agnostic --- and because both runs are mined paired-scene proxies
+rather than GPS-grounded benchmarks, they are evidence of that bounded effect
+and not a universal guarantee.
+
+\begin{comment}
+
+
+\begin{figure*}[!t]
+    \centering
+    \begin{subfigure}[t]{0.95\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/retrieval_robustness_topk_top.jpg}
+        \caption{Top row: ResNet18, ResNet50, VGG16, and CLIP ViT-B/32.}
+    \end{subfigure}
+
+    \vspace{0.4em}
+
+    \begin{subfigure}[t]{0.95\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/retrieval_robustness_topk_bottom.jpg}
+        \caption{Bottom row: CLIP ViT-L/14, CosPlace, MixVPR, and Patch-NetVLAD.}
+    \end{subfigure}
+
+    \caption{Attacker-backbone and gallery-size sensitivity from the proxy12 eight-backbone benchmark (three seeds), rendered as two stacked four-panel subfigures. PPEDCRF reduces Top-1 in 20 of 24 cells, ties one cell, and increases it in three ResNet50 cells.}
+    \Description{Two stacked four-panel line charts. The top subfigure shows ResNet18, ResNet50, VGG16, and CLIP ViT-B/32. The bottom subfigure shows CLIP ViT-L/14, CosPlace, MixVPR, and Patch-NetVLAD. Each panel compares raw and PPEDCRF Top-1 retrieval accuracy across gallery sizes 12, 24, and 48, with seed-averaged confidence intervals.}
+    \label{fig:robustness}
+\end{figure*}
+\end{comment}
+
+The robustness analysis exposes important patterns for interpretation. First, CosPlace, MixVPR, and Patch-NetVLAD are supportive in most proxy12 gallery conditions, while ResNet50 is adverse in every condition. Second, both CLIP variants have negative deltas in all three galleries, but their absolute changes are smaller than those of CosPlace or Patch-NetVLAD. Third, the benchmark remains rank-sensitive rather than fully obfuscating: Top-5 and Top-10 often remain high, and stronger attacker-adaptive perturbations would still be needed for more decisive privacy guarantees.
+
+\subsection{Sequence-Length Attacker and Temporal Consistency}
+\label{sec:sequence}
+A stronger multi-frame attacker does not change the frame-level picture. Over
+clip lengths 1--7 and four pooling strategies (50 pairs, 100-candidate
+gallery, 6 backbones, 3 seeds; 33,600 rows; Appendix~A), Top-1 stays within
+$[0.669,0.683]$, close to raw ($[0.670,0.682]$), and stronger pooling does not
+close the already-small gap. Global noise remains more disruptive
+($[0.608,0.616]$) at lower quality. The temporal term does deliver what it was
+designed for --- flicker falls from $7.11\pm5.78$ to $3.87\pm4.78$ --- which,
+consistent with the rest of this paper, is a stability benefit rather than a
+privacy one; we claim no sequence-level guarantee.
+
+\begin{comment}
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/qualitative_figure.jpg}
+    \caption{Qualitative visualization of PPEDCRF sanitization ($\sigma_0=24$ for visual clarity; at lower $\sigma_0$ the difference map shows sharper spatial selectivity). (a)~Original video frame. (b)~DCRF candidate-support heatmap overlay, where warm colors indicate larger predicted support values in the background. (c)~Noise-protected output. (d)~Absolute pixel difference showing spatially selective perturbation. (e)~Mask-guided blur on the same support. (f)~Zoomed crop comparing original (left) and protected (right) in a selected background-support region.}
+    \Description{Six-panel qualitative visualization: original frame, DCRF candidate-support heatmap overlay, noise-protected frame, pixel difference map, mask-guided blur result, and zoomed side-by-side crop of a selected background-support region.}
+    \label{fig:sidebyside}
+\end{figure*}
+\end{comment}
+
+\section{Conclusion}
+Spatially selective perturbation is usually justified by a favourable
+privacy--utility curve. We have argued that such a curve cannot, by itself,
+show that the selectivity is responsible, and we proposed an energy-matched
+protocol that settles the question: redistribute the mechanism's own weights
+under a verified energy-conservation gate, and compare paired retrieval
+outcomes.
+
+Applied to a DCRF-guided mechanism, the protocol returns two negatives. It
+first exposes that the mechanism's learned map is numerically constant, so the
+system performs no spatial selection at all while still producing a plausible
+privacy--utility curve --- a defect invisible to the evaluation such systems
+normally receive. Repeating the study on a mask-supervised checkpoint whose map
+is genuinely selective, over eight energy-matched placements and 98 paired
+comparisons, then shows that no placement beats uniform spreading at the
+operating point, the genuinely selective map being significantly worse on one
+backbone. A 12.5$\times$ budget sweep locates the boundary: at $\sigma_0 \ge
+32$ edge-aligned placement does become significantly better than uniform in
+three independent cells. Placement is therefore not inert --- it is
+unavailable in the high-quality regime these mechanisms are built for, and
+what pays outside it is alignment with image structure rather than with any
+sensitivity map. The complementary matched-PSNR
+analysis closes the other route: once quality is equalized, the mechanism, its
+four ablations, and unstructured global noise are indistinguishable in 119 of
+120 comparisons. The 5.97\,dB PSNR advantage the mechanism shows over global
+noise at equal nominal $\sigma_0$ is likewise not a selectivity benefit: with
+a map that is constant at $\approx0.5$, the mechanism is simply applying half
+the amplitude, and the quality gain follows from that scaling rather than from
+where the noise is placed.
+
+This is not a quirk of one setup. On a real GPS-labeled MSLS benchmark the
+protective effect is directionally consistent but far smaller than on the
+proxy (Top-1 drop 0.018 versus 0.111) and survives extension to eight cities
+and six backbones, while a white-box adversary removes it entirely on every
+backbone and manifest scale tested.
+
+We do not conclude that spatial selectivity is worthless, only that it is
+unproven by the evidence normally offered for it, and that our own instance
+fails the test. The recommendation is procedural: report energy-matched
+controls and a matched-quality comparison alongside any claim that a learned
+map improves privacy, since both are cheap and either can overturn the claim.
+Limitations remain --- proxy benchmarks mined by visual similarity rather than
+GPS ground truth, predominantly day/Forward-view MSLS coverage, and no formal
+DP guarantee. The natural next step is to apply the protocol to selective
+mechanisms beyond our own, and to ask whether \emph{any} placement rule beats
+same-energy noise at matched quality.
+
+
+\appendices
+\section{Released Implementation Notes}
+The unary module predicts a single-channel support logit map, the dynamic CRF
+refines it with average-pooling smoothing and previous-frame reuse, and the
+injector perturbs the \emph{released image}, not a hidden feature tensor.
+
+\textbf{Unary predictor provenance.} The unary predictor is a newly
+implemented encoder--decoder, not a pretrained VPR or segmentation model: two
+$3\times3$ convolution blocks at 32 and 64 channels with max-pooling, two
+transposed-convolution upsampling blocks, and a $1\times1$ convolution to a
+single logit channel, totalling 87,441 trainable parameters. Where masks are
+available, training uses AdamW at $10^{-4}$ with binary cross-entropy. The
+monitoring pool provides no pixel-level support labels, so no sensitivity-map
+accuracy is claimed. Layer-by-layer definitions are in the released artifact.
+
+The released checkpoint records a null mask-root fallback and emits
+near-constant probabilities, so its retrieval numbers cannot establish that
+the unary predictor learned meaningful support. The mask-backed KITTI-360 diagnostic below closes the
+execution gate but still finds near-zero attribution agreement, so it too does
+not validate privacy-sensitivity maps.
+
+For exact DCRF reproduction, the sigmoid in Eq.~(2) is the element-wise
+$\sigma(z)=1/(1+\exp(-z))$, the spatial smoother is average pooling with a
+$3\times3$ kernel, stride 1, and reflect padding, and the reported benchmark
+uses five mean-field-style iterations with spatial and temporal weights both
+equal to 2. Optical-flow warping is disabled; the previous refined map is
+reused directly when temporal refinement is enabled.
+
+The normalized control penalty (NCP) is also implemented conservatively in the released code. Rather than building a large symbolic hierarchy at runtime, the current implementation normalizes the refined support map and uses it as a per-pixel perturbation controller. The released sanitizer intentionally multiplies the refined support map and the normalized control map, so high-confidence selected pixels receive the strongest perturbation inside the same spatial support. The manuscript therefore treats the hierarchy-based interpretation as motivation, while the empirical sections report results only for the released normalization rule.
+More explicitly, the effective weight in the released sanitizer is
+\begin{equation}
+\label{eq:appendix_effective_weight}
+w_t=\alpha_t\odot p_t
+    =\alpha\,\frac{p_t^2}{\max(p_t)+\epsilon},
+\end{equation}
+which makes clear that NCP is a normalization and amplitude-control rule,
+not an additional additive penalty term.
+
+
+\section{Energy-Matched Redistribution Controls}
+\label{sec:spatial_causality}
+
+This section documents the three redistribution controls and the diagnostic
+they produced. Let $w_t=\alpha_t\odot p_t$ be the effective spatial weight. We
+compare \texttt{full} (the unmodified DCRF/NCP output) against
+\texttt{uniform\_energy} (every pixel at the amplitude giving the same mean
+squared weight), \texttt{rolled\_energy} (the map cyclically shifted by a
+seed- and frame-dependent offset) and \texttt{permuted\_energy} (the same
+values reassigned to random positions), evaluated at $\sigma_0=8$, gallery
+sizes 50/75/100, six backbones, 50 paired locations and three seeds
+(11,700 rows).
+
+\textbf{Energy-conservation gate.} Each control must preserve the mean squared
+weight of \texttt{full} to a relative tolerance of $10^{-6}$. Realised errors
+are far below it (worst case $4.76\times10^{-7}$), and the gate passes for
+every row.
+
+\textbf{Result and its limit.} All three controls reproduce \texttt{full}'s
+Top-1 outcome exactly: zero discordant pairs and exact McNemar $p=1.0$ for
+each. This null cannot on its own establish that placement is irrelevant,
+because the released checkpoint's map is numerically constant --- unary output
+spanning $[0.4991, 0.5015]$, spatial coefficient of variation
+$6\times10^{-4}$, and \texttt{support\_coverage} $1.0$ on every row, meaning
+every pixel is ``selected''. Redistributing an already-flat map returns
+essentially the same map, so the controls are near-no-ops here. We report the
+null as the protocol's first diagnostic --- the mechanism performs no spatial
+selection while still producing a plausible privacy--utility curve --- and
+establish the placement claim itself in Section~\ref{sec:causality}, on
+placements that do not depend on this map.
+
+\textbf{Perturbation footprint.} Over the 2,700 \texttt{full} rows the mean
+squared effective weight is $0.2506$ (std $4.1\times10^{-6}$), the mean
+effective MSE is $15.70$ (std $0.175$), and $1.54\%$ of output pixels hit the
+$[0,255]$ clamp (std $0.92\%$), identical across backbones since clipping is a
+property of the image rather than the attacker.
+
+\section{Placement-Rule Study}
+\label{sec:placement_appendix}
+
+This section reports the full data behind the placement comparison. Because
+the released checkpoint's map is constant, the redistribution controls cannot
+settle whether location matters; these placements are constructed
+independently of the learned map.
+
+\textbf{Placements.} Each rule produces a non-negative per-pixel map, rescaled
+so its sum of squared weights equals the learned map's for the same clip,
+seed and frame, so outcome differences are attributable to location rather
+than magnitude. Besides the learned map and a uniform reference we evaluate
+spectral-residual saliency, Sobel gradient magnitude, a centre-bias Gaussian
+prior and a fixed smooth random field, plus two placements derived from the
+attacker itself: an \emph{oracle} weighting each pixel by
+$|\partial\,\mathrm{cos}(f(x),g^{+})/\partial x|$ and an \emph{anti-oracle}
+inverting it.
+
+\textbf{Protocol.} Two checkpoints are evaluated: the released one, whose map
+is constant (spatial coefficient of variation $6\times10^{-4}$), and a
+mask-supervised one of the same architecture whose map is genuinely
+non-uniform (coefficient of variation $0.158$). Each is run over 6 attacker
+backbones, 3 noise seeds, and both the 12-pair (gallery 48) and 50-pair
+(gallery 100) benchmarks, giving 2,928 paired rows and 49 paired comparisons
+against the uniform reference per checkpoint. The energy-conservation gate
+passes with worst-case relative error $3.4\times10^{-5}$. Pairing is within a
+run: query identifiers are synthetic and are regenerated per benchmark, so
+rows are keyed by their source run to prevent the two benchmarks from being
+paired against each other.
+
+\begin{table}[t]
+\centering
+\caption{Placement-rule study. $\Delta$ is the mean paired Top-1 difference against the uniform reference; positive means \emph{worse} privacy. ``Zero-disc.'' counts comparisons (of 7 run--backbone cells) with no discordant pairs. No placement is significantly better than uniform in either checkpoint.}
+\label{tab:placement_full}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\hline
+ & \multicolumn{3}{c}{constant map} & \multicolumn{3}{c}{selective map} \\
+Placement & Top-1 & $\Delta$ & Zero-disc. & Top-1 & $\Delta$ & Zero-disc. \\
+\hline
+uniform (ref.)   & 0.636 & --- & --- & 0.634 & --- & --- \\
+anti-oracle      & 0.635 & $-0.001$ & 6/7 & 0.631 & $-0.003$ & 5/7 \\
+learned          & 0.636 & $\pm0.000$ & 7/7 & 0.673 & $+0.039$ & 2/7 \\
+oracle           & 0.664 & $+0.028$ & 0/7 & 0.642 & $+0.008$ & 0/7 \\
+saliency         & 0.661 & $+0.026$ & 2/7 & 0.665 & $+0.031$ & 2/7 \\
+centre bias      & 0.666 & $+0.030$ & 1/7 & 0.664 & $+0.030$ & 1/7 \\
+fixed random     & 0.686 & $+0.051$ & 1/7 & 0.673 & $+0.039$ & 1/7 \\
+edge magnitude   & 0.703 & $+0.067$ & 0/7 & 0.686 & $+0.052$ & 0/7 \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\textbf{Significance.} Of the 98 comparisons, none favours a placement over
+uniform at the cluster-robust level. On the constant map, one comparison
+reaches exact-McNemar significance (edge/CosPlace, $+0.167$, 6 discordant
+pairs, $p=0.031$) but its query-cluster interval includes zero. On the
+selective map, two comparisons are cluster-robust significant and both are
+harmful: the learned placement on VGG16 ($+0.194$, 95\% CI
+$[0.028, 0.361]$) and saliency on the 50-pair run ($+0.053$, CI
+$[0.007, 0.113]$). We report the exact test and the cluster bootstrap
+separately throughout, and let the cluster-robust verdict govern where they
+disagree, because the three seeds of a query are not independent draws.
+
+\textbf{Attacker sensitivity.} The oracle's failure is not explained by the
+attacker being uniformly sensitive. Per-pixel sensitivity is strongly
+concentrated: coefficient of variation $1.12$ (range $0.84$--$2.56$), with the
+top decile of pixels carrying $67.7\%$ of total gradient energy. The released
+constant map captures $9.9\%$ of that energy in its own top decile --- the
+$10\%$ expected by chance --- with rank correlation $0.009$ against attacker
+sensitivity. The mask-supervised map is more variable but no better aligned on
+average ($10.3\%$, correlation $0.013$, though individual frames range from
+$1.1\%$ to $47.1\%$). Sensitive pixels exist and are identifiable; weighting
+them does not translate into retrieval privacy, because gradient magnitude
+fixes where an isotropic perturbation is placed without aligning it with the
+direction that would actually move the embedding.
+
+\subsection{Budget Dependence}
+\label{sec:placement_budget}
+
+The placement results above are measured at $\sigma_0=8$. To establish where
+that null holds and where it breaks, we sweep
+$\sigma_0 \in \{4, 16, 32, 50\}$ on both checkpoints (ResNet18, 12 paired
+locations, gallery 48, 3 seeds), and repeat the two largest budgets at the
+50-pair scale with gallery 100 for adequate power. Energy-conservation gates
+pass throughout (worst relative error $4.0\times10^{-7}$).
+
+The budget is doing real work across this range. Uniform Top-1 falls
+monotonically from $0.778$ at $\sigma_0=4$ to $0.444$ (released checkpoint)
+and $0.361$ (mask-supervised) at $\sigma_0=50$, so the sweep spans a regime
+where the perturbation goes from mild to severe.
+
+\begin{table}[t]
+\centering
+\caption{Placement $\Delta$ versus uniform across budgets (ResNet18, 12 pairs, gallery 48). Positive is worse privacy. Edge placement reverses sign as the budget grows; the mechanism's own learned map never improves on uniform at any budget.}
+\label{tab:placement_budget}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccccc}
+\hline
+ & \multicolumn{4}{c}{constant map} & \multicolumn{4}{c}{selective map} \\
+Placement & $\sigma_0{=}4$ & 16 & 32 & 50 & $\sigma_0{=}4$ & 16 & 32 & 50 \\
+\hline
+learned      & $0.000$ & $0.000$ & $0.000$ & $0.000$ & $-0.028$ & $0.000$ & $+0.111$ & $+0.028$ \\
+anti-oracle  & $0.000$ & $-0.028$ & $0.000$ & $0.000$ & $0.000$ & $0.000$ & $+0.028$ & $0.000$ \\
+oracle       & $-0.028$ & $+0.028$ & $+0.111$ & $+0.083$ & $-0.028$ & $+0.111$ & $+0.139$ & $+0.056$ \\
+saliency     & $0.000$ & $+0.056$ & $+0.056$ & $+0.056$ & $0.000$ & $+0.083$ & $+0.111$ & $+0.056$ \\
+centre bias  & $+0.028$ & $+0.139$ & $+0.167$ & $+0.139$ & $+0.028$ & $+0.167$ & $+0.222$ & $+0.222$ \\
+fixed random & $+0.028$ & $+0.083$ & $+0.111$ & $+0.056$ & $+0.028$ & $+0.111$ & $+0.111$ & $+0.028$ \\
+edge         & $+0.028$ & $+0.083$ & $-0.111$ & $-0.167$ & $+0.028$ & $+0.083$ & $-0.111$ & $-0.139$ \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\textbf{High-budget confirmation at scale.} The sign reversal for edge
+placement is confirmed at 50 pairs (150 paired observations per comparison),
+where it becomes the only placement to beat uniform at the cluster-robust
+level, in three independent cells: $\Delta=-0.140$ on the released checkpoint
+at $\sigma_0=50$ (33 discordant pairs, exact $p=3.2\times10^{-4}$, 95\% CI
+$[-0.247,-0.040]$); $-0.087$ on the mask-supervised checkpoint at
+$\sigma_0=32$ (23 discordant, $p=0.011$, CI $[-0.173,-0.007]$); and $-0.133$
+at $\sigma_0=50$ (36 discordant, $p=0.0012$, CI $[-0.253,-0.013]$). The
+attacker-gradient oracle moves consistently in the same direction over this
+range ($-0.040$ to $-0.060$) without reaching significance, while centre-bias
+and saliency remain harmful.
+
+We report this because it bounds our own claim. Placement is exploitable, but
+only after the perturbation has grown well beyond the quality these mechanisms
+are designed to preserve --- at $\sigma_0=50$ the attacker's Top-1 has already
+fallen by roughly a third on the uniform baseline alone --- and what pays
+there is alignment with image edges rather than with a learned sensitivity
+map, which never improves on uniform at any budget tested.
+
+
+\section{Matched-PSNR/Effective-MSE Comparison}
+\label{sec:matched_psnr}
+
+The fixed-budget comparison reports each variant at its own native operating
+point, which confounds visual quality with retrieval privacy: a variant that
+reduces Top-1 more may simply be adding more distortion. To separate the two
+we run the proxy12 protocol (ResNet18 attacker, gallery 48, three seeds) at
+twelve noise scales $\sigma\in\{4,\dots,50\}$ for every sigma-tunable variant
+and select, for each target PSNR, the swept point of closest achieved PSNR.
+Since $\operatorname{PSNR}=10\log_{10}(255^2/\operatorname{MSE})$ for 8-bit
+frames and the frame dimensions are fixed, matching PSNR matches
+output-distortion energy up to rounding --- though not the latent draws or
+supports --- so this is an output-MSE comparison reported in PSNR
+coordinates.
+
+Table~\ref{tab:matched_psnr} reports three representative targets (30, 33 and
+36\,dB), and two findings follow. First, the six sigma-tunable variants have
+identical displayed Top-1 at every matched target (0.639, 0.667 and 0.722 to
+three decimals). This is a descriptive non-separation rather than a proof of
+equivalence, but it means the matched comparison gives no evidence of extra
+retrieval privacy from DCRF refinement, NCP allocation or temporal reuse over
+unstructured global noise once output quality is fixed; the mechanism's
+benefit is reaching a given privacy level at a better quality budget, not a
+privacy advantage at matched quality. Second, the deterministic baselines sit
+at a \emph{lower} PSNR than any swept target (28.08\,dB blur, 26.07\,dB
+mosaic) yet reach a \emph{lower} Top-1 (0.583 and 0.417) than the noise-based
+variants do at their matched, higher-quality targets. Since they are evaluated
+at worse image quality than the target they are listed against, this is not
+evidence that they dominate at equal utility; it shows only that the two
+families trade privacy against utility differently over the reachable quality
+range. A genuine matched comparison would sweep their kernel or block size,
+which is done separately in Sec.~\ref{sec:deterministic_matched_psnr}. The
+PSNR gap is tabulated so the distinction is not lost.
+
+\begin{table}[t]
+\centering
+\caption{Matched-PSNR/effective-MSE comparison, ResNet18 attacker, gallery size 48, proxy12 protocol, three seeds. The five sigma-tunable variants (PPEDCRF and its four ablations) and global Gaussian noise are collapsed into one row per target because their Top-1 is identical to three decimals at every target; the matched $\sigma$ and achieved PSNR ranges across those six are given. Mask-guided blur/mosaic have no sigma parameter here and are reported at their single native point with the resulting PSNR gap. Top-1 $\downarrow$: lower means better retrieval privacy.}
+\label{tab:matched_psnr}
+\begin{tabular}{lccc}
+\hline
+Target / variant & Matched $\sigma$ & Actual PSNR & Top-1 $\downarrow$ \\
+\hline
+\multicolumn{4}{l}{\emph{30\,dB target}} \\
+All six sigma-tunable & 8--16 & 30.18--30.20\,dB & 0.639 \\
+Mask-guided blur & --- & 28.08\,dB & 0.583 \\
+Mask-guided mosaic & --- & 26.07\,dB & 0.417 \\
+\hline
+\multicolumn{4}{l}{\emph{33\,dB target}} \\
+All six sigma-tunable & 6--12 & 32.66--32.68\,dB & 0.667 \\
+Mask-guided blur & --- & 28.08\,dB & 0.583 \\
+Mask-guided mosaic & --- & 26.07\,dB & 0.417 \\
+\hline
+\multicolumn{4}{l}{\emph{36\,dB target}} \\
+All six sigma-tunable & 4--8 & 36.17--36.19\,dB & 0.722 \\
+Mask-guided blur & --- & 28.08\,dB & 0.583 \\
+Mask-guided mosaic & --- & 26.07\,dB & 0.417 \\
+\hline
+\end{tabular}
+\end{table}
+
+The prespecified paired analysis for each of the five non-reference variants
+against global noise at each target (15 comparisons) finds $n=36$ paired
+query--seed outcomes, zero discordant pairs, exact McNemar $p=1.0$ and a
+query-cluster bootstrap 95\% CI of $[0.000,0.000]$ throughout. This is a
+non-rejection rather than proven equivalence: at $n=36$ the smallest
+discordant asymmetry reaching $\alpha=0.05$ is six pairs.
+
+\subsection{Deterministic Baseline Matched-PSNR Comparison}
+\label{sec:deterministic_matched_psnr}
+
+An earlier version of this comparison swept the blur kernel and mosaic block
+size to bring the deterministic baselines to the sigma-tunable variants' PSNR
+targets. Because the kernel is a discrete odd integer, no setting landed
+closer than $1.60$\,dB to the 36\,dB target, so the comparison could only be
+reported with an explicit residual gap. Section~\ref{sec:operator} supersedes
+it: treating blur and block quantisation as \emph{operators} and solving per
+frame for the gain that hits the reference MSE matches distortion exactly
+rather than approximately, on the real place-labelled benchmark, with paired
+significance over 1,200 observations per arm. The conclusion there is the
+stronger form of what this sweep indicated --- the deterministic operators buy
+privacy by spending image quality, and at matched distortion they are more
+protective than additive noise only once the budget is already large.
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{ref}
+
+\end{document}
