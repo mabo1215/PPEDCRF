@@ -919,3 +919,74 @@ A: 是
     - **当前状态**:`main.pdf` **14 页**、`supplementary.pdf` **8 页**,两者均 0 LaTeX error、0 overfull hbox、0 未定义引用/引文。主文最后一页仅剩约 1,188 字符的参考文献溢出(内容只到页面 236/792 处),即**再挤出约 1/4 页即可达标 13 页**。
     - **剩余差距的性质**:主文附录已清空,可无损压缩的重复内容也已用尽;再压需要动正文实质段落或参考文献列表。鉴于 Related Work 是此前按审稿意见从 17 条扩到 42 条的(见第 14 条),不建议从参考文献下手。下一步需要你决定从哪里再挤 1/4 页。
 
+
+---
+
+# 下次开机接手指南(2026-09-07 收尾,冷启动可直接照做)
+
+**当前一切已提交推送,工作区干净。** 根仓库 `1281ef4`,论文子模块 `9235b31`,两个远端均已同步。
+
+## 一、当前状态速览
+
+| 项目 | 状态 |
+|---|---|
+| G2(a) 输入净化型自适应对手 | **已完成**,已写回论文并提交(第 220、221 条) |
+| G2(b) 微调适应型自适应对手 | **已完成**,8 组配置 × 2 骨干,已写回论文并提交(第 223、224 条) |
+| G2(c) EOT 协同优化 | **未做**,第 218 条已注明这是可选加固项、非 TIFS 必答项,时间不够可写成 future work |
+| 第 219 条压页(13 页硬上限) | **进行中**,16 → 14 页,**还差 1 页**(第 225 条) |
+
+`main.pdf` 14 页、`supplementary.pdf` 8 页,两者 0 error、0 overfull、0 未定义引用。
+
+## 二、⚠️ 先确认这件事:vGPU 3090 可能还在计费
+
+用户在本轮明确回答"不用"关机,因此 **vGPU 3090 被保留为开机状态**(`ssh -p 22766 root@connect.westd.seetacloud.com`)。它上面已无任何任务在跑(已清空确认)。**开机后第一件事建议先问用户是否还需要它**,不需要就关掉止损。已验证的关机方式:`shutdown -h now`(与 `docs/archived/vgpu3090_experiment_handoff.md` 记录的先例一致)。PRO 6000 已由用户切到无卡模式,无需处理。
+
+## 三、下一步:压掉最后 1 页
+
+**差距非常小**:主文最后一页只有约 1,188 字符的参考文献溢出,正文内容只到页面 236/792 处,**再挤出约 1/4 页即可**。
+
+用这条命令随时量化还差多少(比数页数精确得多):
+```bash
+cd /mnt/d/source/PPEDCRF/paper && python3 -c "
+import fitz; d=fitz.open('main.pdf'); p=d[d.page_count-1]; b=p.get_text('blocks')
+print(f'{d.page_count} 页,末页 {len(p.get_text().strip())} 字符,内容到 y={max(x[3] for x in b):.0f}/792')"
+```
+
+**已经用尽、不要重复尝试的路子**:主文 `\appendices` 已完全清空(4 节共 239 行全部搬进 `supplementary.tex`);正文与附录之间的重复段落已删;`Deterministic Baseline` 小节已折叠;Conclusion 第三次重复的数字已改回指;与引言重复的 DP 免责声明已删。
+
+**还没动、可考虑的**(按风险从低到高):
+1. `Experimental Protocol`(约 105 行,主文最大段)——还有收紧空间,但需逐句读,别删掉方法学细节。
+2. `Introduction`(73 行)/ `The Null Holds on Real Geographic Data`(96 行)的行文收紧。
+3. 参考文献列表——**不建议**。Related Work 是此前按审稿意见专门从 17 条扩到 42 条的(第 14 条),砍回去会重新触发那条审稿意见。
+
+## 四、本轮踩过的坑(别再踩一遍)
+
+1. **SSH 连这几台机器绝不能加 `-o BatchMode=yes`**——这些主机是密码认证,该参数会直接禁用密码认证并报 "Permission denied",看起来像网络/权限问题,实际是自己造成的。可用的方式:`plink.exe -ssh -P <port> -pw <密码> -hostkey "SHA256:liZ36vNCsNcNdXeWs4f+g5ZIhPM/ZihP834vxs8Ulqc" -batch root@<host>`(两台 seetacloud 主机共用同一个 hostkey 指纹)。
+2. **从 WSL 调 `build.bat` 必须用完整路径**:`cmd.exe /c "D:\source\PPEDCRF\paper\build.bat"`。用相对路径或先 `cd` 会静默失败——PDF 不重新生成,而日志里还是旧的页数,极易误判"我的修改没效果"。判断是否真的重建了:看 `build/main.pdf` 的 mtime 或字节数有没有变。
+3. **云主机上并发跑多个任务会因线程超订阅而严重拖慢**:PRO 6000 上 3 个并发任务各自烧掉 250–390 CPU 分钟却几乎没推进(每个进程默认想用满 208 核)。要并发就必须设 `OMP_NUM_THREADS`/`MKL_NUM_THREADS` 限流(本机用的是 4)。
+4. **这两台云主机的 manifest 加载阶段远慢于本机**(312MB manifest + 80 万条 gallery dict,吃单核主频),本机 RTX 3070 反而更快。轻量任务优先考虑本机。
+5. **纯文本写死的 "Appendix~A" 不会触发 LaTeX 未定义警告**。这轮搬附录时差点带着 4 处失效引用发出去。以后凡是移动章节,除了查 `\ref`,一定要再 `grep -n "Appendix"` 一遍。
+6. **`build.bat` 原本不构建 `supplementary.tex`**(已修)。补充材料是投稿件之一,改动后必须一起编译校验。
+
+## 五、可直接复用的实验命令
+
+微调自适应对手(本机,`--unfreeze_blocks` 支持解冻 resnet 最后 N 个 block,mixvpr 只能为 1):
+```bash
+cd /mnt/d/source/PPEDCRF
+OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 /mnt/d/source/.venv/Scripts/python.exe \
+  src/scripts/finetune_adaptive_attacker.py \
+  --manifest src/outputs/icme2027_manifest_expanded/manifest_all8.jsonl \
+  --root "G:/work/datasets/msls/extracted" \
+  --backbone resnet18 --n_test 100 --n_val 50 --epochs 15 \
+  --batch_size 64 --neg_k 8 --lr 1e-6 --output <outdir>/ft.pt
+```
+held-out 攻防对比(`--eval_checkpoint` 加载微调权重,gallery 仍用 stock 模型索引):
+```bash
+/mnt/d/source/.venv/Scripts/python.exe src/scripts/run_direction_transfer_study.py \
+  --manifest src/outputs/icme2027_manifest_expanded/manifest_all8.jsonl \
+  --root "G:/work/datasets/msls/extracted" \
+  --eval_backbone resnet18 --surrogates resnet50 vgg16 cosplace \
+  --eval_checkpoint <outdir>/ft.pt --query_id_file <outdir>/ft.pt.test_query_ids.json \
+  --seeds 1234 --output <outdir>/adapted_eval.csv
+```
+注:`split_queries` 只依赖 `n_test`/`n_val`/`seed`,所以同参数下各次运行的 held-out 划分**完全相同**,stock 基线可跨配置复用(用 `diff` 比对两个 `.test_query_ids.json` 确认后再复用)。
