@@ -569,6 +569,25 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+
+def embed_gallery_batched(cfg, embedder, images: torch.Tensor,
+                          batch: int = 128) -> torch.Tensor:
+    """Embed the gallery in chunks, keeping the result on the compute device.
+
+    The shared helper embeds the whole gallery in one forward pass, which is
+    fine for a light backbone but exhausts an 8 GB card on a VPR backbone at
+    2,000 images. Chunking here rather than changing the shared helper keeps
+    every previously published number reproducible from the same code path;
+    under eval/no_grad the chunked result is the same embedding matrix.
+    """
+    out = []
+    with torch.no_grad():
+        for i in range(0, images.size(0), batch):
+            out.append(build_gallery_embeddings(cfg, embedder,
+                                                images[i:i + batch]))
+    return torch.cat(out, dim=0)
+
+
 def main() -> None:
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -639,7 +658,7 @@ def main() -> None:
                 gallery_tensor, gallery_ids = build_gallery_tensor(
                     gallery_frame_by_id=gallery_by_id, query_ids=query_ids,
                     distractor_ids=distractors, gallery_size=int(gallery_size))
-            gallery_emb = build_gallery_embeddings(rcfg, embedder, gallery_tensor)
+            gallery_emb = embed_gallery_batched(rcfg, embedder, gallery_tensor)
 
             for seed in args.seeds:
                 # --- build every placement's weight maps, energy-matched ---

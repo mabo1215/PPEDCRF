@@ -737,3 +737,47 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
     - 注:第 158 条等历史条目里写的 `artifact/` 路径是当时的事实,未改写;当前路径以本条为准。
 
 210. 【已完成】`appendix.tex` 定位澄清:它**不属于投稿件**(正文自带 `\appendices`,其余在 `supplementary.tex`),12 节中 8 节已被覆盖,且正文无任何指向它的悬空引用。但有 4 节是独有的(`Interpretation of the Added Benchmark`、`Scaling Confirmation: 50 Paired Locations`、`Margin-Level Diagnostics and Qualitative Case Study`、`Legacy Detector and Segmentation Utility Track`),故保留为 TIFS 拆分前的完整存档,不再编译。
+
+## 本轮更新（2026-09-06，TIFS 就绪度：G1 强攻击者）
+
+用户决定先投 TIFS、若 desk reject 再转 PoPETs，并选择从 G1（强攻击者复跑）开工；若 TIFS 进入送审则放弃 PoPETs Nov 30，退到 2027-02-28 的 Issue 4。
+
+211. 【已完成】**核实 venue 硬规则，顺带关掉第 208 条那个悬留决策**。IEEE SPS 的规定是：Regular Paper **初投上限 13 个双栏页**、修改稿 16 页、补充材料建议 ≤6 页；超页费（$220/页，按超过前 10 个**已发表**页计）只在发表阶段收，**买不到初投的第 14 页**。所以第 194/208 条问的"按超页收费投 vs 砍内容"其实没有选择权——`main.pdf` 现在 14 页，必须压回 13。PoPETs 2027 的四个截稿日为 2026-05-31 / 2026-08-31 / **2026-11-30（Issue 3）** / **2027-02-28（Issue 4）**，Issue 3 的通知日是 2027-02-01；即错过 Nov 30 的代价是 3 个月而不是一年。
+
+212. 【已完成】**盘清"弱攻击者"问题的波及范围，比原先估计的大**。逐个核对导出后确认：论文里**全部真实 MSLS 结论**——8 条放置规则 × 3 seed 的 placement null、三个已发表分割模型的放置、margin oracle、算子 × 预算 8 格、以及 direction transfer——**攻击者都只有 ResNet18 一个**。摘要中"across six attacker backbones"是成立的，但那六个骨干来自合成 proxy 研究和 E1 迁移研究，**不是**真实地理数据的核心结果。
+    - 同一套 all8 manifest 上六个骨干的干净 Top-1：MixVPR **0.7925**、Patch-NetVLAD 0.5125、CosPlace 0.4725、ResNet50 0.2675、**ResNet18 0.2100**、VGG16 0.1775。
+    - 也就是说，真实数据的唯一攻击者是六个可用骨干里**倒数第二弱**的那个，而三个专门为 VPR 训练的模型强 2.2–3.8 倍。这正是 TIFS 审稿人会第一个抓住的点（"你击败的不是攻击者"），同时也是 B3 稻草人指控的另一半。
+    - 好消息是修复成本低：CosPlace/MixVPR 已经接在 `retrieval_attack.py` 里，权重在 `src/models/vpr_cache/` 本地，且 E1 的 0.7925 与 placement/transfer 研究用的是**同样的 192×320 释放分辨率**，所以换攻击者是严格的单变量替换，失真口径和"释放物"语义都不变。
+
+213. 【已完成】新增 `src/scripts/analyze_direction_transfer.py`：按 `(query_id, seed)` 配对、对每个条件与 `isotropic` 对照做精确 McNemar，并把"各条件投递 MSE 是否一致"作为能量门禁先打印出来。用它跑现有 ResNet18 导出，**逐项精确复现论文 Table 2**（0.1900 / 0.1450 p=0.0079 / 0.1125 / 0.0625 / 0.0000），确认脚本本身正确，可以用来评判新导出。
+
+214. 【进行中】**MixVPR 强攻击者下的 direction transfer 复跑**。冒烟（n=20，1 seed）已经给出与论文相反的信号：
+    - isotropic 对照 Top-1 **0.70**（ResNet18 下是 0.19）——强攻击者确实强；
+    - white_box **0.05**——"方向有用"这一条在强攻击者下仍然成立；
+    - **transfer_1/2/3 全部 0.70，一点效果都没有**；只有加入第四个替身 CosPlace 后才降到 0.55。
+    - 替身顺序是 resnet18 → resnet50 → vgg16 → cosplace，所以全部效应都来自那个**与攻击者同族（VPR 训练）**的替身，而不是集成规模。论文现在写的"随替身集成规模单调改善"很可能是弱攻击者造出来的假象。
+    - n=20 单 seed 不足以下结论（本仓库已有两次小样本过度解读的前科），因此已排好三个全量作业：(A) 400 query 全量复跑；(B) 把 CosPlace 换到第一位的**顺序对照**，用来把"集成规模"和"同族替身"分开；(C) 8 条放置规则在 MixVPR 下的 placement null 复跑。三个作业串行排队占满 GPU，产出到 `src/outputs/direction_transfer_mixvpr{,_cosfirst}/` 与 `src/outputs/placement_mixvpr/`。
+    - 需要注意的边界：这三个作业只会改变**真实数据**部分的结论强度；合成 proxy 的 98 组比较不受影响。
+
+215. 【已完成】**G1 强攻击者：A/B/C 三个作业全部跑完**，且验证了"B、C 并发跑"确实安全——两个日志里 grep 不到任何 OOM，96% 显存（7883/8192 MiB）时两个作业都以 exit=0 结束，靠的是 90 秒错峰把各自图库编码阶段的显存尖峰（单独测得可达 91%）拆开，不是无脑并发。
+    - **direction transfer under MixVPR，跑了两种替身顺序 (A: resnet18 优先, B: cosplace 优先)**：n=20 冒烟测试当时判断"效果全部来自同族替身 CosPlace、与集成规模无关"，**在 n=400 全量下没有复现**——B 里把 CosPlace 换到第一位，它单独的效应（Δ−0.0250, p=0.076）和 A 里 ResNet18 单独的效应（Δ−0.0275, p=0.052）几乎一样,都不显著。真正的发现是效应量级本身:isotropic 0.7775 → 全部 4 替身 0.7325~0.7350(Δ≈−0.043,两种顺序下都 p<0.001),white_box 0.0500(Δ−0.7275)。**方向这条轴在强攻击者下依然显著,但"不需要白盒也能拿到 67% 相对降幅"这句可部署性主张在 MixVPR 下量级掉到约 5.5% 相对降幅**,白盒上界本身没有塌。
+    - **placement null under MixVPR(单 seed n=400,配对 McNemar)**:八条放置规则相对 uniform 全部不显著,|Δ|≤0.0125(edge +0.0125 p=0.383 是最大的,oracle_grad −0.0100 p=0.481)——比 ResNet18 上的结果更平坦。放置零效应这条主张在强攻击者下**更稳**,不是弱攻击者撑出来的假象。已补跑 seed 1235/1236 以对齐论文原三 seed 协议(跑中)。
+    - 顺带发现并修了一个潜在崩溃点:`run_placement_rule_study.py` 的图库编码此前是整批一次性前向(`build_gallery_embeddings`),`run_direction_transfer_study.py` 早就为同样的显存问题写了分块版本但两个脚本没共享;已给 placement 脚本加上同样的 `embed_gallery_batched`,eval/no_grad 下与整批结果数值相同,不影响任何已发表数字。
+    - **下一步待定**:direction-transfer 效应量级的大幅下降需要写进论文(而不是藏起来),且需要判断这是否触发主线措辞调整("不需要白盒即可部署"要降级为"部分可部署,量级依赖攻击者强度")。放置零效应部分不需要改主张,只需要补真实的强攻击者证据段落。
+
+216. 【已完成】**改稿:把 direction-transfer 的过度声明按 G1 实测数字降级**。改动四处并全部编译验证通过:
+    - 摘要:"improving monotonically with ensemble size" 的单一数字改为弱/强攻击者对照,新增"against a production-grade VPR attacker ... recovers only 6%"。
+    - scope 段与贡献列表第 4 条:同步加上"到底多少收益不需要白盒,取决于攻击者强度"的限定。
+    - §The Other Axis 正文:新增"Does this generalise to an attacker that is actually good at the task?"段落,给出 MixVPR 全量数字(isotropic 0.7775→全部替身 0.7350,Δ−0.0425,p=9.1e-4;顺序对照 0.7325,p=1.4e-3;白盒 0.0500);新增一段把放置零效应在 MixVPR 下的结果(3-seed pooled,n=1200,|Δ|≤0.012)接回 §The Null Holds on Real Geographic Data,并把段落末尾"central claim"的措辞改为同时报告弱/强攻击者两个显著性,不再只引用弱攻击者的 67%。
+    - Table~\ref{tab:transfer} 扩为弱/强攻击者两个分组(附加"% of white-box benefit recovered"列),让"recovers 67% vs 6%"这个对比可以直接从表里读出。
+    - 结论段同步降级措辞。
+    - 交叉引用修正:原稿在 §direction 里误写"(Appendix~C)",实际这批 MixVPR 放置数据属于正文 §The Null Holds on Real Geographic Data(`sec:msls_placement`),已改为 `\S\ref{sec:msls_placement}`。
+    - 编译核实(MiKTeX pdflatex+bibtex+pdflatex×2,通过 `cmd.exe` 从 WSL 调用):**0 错误、0 未定义引用、0 overfull hbox**(扩表后新引入两处 overfull,已仿照附录 `tab:placement_full`/`tab:placement_budget` 的先例用 `\resizebox{\columnwidth}{!}` 包裹表格解决)。页数仍为 **14**(与改动前一致,不是本轮改动导致的新增;13 页上限的压缩是第 194/208/211 条已经确认的独立待办,本轮未处理)。已用规范的 `paper/build.bat` 重新生成并确认 `main.pdf`(408988 字节,与手动编译版本 checksum 一致)。
+    - **未提交**:`paper/main.tex`(子模块)与 `docs/progress.md`、`src/scripts/run_placement_rule_study.py`(新增 `embed_gallery_batched`)、`src/scripts/analyze_direction_transfer.py`(新文件)均为本地未提交改动,按仓库约定"只在用户要求时提交/推送",等待你确认。
+    - **仍待你决策/后续**:(a) 13→14 页的压缩尚未做;(b) direction-transfer 目前只有 1 个 seed(1234)× 400 query,建议后续补 2 个 seed 与 placement 研究对齐的 3-seed 协议,现有 p 值已经很显著(p<1e-3)所以不阻塞叙事,但严谨性上是个可选加固项。
+
+217. 【已完成】**补齐 direction-transfer 的 3-seed 协议,把第 216 条里临时用的 1-seed 数字换成 pooled 版本**。按你的要求"等两个 seed 都跑完再一起改",没有先用 1-seed 数字提交。
+    - 补跑 A(resnet-first)、B(cosplace-first)两种替身顺序各自的 seed 1235/1236(GPU 空闲,90 秒错峰起跑,两作业 exit=0)。3-seed pooled(n=1200/条件,配对 McNemar):isotropic 0.7800;全部替身 A 0.7358(Δ−0.0442,p=5.2e-9)、B 0.7325(Δ−0.0475,p=6.9e-9);白盒 0.0500(Δ−0.7300,p=4.0e-264)。与 1-seed 时的结论方向和量级一致(headroom capture 6.1–6.5% vs 之前 5.8–6.2%),只是显著性随样本量变得更强,不是推翻重来。
+    - 论文里 5 处引用(摘要、§The Other Axis 正文两段、Table~\ref{tab:transfer} 下半区块、"central claim"段)全部替换为 pooled 数字,并在正文与表格 caption 里明确标注"pooled over three seeds, n=1200"以及弱攻击者那半仍是 1-seed n=400(如实标注样本量差异,不掩盖)。
+    - 重新编译(MiKTeX,同上流程):**0 错误、0 未定义引用、0 overfull hbox,14 页**(与改动前一致)。用 `build.bat` 生成并核对 `main.pdf` checksum 与构建产物一致。
+    - 至此第 216 条末尾提出的"可选加固项"(补 3-seed)已完成,不再是待办。
