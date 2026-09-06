@@ -842,3 +842,70 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
     A: 保留
     3. 本轮改动(paper 子模块 + 根仓库 docs/progress.md + src/ 新增代码)是否现在提交,按仓库约定"paper 是子模块,子模块内先 commit,再回根仓库 bump 指针"。
     A： 按仓库约定"paper 是子模块,子模块内先 commit,再回根仓库 bump 指针"。
+
+## 本轮更新(2026-09-06,G2 第二档:微调适应型自适应对手)
+
+用户确认第 221 条三个待决策项后,选择"现在推进 G2(b)微调适应档"。本条记录该档目前的进展和一个真实的负面/待解决发现。
+
+222. 【进行中,已阻塞在资源争用】**G2(b) 微调适应型自适应对手:第一版实现暴露了朴素微调会让攻击者变弱而非变强,已加固实现但尚未跑出最终数字**。
+    - 新增 `src/scripts/finetune_adaptive_attacker.py`:攻击者在"已知会被此类防御扰动"的样本(与本研究其余部分同款、按 target_mse=15.68 标定的 isotropic 噪声)上,冻结主干、只微调最后一个 block(resnet18/50 的 `layer4`,mixvpr 的 `aggregator`),用 triplet loss 对齐到攻击者自己(未微调)模型的固定 gallery 索引——刻意不假设攻击者会重新为整个参考库重新编码,这在真实部署中不现实。查询集按 place 划分为互不重叠的 train/val/test 三份,test 集(默认 100 条)全程不参与训练或模型选择。
+    - `run_direction_transfer_study.py` 新增 `--eval_checkpoint`(把微调后 state_dict 加载到 eval_backbone,white_box 条件因此自动针对"适应后模型"重新优化)与 `--query_id_file`(把评测限制到 held-out test 集,保证微调和评测查询完全不重叠)两个参数。
+    - **第一版 bug 并已修复**:初版 `--eval_checkpoint` 会用微调后的模型重新编码整个 gallery,与训练时"gallery 保持攻击者原始模型索引"的假设不一致;已修复为"gallery 用 stock 模型编码、只有 query 编码器和 white_box 梯度目标用微调模型",训练和评测口径统一。
+    - **核心发现(据此暂停,未做最终定论)**:resnet18 上按最初方案(50 epoch、随机负样本)微调后,white_box Top-1 在两种口径下都稳定钉在 0.00(修 bug 前后一致)——微调完全没能挽回白盒漏洞。但攻击者自身在 held-out 查询上的 isotropic Top-1 反而从 0.17 掉到 0.08(bug 修复后)甚至更低,提示朴素微调可能只是在过拟合训练集的 300 条查询,而非学到真正更强的表征。已加固实现:(a) 补充 place-disjoint validation 集(默认 50 条)、(b) 每个 epoch 用真实 Top-1 检索精度做验证并保存"验证集最优"而非"最后一个 epoch"的 checkpoint、(c) 负样本改为从 K=8 个候选中挑"当前最像"的困难负样本(免费,因为 gallery embedding 已预计算,不需要额外前向)。加固后的 3-epoch 冒烟测试显示:**未微调的预训练模型本身 val_top1=0.30,微调 1-3 个 epoch 后立刻单调跌到 0.04→0.08→0.12**,早停机制正确选中了"epoch 0(不微调)"为最优 checkpoint——这不是负样本难度的问题,更像是"冻结主干、只调最后一个 block、仅 250-300 条训练查询"这个预算约束下的微调本身就不稳定,容易比不微调更差。曾尝试把学习率从 1e-4 降到 1e-6 做进一步验证,但连续 3 次被系统以"内存不足"杀掉。
+    - **已排查内存杀进程的原因**:`ps aux` 显示同一台机器上另有一个完全不相关的项目(`/mnt/c/source/bodhi-vlm`)的 8 个 `run_r11b_paired_residual.py` 分片进程在满载运行(每个 ~104% CPU,已运行 80+ 分钟),加上另外 3-4 个并行的 Claude Code 会话——`free -h` 每次查看时 WSL 侧都显示还有 9-10GB 可用,但杀进程信号很可能来自 Windows 宿主机整体内存压力,WSL 自身的 `free` 看不全。这不是我方代码的 bug,也不是我可以/应该单方面处理的东西(另一个项目的正常在跑任务,不该擅自打断)。
+    - 已征求你的意见,你选择"先等一等、稍后再重试",而不是现在用更小 batch 硬挤,也不是让我去处理另一个项目。**因此本条目前挂起**,等你告知可以重试(或系统资源缓解)后,补跑加固版的 lr=1e-6 冒烟测试、确认能避免早期崩溃后,再跑完整 resnet18 微调 + stock/adapted 对比评测(held-out 100 条),视情况再决定是否对 mixvpr 也跑一遍。
+    - **未提交**:`src/scripts/finetune_adaptive_attacker.py`(新文件)、`src/scripts/run_direction_transfer_study.py` 的 `--eval_checkpoint`/`--query_id_file` 改动均为本地未提交状态,等 G2(b) 有定论后再一并提交,避免中途状态污染提交历史。
+
+    需要你决策(等系统资源缓解后回来处理):
+    1. 系统资源(另一项目的 8 分片任务)缓解后,告知我可以重试,我会先跑一次加固版 lr=1e-6 的短冒烟测试确认不再立刻崩溃,再跑完整对比。
+    A: vGPU 3090 上
+    2. 如果加固后(更低学习率、困难负样本、验证集早停)仍然无法让微调后的攻击者在 held-out 集上超过"不微调"的基线,这本身就是一个可以写的结论("在此计算预算下,朴素的攻击者微调适应不但没有威胁到白盒结果,反而会让攻击者本身变弱")——但这比"microtune 之后 white_box 仍然是 0.00"这类干净结论更依赖于"我们是否已经找到了一个诚实、有代表性的微调超参数",需要你判断这个负面结果是否已经"试得足够努力"、可以作为 G2(b) 的定论写回论文,还是要再多试几组超参数。
+    A: 先写回论文 再多试几组超参数
+
+223. 【已完成实验,论文待改】**G2(b) 追加超参数扫描:学习率是关键变量,lr=1e-6 下微调后的攻击者确实变强,但白盒结果依然完全不受影响——比第 222 条的负面结论更干净、更有说服力**。
+    - 背景:用户要求"先写回论文,再多试几组超参数",同时问"能否在 PRO 6000 上同时跑"。已确认 PRO 6000(`ssh -p 48305 root@connect.westc.seetacloud.com`,`/root/autodl-tmp/PPEDCRF`)GPU 已开(与一个无关的 ollama 进程共享,32/98GB 已用,对本实验足够);已 `git pull` 到 `73934df`,已用主机对主机直传(vGPU 3090 → PRO 6000,经 `/root/autodl-fs/` 共享盘,因 PRO 6000 本地盘只剩 44GB/2.3GB 空闲)补齐 all8 manifest 与 8 城市 MSLS 图像(1.5GB)、resnet50/vgg16 权重缓存、CosPlace checkpoint;已传输两个未提交的 G2(b) 文件。vGPU 3090 侧仍在等待用户开卡,与本条无关。
+    - **关键发现**:第 222 条里"朴素微调让攻击者变弱"这个结论,原来是学习率选得太激进(lr=1e-4)导致的过拟合假象,不是这个微调策略本身的固有属性。同一套代码(冻结主干、只调最后一个 block、K=8 困难负样本、验证集早停)只把学习率降到 lr=1e-6(低两个数量级)后,held-out 验证集 Top-1 从"越训越差"反转为单调上升:epoch 0(预训练)=0.30 → epoch 1-3=0.32 → epoch 4-5=0.34 → epoch 6-10=0.36(在 epoch 6 后打平,早停选中 epoch 6)。
+    - **held-out 100 条测试集上的真实攻防对比**(stock vs 这个"真正变强了"的 adapted 模型,同一批查询、同一固定噪声,配对精确 McNemar):
+
+      | 条件 | stock | adapted | 配对 Δ | 配对 p |
+      |---|---|---|---|---|
+      | isotropic(攻击者自身基线) | 0.17 | 0.22 | +0.05 | 0.125 |
+      | **white_box** | **0.00** | **0.00** | **0.00(0 个不一致查询)** | **1.0** |
+      | transfer_1 | 0.15 | 0.13 | −0.02 | 0.625 |
+      | transfer_2 | 0.11 | 0.09 | −0.02 | 0.625 |
+      | transfer_3 | 0.04 | 0.05 | +0.01 | 1.0 |
+
+    - **这比第 222 条的结论更强、更可信**:第 222 条的"白盒结果不受影响"建立在一个自身变弱的攻击者上,容易被质疑"攻击者本来就更差,白盒当然还是能打穿它";这次的攻击者是真实变强的(held-out isotropic 从 0.17→0.22,同方向验证集从 0.30→0.36),但白盒 Top-1 在 100 条测试查询上**逐条精确相同**(0 个不一致对),部署版(transfer)三档也都不显著。这是"即使攻击者确实从见过的防御输出样本中学到了东西,方向扰动依然完全免疫"这个更有力的正面结论。
+    - **论文现状与本条的冲突**:`paper/main.tex` 当前的 `\S\ref{sec:finetune_adaptation}`("A First Attempt at a Genuinely Adaptive Attacker")、Scope-of-claims 段(约 108-118 行)、Conclusion(约 1300-1310 行)三处都是基于第 222 条"微调只会让攻击者变弱"这个已被推翻的结论写的,需要重写为本条的更干净结论。**本条完成后尚未触碰 `paper/main.tex`,等你决定具体改写方向后再动笔**(遵循前几轮的流程:先讨论候选方案,你选定后再写)。
+    - 数据/日志留存于 PRO 6000:`/root/autodl-tmp/PPEDCRF/src/outputs/direction_transfer_adaptive_g2b/resnet18_smoke4/`(`ft.pt` 微调 checkpoint、`stock_eval.csv`/`adapted_eval.csv` 及对应 log)。
+
+需要你决策:
+    1. 论文三处(新小节、Scope-of-claims、Conclusion)怎么改——是只强调"更干净的正面结论"(攻击者验证上确实变强,白盒依然免疫),还是也如实提一句"第一次尝试的学习率过激进导致了误导性的负面结果,调低学习率后才发现真实情况"这个方法论教训(更透明,但会让叙事更长)?
+    A：更透明
+    【已完成】按"更透明"方案重写了 `\S\ref{sec:finetune_adaptation}`(先讲 lr=1e-4 失败尝试,再讲 lr=1e-6 成功且白盒依然免疫,新增 `tab:finetune` 表格),同步更新 Scope-of-claims(约 108-123 行)与 Conclusion(约 1330-1345 行)的措辞。`paper\build.bat` 编译通过:0 LaTeX error、0 undefined references、0 overfull hbox,16 页。改动尚未提交。
+    2. 是否已经"试得足够"可以定论,还是要按原计划继续多试几组超参数(更多 epoch、更大 neg_k、甚至尝试更大的可训练层范围)——目前 val_top1 在 epoch 6 后打平在 0.36,不确定是这个攻击者在当前预算下的真实上限,还是还能再往上探。
+    A: 可以在PRO 6000上试下  更多 epoch、更大 neg_k、甚至尝试更大的可训练层范围
+    【进行中】将在 PRO 6000 上继续跑:(a) 更多 epoch(当前 10 epoch 在第 6 轮打平,延长看是否只是学习率余量不够还是真正的上限)、(b) 更大 neg_k(当前 8,试更大的困难负样本候选池)、(c) 解冻更大的可训练层范围(当前只调 resnet18 的 `layer4`,可以尝试连 `layer3` 一起解冻)。结果会再写回本文件,论文本轮的"lr=1e-6 遂告一段落"版本会先保留,除非新一轮结果推翻它。
+
+224. 【已完成,论文已改】**G2(b) 完整 8 组超参数扫描收官:resnet18 六种配置全部收敛到同一区间,MixVPR(强攻击者)首次纳入测试,同样白盒免疫——已写回论文**。
+    - 背景:用户要求"能否同时在 PRO 6000 上跑"并"vGPU 3090 已开,最大化压榨显卡性能,10 分钟定时巡检,完成后拉回结果并关机"。过程中发现 PRO 6000/vGPU 3090 两边的 manifest 加载阶段(312MB manifest、80 万条 gallery dict)在服务器级 CPU 上远比本机慢(单核主频更低所致),且并发多个任务会导致线程超订阅式的严重拖慢(PRO 6000 上 3 个并发任务各自烧了 250–390 CPU 分钟却只推进了不到 10 个 epoch)。据此把卡住的任务迁移回本机 RTX 3070(用 `OMP_NUM_THREADS=4`/`MKL_NUM_THREADS=4` 限流,规避与本机另一个不相关项目 bodhi-vlm 的资源争用),分批跑完,PRO 6000 保留唯一已有真实进度的任务继续跑。
+    - **resnet18 六组配置全部完成**,验证集 Top-1 全部收敛到 **0.32–0.38** 区间,不因具体超参数(更多 epoch、更大困难负样本池、多解冻一层、学习率在 3×10⁻⁶–10⁻⁵ 之间调整)而突破:
+      - 10-epoch 基线(lr=1e-6,neg_k=8):best epoch 6,val_top1=0.36
+      - 40-epoch 延长(同上配置):best epoch **17**,val_top1=**0.38**(未突破的更长训练也证实过拟合会让效果掉回 0.30 附近,早停机制正确保留了 epoch 17 的最优 checkpoint)
+      - neg_k=32:best epoch 5,val_top1=0.36
+      - unfreeze layer3+layer4:best epoch 12,val_top1=**0.38**(与延长 epoch 殊途同归,说明 0.38 更像是当前 250 条训练数据预算下的真实上限,而非某个具体超参数的巧合)
+      - lr=3×10⁻⁶:best epoch 6,val_top1=0.36
+      - lr=1×10⁻⁵:best epoch 3(短暂到 0.36 后回落),最终仍判定 0.36
+      - held-out 100 条测试集上共跑了 2 次独立验证(10-epoch 版与 40-epoch/0.38 版):**白盒 Top-1 在两次验证里都是逐条精确 0.00 vs 0.00,0 个不一致查询**,isotropic 攻击者自身基线随验证集提升同步小幅上升(0.17→0.22 或 0.17→0.21)。
+    - **MixVPR(强攻击者)首次纳入 G2(b) 微调测试**——三档学习率:lr=10⁻⁴ 让攻击者验证集 Top-1 从预训练的 0.84 真实提升到 **0.88**(best epoch 1,之后过拟合回落);lr=10⁻⁶ 与 lr=10⁻⁷ **完全没有效果**(最优 checkpoint 就是 epoch 0/预训练本身,两档都是)。这本身是一个干净发现:MixVPR 的 aggregator(230 万参数,与 resnet18 的 layer4 结构完全不同)需要的学习率量级和 resnet18 差两个数量级,resnet18 上灾难性的 1e-4 对 MixVPR 反而是唯一起作用的档位。
+      - 用 lr=10⁻⁴ 的最优 checkpoint(val_top1=0.88)在 held-out 100 条测试集上做真实攻防对比(替身顺序 resnet18→resnet50→vgg16→cosplace,与 G1 一致):白盒 Top-1 stock=0.03 → adapted=0.04(配对精确 McNemar,1 个不一致查询,p=1.0),isotropic 攻击者自身基线 0.66→0.69,部署版 transfer 1–4 全部不显著。**与 resnet18 结论完全一致:即使攻击者在自己的任务上确实变强了,也没能拿到白盒漏洞的任何实质性收益。**
+    - **论文改动(已完成,已编译验证)**:`paper/main.tex` 的 `Table~\ref{tab:finetune}` 扩展为两个区块(ResNet18 lr=10⁻⁶ 档 + MixVPR lr=10⁻⁴ 档,后者含 4 个 transfer 行因为 MixVPR 用了 4 个替身),`\S\ref{sec:finetune_adaptation}` 结尾新增两句:一句总结 resnet18 六组超参数都收敛到同一区间且白盒每次都不受影响,一句总结 MixVPR 这个架构完全不同的攻击者复现了同样的模式。`cmd.exe` 调用 `paper\build.bat` 编译通过:0 LaTeX error、0 undefined references、0 overfull hbox,16 页(页数与改动前一致)。
+    - **数据/代码位置**:`finetune_adaptive_attacker.py` 新增 `--unfreeze_blocks` 参数(支持解冻 resnet 最后 N 个 block,mixvpr 仍只能为 1)。8 组训练结果分散在三处:PRO 6000 `/root/autodl-tmp/PPEDCRF/src/outputs/direction_transfer_adaptive_g2b/{resnet18_moreepochs,resnet18_negk32(已删,迁移到本机),resnet18_unfreeze2(已删,迁移到本机)}`(negk32/unfreeze2 因 PRO 6000 三任务并发线程超订阅被杀掉重迁到本机)、本机 `src/outputs/direction_transfer_adaptive_g2b/local_sweep/{resnet18_negk32,resnet18_unfreeze2,resnet18_lr3e6,resnet18_lr1e5,mixvpr_lr1e4,mixvpr_lr1e6,mixvpr_lr1e7}`。vGPU 3090 上原计划的 6 组任务(mixvpr 三档 + resnet18 三档)因同样的线程超订阅被杀掉并全部重跑于本机,vGPU 3090 目前已清空、空闲,等待关机确认(见下方待决策项)。
+    - **未提交**:`src/scripts/finetune_adaptive_attacker.py`(`--unfreeze_blocks` 新增)、`src/scripts/run_direction_transfer_study.py`(`--eval_checkpoint`/`--query_id_file` 累积改动)、`paper/main.tex`(本条的两处编辑)均为本地未提交,等你确认后再提交(遵循"paper 子模块先 commit,再回根仓库 bump 指针"的既有约定)。
+
+    需要你决策:
+    1. 现在是否提交本轮全部改动(`finetune_adaptive_attacker.py`、`run_direction_transfer_study.py`、`paper/main.tex` 的 MixVPR 扩展)?
+A: 是 
+    2. vGPU 3090 已确认空闲、无待办任务,关机机制已在 `docs/archived/vgpu3090_experiment_handoff.md` 中验证过(`shutdown -h now`,`/usr/bin/shutdown` 也确认存在)——是否现在执行关机?
+    A: 不用
+

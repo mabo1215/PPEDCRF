@@ -169,6 +169,19 @@ def main() -> int:
                          "attacker applies to the received frame before "
                          "embedding it, e.g. jpeg75/jpeg50/blur/denoise. "
                          "'none' reproduces the original (non-adaptive) study.")
+    ap.add_argument("--eval_checkpoint", default="",
+                    help="G2 tier-2 adaptive adversary: state_dict checkpoint "
+                         "for the eval_backbone, e.g. from "
+                         "finetune_adaptive_attacker.py. Loaded onto the "
+                         "eval_backbone embedder before it embeds the gallery "
+                         "or any query, so the white_box condition is "
+                         "automatically re-optimised against the adapted "
+                         "model. Surrogates are unaffected.")
+    ap.add_argument("--query_id_file", default="",
+                    help="optional JSON file with a list of query_ids to "
+                         "restrict evaluation to, e.g. the held-out test "
+                         "split written by finetune_adaptive_attacker.py so "
+                         "fine-tuning and evaluation never share queries.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
 
@@ -177,6 +190,12 @@ def main() -> int:
 
     records, gallery = load_manifest(args.manifest, args.root)
     queries = records if not args.limit else records[: args.limit]
+    if args.query_id_file:
+        with open(args.query_id_file, encoding="utf-8") as fh:
+            keep = set(json.load(fh))
+        queries = [r for r in queries if r["query_id"] in keep]
+        print(f"[transfer] restricted to {len(queries)} queries from "
+              f"{args.query_id_file}", flush=True)
     gallery_ids = sorted(gallery)
     resize_hw = (args.height, args.width)
     gallery_tensor = torch.stack(
@@ -192,9 +211,27 @@ def main() -> int:
         cfg = RetrievalConfig(backbone=b,
                               input_size=default_input_size_for_backbone(b))
         e = make_default_embedder(cfg).eval().to(device)
+        if b == args.eval_backbone and args.eval_checkpoint:
+            # The gallery stays indexed with the attacker's original (stock)
+            # model: re-embedding a whole reference database every time a
+            # query encoder is adapted is not something a real deployed
+            # system does, and it is what finetune_adaptive_attacker.py
+            # trained against (fixed pretrained-model targets). Only the
+            # query-side encoder -- used below for every condition's ranking
+            # and as the white_box gradient target -- is replaced.
+            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor)
+            adapted = make_default_embedder(cfg).eval().to(device)
+            state = torch.load(args.eval_checkpoint, map_location=device)
+            adapted.load_state_dict(state, strict=True)
+            adapted.eval()
+            e = adapted
+            print(f"[transfer] loaded adapted checkpoint for {b} from "
+                  f"{args.eval_checkpoint} (gallery stays stock-indexed)",
+                  flush=True)
+        else:
+            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor)
         embedders[b] = e
         sizes[b] = cfg.input_size
-        gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor)
         torch.cuda.empty_cache()
         print(f"[transfer] gallery embedded with {b}", flush=True)
 
