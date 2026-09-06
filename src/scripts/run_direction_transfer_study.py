@@ -49,6 +49,7 @@ from eval.retrieval_attack import (  # noqa: E402
     make_default_embedder,
     preprocess_for_embed,
 )
+from eval.sanitizers import SANITIZERS  # noqa: E402
 from scripts.run_geotagged_vpr_benchmark import (  # noqa: E402
     load_image,
     load_manifest,
@@ -163,6 +164,11 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--sanitizer", default="none", choices=sorted(SANITIZERS),
+                    help="G2 tier-1 adaptive adversary: preprocessing the "
+                         "attacker applies to the received frame before "
+                         "embedding it, e.g. jpeg75/jpeg50/blur/denoise. "
+                         "'none' reproduces the original (non-adaptive) study.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
 
@@ -207,8 +213,8 @@ def main() -> int:
         print(f"[transfer] resuming, {len(done)} rows already present",
               flush=True)
 
-    fields = ["query_id", "condition", "seed", "correct_rank", "top1_place",
-              "correct_place", "effective_mse", "psnr"]
+    fields = ["query_id", "condition", "seed", "sanitizer", "correct_rank",
+              "top1_place", "correct_place", "effective_mse", "psnr"]
     new = not out.is_file()
     fh = open(out, "a", newline="", encoding="utf-8")
     writer = csv.DictWriter(fh, fieldnames=fields)
@@ -246,8 +252,9 @@ def main() -> int:
                             args.step_size, args.linf)
                 released = release_at_mse(frame, delta, args.target_mse)
                 mse = float((released - frame).square().mean())
+                sanitized = SANITIZERS[args.sanitizer](released)
                 with torch.no_grad():
-                    qe = normalised_embedding(embedders[ev], released, sizes[ev])
+                    qe = normalised_embedding(embedders[ev], sanitized, sizes[ev])
                     sims = ev_gal @ qe.flatten()
                     order = torch.argsort(sims, descending=True)
                     rank = next(i + 1 for i, j in enumerate(order.tolist())
@@ -255,6 +262,7 @@ def main() -> int:
                     top1_place = place_of[gallery_ids[int(order[0].item())]]
                 writer.writerow({
                     "query_id": qid, "condition": cond, "seed": seed,
+                    "sanitizer": args.sanitizer,
                     "correct_rank": rank, "top1_place": top1_place,
                     "correct_place": want, "effective_mse": f"{mse:.6f}",
                     "psnr": f"{10 * torch.log10(torch.tensor(255.0 ** 2 / max(mse, 1e-9))):.4f}",
