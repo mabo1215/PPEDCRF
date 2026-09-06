@@ -909,3 +909,13 @@ A: 是
     2. vGPU 3090 已确认空闲、无待办任务,关机机制已在 `docs/archived/vgpu3090_experiment_handoff.md` 中验证过(`shutdown -h now`,`/usr/bin/shutdown` 也确认存在)——是否现在执行关机?
     A: 不用
 
+225. 【进行中】**第 219 条压页任务:16 页 → 14 页,距 TIFS 初投 13 页上限还差 1 页**。G2 收官后 `main.pdf` 涨到 16 页,本轮按"先无损、再动内容"的顺序压缩。
+    - **关键认知更正**:第 211 条记录的规则里,正文是"初投**上限** 13 页"(硬限制),补充材料是"**建议** ≤6 页"(建议值,非硬性)。此前我误把补充材料的 6 页当成硬上限,因而认为"没有地方可搬"。改按此理解后,把附录整体搬进 `supplementary.tex` 成为最优解——**不删任何证据,只是移出被计页的文档**。
+    - **已做的无损压缩**:(a) 附录 `Deterministic Baseline Matched-PSNR Comparison` 小节正文自述"已被 §operator 取代",折成 8 行;(b) 附录 `Placement-Rule Study` 的 "Placements"/"Protocol"/"Significance" 三段与正文 §Allocation I 高度重复(同样的 8 条放置规则、同样的两个 checkpoint 与 CV 值、同样的 2,928 行/49 组比较、同样的能量门禁 $3.4\times10^{-5}$、同样的 VGG16 +0.194 与 saliency +0.053 显著结果),压成一句指针 + 仅保留独有内容(within-run 配对细节、edge/CosPlace 精确检验格、精确检验 vs cluster bootstrap 的取舍说明);(c) 删掉 `Experimental Protocol` 里一段与上文几乎逐字重复的 downstream-utility 段落(注释掉表格时留下的残留)。
+    - **附录整体迁移**:`Released Implementation Notes`(32 行)、`Energy-Matched Redistribution Controls`(37 行)、`Matched-PSNR/Effective-MSE Comparison` 含 Deterministic 小节(64 行)、`Placement-Rule Study` 含 Budget Dependence(106 行)全部移入 `supplementary.tex`,主文 `\appendices` 块清空。共移出 239 行。
+    - **交叉引用修正**(迁移引入的真实风险,已全部处理):主文里 2 处 `\ref` 指向被移走的 label(`sec:matched_psnr`、`sec:placement_budget`)改为"the supplementary material";主文里 **4 处硬编码的纯文本 "Appendix~A"**(不会触发 LaTeX 未定义警告、极易漏掉)同样改写;补充材料里 6 处反向指向主文 label(`sec:causality`/`sec:operator`/`sec:mechanism`)的 `\ref` 改为文字描述。
+    - **正文轻度收紧**(不删结论/数字):Conclusion 第 4、5 段把已在正文出现过第三次的数字改为回指;`Scope of this benchmark` 段删掉与引言 `Scope of the claims` 重复的 DP 免责声明(第 184 条也修过同一类重复)。
+    - **构建脚本修复**:`paper/build.bat` 此前只构建 main/titlepage/appendix,**不构建 `supplementary.tex`**——而补充材料是投稿件之一,且本轮大量内容迁入其中,必须纳入构建校验。已加入 `call :build_one supplementary`。
+    - **当前状态**:`main.pdf` **14 页**、`supplementary.pdf` **8 页**,两者均 0 LaTeX error、0 overfull hbox、0 未定义引用/引文。主文最后一页仅剩约 1,188 字符的参考文献溢出(内容只到页面 236/792 处),即**再挤出约 1/4 页即可达标 13 页**。
+    - **剩余差距的性质**:主文附录已清空,可无损压缩的重复内容也已用尽;再压需要动正文实质段落或参考文献列表。鉴于 Related Work 是此前按审稿意见从 17 条扩到 42 条的(见第 14 条),不建议从参考文献下手。下一步需要你决定从哪里再挤 1/4 页。
+
