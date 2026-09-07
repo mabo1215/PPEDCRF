@@ -94,7 +94,13 @@ R3 & No downstream-utility evidence exists for the direction axis. Table~1's
 mAP/mIoU is measured at $\sigma_0=8$ on the mechanism's own additive
 perturbation (allocation axis); the direction result is supported only by
 $19.19$ MSE / $35.3$\,dB PSNR, and PSNR is not utility for adversarially
-directed perturbations. & \pending & Experiment D3: same-image utility audit
+directed perturbations. & \done & D3 run: at identical delivered MSE the
+direction costs $0.058$ more per-image AP@50 ($p=5.8\times10^{-14}$) and
+$0.048$ more per-image IoU ($p=4.7\times10^{-9}$) than the isotropic control
+over 200 images per task; clean/isotropic rows reproduce the published table to
+within $0.002$. Written into the main text, the supplementary, Scope-of-claims
+and the Conclusion as a limit on the recommendation. Superseded gate text:
+same-image utility audit
 under the surrogate-direction perturbation at the operating point's delivered
 MSE, with an isotropic control at the same MSE; both rows added to Table~1.
 Gate: the paper either reports direction-axis utility or discloses its absence
@@ -131,6 +137,18 @@ the real-benchmark placement result; the six backbones come from the proxy and
 transfer studies, while real place-labelled results use ResNet18 and MixVPR.
 & \pending & Rephrase the abstract so backbone coverage is attributed to the
 studies that carry it. Text-only. \\
+
+R12 & An unterminated \texttt{\textbackslash begin\{comment\}} silently removed
+\texttt{\textbackslash section\{Experimental Evaluation\}} and the entire
+Experimental Protocol subsection from the compiled paper (the \texttt{comment}
+environment does not nest, so it ran to the next \texttt{\textbackslash
+end\{comment\}} 57 lines later). LaTeX warns about none of it. Part of the
+earlier 16-to-14-page reduction was this accidental deletion, not compression.
+& \done & Stray opener removed; the section, its protocol text and its labels
+are back in the PDF, the deliberately hidden datasets table stays hidden, and
+the build reports 0 undefined references. Standing consequence for R4: verify
+every remaining cut against the \emph{rendered PDF}, never against the source.
+\\
 
 R10 & The main text stated that the same-image mAP/mIoU values are ``in the
 Supplementary Material''. They were in no submitted document: the table
@@ -199,8 +217,8 @@ manifest, gallery, surrogate ensembles and delivered MSE as the published
 Table~2, so rows are directly comparable. ResNet18 (3 surrogates) and MixVPR
 (4 surrogates), 3 seeds each. \\
 
-D3 --- downstream utility of the direction perturbation (R3) & \running &
-55\% & 7 Sep 2026, 19:00 & \textbf{Meaning:} supplies the evidence the paper's
+D3 --- downstream utility of the direction perturbation (R3) & \done &
+100\% & Complete (7 Sep 2026, 16:30) & \textbf{Meaning:} supplies the evidence the paper's
 own problem statement demands. Applies the surrogate-direction perturbation to
 the co-audited 200-image COCO detection and 200-image VOC segmentation
 manifests at the operating point's delivered MSE, with an isotropic control at
@@ -208,15 +226,15 @@ the same MSE, then measures mAP@50 and mIoU with the frozen detectors already
 used for Table~1. Cheap; can share the GPU with D1. \\
 
 D2 --- adaptive adversary trained on the defended output (R2) & \running &
-40\% & 7 Sep 2026, 22:00 & \textbf{Meaning:} makes the adaptive-adversary
+55\% & 8 Sep 2026, 02:00 & \textbf{Meaning:} makes the adaptive-adversary
 section answer the question it poses. Same fine-tuning recipe, splits and
 early-stopping rule as the published sweep, but with training samples drawn
 from the surrogate-direction perturbation instead of isotropic noise.
 Perturbation generation dominates the cost, so training samples are
 precomputed once and reused across configurations. \\
 
-D4 --- seed and sample-size strengthening (R5) & \pending & 0\% &
-10 Sep 2026, 20:00 & \textbf{Meaning:} brings two headline tables up to the
+D4 --- seed and sample-size strengthening (R5) & \running & 5\% &
+8 Sep 2026, 12:00 & \textbf{Meaning:} brings two headline tables up to the
 statistical standard of the rest of the paper. Extends the
 non-adaptive-preprocessing sweep from 1 to 3 seeds (2 attackers $\times$ 4
 sanitizers) and enlarges or pools the fine-tuning evaluation split beyond

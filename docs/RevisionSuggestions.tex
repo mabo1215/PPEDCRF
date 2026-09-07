@@ -179,6 +179,21 @@ design for direction, not distribution --- costs the downstream task the
 mechanism exists to preserve. The manuscript currently cannot answer, and does
 not flag the gap.
 
+\paragraph{Outcome (measured 7 September 2026).} D3 has been run and the
+concern was justified. At identical delivered MSE ($15.68$), against the
+unperturbed reference the isotropic control costs $0.021$ per-image AP@50 and
+$0.007$ per-image IoU, while the surrogate direction costs $0.079$ and
+$0.055$. Paired image by image over 200 images per task, the direction is
+worse than the isotropic control by $0.058$ AP (Wilcoxon signed-rank
+$p=5.8\times10^{-14}$) and $0.048$ IoU ($p=4.7\times10^{-9}$). The clean and
+isotropic rows reproduce the published allocation-axis table to within
+$0.002$, so this is a comparable measurement rather than a separate one. The
+reading is a limit on the recommendation, not a refutation: allocation buys no
+measurable privacy at any of these utility costs, direction buys a significant
+reduction, but direction is not free and a protocol that matches delivered
+distortion understates what it spends. This is now reported in the main text,
+in the supplementary, and in the Scope-of-claims and Conclusion.
+
 \textbf{Required actions.}
 \begin{enumerate}
   \item \textbf{Experiment (D3).} Run the existing same-image utility audit
@@ -195,6 +210,33 @@ not flag the gap.
   must say explicitly that the reported utility covers the allocation axis
   only.
 \end{enumerate}
+
+\subsection*{R12 --- Critical, found and fixed during this cycle: an entire
+section was missing from the compiled paper}
+
+\textbf{Finding.} A leftover \verb|\begin{comment}| sat immediately before
+\verb|\section{Experimental Evaluation}|. The \texttt{comment} environment does
+not nest, so it ran to the next \verb|\end{comment}| fifty-seven lines later
+--- the one deliberately hiding a datasets table --- and swallowed everything
+between: the section heading, the whole Experimental Protocol subsection (the
+paired-scene benchmark construction, the resize, similarity and metric
+conventions, and the downstream-utility description) and their labels. LaTeX
+issues no warning for this, and the omission survived several review passes
+because nothing in the source looks wrong.
+
+The submitted PDF therefore had three sections --- Introduction, The Mechanism
+Under Test, Conclusion --- with every results subsection rendered as a
+subsection of the mechanism description, and no protocol section at all. Part
+of the earlier sixteen-to-fourteen page reduction was this accidental deletion
+rather than compression, so the page budget was never as close to compliant as
+the record suggested.
+
+\textbf{Status.} Fixed: the stray opener is removed, the section and its
+protocol are back in the compiled paper, the deliberately hidden datasets table
+stays hidden, and the build reports zero undefined references. \textbf{Lesson
+for the remaining compression work (R4): verify every cut against the rendered
+PDF, not against the source.} A commented-out region looks identical to
+compressed prose in \texttt{.tex} and identical to nothing at all in the PDF.
 
 \subsection*{R4 --- Blocking (submission compliance): 14 pages against a
 13-page hard limit}
