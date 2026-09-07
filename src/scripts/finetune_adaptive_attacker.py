@@ -37,6 +37,19 @@ failure mode recurring.
 The held-out test query_ids are written alongside the checkpoint so
 run_direction_transfer_study.py --query_id_file can evaluate on exactly the
 queries the fine-tuned model never saw during training or model selection.
+
+--train_perturbation selects what the attacker is assumed to have collected.
+`isotropic` is the original behaviour and reproduces the published sweep.
+`direction` instead trains on frames carrying the *direction* perturbation
+this paper actually proposes, which is the exposure an adversary who
+anticipates this defense would have. The distinction matters: an attacker
+adapted to isotropic noise has adapted to the operating-point control, not to
+the defense, so the two experiments answer different questions and both are
+reported. Direction-perturbed training frames are deterministic given the
+frame and the surrogate ensemble, so they are computed once into a cache
+directory and reused across epochs and across configurations; that also means
+this mode trains without the fresh-noise augmentation the isotropic mode gets
+for free, which is a real difference rather than an implementation detail.
 """
 from __future__ import annotations
 
@@ -62,7 +75,9 @@ from eval.retrieval_attack import (  # noqa: E402
     preprocess_for_embed,
 )
 from scripts.run_direction_transfer_study import (  # noqa: E402
+    directional_delta,
     embed_gallery_batched,
+    normalised_embedding,
     release_at_mse,
 )
 from scripts.run_geotagged_vpr_benchmark import (  # noqa: E402
@@ -122,19 +137,105 @@ def isotropic_perturb(frame: torch.Tensor, target_mse: float, seed: int) -> torc
     return release_at_mse(frame.unsqueeze(0), delta.unsqueeze(0), target_mse).squeeze(0)
 
 
-def validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of, val_records,
-                    resize_hw, target_mse, device) -> float:
-    """Top-1 retrieval accuracy on isotropic-perturbed validation queries.
+def build_direction_cache(records, cache_dir: Path, args, gallery, gallery_ids,
+                          place_of, gallery_tensor, resize_hw, device) -> None:
+    """Cache the direction-perturbed version of every training/validation frame.
 
-    Noise is fixed per query (seeded by index, not resampled), so the metric
-    is comparable across epochs -- otherwise re-randomizing the noise every
-    call would add its own variance to the early-stopping signal.
+    The perturbation is deterministic given the frame and the surrogate
+    ensemble, so it is computed once and reused across epochs and across
+    hyper-parameter configurations. Files are written one per query and the
+    build skips whatever is already on disk, so an interrupted run resumes
+    where it stopped instead of regenerating everything.
+
+    The surrogate embedders live only inside this function so they are freed
+    before training starts; on a shared GPU, holding four extra backbones for
+    the whole run is what turns a comfortable job into an OOM.
+    """
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    todo = [r for r in records
+            if not (cache_dir / f"{r['query_id']}.pt").is_file()]
+    if not todo:
+        print(f"[finetune] direction cache complete ({len(records)} frames)",
+              flush=True)
+        return
+    print(f"[finetune] building direction cache: {len(todo)} of "
+          f"{len(records)} frames missing", flush=True)
+
+    embedders, sizes, surr_gal = {}, {}, {}
+    for b in args.direction_surrogates:
+        scfg = RetrievalConfig(backbone=b,
+                               input_size=default_input_size_for_backbone(b))
+        e = make_default_embedder(scfg).eval().to(device)
+        embedders[b] = e
+        sizes[b] = scfg.input_size
+        if args.direction_objective == "positive":
+            surr_gal[b] = embed_gallery_batched(scfg, e, gallery_tensor)
+        torch.cuda.empty_cache()
+        print(f"[finetune] surrogate ready: {b}", flush=True)
+
+    for i, rec in enumerate(todo, 1):
+        frame = load_image(rec["query_path"], resize_hw).unsqueeze(0).to(device)
+        if args.direction_objective == "positive":
+            pos = next((j for j, g in enumerate(gallery_ids)
+                        if place_of[g] == rec["place_id"]), None)
+            if pos is None:
+                continue
+            tgts = [surr_gal[b][pos].to(device)
+                    for b in args.direction_surrogates]
+        else:
+            with torch.no_grad():
+                tgts = [normalised_embedding(embedders[b], frame,
+                                             sizes[b]).detach()
+                        for b in args.direction_surrogates]
+        with torch.enable_grad():
+            delta = directional_delta(
+                frame, tgts, [embedders[b] for b in args.direction_surrogates],
+                [sizes[b] for b in args.direction_surrogates],
+                args.direction_steps, args.direction_step_size,
+                args.direction_linf)
+        released = release_at_mse(frame, delta, args.target_mse)
+        torch.save(released.squeeze(0).cpu(),
+                   cache_dir / f"{rec['query_id']}.pt")
+        if i % 25 == 0:
+            print(f"[finetune] direction cache {i}/{len(todo)}", flush=True)
+
+    for b in list(embedders):
+        embedders.pop(b)
+    surr_gal.clear()
+    torch.cuda.empty_cache()
+    print("[finetune] direction cache complete", flush=True)
+
+
+def cached_direction_perturb(rec, cache_dir: Path) -> torch.Tensor:
+    path = cache_dir / f"{rec['query_id']}.pt"
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Direction-perturbed frame missing for {rec['query_id']}; the "
+            f"cache under {cache_dir} is incomplete.")
+    return torch.load(path, map_location="cpu")
+
+
+def validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of, val_records,
+                    resize_hw, target_mse, device, perturb=None) -> float:
+    """Top-1 retrieval accuracy on perturbed validation queries.
+
+    The perturbation matches whatever the model trains on, so the
+    early-stopping signal measures the thing being adapted to rather than a
+    different distribution. In the default isotropic mode the noise is fixed
+    per query (seeded by index, not resampled), so the metric is comparable
+    across epochs -- otherwise re-randomizing the noise every call would add
+    its own variance to the early-stopping signal. The direction mode is
+    deterministic by construction.
     """
     correct = 0
     with torch.no_grad():
         for i, rec in enumerate(val_records):
             frame = load_image(rec["query_path"], resize_hw)
-            perturbed = isotropic_perturb(frame, target_mse, seed=i).unsqueeze(0).to(device)
+            if perturb is None:
+                released = isotropic_perturb(frame, target_mse, seed=i)
+            else:
+                released = perturb(rec, frame, i)
+            perturbed = released.unsqueeze(0).to(device)
             x = preprocess_for_embed(perturbed, cfg.input_size)
             q = F.normalize(embedder(x), dim=1).flatten()
             sims = gal_emb @ q
@@ -174,6 +275,30 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=1234)
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
+    ap.add_argument("--train_perturbation", default="isotropic",
+                    choices=("isotropic", "direction"),
+                    help="what the attacker collected and adapts to: the "
+                         "operating-point isotropic control (published "
+                         "behaviour) or this paper's direction perturbation "
+                         "(an adversary that anticipates the defense).")
+    ap.add_argument("--direction_surrogates", nargs="+",
+                    default=["resnet50", "vgg16", "cosplace"],
+                    help="surrogate ensemble the collected direction "
+                         "perturbation was optimised against.")
+    ap.add_argument("--direction_objective", default="self",
+                    choices=("self", "positive"),
+                    help="'self' is the gallery-free deployable direction; "
+                         "'positive' targets the query's correct gallery "
+                         "entry and matches the originally published "
+                         "transfer conditions.")
+    ap.add_argument("--direction_steps", type=int, default=20)
+    ap.add_argument("--direction_step_size", type=float, default=1.0)
+    ap.add_argument("--direction_linf", type=float, default=16.0)
+    ap.add_argument("--direction_cache", default="",
+                    help="directory of cached direction-perturbed frames; "
+                         "defaults to <output>.dircache. Reusable across "
+                         "configurations, since the perturbation is "
+                         "deterministic given frame and surrogates.")
     ap.add_argument("--output", required=True, help="checkpoint path (state_dict)")
     ap.add_argument("--test_ids_output", default="",
                     help="defaults to <output>.test_query_ids.json")
@@ -198,6 +323,25 @@ def main() -> int:
           f"validation / {len(test_records)} held-out test queries "
           f"(all mutually place-disjoint)", flush=True)
 
+    cache_dir = Path(args.direction_cache) if args.direction_cache else \
+        Path(str(args.output) + ".dircache")
+    if args.train_perturbation == "direction":
+        build_direction_cache(train_records + val_records, cache_dir, args,
+                              gallery, gallery_ids, place_of, gallery_tensor,
+                              resize_hw, device)
+
+        def train_perturb(rec, frame):
+            return cached_direction_perturb(rec, cache_dir)
+
+        def val_perturb(rec, frame, index):
+            return cached_direction_perturb(rec, cache_dir)
+    else:
+        def train_perturb(rec, frame):
+            return isotropic_perturb(frame, args.target_mse,
+                                     seed=rng.randrange(0, 2 ** 31))
+
+        val_perturb = None
+
     place_to_indices: Dict[str, List[int]] = {}
     for i, g in enumerate(gallery_ids):
         place_to_indices.setdefault(place_of[g], []).append(i)
@@ -220,7 +364,8 @@ def main() -> int:
     optimizer = torch.optim.Adam(trainable_params, lr=args.lr)
 
     init_val_acc = validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of,
-                                   val_records, resize_hw, args.target_mse, device)
+                                   val_records, resize_hw, args.target_mse,
+                                   device, val_perturb)
     print(f"[finetune] epoch 0 (pretrained, no fine-tuning) "
           f"val_top1={init_val_acc:.4f}", flush=True)
     best_val_acc = init_val_acc
@@ -237,13 +382,7 @@ def main() -> int:
             frames, pos_idx, neg_cand_idx = [], [], []
             for rec in batch:
                 frame = load_image(rec["query_path"], resize_hw)
-                gnoise = torch.Generator(device="cpu").manual_seed(
-                    rng.randrange(0, 2 ** 31))
-                delta = torch.randn(frame.shape, generator=gnoise)
-                perturbed = release_at_mse(frame.unsqueeze(0),
-                                           delta.unsqueeze(0),
-                                           args.target_mse).squeeze(0)
-                frames.append(perturbed)
+                frames.append(train_perturb(rec, frame))
 
                 pos_place = rec["place_id"]
                 pos_idx.append(rng.choice(place_to_indices[pos_place]))
@@ -284,7 +423,8 @@ def main() -> int:
             step += 1
 
         val_acc = validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of,
-                                  val_records, resize_hw, args.target_mse, device)
+                                  val_records, resize_hw, args.target_mse,
+                                  device, val_perturb)
         marker = ""
         if val_acc > best_val_acc:
             best_val_acc = val_acc
