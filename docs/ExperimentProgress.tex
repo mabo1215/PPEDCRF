@@ -132,6 +132,24 @@ transfer studies, while real place-labelled results use ResNet18 and MixVPR.
 & \pending & Rephrase the abstract so backbone coverage is attributed to the
 studies that carry it. Text-only. \\
 
+R10 & The main text stated that the same-image mAP/mIoU values are ``in the
+Supplementary Material''. They were in no submitted document: the table
+survived only as a \texttt{\textbackslash begin\{comment\}} block in
+\texttt{main.tex} after an earlier compression pass. & \done & Restored as a
+real section of \texttt{supplementary.tex}, scoped to the allocation axis, and
+the commented duplicate removed so the two cannot drift. Verified no
+\texttt{\textbackslash ref} pointed at the deleted label. \\
+
+R11 & The gallery-free direction objective starts at its own stationary point:
+the clean frame maximises self-similarity, so the gradient is zero there and
+\texttt{sign()} returns zero. On MixVPR this left 37\% of white-box queries
+completely unperturbed while still being recorded as direction conditions. &
+\done & Fixed with a seeded random start (1.0 pixel units for the self
+objective, 0.0 for the gallery-targeted one, so published runs reproduce
+unchanged), a zero-perturbation guard, and \texttt{zlib.crc32} rather than
+\texttt{hash()} for reproducibility. Affected partial runs set aside as
+\texttt{*\_zerostart\_flawed} and re-run. \\
+
 F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/}
 have a provenance record only for the reachable export trees. & \partialstatus
 & Add SHA-256 entries for the E1 MSLS and E5 KITTI-360 trees to
@@ -172,8 +190,8 @@ Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-D1 --- gallery-free direction objective (R1) & \running & 20\% &
-8 Sep 2026, 08:00 & \textbf{Meaning:} decides whether the paper's positive
+D1 --- gallery-free direction objective (R1) & \running & 35\% &
+8 Sep 2026, 02:00 & \textbf{Meaning:} decides whether the paper's positive
 claim is deployable or merely conditional. Replaces the ground-truth gallery
 target with a self-embedding repulsion objective that uses only the released
 frame, so no knowledge of the correct reference image is required. Same
@@ -181,16 +199,16 @@ manifest, gallery, surrogate ensembles and delivered MSE as the published
 Table~2, so rows are directly comparable. ResNet18 (3 surrogates) and MixVPR
 (4 surrogates), 3 seeds each. \\
 
-D3 --- downstream utility of the direction perturbation (R3) & \pending &
-0\% & 8 Sep 2026, 20:00 & \textbf{Meaning:} supplies the evidence the paper's
+D3 --- downstream utility of the direction perturbation (R3) & \running &
+55\% & 7 Sep 2026, 19:00 & \textbf{Meaning:} supplies the evidence the paper's
 own problem statement demands. Applies the surrogate-direction perturbation to
 the co-audited 200-image COCO detection and 200-image VOC segmentation
 manifests at the operating point's delivered MSE, with an isotropic control at
 the same MSE, then measures mAP@50 and mIoU with the frozen detectors already
 used for Table~1. Cheap; can share the GPU with D1. \\
 
-D2 --- adaptive adversary trained on the defended output (R2) & \pending &
-0\% & 10 Sep 2026, 12:00 & \textbf{Meaning:} makes the adaptive-adversary
+D2 --- adaptive adversary trained on the defended output (R2) & \running &
+40\% & 7 Sep 2026, 22:00 & \textbf{Meaning:} makes the adaptive-adversary
 section answer the question it poses. Same fine-tuning recipe, splits and
 early-stopping rule as the published sweep, but with training samples drawn
 from the surrogate-direction perturbation instead of isotropic noise.
@@ -238,20 +256,20 @@ ID & Edit & Status & Location \\
 \endlastfoot
 
 T1 & Replace ``with no access to the attacker at all'' with a statement naming
-what the defender must and must not hold. & \pending & \texttt{main.tex}
+what the defender must and must not hold. & \done & \texttt{main.tex}
 \S\,The Other Axis; Scope-of-claims; Table~2 caption; Conclusion. Gated on D1's
 outcome for which variant becomes the headline. \\
 
-T2 & Scope the utility table to the allocation axis. & \pending &
+T2 & Scope the utility table to the allocation axis. & \done &
 \texttt{main.tex} Table~1 caption and the Experimental Protocol paragraph that
 introduces the same-image utility check. \\
 
 T3 & Narrow the adaptive-adversary claim to the exposure actually trained on
-until D2 lands. & \pending & \texttt{main.tex} Scope-of-claims and Conclusion;
+until D2 lands. & \done & \texttt{main.tex} Scope-of-claims and Conclusion;
 \S\,A First Attempt at a Genuinely Adaptive Attacker. \\
 
 T4 & Attribute the abstract's six-backbone coverage to the studies that carry
-it. & \pending & \texttt{main.tex} abstract. \\
+it. & \done & \texttt{main.tex} abstract. \\
 
 \end{longtable}
 
