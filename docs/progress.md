@@ -1051,3 +1051,61 @@ held-out 攻防对比(`--eval_checkpoint` 加载微调权重,gallery 仍用 stoc
       属于已被上游取代的重复内容。按"删数据前先确认、优先选可逆做法"的铁律，用 `git stash push`
       （可逆）而不是 `git checkout --`（不可逆）收起它，再 `reset --hard origin/main` 同步到 `b415fa4`。
 
+
+231. 【已完成】**D1/D2/D3 三个实验的代码全部写完并本地冒烟通过，已提交推送**（`74e5535`、`719ef8a`、`48e065b`）。
+    - **D1**：`run_direction_transfer_study.py` 新增 `--objective {positive,self}`。`positive` 是原行为（默认，
+      保证已发表数字与断点续跑逐行不变），`self` 把优化目标换成"远离这一帧自己的 clean embedding"，
+      只用手上这一帧，不需要任何 gallery 知识。导出新增 `objective` 列；若续跑一个旧 schema 的 CSV，
+      会沿用它自己的表头，避免追加行整体错位一列。
+    - **D3**：新增 `src/scripts/evaluate_direction_utility.py`，用与已发表效用表**同一套**冻结
+      Faster R-CNN + DeepLabV3 和同一组 manifest，在**相同投递 MSE** 下比较 clean / isotropic / direction
+      三个条件的 mAP@50 与 mIoU。逐图增量落盘、按 (image_id, condition) 续跑。
+    - **D2**：`finetune_adaptive_attacker.py` 新增 `--train_perturbation {isotropic,direction}`。
+      direction 档把训练样本换成方向扰动帧（确定性，故一次性建缓存并跨 epoch/跨配置复用；
+      建完缓存即释放 surrogate，避免共享卡上多驮四个骨干），validation 也改用与训练同分布的扰动。
+      **回归验证**：isotropic 档在 24 query 子集上与改动前脚本逐 epoch 完全一致（triplet loss 0.2372/0.2334），
+      已发表的 8 组扫描不受影响。
+
+232. 【已完成】**发现并修掉一个会毁掉 D1 结论的真实 bug：gallery-free 目标函数的起点正好是它自己的驻点**。
+    - 现象：D1 首轮跑到约 15% 时拉回中间结果做早期判读，`analyze_direction_transfer.py` 的能量门禁在
+      MixVPR 上**报错**——投递 MSE 落在 [0.0000, 15.6800] 而不是恒定 15.68。逐行查后确认：
+      784 行里有 48 行 MSE 恰好为 0，**全部是 white_box 条件**。
+    - 原因：`self` 目标是"降低与自己 clean embedding 的相似度"，而未扰动帧恰好让该相似度取到最大值 1，
+      即目标函数的驻点，梯度为 0；`grad.sign()` 于是给出 0，扰动永远不动。resnet18 上靠浮点噪声打破了平局
+      （所以看起来能跑），MixVPR 上有 **37%** 的 query 梯度精确为 0，这些"方向"条件实际上一点失真都没投递。
+      也就是说首轮那批看起来不错的数字，其机制是"浮点噪声碰巧打破平局"，不可用。
+    - 修法：`directional_delta` 新增 `random_start`（像素单位的均匀随机起点，标准 PGD 做法）与显式
+      `generator`。`self` 档解析为 1.0、`positive` 档解析为 0.0（已发表结果因此逐字不变），解析结果直接打印。
+      随机起点的种子用 `zlib.crc32` 而非 `hash()`——Python 对字符串的 hash 每进程随机化，用它会让随机起点
+      不可复现。两个调用方（效用脚本、微调缓存）同步传参，且对零扰动**直接抛错**而不是记录下来。
+    - 验证：MixVPR 上 32/32 行全部投递 15.68、0 条零扰动警告；`positive` 档打印 random_start=0.0，
+      排名只在既有的 CUDA 非确定性范围内浮动。
+    - 首轮受影响的产出**未删除**，改名为 `*_zerostart_flawed` 留档，两个实验已按修复后的代码重跑。
+
+233. 【已完成】**又发现一处论文级的悬空引用：正文声称的下游效用数字在任何投稿件里都不存在**。
+    - 正文 Experimental Protocol 写着 "The values are in the Supplementary Material"，但
+      `grep` 确认 `supplementary.tex` 里**没有任何** mAP/mIoU 内容；那张 E4 效用表只以
+      `\begin{comment}` 注释块的形式留在 `main.tex` 里，既不进正文 PDF，也不进补充材料 PDF。
+      审稿人按图索骥会什么都找不到。这不是本轮改出来的，是之前压页时把表注释掉、却保留了指向它的句子。
+    - 已修：在 `supplementary.tex` 新增 `\section{Downstream Utility on the Sanitized Frames}`，
+      把整表恢复为**真实排版内容**并标明它只覆盖 allocation 轴；`main.tex` 里那段注释块删除，
+      换成一行说明指向补充材料，避免两份副本日后各自漂移（确认 `tab:e4seg` 已无任何 `\ref` 引用，无悬空）。
+
+234. 【已完成】**论文文字修改 T1–T4 已落地并编译验证**（paper 子模块 `346a523`，根仓库指针已 bump）。
+    - **T1（最重要）**：在 §The Other Axis 和 Table 2 caption 里明确写出"丢掉的是攻击者的网络，
+      保留的是目标参考点"——即防护方被假定持有自己站点的参考视图；固定安装做得到，
+      拿到任意一帧、没有参考的净化器做不到。同时把 "with no access to the attacker at all"
+      改为 "with no access to the attacker's model"。
+    - **T2**：Experimental Protocol 明确效用数字只覆盖 allocation 轴，并说明为什么方向轴必须单独测
+      （同能量下"移动 embedding 的扰动"与"各向同性噪声"对检测器的代价可以不同，PSNR 分辨不了）。
+    - **T3**：Scope-of-claims、Conclusion 与 §A First Attempt 三处，把自适应对手的结论收窄为
+      "对手适应的是工作点**对照**（各向同性噪声），不是本文提出的方向扰动"，并声明方向适应版单独报告。
+    - **T4**：摘要不再把 "six attacker backbones" 放进报告真实地理数据结果的那句话里。
+    - 顺手修掉 `supplementary.tex` 里 2 个 overfull hbox（两张宽表按正文既有做法套 `resizebox`）。
+      编译：main 14 页、supplementary 8 页，两者 0 error、0 overfull、0 未定义引用。
+
+235. 【进行中】**三个实验正在跑**（2026-09-07 16:0x NZST）：
+    - D1（vGPU 3090，两块 screen）：resnet18 与 mixvpr 的 gallery-free 方向迁移，各 400 query × 3 seed。
+      因为这台卡是共享的（连上时另一个项目已占 22GB / 52%），按当前速率预计 22:00–次日 02:00 NZST 完成。
+    - D3（本机 RTX 3070）：方向扰动的下游效用，detection + segmentation 各 200 图 × 3 次独立运行。
+    - D2（本机，排在 D3 之后自动启动）：方向扰动训练的自适应对手 + held-out 攻防对比（self/positive 两档）。
