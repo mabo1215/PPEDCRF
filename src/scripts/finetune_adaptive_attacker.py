@@ -225,7 +225,7 @@ def cached_direction_perturb(rec, cache_dir: Path) -> torch.Tensor:
 
 
 def validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of, val_records,
-                    resize_hw, target_mse, device, perturb=None) -> float:
+                    resize_hw, target_mse, device, perturb=None):
     """Top-1 retrieval accuracy on perturbed validation queries.
 
     The perturbation matches whatever the model trains on, so the
@@ -237,6 +237,7 @@ def validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of, val_records,
     deterministic by construction.
     """
     correct = 0
+    ranks: List[int] = []
     with torch.no_grad():
         for i, rec in enumerate(val_records):
             frame = load_image(rec["query_path"], resize_hw)
@@ -251,7 +252,27 @@ def validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of, val_records,
             top1 = int(torch.argmax(sims).item())
             if place_of[gallery_ids[top1]] == rec["place_id"]:
                 correct += 1
-    return correct / max(len(val_records), 1)
+            # Rank of the query's own place. Top-1 alone is a very coarse
+            # early-stopping signal when the perturbation has already driven
+            # it near zero: on the direction arm the baseline is 2 correct out
+            # of 50, so any gain smaller than one query is invisible and "the
+            # attacker did not improve" would be unfalsifiable. The rank of
+            # the correct place moves continuously and is reported alongside,
+            # without being used for selection -- selection stays on Top-1 so
+            # the direction arm remains comparable to the published isotropic
+            # sweep.
+            order = torch.argsort(sims, descending=True)
+            for pos, j in enumerate(order.tolist(), start=1):
+                if place_of[gallery_ids[j]] == rec["place_id"]:
+                    ranks.append(pos)
+                    break
+    if ranks:
+        sorted_ranks = sorted(ranks)
+        median_rank = float(sorted_ranks[len(sorted_ranks) // 2])
+        mrr = sum(1.0 / r for r in ranks) / len(ranks)
+    else:
+        median_rank, mrr = float("nan"), float("nan")
+    return correct / max(len(val_records), 1), median_rank, mrr
 
 
 def main() -> int:
@@ -380,11 +401,12 @@ def main() -> int:
           f"{args.unfreeze_blocks} block(s)", flush=True)
     optimizer = torch.optim.Adam(trainable_params, lr=args.lr)
 
-    init_val_acc = validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of,
-                                   val_records, resize_hw, args.target_mse,
-                                   device, val_perturb)
+    init_val_acc, init_rank, init_mrr = validation_top1(
+        embedder, cfg, gal_emb, gallery_ids, place_of,
+        val_records, resize_hw, args.target_mse, device, val_perturb)
     print(f"[finetune] epoch 0 (pretrained, no fine-tuning) "
-          f"val_top1={init_val_acc:.4f}", flush=True)
+          f"val_top1={init_val_acc:.4f} val_median_rank={init_rank:.1f} "
+          f"val_mrr={init_mrr:.5f}", flush=True)
     best_val_acc = init_val_acc
     best_epoch = 0
     best_state = copy.deepcopy(embedder.state_dict())
@@ -439,9 +461,9 @@ def main() -> int:
             epoch_n += len(batch)
             step += 1
 
-        val_acc = validation_top1(embedder, cfg, gal_emb, gallery_ids, place_of,
-                                  val_records, resize_hw, args.target_mse,
-                                  device, val_perturb)
+        val_acc, val_rank, val_mrr = validation_top1(
+            embedder, cfg, gal_emb, gallery_ids, place_of,
+            val_records, resize_hw, args.target_mse, device, val_perturb)
         marker = ""
         if val_acc > best_val_acc:
             best_val_acc = val_acc
@@ -450,7 +472,8 @@ def main() -> int:
             marker = " (best so far)"
         print(f"[finetune] epoch {epoch + 1}/{args.epochs} "
               f"mean_triplet_loss={epoch_loss / max(epoch_n, 1):.4f} "
-              f"val_top1={val_acc:.4f}{marker} (step {step})", flush=True)
+              f"val_top1={val_acc:.4f} val_median_rank={val_rank:.1f} "
+              f"val_mrr={val_mrr:.5f}{marker} (step {step})", flush=True)
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     torch.save(best_state, args.output)
