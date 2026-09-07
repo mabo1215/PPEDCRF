@@ -149,19 +149,22 @@ def directional_delta(
         candidate.requires_grad_(True)
         loss = torch.zeros((), device=frame.device)
         if eot_ops:
-            picks = [eot_ops[int(torch.randint(len(eot_ops), (1,),
+            # The transformed views depend only on the current iterate, so
+            # they are built once per step and shared across the ensemble.
+            # Computing them inside the embedder loop instead re-ran the same
+            # OpenCV round-trip once per surrogate -- three to four times the
+            # CPU work per step, which dominated the runtime of this path.
+            picks = []
+            for _ in range(max(1, eot_samples)):
+                op = eot_ops[int(torch.randint(len(eot_ops), (1,),
                                                generator=generator).item())]
-                     for _ in range(max(1, eot_samples))]
+                # BPDA: forward through the real (non-differentiable)
+                # transform, backward as if it were the identity.
+                picks.append(candidate + (op(candidate) - candidate).detach())
         else:
-            picks = [None]
+            picks = [candidate]
         for emb, tgt, isz in zip(embedders, targets, input_sizes):
-            for op in picks:
-                if op is None:
-                    view = candidate
-                else:
-                    # BPDA: forward through the real (non-differentiable)
-                    # transform, backward as if it were the identity.
-                    view = candidate + (op(candidate) - candidate).detach()
+            for view in picks:
                 q = normalised_embedding(emb, view, isz)
                 t = tgt / tgt.norm().clamp_min(1e-12)
                 loss = loss + (q.flatten() * t.flatten()).sum() / len(picks)
