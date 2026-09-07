@@ -1158,3 +1158,31 @@ held-out 攻防对比(`--eval_checkpoint` 加载微调权重,gallery 仍用 stoc
 
 239. 【已完成】`src/requirements.txt` 补上一直缺的 `scipy`、`scikit-learn`、`faiss-cpu`——
     前几轮会话都是在远程主机上跑崩了才发现缺这三个，现在写进依赖文件，新主机可以一次装齐。
+
+240. 【已完成】**2c 4080（双卡）接入，D2 与 D3 迁到该机**。用户开机后要求把这两个实验移过去。
+    - 主机核实：2× RTX 4080 SUPER（各 32760 MiB），开机时两卡全空；`/etc/network_turbo` 存在；
+      `/root/autodl-tmp` 本地盘 250G 全空；base 环境是 miniconda3 + Python 3.12.3 + torch 2.7.0+cu128
+      + torchvision 0.22.0+cu128（与 vGPU 的 3.10/2.13.0+cu130 是**不同**的软件栈，这一点对 D3 复现反而有价值）。
+    - **`/root/autodl-fs` 与 vGPU 3090 是同一个共享卷**（`AutoFS:fswestbfourth985735`，容量/inode 数字完全一致），
+      所以数据走它中转，不经过本机（遵守"主机间传输不绕本机"的铁律）。
+      ⚠️ **但该卷 inode 已用 83%，只剩 35,180 个**。MSLS 是 7,623 个小文件，直接 `cp` 过去会吃掉剩余 inode 的 22%，
+      按 src.md 的 inode 铁律必须避免——因此全部**打成 tar 再传**（每个包只占 1 个 inode）：
+      `msls.tar`(1.6G)、`models.tar`(454M，CosPlace/MixVPR 权重 + third_party)、`tvweights.tar`(805M，
+      torchvision 分类骨干)、`repo.tar`(620M，排除 data/outputs/venv)。2c 上解到本地 250G 盘，不占共享卷 inode。
+    - **仓库为什么不用 git clone**：PPEDCRF 是私有仓库，2c 上 `git clone` 报
+      `could not read Username for 'https://github.com'`。vGPU 上能拉是因为它有 `~/.git-credentials`——
+      **没有把该凭据文件复制到 2c**（散播凭据不属于数据传输，按 host-login.md 的安全约定不做），
+      改为 tar 整个工作树过去；后续代码更新用 `scp` 送具体文件（shell.md 里记录的 fallback）。
+    - **D3 的 COCO/VOC 不用传**：2c 的 `/root/autodl-pub/` 自带 `COCO2017/val2017.zip` 与
+      `VOCdevkit/VOC2012.tar.gz`。写了 `prep_2c_utility_data.py`，**只从压缩包里抽出 manifest 引用的那 400 张**
+      （COCO 200 + VOC 图 200 + VOC mask 200），并把 manifest 里的 Windows 绝对路径改写为 2c 本地路径。
+      **关键是不重建 manifest**——重建会重新采样图片，新数字就与已发表的 200+200 不可比了；
+      抽取既有 manifest 引用的成员才能保证是同一批图。VOC 走 tar.gz 单次流式扫描取件，避免 400 次随机寻址。
+    - 缺的 6 个 pip 包（pandas/scipy/sklearn/faiss-cpu/opencv/skimage）用清华源装好——
+      **装 pip 包时没有 source network_turbo**，因为 turbo 只加速 GitHub/HuggingFace，对 pip 源反而更慢。
+    - 分工：**2c GPU0 = D2 的 MixVPR 档**（强攻击者的方向扰动训练自适应对手，3 档学习率 + 40 epoch，
+      按已发表的 MixVPR 各向同性扫描的量级来设，因为 MixVPR 的 aggregator 需要的 lr 比 resnet18 高两个数量级）；
+      **2c GPU1 = D3 独立复现**（det + seg 各 200 图 × **5 次**运行，比本机的 3 次更紧的误差带；
+      不同 GPU、不同驱动、不同 torch 版本，因此是真复现而不是重跑）。
+    - 本机那 5 组 resnet18 扫描已经跑到 2/5，没有中途杀掉（杀掉等于白烧已完成的 GPU 时间），
+      让它跑完后本机自动接 D4；vGPU 3090 继续跑 D1。三台机器分别在做 D1 / D2+D3 / D4，没有空转。
