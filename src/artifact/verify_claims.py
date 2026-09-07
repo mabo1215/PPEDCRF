@@ -30,6 +30,71 @@ def top1(df: pd.DataFrame, variant: str) -> float:
     return float((sub["correct_rank"] == 1).mean())
 
 
+def _iou(a, b):
+    ix0, iy0 = max(a[0], b[0]), max(a[1], b[1])
+    ix1, iy1 = min(a[2], b[2]), min(a[3], b[3])
+    iw, ih = max(0.0, ix1 - ix0), max(0.0, iy1 - iy0)
+    inter = iw * ih
+    ua = ((a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1])
+          - inter)
+    return inter / ua if ua > 0 else 0.0
+
+
+def per_image_ap(pred, target, iou_threshold: float = 0.5) -> float:
+    """Class-averaged AP@50 for a single image.
+
+    Inlined rather than imported so the artifact stays standalone: it needs
+    only the exported predictions and the exported box targets, no dataset,
+    no model and no repository code. This mirrors the evaluation used to
+    produce the numbers, over one image at a time.
+    """
+    classes = sorted(set(int(x) for x in target.get("labels", []))
+                     | set(int(x) for x in pred.get("labels", [])))
+    if not classes:
+        return 0.0
+    aps = []
+    for cid in classes:
+        gt = [b for b, l in zip(target.get("boxes", []),
+                                target.get("labels", [])) if int(l) == cid]
+        scored = sorted(
+            ((float(sc), b) for b, l, sc in zip(pred.get("boxes", []),
+                                                pred.get("labels", []),
+                                                pred.get("scores", []))
+             if int(l) == cid), key=lambda t: t[0], reverse=True)
+        if not gt:
+            continue
+        matched, tp, fp = set(), [], []
+        for _, box in scored:
+            best, best_j = 0.0, -1
+            for j, g in enumerate(gt):
+                if j in matched:
+                    continue
+                v = _iou(box, g)
+                if v > best:
+                    best, best_j = v, j
+            if best >= iou_threshold and best_j >= 0:
+                matched.add(best_j)
+                tp.append(1.0)
+                fp.append(0.0)
+            else:
+                tp.append(0.0)
+                fp.append(1.0)
+        c_tp = c_fp = 0.0
+        prec, rec = [], []
+        for t, f in zip(tp, fp):
+            c_tp += t
+            c_fp += f
+            prec.append(c_tp / max(c_tp + c_fp, 1e-12))
+            rec.append(c_tp / float(len(gt)))
+        ap = 0.0
+        for k in range(101):
+            r = k / 100.0
+            vals = [p for p, rr in zip(prec, rec) if rr >= r]
+            ap += max(vals) if vals else 0.0
+        aps.append(ap / 101.0)
+    return sum(aps) / len(aps) if aps else 0.0
+
+
 def load(path: Path) -> pd.DataFrame:
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -138,12 +203,57 @@ CONCENTRATION_CLAIMS = [
 
 # Direction, optimised against surrogates and evaluated on a held-out
 # attacker at the operating point's delivered MSE. (label, condition, Top-1)
+# Superseded by the gallery-free objective below; kept so the earlier
+# single-seed export still verifies against the number it produced.
 TRANSFER_CLAIMS = [
     ("isotropic control", "isotropic",  0.1900),
     ("1 surrogate",       "transfer_1", 0.1450),
     ("2 surrogates",      "transfer_2", 0.1125),
     ("3 surrogates",      "transfer_3", 0.0625),
     ("white box",         "white_box",  0.0000),
+]
+
+# The paper's headline transfer table: the direction is optimised away from the
+# frame's own clean embedding, so no reference database is assumed. Three seeds,
+# n=1200 per condition. (file, label, condition, Top-1 printed in the paper)
+GALLERY_FREE_CLAIMS = [
+    ("resnet18.csv", "r18/isotropic",   "isotropic",  0.1967),
+    ("resnet18.csv", "r18/1 surrogate", "transfer_1", 0.1508),
+    ("resnet18.csv", "r18/2 surrogates","transfer_2", 0.1325),
+    ("resnet18.csv", "r18/3 surrogates","transfer_3", 0.0358),
+    ("resnet18.csv", "r18/white box",   "white_box",  0.0033),
+    ("resnet18_reference_targeted.csv", "r18/ref-targeted 3 surr", "transfer_3", 0.0517),
+    ("resnet18_reference_targeted.csv", "r18/ref-targeted white box", "white_box", 0.0000),
+    ("mixvpr.csv", "mix/isotropic",    "isotropic",  0.7800),
+    ("mixvpr.csv", "mix/1 surrogate",  "transfer_1", 0.7550),
+    ("mixvpr.csv", "mix/2 surrogates", "transfer_2", 0.7517),
+    ("mixvpr.csv", "mix/3 surrogates", "transfer_3", 0.7483),
+    ("mixvpr.csv", "mix/4 surrogates", "transfer_4", 0.7342),
+    ("mixvpr.csv", "mix/white box",    "white_box",  0.0008),
+]
+
+# Non-adaptive preprocessing, three seeds per cell (n=1200).
+# (backbone, sanitizer, transfer condition, isotropic, white box, transfer)
+SANITIZE_CLAIMS = [
+    ("resnet18", "jpeg75",  "transfer_3", 0.2050, 0.0083, 0.1217),
+    ("resnet18", "jpeg50",  "transfer_3", 0.1992, 0.0333, 0.1400),
+    ("resnet18", "blur",    "transfer_3", 0.1725, 0.0175, 0.1283),
+    ("resnet18", "denoise", "transfer_3", 0.1417, 0.0600, 0.1125),
+    ("mixvpr",   "jpeg75",  "transfer_4", 0.7883, 0.4717, 0.7350),
+    ("mixvpr",   "jpeg50",  "transfer_4", 0.7667, 0.5850, 0.7308),
+    ("mixvpr",   "blur",    "transfer_4", 0.7642, 0.4817, 0.7033),
+    ("mixvpr",   "denoise", "transfer_4", 0.7300, 0.5392, 0.7017),
+]
+
+# Downstream utility of the direction perturbation, per-image means over the
+# repeated runs. (task, condition, value printed in the paper)
+UTILITY_CLAIMS = [
+    ("detection",    "clean",     0.6949),
+    ("detection",    "isotropic", 0.6741),
+    ("detection",    "direction", 0.6161),
+    ("segmentation", "clean",     0.7387),
+    ("segmentation", "isotropic", 0.7318),
+    ("segmentation", "direction", 0.6835),
 ]
 
 # Controlled retrieval task with an exactly known Jacobian. The identity check
@@ -455,6 +565,115 @@ def main() -> int:
             if not ok:
                 failures.append(f"transfer/{label}: paper={expected:.4f} "
                                 f"recomputed={got:.4f}")
+
+    print("\n== Gallery-free direction transfer (headline table) ==")
+    gf_root = root / "direction_transfer_galleryfree"
+    gf_cache = {}
+    for fname, label, cond, expected in GALLERY_FREE_CLAIMS:
+        f = gf_root / fname
+        if fname not in gf_cache:
+            if not f.is_file():
+                failures.append(f"gallery-free: {fname} absent")
+                print(f"  MISSING  {fname}")
+                gf_cache[fname] = None
+            else:
+                gf_cache[fname] = pd.read_csv(f)
+        df = gf_cache[fname]
+        if df is None:
+            continue
+        sel = (df.correct_rank == 1).astype(float)[df.condition == cond]
+        if sel.empty:
+            failures.append(f"gallery-free/{label}: no rows")
+            print(f"  FAIL  gallery-free/{label}: no rows")
+            continue
+        checked += 1
+        got = float(sel.mean())
+        ok = abs(got - expected) <= 0.002
+        print(f"  {'OK  ' if ok else 'FAIL'}  {label:28s} "
+              f"paper={expected:.4f} recomputed={got:.4f} (n={len(sel)})")
+        if not ok:
+            failures.append(f"gallery-free/{label}: paper={expected:.4f} "
+                            f"recomputed={got:.4f}")
+    for fname in sorted({c[0] for c in GALLERY_FREE_CLAIMS}):
+        df = gf_cache.get(fname)
+        if df is None:
+            continue
+        checked += 1
+        spread = float(df.effective_mse.max() - df.effective_mse.min())
+        ok = spread <= 1e-3
+        print(f"  {'OK  ' if ok else 'FAIL'}  {fname}: delivered MSE spread "
+              f"{spread:.2e}")
+        if not ok:
+            failures.append(f"gallery-free/{fname}: delivered MSE not matched")
+
+    print("\n== Non-adaptive preprocessing, three seeds per cell ==")
+    for backbone, san, cond, exp_iso, exp_wb, exp_tr in SANITIZE_CLAIMS:
+        f = root / "sanitize_3seed" / backbone / f"{san}.csv"
+        if not f.is_file():
+            failures.append(f"sanitize/{backbone}/{san}: absent")
+            print(f"  MISSING  {backbone}/{san}")
+            continue
+        df = pd.read_csv(f)
+        hit = (df.correct_rank == 1).astype(float)
+        for name, want, c in (("isotropic", exp_iso, "isotropic"),
+                              ("white box", exp_wb, "white_box"),
+                              ("transfer", exp_tr, cond)):
+            sel = hit[df.condition == c]
+            if sel.empty:
+                failures.append(f"sanitize/{backbone}/{san}/{name}: no rows")
+                continue
+            checked += 1
+            got = float(sel.mean())
+            ok = abs(got - want) <= 0.002
+            print(f"  {'OK  ' if ok else 'FAIL'}  {backbone}/{san}/{name:9s} "
+                  f"paper={want:.4f} recomputed={got:.4f} (n={len(sel)})")
+            if not ok:
+                failures.append(f"sanitize/{backbone}/{san}/{name}: "
+                                f"paper={want:.4f} recomputed={got:.4f}")
+
+    print("\n== Downstream utility of the direction perturbation ==")
+    for task, cond, expected in UTILITY_CLAIMS:
+        f = root / "direction_utility" / f"{task}.jsonl"
+        if not f.is_file():
+            failures.append(f"utility/{task}: absent")
+            print(f"  MISSING  utility/{task}")
+            continue
+        det_targets = {}
+        if task == "detection":
+            tf = root / "direction_utility" / "targets_detection.json"
+            if not tf.is_file():
+                failures.append("utility/detection: targets_detection.json absent")
+                print("  MISSING  utility/detection targets")
+                continue
+            det_targets = json.loads(tf.read_text(encoding="utf-8"))
+        per_image = {}
+        with open(f, encoding="utf-8") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                if row["condition"] != cond:
+                    continue
+                if "det" in row:
+                    score = per_image_ap(row["det"],
+                                         det_targets[row["image_id"]])
+                else:
+                    ious = [i / u for i, u in row["seg_iu"].values() if u]
+                    score = sum(ious) / len(ious) if ious else 0.0
+                per_image.setdefault(row["image_id"], []).append(score)
+        if not per_image:
+            failures.append(f"utility/{task}/{cond}: no rows")
+            continue
+        means = [sum(v) / len(v) for v in per_image.values()]
+        got = sum(means) / len(means)
+        checked += 1
+        ok = abs(got - expected) <= 0.002
+        print(f"  {'OK  ' if ok else 'FAIL'}  {task}/{cond:10s} "
+              f"paper={expected:.4f} recomputed={got:.4f} "
+              f"(n={len(means)} images)")
+        if not ok:
+            failures.append(f"utility/{task}/{cond}: paper={expected:.4f} "
+                            f"recomputed={got:.4f}")
 
     print("\n== Operators at matched delivered MSE (real benchmark) ==")
     for label, subdir, exp_u, exp_d in OPERATOR_CLAIMS:
