@@ -109,6 +109,8 @@ def directional_delta(
     linf: float,
     random_start: float = 0.0,
     generator: torch.Generator | None = None,
+    eot_ops: Sequence = (),
+    eot_samples: int = 2,
 ) -> torch.Tensor:
     """Sign-gradient descent on summed similarity across a surrogate ensemble.
 
@@ -127,6 +129,14 @@ def directional_delta(
     zero, leaving the frame unperturbed and silently entering the study as a
     "direction" condition that delivered no distortion at all. A random start
     is the standard remedy and makes the first step well defined.
+
+    Passing `eot_ops` optimises the direction in expectation over those
+    attacker-side transforms instead of against a frame that arrives
+    untouched. Those transforms are not differentiable, so the backward pass
+    treats each as the identity (the standard BPDA substitution): the forward
+    value is the transformed frame, the gradient is taken with respect to the
+    frame that produced it. Ops are sampled per step rather than all applied
+    every step, the cheap unbiased estimator of the same expectation.
     """
     original = frame.detach().float()
     if random_start > 0:
@@ -138,10 +148,23 @@ def directional_delta(
     for _ in range(max(1, steps)):
         candidate.requires_grad_(True)
         loss = torch.zeros((), device=frame.device)
+        if eot_ops:
+            picks = [eot_ops[int(torch.randint(len(eot_ops), (1,),
+                                               generator=generator).item())]
+                     for _ in range(max(1, eot_samples))]
+        else:
+            picks = [None]
         for emb, tgt, isz in zip(embedders, targets, input_sizes):
-            q = normalised_embedding(emb, candidate, isz)
-            t = tgt / tgt.norm().clamp_min(1e-12)
-            loss = loss + (q.flatten() * t.flatten()).sum()
+            for op in picks:
+                if op is None:
+                    view = candidate
+                else:
+                    # BPDA: forward through the real (non-differentiable)
+                    # transform, backward as if it were the identity.
+                    view = candidate + (op(candidate) - candidate).detach()
+                q = normalised_embedding(emb, view, isz)
+                t = tgt / tgt.norm().clamp_min(1e-12)
+                loss = loss + (q.flatten() * t.flatten()).sum() / len(picks)
         grad, = torch.autograd.grad(loss, candidate)
         candidate = candidate - step_size * grad.sign()
         delta = (candidate - original).clamp(-linf, linf)
@@ -228,12 +251,27 @@ def main() -> int:
                          "the unperturbed frame is a stationary point of the "
                          "objective and a zero start yields no perturbation "
                          "at all on some frames.")
+    ap.add_argument("--eot_sanitizers", nargs="*", default=[],
+                    help="optimise the direction in expectation over these "
+                         "attacker-side transforms (names from "
+                         "eval/sanitizers.py, e.g. jpeg75 blur denoise). "
+                         "Empty means the published behaviour: the direction "
+                         "assumes the frame arrives untouched.")
+    ap.add_argument("--eot_samples", type=int, default=2,
+                    help="transforms sampled per optimisation step when "
+                         "--eot_sanitizers is given.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
     if args.random_start is None:
         args.random_start = 1.0 if args.objective == "self" else 0.0
+    for name in args.eot_sanitizers:
+        if name not in SANITIZERS:
+            raise SystemExit(f"unknown sanitizer for EOT: {name!r}; "
+                             f"available: {sorted(SANITIZERS)}")
+    eot_ops = [SANITIZERS[n] for n in args.eot_sanitizers]
     print(f"[transfer] objective={args.objective} "
-          f"random_start={args.random_start}", flush=True)
+          f"random_start={args.random_start} "
+          f"eot={args.eot_sanitizers or 'off'}", flush=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[transfer] device={device}", flush=True)
@@ -364,7 +402,8 @@ def main() -> int:
                             [sizes[b] for b in use], args.steps,
                             args.step_size, args.linf,
                             random_start=args.random_start,
-                            generator=gstart)
+                            generator=gstart, eot_ops=eot_ops,
+                            eot_samples=args.eot_samples)
                     if float(delta.abs().max()) == 0.0:
                         zero_delta += 1
                         print(f"[transfer] WARNING zero perturbation for "
