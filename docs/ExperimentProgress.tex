@@ -72,7 +72,12 @@ R1 & The transferable direction is optimised against the \emph{true positive
 gallery embedding} (\texttt{gal\_emb[b][pos[0]]}), so the ``no access to the
 attacker at all'' claim hides a requirement that the defender already know
 which geo-tagged reference image the frame matches. Undisclosed in the
-manuscript. & \running & Experiment D1 (gallery-free objective) run on both
+manuscript. & \done & D1 done, 400 queries $\times$ 3 seeds on both backbones,
+energy gate exact. The gallery-free objective is \emph{stronger}: ResNet18
+$0.0358$ vs isotropic $0.1967$ ($\Delta=-0.1608$, $p=1.9\times10^{-41}$) against
+the reference-targeted $-0.1275$; MixVPR $0.7342$ vs $0.7800$ ($-0.0458$) against
+$-0.0442$, white-box tightening from $0.0500$ to $0.0008$. Promoted to the
+paper's deployable claim. Superseded gate text: D1 (gallery-free objective) on both
 backbones at matched delivered MSE, three seeds; then either promote the
 gallery-free variant to the deployable claim, or restate the threat model in
 Scope-of-claims, \S\,The Other Axis, the Table~2 caption and the Conclusion.
@@ -83,7 +88,13 @@ R2 & The adaptive adversary was fine-tuned on \emph{isotropic}
 delivered-MSE-matched output (\texttt{torch.randn} +
 \texttt{release\_at\_mse}), not on the direction perturbation the paper
 proposes, so the section measures robustness to a noise-adapted attacker
-rather than to a defense-aware one. & \pending & Experiment D2: repeat the
+rather than to a defense-aware one. & \done & D2 done on both backbones with
+validation median rank added (Top-1 alone was unfalsifiable at a two-of-fifty
+baseline). The adapting attacker improves rank $85\to64$--$70$ and MRR
+$0.074\to0.088$--$0.091$ but never Top-1; the identical recipe on the isotropic
+exposure does lift Top-1 $0.30\to0.36$, so the procedure has power. MixVPR: no
+configuration improves on $0.84$ at median rank $1$. Written into the paper.
+Superseded gate text: repeat the
 fine-tuning sweep with direction-perturbed training samples, same splits,
 hard-negative mining and early-stopping rule; report alongside the existing
 isotropic-trained row rather than replacing it. Gate: the adaptive-adversary
@@ -106,10 +117,11 @@ MSE, with an isotropic control at the same MSE; both rows added to Table~1.
 Gate: the paper either reports direction-axis utility or discloses its absence
 as a limitation, and Table~1's caption states its axis scope. \\
 
-R4 & \texttt{main.pdf} is 14 pages against a 13-page TIFS initial-submission
-hard limit; $\approx$1/4 page must be recovered ($1{,}188$ characters of
-reference overflow on the last page, content ending at $y=236/792$). All
-lossless levers from prior rounds are spent. & \pending & Move
+R4 & \texttt{main.pdf} is now \textbf{15} pages against a 13-page TIFS
+initial-submission hard limit. The earlier ``14 pages, a quarter page over''
+record was never the real starting point: it was measured on a PDF that was
+silently missing the whole Experimental Protocol section (R12). Restoring that
+section and adding the D1, D2 and D3 results accounts for the rest. & \pending & Move
 \S\,Controlled Paired-Scene Retrieval Benchmark and its module-ablation table
 into \texttt{supplementary.tex}, leaving a three-sentence pointer. Perform
 \emph{after} D1--D3 so new results do not undo the compression. Gate: 13
@@ -208,8 +220,8 @@ Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-D1 --- gallery-free direction objective (R1) & \running & 35\% &
-8 Sep 2026, 02:00 & \textbf{Meaning:} decides whether the paper's positive
+D1 --- gallery-free direction objective (R1) & \done & 100\% &
+Complete (7 Sep 2026) & \textbf{Meaning:} decides whether the paper's positive
 claim is deployable or merely conditional. Replaces the ground-truth gallery
 target with a self-embedding repulsion objective that uses only the released
 frame, so no knowledge of the correct reference image is required. Same
@@ -225,8 +237,8 @@ manifests at the operating point's delivered MSE, with an isotropic control at
 the same MSE, then measures mAP@50 and mIoU with the frozen detectors already
 used for Table~1. Cheap; can share the GPU with D1. \\
 
-D2 --- adaptive adversary trained on the defended output (R2) & \running &
-55\% & 8 Sep 2026, 02:00 & \textbf{Meaning:} makes the adaptive-adversary
+D2 --- adaptive adversary trained on the defended output (R2) & \done &
+100\% & Complete (7 Sep 2026) & \textbf{Meaning:} makes the adaptive-adversary
 section answer the question it poses. Same fine-tuning recipe, splits and
 early-stopping rule as the published sweep, but with training samples drawn
 from the surrogate-direction perturbation instead of isotropic noise.
@@ -240,7 +252,7 @@ non-adaptive-preprocessing sweep from 1 to 3 seeds (2 attackers $\times$ 4
 sanitizers) and enlarges or pools the fine-tuning evaluation split beyond
 $n=100$. \\
 
-D5 --- EOT-hardened direction (R6) & \deferred & 0\% & Not scheduled &
+D5 --- EOT-hardened direction (R6) & \running & 20\% & 8 Sep 2026, 12:00 &
 \textbf{Meaning:} turns a disclosed weakness into a problem-and-response pair,
 or produces a clean negative result about the axis. Optimises the direction
 under an expectation over JPEG-75/50, Gaussian blur and denoising, then
