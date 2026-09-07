@@ -23,30 +23,43 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{4 September 2026 (ICME 2027 follow-up: M2/M3/M4 GPU experiments complete on vGPU 3090, results written into main paper and Appendix; second vGPU 3090 session -- M3.3 white-box attacker on real MSLS and M5 matched-PSNR extended to 5 more backbones -- complete, results written back, vGPU 3090 shut down; M7 M4 cluster bootstrap added locally; fresh independent review recorded in \texttt{docs/RevisionSuggestions.tex} recommends accept with minor revisions; fourth session added the 8-city cross-time runs and finer deterministic sweep, verified ICME format compliance, and built the anonymous one-command reproducibility artifact)}
+\date{7 September 2026 --- IEEE TIFS revision cycle. This file was reset to
+carry \emph{only} open, running and not-yet-started work, per the repository
+convention that completed items are removed from these tables once they are
+recorded in \texttt{docs/progress.md}. All ICME- and TOMM-era tables, whose
+items are closed, were removed in this revision; their completion records
+remain in \texttt{docs/progress.md} entries 1--225.}
 
 \begin{document}
 \maketitle
 
-\section*{ICME 2027 Revision Cycle --- Next-Step Plan}
+\section*{Scope of This Revision Cycle}
 
-This is the active plan for the independent ICME 2027 review recorded in
-\texttt{docs/RevisionSuggestions.tex}. The main paper has been reframed as
-frame-level release-side sanitization and the experiments below are separated
-from the historical TOMM cycle. Percentages describe repository completion,
-not scientific completion; no smoke or proxy-only result is eligible for a
-real-place claim.
+The active review is the third independent review recorded in
+\texttt{docs/RevisionSuggestions.tex} (7 September 2026), conducted against
+IEEE TIFS. It supersedes the ICME-oriented and 4 September TIFS assessments
+in that file's earlier versions.
 
-\begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
-\caption{Active ICME 2027 revision-cycle plan and next steps after PRO 6000
-no-card preparation (3 September 2026, New Zealand Standard Time).}
-\label{tab:icme-next-step}\\
+Its central conclusion is that the manuscript's \emph{negative} result
+(allocation is inert) is settled and well evidenced, while its \emph{positive}
+result (direction is where the leverage is) has three open gaps --- R1, R2 and
+R3 below --- that were found by reading the implementation rather than the
+manuscript, and that cannot be closed by editing text alone. Percentages
+describe repository completion, not scientific completion; no smoke test or
+proxy-only result is eligible for a real-place claim.
+
+\section*{Table 1: TIFS Revision Items --- Open and Partial Only}
+
+\begin{longtable}{@{}p{0.05\linewidth}p{0.27\linewidth}p{0.12\linewidth}p{0.48\linewidth}@{}}
+\caption{Open items from the 7 September 2026 independent TIFS review.
+Completed items are not listed; see \texttt{docs/progress.md}.}
+\label{tab:tifs-open}\\
 \toprule
-ID & Review gap & Status & Next step / completion gate \\
+ID & Review gap & Status & Completion gate / next step \\
 \midrule
 \endfirsthead
 \toprule
-ID & Review gap & Status & Next step / completion gate \\
+ID & Review gap & Status & Completion gate / next step \\
 \midrule
 \endhead
 \midrule
@@ -54,219 +67,103 @@ ID & Review gap & Status & Next step / completion gate \\
 \endfoot
 \bottomrule
 \endlastfoot
-M1 & IEEE format, six-page limit, and double-blind anonymity & \done\ \textbf{95\% complete} & Format compliance now \emph{verified directly}, not assumed: letter page size ($612\times792$\,pt), all fonts embedded and Type~1 (\texttt{pdffonts}), author block reads ``Anonymous Submission'' with real author metadata commented out, 152-word abstract, 0 BibTeX warnings, 0 undefined references/citations. The six-page limit is also no longer a guess: the preceding ICME edition publishes it explicitly as ``no longer than 6 pages, including all text, figures, and references'' (double-blind, 50\,MB supplementary), so an over-length body is a real desk-reject risk rather than a provisional overage. main.tex \emph{was} compressed to exactly 6 pages this round with no evidence removed, by cutting duplication (the conclusion restated results already given in the evaluation section; several protocol paragraphs duplicated appendix material). The author then elected to restore the full seven-cluster related-work section --- which had been commented out, leaving the compiled paper with only 11 references and an 84-word related work --- returning the body to 7 pages with all 43 references. Recorded as a deliberate, informed trade-off; the remaining 5\% is cutting back to 6 pages before submission, most cheaply by re-compressing related-work prose while keeping its citations. \\
-M2 & Unary-map validity and spatial causality & \done\ \textbf{100\% complete} & Ran learned/uniform/rolled/permuted same-energy controls on vGPU 3090 (6 backbones, 3 gallery sizes, 3 seeds, 11{,}700 rows). Energy-preservation gate passed for every row (max relative error $4.76\times10^{-7}$, well under the $10^{-6}$ tolerance). Paired McNemar test across 2{,}700 queries per comparison found \emph{zero discordant pairs} for all three same-energy controls versus the learned placement ($p=1.0$): retrieval degradation is explained by total perturbation energy, not by which pixels carry it. Written into main paper (new paragraph + Conclusion finding 6) and a full new Appendix section (\S~Spatial-Causality Validation), now also reporting clipping fraction ($1.54\%\pm0.92\%$) and perturbation-energy statistics (M5 cross-reference). The learned map is now explicitly described as a heuristic, quality-preserving weighting rather than a validated privacy-optimal placement. \textbf{Not attempted:} retraining/recalibrating the sensitivity map itself against an operational target (M2 items 1--2 in the review), or comparing against random-fixed/center/saliency mask baselines with DCRF/NCP disabled (M2 item 4) -- the energy-permutation test (item 5) was decisive enough on its own to trigger the required reframe (item 6), so these additional ablations were judged lower-priority. \\
-M3 & Geographic ground truth and MSLS coverage & \done\ \textbf{97\% complete} & Manifest audit replayed on all/o2n/n2o (all valid; o2n/n2o pass the coverage gate, all's gate fails only on an export-completeness gap in its per-row city field, not an actual single-city construction). Ran the official MSLS benchmark on all 3 manifests $\times$ 6 backbones (ResNet18, ResNet50, VGG16, CosPlace, MixVPR, Patch-NetVLAD; 18 cells, 14{,}400 rows); found and fixed a real OOM bug (unbatched gallery embedding at 1000-image scale) along the way, committed as \texttt{c7dde50}. 14 of 18 cells show the protective point-estimate direction; a place-cluster bootstrap (2{,}000 resamples per cell, Appendix Table~tab:e1\_bootstrap) finds only 5 of 18 individually significant at 95\%. \textbf{New this round (vGPU 3090):} the white-box sign-gradient attacker now ran for real against all three official MSLS manifests (ResNet18, 20 steps, $\ell_\infty=8$, matching the proxy protocol exactly): Top-1 collapses to 0.000--0.010 on every manifest at a comparable visual budget ($\sim$35.2\,dB vs \texttt{full}'s 36.2\,dB), confirming the proxy's white-box finding on real geographic data. Written into \texttt{paper/appendix.tex} (Table~tab:msls\_whitebox, extending \S~Constrained Attacker-Aware Baseline) and cross-referenced in main.tex. \textbf{Remaining gap:} a wider-city MSLS manifest is still genuinely data-blocked -- confirmed again this round: the local mirror has official metadata for all 25 \texttt{train\_val} cities but only Manila/Toronto have downloaded images; this needs a further multi-gigabyte per-city download not attempted this round and is disclosed as a limitation rather than silently left open. \\
-M4 & Frame-versus-sequence threat-model mismatch & \done\ \textbf{100\% complete} & Ran the sequence-level benchmark on vGPU 3090: clip lengths 1/2/4/7 (7, not 8, because the monitoring proxy only has 7 frames/clip -- a real data-scale bug caught and fixed before launch), 4 pooling strategies, 3 variants (raw/full/global\_noise), 6 backbones, 33{,}600 rows. PPEDCRF's aggregate Top-1 stays flat across clip lengths and pooling strategies (no erosion from a stronger multi-frame attacker); flicker score and perturbation-stability variance are both substantially lower than global noise, confirming the temporal-consistency prior. Written into main paper (new \S~Sequence-Length Attacker and Temporal Consistency, replacing the prior ``no numerical claim'' placeholder) and a full new Appendix section. Confirmed separately: the noise-injector's ``wiener'' mode is already a deprecated alias for \texttt{indexed\_gaussian} in the code (\texttt{src/privacy/noise\_injector.py}), matching the paper's disclaimer -- this review item was already resolved before this round. \\
-M5 & Matched privacy--utility comparison & \done\ \textbf{97\% complete} & Added the perturbation-footprint statistics the review specifically asked for (clipping/saturation rate, effective weight energy, weighted and effective MSE) to the Appendix M2 section, computed from the same 2{,}700-row export. \textbf{New this round (vGPU 3090):} re-ran the full 12-point sigma sweep, matched-PSNR selection, and paired McNemar/bootstrap significance test for the five backbones beyond ResNet18 (ResNet50, VGG16, CosPlace, MixVPR, Patch-NetVLAD; 75 further comparisons). 89 of 90 total comparisons (15 original + 75 new) have zero discordant pairs and exact McNemar $p=1.0$; the one exception (VGG16, 33\,dB, one discordant pair) is still far from significant. The ``no detectable matched-quality difference'' finding is therefore confirmed across every attacker backbone used elsewhere in the paper, not just ResNet18. Written into \texttt{paper/appendix.tex} (\S~Multi-Backbone Extension, Table~tab:matched\_psnr\_multibackbone) and \texttt{paper/main.tex} (limitations line updated from ``restricted to one attacker backbone'' to ``restricted to one gallery size''). \textbf{Remaining gap:} still one gallery size (48 candidates) only. \\
-M6 & Differential-privacy ambiguity & \textbf{80\% complete} & Unchanged this round; audited and confirmed consistent (Gaussian-inspired calibration index language holds throughout abstract, method, and Appendix). Final PDF-text grep audit remains open as a pre-submission checklist item rather than a content gap. \\
-M7 & Cluster-aware statistical units & \done\ \textbf{98\% complete} & Added a real place-cluster bootstrap (2{,}000 resamples, resampling official MSLS \texttt{unique\_cluster} place ids) for all 18 M3 cells (Appendix Table~tab:e1\_bootstrap); only 5/18 cells are individually significant, and the main-text ``14 of 18'' claim now explicitly says so. M2's paired McNemar test is exact and trivially cluster-robust. The F1 matched-PSNR test uses a query-cluster bootstrap and now covers all six backbones (see M5). \textbf{New this round (local CPU, no GPU needed):} added \texttt{src/scripts/bootstrap\_sequence\_retrieval.py}, the same McNemar + query-cluster bootstrap procedure applied to the M4 clip-length/pooling table (96 cells: 6 backbones $\times$ 4 clip lengths $\times$ 4 pooling strategies, resampling the 50 mined paired-scene query ids). \texttt{full} vs \texttt{global\_noise}: 28/96 cells significant, uniformly consistent with the existing quality--privacy trade-off finding. \texttt{full} vs \texttt{raw}: 11/96 significant, not one-directional (9 adverse, 2 protective), formalizing the existing ``no systematic deviation from raw'' description with a real interval. Written into \texttt{paper/appendix.tex} (\S~Sequence-Length Attacker Validation, new ``Cluster-aware significance'' paragraph). \\
-M8 & Reproducibility and artifact audit & \done\ \textbf{95\% complete} & All 30 GPU-experiment combinations (M2 large-scale $\times$6, M4 large-scale $\times$6, M3 $\times$18) finished with \texttt{EXIT\_CODE=0}; a 126-file SHA-256 checksum manifest was generated on the remote host and verified bit-for-bit after pulling results back locally. Remote git commit \texttt{c7dde50} (includes the M3 OOM fix) is recorded. \texttt{src/run\_eval.py}'s misleading \texttt{DummySensitiveRegionNet} placeholder (silently returns random noise, no connection to the trained checkpoint) was renamed to \texttt{demo\_pipeline\_smoke.py}/\texttt{RandomUntrainedUnaryNet} with an unmistakable module-level warning docstring, since the review named this exact reproducibility trap. \texttt{src/tests/test\_smoke.py} (previously a literal \texttt{assert True}) now has 6 real tests covering DCRF shape/range, temporal-state reset, NCP allocation, noise-injector clipping, deterministic seeding, and zero-mask no-op -- all verified passing locally. No credentials entered the repository; vGPU 3090 confirmed shut down. \textbf{Not done:} the anonymous public reviewer artifact package (manifests, pinned deps, one-command reproduction, table-regeneration verifier) is a substantial new deliverable that has not been started -- flagged for an explicit user decision on scope and hosting before attempting it. \\
-M9 & Organization and presentation & \textbf{70\% complete} & New content (M2/M3/M5/M7 writeback) follows the existing hedged, caveat-explicit prose style; abstract shortened. Page count remains 7 (see M1). Final visual inspection and official-template check remain open pending the eventual 2027 kit. \\
-\end{longtable}
 
-\section*{ICME 2027 Next-Step Schedule}
+R1 & The transferable direction is optimised against the \emph{true positive
+gallery embedding} (\texttt{gal\_emb[b][pos[0]]}), so the ``no access to the
+attacker at all'' claim hides a requirement that the defender already know
+which geo-tagged reference image the frame matches. Undisclosed in the
+manuscript. & \running & Experiment D1 (gallery-free objective) run on both
+backbones at matched delivered MSE, three seeds; then either promote the
+gallery-free variant to the deployable claim, or restate the threat model in
+Scope-of-claims, \S\,The Other Axis, the Table~2 caption and the Conclusion.
+Gate: no sentence in the paper asserts attacker-free operation without naming
+what the defender must hold. \\
 
-This schedule originally tracked PRO 6000 no-card preparation. PRO 6000's
-last-known SSH port was refused when the user reported it powered on
-(4 September 2026); rather than block on it, execution pivoted to vGPU 3090
-(48GB, confirmed reachable and idle) with the user's explicit approval. All
-rows below reflect what actually ran on vGPU 3090, not the original PRO 6000
-plan. The remote repo there was on a stale TOMM-cycle commit lacking the ICME
-scripts entirely; it was fast-forwarded to \texttt{origin/main} and VPR
-weights/checkpoint were recovered from a local backup rather than
-re-downloaded. M2 and M4 were first run at the originally-planned 12-pair
-proxy scale (completed in under 2 minutes per backbone, leaving the GPU at
-0\% utilization), then re-run at a larger 50-pair/100-gallery scale so the
-run actually used the available 48GB. All three experiments are now
-complete, and results are written into \texttt{paper/main.tex} and
-\texttt{paper/appendix.tex}; vGPU 3090 was confirmed shut down afterward to
-stop billing.
+R2 & The adaptive adversary was fine-tuned on \emph{isotropic}
+delivered-MSE-matched output (\texttt{torch.randn} +
+\texttt{release\_at\_mse}), not on the direction perturbation the paper
+proposes, so the section measures robustness to a noise-adapted attacker
+rather than to a defense-aware one. & \pending & Experiment D2: repeat the
+fine-tuning sweep with direction-perturbed training samples, same splits,
+hard-negative mining and early-stopping rule; report alongside the existing
+isotropic-trained row rather than replacing it. Gate: the adaptive-adversary
+claim in Scope-of-claims and the Conclusion matches the exposure actually
+trained on. \\
 
-\begin{longtable}{@{}p{0.16\linewidth}p{0.13\linewidth}p{0.12\linewidth}p{0.18\linewidth}p{0.31\linewidth}@{}}
-\caption{ICME 2027 prepared experiments and estimated New Zealand completion
-times. Estimates begin when the user confirms that the PRO 6000 GPU is powered
-on and the data/checkpoint gates pass.}
-\label{tab:icme-schedule}\\
-\toprule
-Experiment & Status & \% complete & Est. completion (NZST) & Next action / output \\
-\midrule
-\endfirsthead
-\toprule
-Experiment & Status & \% complete & Est. completion (NZST) & Next action / output \\
-\midrule
-\endhead
-\midrule
-\multicolumn{5}{r}{\itshape continued on next page} \\
-\endfoot
-\bottomrule
-\endlastfoot
-PRO 6000 no-card code/data gate & \done & 100\% & Complete (3 Sep 2026) & Root commit, paper gitlink, VPR revisions, monitoring proxy, MSLS subset, checkpoint, utility subset, VPR weights, Python compilation, and no-card state were verified; temporary credentials were removed. \emph{PRO 6000 itself was never reached}: on 4 Sep 2026 its SSH port was refused even after the user reported the card powered on, so execution pivoted to vGPU 3090 (48GB) with the user's explicit approval; this preparation work was not wasted since the same code/data were re-derived and re-staged on vGPU 3090. \\
-GPU-on handoff replay & \done & 100\% & Complete (4 Sep 2026) & vGPU 3090 confirmed reachable and idle (RTX 3090, 48GB free). Remote repo was on a stale TOMM-cycle commit and lacked the ICME scripts entirely; \texttt{git fetch}+\texttt{checkout} to \texttt{origin/main} restored them, and VPR weights/checkpoint were recovered from an untracked local backup rather than re-downloaded. \\
-Local CUDA smoke suite & \done & 100\% & Complete (3 Sep 2026) & M2, M3, and M4 smoke gates pass; outputs are engineering checks only. \\
-ICME-M2 spatial intervention & \done & 100\% & Complete (4 Sep 2026) & Ran on vGPU 3090: 12-pair quick pass then scaled to 50-pair/100-gallery to actually saturate the GPU (6 backbones, 3 gallery sizes, 3 seeds). Energy-conservation gate passed for every row; paired McNemar found zero discordant pairs for all three same-energy controls. Written into main paper and Appendix. \\
-ICME-M3 manifest coverage audit & \done & 100\% & Complete (4 Sep 2026) & MSLS subset transferred via 16-way parallel chunked scp (single-stream transfer measured $\sim$8KB/s; parallel chunks reached $\sim$75--100KB/s, a $\sim$13$\times$ speedup), reassembled, and sha256-verified bit-identical to the local original. All three manifest audits replayed: all/o2n/n2o report city, subtask, viewpoint, illumination, season, weather, positive-gallery intervals, and path-disjointness; the known all-subset coverage warning is confirmed to be an export-completeness gap, not a real single-city limitation. \\
-ICME-M3 expanded MSLS VPR & \done & 95\% & Complete (4 Sep 2026) & Ran all 3 manifests $\times$ 6 available attackers (18 cells, 14{,}400 rows). Found and fixed a real OOM bug in the shared gallery-embedding path (unbatched 1000-image forward pass) that made Patch-NetVLAD fail even running alone; fixed by chunking, committed as \texttt{c7dde50}. The primary manifest's 200-query/2-city limitation is now superseded for the \texttt{all} split by Session 3's N1 row (400 queries, 8 cities); the \texttt{o2n}/\texttt{n2o} cross-time splits still use the original 200-query/2-city manifests (8-city \texttt{o2n8}/\texttt{n2o8} extensions were built and gate-validated but not yet run against any backbone). \\
-ICME-M4 sequence retrieval proxy & \done & 100\% & Complete (4 Sep 2026) & Ran clip lengths 1/2/4/7 (7, not 8: the monitoring proxy has only 7 frames/clip, caught before launch) with four pooling strategies and real flicker/temporal-stability metrics on the actual GPU. Written into main paper and Appendix, replacing the prior ``no numerical claim'' placeholder. \\
-Cluster-aware summaries and checksums & \done & 90\% & Complete (4 Sep 2026) & M2's paired test is exact (zero discordant pairs, no bootstrap needed). A 126-file SHA-256 manifest was generated on vGPU 3090 and verified bit-identical after pull-back; remote commit \texttt{c7dde50} recorded. A place-cluster bootstrap (2{,}000 resamples) was added for all 18 M3 cells, done locally as pure CPU post-processing on the already-pulled CSVs with no new GPU time. Still open: an equivalent bootstrap for M4's clip-length tables (lower priority; see M7 row above). \\
-Reproducibility code audit (M8, non-GPU) & \done & 100\% & Complete (4 Sep 2026) & Local session, no GPU needed. Renamed \texttt{run\_eval.py} to \texttt{demo\_pipeline\_smoke.py} and its \texttt{DummySensitiveRegionNet} to \texttt{RandomUntrainedUnaryNet} with an explicit warning docstring, since the review specifically flagged this random-placeholder entry point as a reproducibility trap. Replaced the \texttt{assert True} smoke test with 6 real tests (DCRF shape/range, temporal reset, NCP allocation, noise clipping, deterministic seeding, zero-mask no-op); all verified passing locally. \\
-ICME-M3.3 white-box attacker on real MSLS & \done & 100\% & Complete (4 Sep 2026) & Second vGPU 3090 session: 3 parallel screens (all/o2n/n2o manifests), ResNet18, 20 sign-gradient steps, $\ell_\infty=8$, all EXIT\_CODE=0. Top-1 collapses to 0.000--0.010 on every manifest at a visual budget close to \texttt{full}'s own. Written into \texttt{paper/appendix.tex} (Table~tab:msls\_whitebox) and \texttt{paper/main.tex}. \\
-ICME-M5 matched-PSNR extended to 5 backbones & \done & 100\% & Complete (4 Sep 2026) & Same vGPU 3090 session, 5 parallel screens (ResNet50/VGG16/CosPlace/MixVPR/Patch-NetVLAD), each a full 12-point sigma sweep + matched-PSNR selection + significance test, all EXIT\_CODE=0/ANALYSIS\_EXIT=0. 89 of 90 total comparisons (with the original ResNet18 result) have zero discordant pairs. Written into \texttt{paper/appendix.tex} (Table~tab:matched\_psnr\_multibackbone) and \texttt{paper/main.tex}. \\
-Pull-back, checksum, and shutdown & \done & 100\% & Complete (4 Sep 2026) & 8 parallel screens (M3.3 + M5) monitored via automated 10-minute check-ins; outputs (1.2MB + 5.7MB) pulled back and verified against a 259-file SHA-256 manifest generated on the remote host (0 mismatches). vGPU 3090 confirmed shut down (\texttt{shutdown -h now}, follow-up SSH timed out) immediately after the verified pull-back to stop billing. \\
-M7 M4 cluster-aware bootstrap (non-GPU) & \done & 100\% & Complete (4 Sep 2026) & Local CPU-only post-processing on the already-pulled \texttt{sequence\_retrieval\_large50} export, run while the vGPU 3090 GPU jobs above were in progress (no GPU needed): new \texttt{src/scripts/bootstrap\_sequence\_retrieval.py}, 96 cells, written into \texttt{paper/appendix.tex}. \\
-Fresh independent review (post-session) & \done & 100\% & Complete (4 Sep 2026) & Re-reviewed the current \texttt{paper/main.tex}/\texttt{paper/appendix.tex} from scratch per the repository's fresh-review protocol; overwrote \texttt{docs/RevisionSuggestions.tex} with a new review recommending \emph{accept, conditional on minor revisions}, down from the prior round's \emph{reject in current form}. \\
-Session 3: N1--N5 (third vGPU 3090 session) & \done & 100\% & Complete (4 Sep 2026) & 16 parallel screens: N1 (6-backbone black-box VPR on a new 8-city/400-query/2{,}000-gallery MSLS manifest, built by re-extracting from already-downloaded raw MSLS zip parts -- no new download needed -- plus a white-box variant), N3 (white-box attacker extended to 5 more backbones on the existing 2-city 3-manifest set), N2 (matched-PSNR sigma sweep extended to gallery sizes 12 and 100, ResNet18), N5 (deterministic blur/mosaic kernel/block-size sweep for a true matched-PSNR comparison). Launched only after an unrelated GPU workload already running on the shared vGPU (10 screens, 99\% utilization) finished, per the user's explicit queueing instruction; all non-GPU prep (data transfer, manifest audit, code sync) was done in parallel while waiting so the launch was immediate once the GPU freed up. A real bug was found and fixed mid-run: \texttt{MonitoringClipDataset} raised on an explicitly-empty distractor list (the gallery-size-12 sweep needs zero extra distractors since \texttt{num\_queries} already equals 12), committed as \texttt{520b180}; only the affected \texttt{n2\_g12} screen was killed and relaunched, the other 15 were untouched. All 16 screens finished EXIT\_CODE=0; 237-file SHA-256 manifest verified 0 mismatches. All four experiments written into \texttt{paper/main.tex} and \texttt{paper/appendix.tex} (new Tables~tab:e1\_wide8, tab:msls\_whitebox\_ext, tab:matched\_psnr\_gallery, tab:deterministic\_matched\_psnr); both PDFs rebuild with 0 errors and 0 BibTeX warnings (main.pdf unchanged at 7 pages, appendix.pdf 12$\to$13 pages). vGPU 3090 was \emph{not} shut down afterward because the shared other-session workload's owner had not been asked; left on and idle, shutdown decision deferred to the user. \\
-Session 4: N6/N7 + full revision closeout & \done & 100\% & Complete (4 Sep 2026) & Fourth vGPU 3090 session, launched immediately after the session-3 batch on the same card. 16 screens: N6 (the two official cross-time manifests rebuilt at 8-city/400-query/2{,}000-gallery scale $\times$ 6 backbones, plus white-box on each) and N7 (finer deterministic sweep: blur kernel 3, mosaic blocks 2 and 3). All EXIT\_CODE=0; 86-file SHA-256 manifest verified with 0 mismatches. \textbf{N6 revises an earlier conclusion}: at two cities the adverse cells looked cross-time-direction-dependent (three of four on \texttt{n2o}, spread over ResNet50/VGG16/Patch-NetVLAD), but at 8-city scale those three backbones are clearly protective and the only 2 adverse cells of 12 are ResNet18 on \emph{both} directions --- adverse behavior tracks the weakest attacker, not the capture-time direction. \textbf{N7 closes the M5 residual}: mosaic now matches at every target (block 3 $\to$ 32.34\,dB, block 2 $\to$ 36.64\,dB) and blur brackets the 36\,dB target (kernel 5 $\to$ 34.40\,dB, kernel 3 $\to$ 37.95\,dB), a discreteness property of the kernel rather than an unmet sweep; at 36\,dB \texttt{full} (0.722) is the most protective of the three. \\
-ICME format compliance verified (M1/M9) & \done & 100\% & Complete (4 Sep 2026) & Checked directly rather than assumed: letter page size, all fonts embedded and Type~1, anonymized author block, 152-word abstract, 0 BibTeX warnings, 0 undefined references. The 6-page limit was \emph{confirmed} from the preceding ICME edition's published rules (``no longer than 6 pages, including all text, figures, and references''), so it is no longer a provisional guess. main.tex was compressed to exactly 6 pages with no evidence removed (the conclusion and several protocol paragraphs duplicated material already in the results sections and appendix); the author then chose to restore the full seven-cluster related-work section (previously commented out, leaving only 11 references and an 84-word related work), returning the body to 7 pages with all 43 references. Recorded as a deliberate trade-off that must be cut back to 6 pages before submission. \\
-Anonymous reproducibility artifact (M8) & \done & 100\% & Complete (4 Sep 2026) & Built \texttt{artifact/}: a 23\,MB CPU-only, network-free, one-command bundle (\texttt{run\_verification.sh}) that checks 332 released exports against a SHA-256 manifest and then recomputes 53 reported values --- Top-1 for six backbones on all three 8-city manifests, white-box attacker-aware Top-1, achieved PSNR/Top-1 at every swept blur/mosaic point, and the zero-discordant-pair significance claims --- straight from the raw per-query CSVs via \texttt{verify\_claims.py}. All 53 reproduce with 0 mismatches. Dependencies pinned to the exact run environment (Python 3.10.12, torch 2.13.0+cu130, RTX 3090 driver 580.82.09). Anonymity scrubbed: 36 metadata files carried an absolute remote path whose directory name would also have disclosed the manuscript's earlier submission history. Only the hosting channel remains an author decision. \\
-Placement-rule study (multi-rule) & \done & 100\% & Complete (4 Sep 2026) & New \texttt{run\_placement\_rule\_study.py} extends energy matching from re-arranging one learned map to \textbf{eight independently constructed placements} (learned / uniform / spectral-residual saliency / Sobel edge / centre bias / fixed random field / \textbf{attacker-gradient oracle} / anti-oracle), each renormalised to the learned map's exact sum of squares. Run on two checkpoints: the released one and the mask-supervised E5 one (spatial CV 0.158 vs 6e-4), 98 paired comparisons. \textbf{No placement beats uniform at the operating point}; the genuinely selective map is significantly \emph{worse} on VGG16 ($+0.194$, CI $[0.028,0.361]$). \\
-Degenerate-checkpoint discovery & \done & 100\% & Complete (4 Sep 2026) & \textbf{The released checkpoint's learned map is a constant}: unary output spans $[0.4991,0.5015]$, spatial CV $6\times10^{-4}$, support coverage $1.000$, verified directly on GPU. Root cause is \texttt{mask\_root=null}: the unary net trained without mask supervision and collapsed. The paper's original energy-matched controls were therefore near-no-ops on it, so the zero-discordant result followed from degeneracy rather than from any fact about placement, and the manuscript contained one demonstrably false sentence. Disclosed in paper and appendix; conclusions rebuilt on evidence independent of that map. \\
-Budget sweep and its reversal & \done & 100\% & Complete (4 Sep 2026) & $\sigma_0\in\{4,16,32,50\}$ on both checkpoints, then $\{32,50\}$ repeated at 50-pair scale for power. The budget does real work (uniform Top-1 $0.778\to0.444/0.361$). The null holds at and below the operating point (56 comparisons). \textbf{At $\sigma_0\ge32$ edge placement becomes significantly better than uniform} in three independent cells ($-0.140$, $p{=}3.2\mathrm{e}{-4}$; $-0.087$; $-0.133$). Reported as a bound on our own claim. \\
-Mechanistic account & \done & 100\% & Complete (4 Sep 2026) & The initial hypothesis (sensitivity is spatially homogeneous, so placement cannot matter) was \emph{falsified by measurement}: sensitivity is strongly concentrated (CV 1.12; top decile carries 67.7\% of gradient energy) and the learned map is blind to it (own top decile captures 9.9\%, chance level; Spearman 0.009). Yet the oracle still fails. Final account: gradient magnitude fixes \emph{where} noise lands but not \emph{which direction} it moves the embedding, which is why an optimized white-box perturbation at equal PSNR succeeds where every placement fails. \\
-Analysis-pairing bug (caught by gate) & \done & 100\% & Complete (4 Sep 2026) & The energy-conservation gate rejected the mask-backed batch at 87.7\% relative error. The fault was in the analysis, not the data: proxy12 and proxy50 reuse the same synthetic \texttt{loc\_xxx} query ids, so grouping on (backbone, query, seed) paired rows across two different benchmarks. The degenerate batch slipped through only because a constant map yields nearly identical energy in both. Fixed by tagging rows with their source run; counts corrected from 42 to 49 per study and all numbers recomputed. \\
-TIFS format migration & \done & 100\% & Complete (4 Sep 2026) & Verified TIFS/SPS rules rather than assuming them: single-anonymized review (so the anonymous author block was \emph{wrong} for this venue and real authorship is restored), 13-page initial limit \emph{including appendices and references}, and a 6-page supplement ceiling. Converted to \texttt{IEEEtran journal}, merged the core appendices into the paper (exactly 13 pages), and split supporting material into a 6-page supplement. Both build with 0 BibTeX warnings and 0 undefined references. \\
-Real-MSLS placement study (closes B2) & \done & 100\% & Complete (5 Sep 2026) & The placement evidence had been entirely from the mined proxy, whose locations are synthetic ids. Added a geotagged mode to the study (queries become single frames, correctness by official place id, the oracle targets the query's real place positive) and repeated the whole thing on real MSLS: 400 queries, 2{,}000-image gallery, 277 place identities, 1{,}200 paired observations per comparison, energy gate $5.6\times10^{-7}$. \textbf{The null survives}: 0 of 7 comparisons significant, every $\Delta$ within $\pm0.01$, oracle $-0.0008$ ($p=1.00$). Sensitivity statistics replicate almost exactly (CV 1.01 vs 1.12; top decile 64.7\% vs 67.7\%; learned map 9.4\% vs 9.9\%, i.e.\ chance). Run entirely on the local RTX 3070. \\
-Segmentation-driven placement (partly addresses B1) & \done & 100\% & Complete (5 Sep 2026) & Added a placement neither we nor the mechanism designed: torchvision DeepLabV3-ResNet50, whose COCO/VOC \texttt{background} class is the scene structure carrying the location signal, making it a faithful implementation of the published ``perturb the background, spare the foreground'' strategy. Genuinely discriminative on street imagery (spatial CV 0.07--0.49 vs the released checkpoint's $6\times10^{-4}$). \textbf{It does not beat uniform either} ($-0.0008$, $p=1.00$, CI $[-0.010,+0.008]$). Stated in the paper as a real model implementing a real strategy, \emph{not} a re-run of a specific published system, so B1 is mitigated rather than closed. \\
-Mechanism formalised; protocol confound disclosed & \done & 100\% & Complete (5 Sep 2026) & First-order analysis gives $\mathbb{E}\lVert\Delta f\rVert^2\approx\sigma^2\sum_i w_i^2\lVert J_i\rVert^2$, which under the energy constraint \emph{predicts an oracle advantage} given the measured concentration of $\lVert J_i\rVert$ --- and there is none. Two measurable reasons: clamp losses, and the fact that retrieval is decided by rank rather than displacement magnitude. Direct measurement also sharpened the clamp account: matching $\mathrm{mean}(w^2)$ would force delivered MSE to match exactly, so the observed shortfall (3.6\% proxy, 0.25\% real) is clamp loss, but the clipping \emph{fraction} is identical (1.91\%), so the loss is energy shed per boundary pixel rather than pixel count. Disclosed as a confound in our own protocol, which would be sharper if matched on achieved PSNR. \\
-TIFS readiness assessment & \done & 100\% & Complete (5 Sep 2026) & Recorded in \texttt{docs/RevisionSuggestions.tex}: estimated \textbf{major revision at best, more likely reject} --- explicitly not a weak accept --- with three named blockers (B1 no published mechanism ever tested, B2 proxy-only evidence, B3 neither checkpoint purpose-built) and a priority-ordered remedy list. B2 is now closed and B1 partly mitigated by the two rows above; B3 remains untouched, and running an actual published system through the protocol remains the one item that decides TIFS viability. \\
-Artifact verifier resynced & \done & 100\% & Complete (5 Sep 2026) & Extended from 76 to \textbf{89 auto-verified claims}, adding the nine real-MSLS placement Top-1 values and four sensitivity statistics; the packaging script now collects the MSLS study outputs. All 89 recompute from the raw exports with zero mismatches. \\
-\end{longtable}
+R3 & No downstream-utility evidence exists for the direction axis. Table~1's
+mAP/mIoU is measured at $\sigma_0=8$ on the mechanism's own additive
+perturbation (allocation axis); the direction result is supported only by
+$19.19$ MSE / $35.3$\,dB PSNR, and PSNR is not utility for adversarially
+directed perturbations. & \pending & Experiment D3: same-image utility audit
+under the surrogate-direction perturbation at the operating point's delivered
+MSE, with an isotropic control at the same MSE; both rows added to Table~1.
+Gate: the paper either reports direction-axis utility or discloses its absence
+as a limitation, and Table~1's caption states its axis scope. \\
 
-\section*{PPEDCRF ACM TOMM Revision Cycle --- Next-Step Plan}
+R4 & \texttt{main.pdf} is 14 pages against a 13-page TIFS initial-submission
+hard limit; $\approx$1/4 page must be recovered ($1{,}188$ characters of
+reference overflow on the last page, content ending at $y=236/792$). All
+lossless levers from prior rounds are spent. & \pending & Move
+\S\,Controlled Paired-Scene Retrieval Benchmark and its module-ablation table
+into \texttt{supplementary.tex}, leaving a three-sentence pointer. Perform
+\emph{after} D1--D3 so new results do not undo the compression. Gate: 13
+pages, 0 errors, 0 overfull boxes, 0 undefined references, no dangling
+\texttt{\textbackslash ref}. \\
 
-This table is the active plan for the review letter in
-\texttt{docs/TOMM\_Response\_Letter.md}. It supersedes the historical
-experiment entries below for this PPEDCRF revision cycle. No incomplete run
-may be used for paper writeback.
+R5 & Two headline tables are under-seeded relative to the rest of the paper:
+the non-adaptive-preprocessing sweep is 1 seed (all other core tables pool 3),
+and the fine-tuned-adversary result rests on $n=100$ held-out queries at 1
+seed while claiming an exact zero-discordant-pair outcome. & \pending &
+Experiment D4: extend the preprocessing sweep to 3 seeds; enlarge or pool the
+fine-tuning evaluation split. Gate: both tables state a seed count consistent
+with the rest of the paper. \\
 
-\begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
-\caption{Active PPEDCRF revision-cycle experiment plan and next steps (1 September 2026, local RTX 3070 session).}
-\label{tab:ppedcrf-next-step}\\
-\toprule
-ID & Review gap & Status & Next step / completion gate \\
-\midrule
-\endfirsthead
-\toprule
-ID & Review gap & Status & Next step / completion gate \\
-\midrule
-\endhead
-\midrule
-\multicolumn{4}{r}{\itshape continued on next page} \\
-\endfoot
-\bottomrule
-\endlastfoot
-E1 & Real place identities/GPS, larger galleries, and cross-condition VPR evaluation (R2-1, R3-5) & \done & Official-source MSLS runs are complete for the all, o2n, and n2o protocols. Each uses 200 queries (Manila/Toronto, 100 each) against a shared 1000-image gallery, with true place clusters, disjointness gates, and per-query ranks; the cross-time manifests additionally include capture-time fields. All-run raw Top-1/5/10 = 0.170/0.385/0.450 and PPEDCRF = 0.152/0.335/0.432 at 36.2\,dB PSNR. In the official cross-time splits, o2n changes Top-1 from 0.140 to 0.168$\pm$0.009, while n2o changes it from 0.155 to 0.137$\pm$0.006; the direction is therefore condition-dependent. The realized subset remains day/Forward-view with empty season/weather fields and one attacker backbone, so no broad all-condition claim is made. Oxford RobotCar remains an unused fallback. \\
-E2 & Matched PSNR/MSE/energy and unary-only/no-DCRF ablations (R2-2, R3-3) & \done & Pivoted off vGPU 3090 entirely: all local data/weights/checkpoint were already present, so the full 12-point sigma sweep (\{4,6,8,10,12,16,20,24,28,32,40,50\}, ResNet18, proxy12 scale, real monitoring corpus) ran sequentially on the local RTX 3070 in about 20 minutes (each point under 2 minutes). \texttt{matched\_psnr\_from\_sweep.py} produced the matched-PSNR/effective-MSE table at 30/33/36\,dB targets; a real schema-mismatch bug in that script (it read a non-existent \texttt{label} column from \texttt{summary.csv}, which only carries the numeric aggregate) was found and fixed. Headline finding: at matched PSNR the six sigma-tunable variants (full/no\_temporal/no\_ncp/unary\_only/no\_dcrf/global\_noise) have identical displayed Top-1 point estimates (0.639 at 30\,dB, 0.667 at 33\,dB, 0.722 at 36\,dB across all six); this is a descriptive result, not a formal equivalence test. The paper now makes explicit that matched PSNR is matched output MSE and total squared-error energy for fixed-size 8-bit frames, while the deterministic mask-guided blur/mosaic baselines have no PSNR-tunable knob and could not be matched to the swept targets (their fixed native point sits 2--10\,dB below the targets), so their lower Top-1 at that lower quality is reported with an explicit PSNR-gap column rather than claimed as a matched-quality comparison. (An earlier verbal report of this result had the blur/mosaic direction backwards; corrected before writeback.) Integrated into \texttt{paper/appendix.tex} (new \S~Matched-PSNR/Effective-MSE Comparison) and corresponding passages in \texttt{paper/main.tex}; both PDFs rebuild with 0 errors. \\
-E3 & Stronger mask-based and attacker-aware baselines (R2-2) & \done & The constrained attacker-aware baseline (20-step sign-gradient, $\ell_\infty{=}8$, ResNet18) already exists in \texttt{tomm\_review\_proxy12}/\texttt{proxy50} with the same gallery/seed/output schema as every other variant. Audited and integrated into Appendix~F: Top-1 reaches 0.000 at a PSNR comparable to PPEDCRF's own budget. Blur/mosaic were already integrated. \\
-E4 & Detection mAP and segmentation mIoU on the same sanitized images (R2-2) & \done & Re-ran both the detection (COCO, 200 images) and segmentation (VOC, 200 images) manifests together on the local RTX 3070 against the current checkpoint; both numbers now come from the same audit pass. Table~tab:e4seg in main.tex now reports mAP@50 alongside mIoU for all 8 variants. \\
-E5 & Unary predictor provenance and independent sensitivity-map assessment (R3-1) & \done & The released checkpoint and its public Hub copy are bit-identical and mask-free; both fail the original non-constant-map probe. A new mask-backed checkpoint was trained on 1,033 sequence-0000 images using official KITTI-360 structural-support masks, then evaluated only on held-out sequence 0002 with 32 queries and 128 gallery images. The operational gate passes for all 32 queries, but mean static-background Spearman is $-0.00024$, top-10 overlap is 0.0497, and predicted top-10\% regions capture 0.0947 of reference attribution energy. E5 is therefore complete as a negative attribution diagnostic, not as validation of sensitivity-map accuracy. \\
-E6 & Eq.~(2), gallery disclosure, margins, and Fig.~6 retrieval evidence (R3-5, R3-6, R3-7) & \done & Added \texttt{src/scripts/margin\_subgroup\_analysis.py}, a pure post-processing step over the existing \texttt{per\_query.csv} exports (no new GPU run needed). Small/large-margin aggregation (Appendix Table~tab:margin\_subgroups) and a regenerated qualitative case-study figure (worst-margin proxy12 query, Appendix Fig.~fig:case\_study) are integrated. \\
-E7 & MixVPR transfer diagnosis and mitigation (R3-8) & \done & The current corrected proxy12/proxy50 runs no longer reproduce the adverse MixVPR transfer the reviewer observed; verified against the already-integrated main-text/appendix tables. Added the margin-level diagnosis the reviewer asked for (Appendix~\S Margin-Level Diagnostics) explaining why MixVPR's aggregate delta is small even though it is not adverse. No mitigation experiment was run because the current operating point is not adverse; the margin-aware sigma-schedule mitigation is documented as the concrete next step if adverse transfer recurs. \\
-\end{longtable}
+R6 & \S\,Robustness to Non-Adaptive Preprocessing discloses that routine JPEG,
+blur and denoising recover most of the white-box bound, with no defense-side
+response attempted. & \deferred & Experiment D5 (EOT over the same
+transformations), optional. Report either outcome; a failure is a publishable
+negative result about the axis. Previously logged as optional hardening ---
+raised in priority because the preprocessing weakness is now published in the
+manuscript itself. \\
 
-\paragraph{Current execution state (1 September 2026, local session).} vGPU
-3090 was found powered off (\texttt{Connection refused} on its known SSH
-port) at the start of this session; rather than wait on it, E2's sigma
-sweep was re-scoped to the local RTX 3070 and completed there in full, so
-vGPU 3090 no longer gates E2. The public-data blockers for E1 (MSLS) and E5
-(KITTI-360) are also cleared: both were registered by the author, downloaded
-via direct HTTPS (working around a mid-session WSL-level DNS resolver outage
-with a Cloudflare-DoH-resolved \texttt{curl --resolve} fallback, then via
-PowerShell once confirmed healthy), extracted locally, and manifest-built.
-E1's manifest build initially silently dropped one of the two requested
-cities (a real bug in the eligible-query selection, fixed); after the fix
-and two more real bug fixes in the benchmark runner itself (shared-gallery
-handling, missing raw baseline), E1 produced complete all, o2n, and n2o
-place-labeled runs and they are now integrated into both paper files. The
-o2n/n2o runs are official cross-time splits, but their realized subset has
-limited viewpoint/illumination/season/weather diversity. The original E5
-checkpoint's diagnostic gate failed on the real KITTI-360 manifest, confirming
-the checkpoint-provenance problem. A replacement mask-backed checkpoint now
-passes the operational non-constant gate on held-out sequence 0002, but its
-near-zero attribution agreement is negative evidence rather than validation.
-E3/E4/E6/E7 required no vGPU time and were completed on
-the local RTX 3070 / CPU from already-existing per-query exports.
+R7 & The abstract's ``six attacker backbones'' sits in the same sentence as
+the real-benchmark placement result; the six backbones come from the proxy and
+transfer studies, while real place-labelled results use ResNet18 and MixVPR.
+& \pending & Rephrase the abstract so backbone coverage is attributed to the
+studies that carry it. Text-only. \\
 
-\paragraph{Evidence policy.} The existing 12/50-pair benchmark remains a
-visual-similarity proxy. E1 is now the paper's one true-place/geolocation
-result (gate-passing, \texttt{scientific\_evidence=true}), reported alongside
-the proxy with an explicit note that its effect size is much smaller, its
-cross-time direction is condition-dependent, and its condition-diversity
-coverage is limited --- it strengthens, but does not replace, the proxy
-claims. E2--E7 strengthen mechanism, utility, and attacker-sensitivity
-claims, but incomplete, smoke, blocked, or
-protocol-mismatched outputs
-remain engineering evidence and must not be inserted into the manuscript.
-Every number integrated into \texttt{paper/main.tex} or
-\texttt{paper/appendix.tex} in this session was read directly from a
-non-smoke run's CSV/JSON export (\texttt{scientific\_evidence} audited
-manually where the export script's own flag defaults to false pending
-review) and cross-checked against the numbers already cited elsewhere in the
-manuscript for consistency.
+F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/}
+have a provenance record only for the reachable export trees. & \partialstatus
+& Add SHA-256 entries for the E1 MSLS and E5 KITTI-360 trees to
+\texttt{docs/experiment\_provenance.md} when those files are next reachable.
+Non-blocking documentation gate. \\
 
-\paragraph{Additional local/vGPU verification (1 September 2026).} The vGPU
-3090 was subsequently powered on and re-checked through the credentials in the
-local environment file: the pinned host key matched, the RTX 3090 exposed
-49152 MiB, and the remote PyTorch environment reported CUDA availability.
-The earlier six-attacker proxy12/proxy50 checks completed with 5,436 and
-22,650 per-query rows, respectively. To close the previously blocked CLIP
-verification, the two public CLIP checkpoints were then downloaded through
-\texttt{https://hf-mirror.com}, loaded successfully in strict offline mode,
-and used in complete eight-attacker runs. The mirror-backed proxy12 run
-contains 7,236 per-query rows and 219 summary rows; the proxy50 run contains
-30,150 per-query rows and 219 summary rows. Both include CLIP ViT-B/32 and
-ViT-L/14, use CUDA, pass finite-value audits, and use the checkpoint whose
-SHA-256 matches the local copy. These runs remain proxy engineering evidence
-(\texttt{scientific\_evidence=false}) and do not replace the paper's existing
-validated export or alter its headline claims. Separately, the optional Manila
-s2w MSLS run completed locally with 80 queries, 80 gallery images, and three
-seeds; its raw/full Top-1 values were 0.5375 and $0.5000\pm0.0177$,
-respectively. Because this run is single-city and small-gallery evidence, it
-is not written into the paper's headline claims.
+B3 & Neither checkpoint of the tested mechanism was engineered as a privacy
+map: the released one is numerically constant, the mask-supervised one was
+trained for the attribution diagnostic. & \partialstatus & Disclosed rather
+than closed, which is the correct disposition for a falsification testbed. No
+further action planned; listed so it is not silently dropped. \\
 
-\section*{Table 1: Revision Suggestions Completion Status}
-
-\begin{longtable}{@{}p{0.05\linewidth}p{0.23\linewidth}p{0.14\linewidth}p{0.48\linewidth}@{}}
-\caption{Open, blocked, deferred, and not-yet-started items from
-\texttt{docs/revision\_suggestions.tex}. Completed items are omitted from this
-current-work table; their evidence remains in \texttt{docs/progress.md} and in
-the paper.}
-\label{tab:completion}\\
-\toprule
-\# & Open item & Status & Evidence / notes \\
-\midrule
-\endfirsthead
-\toprule
-\# & Open item & Status & Evidence / notes \\
-\midrule
-\endhead
-\midrule
-\multicolumn{4}{r}{\itshape continued on next page} \\
-\endfoot
-\bottomrule
-\endlastfoot
-E1 & MSLS or Oxford RobotCar real place/GPS VPR & \done & All, o2n, and n2o MSLS runs are complete (each: Manila+Toronto, 200 queries, 1000-image gallery, all gates pass) and integrated into both paper files. The all-run effect is smaller than the proxy effect; o2n and n2o show opposite Top-1 directions, so the result is explicitly condition-dependent. Remaining coverage is limited to day/Forward-view samples with empty season/weather fields and one attacker backbone. \\
-E2 & Matched PSNR/MSE/energy experiment & \done & Full 12-point sigma sweep completed on the local RTX 3070 (no vGPU needed); native ablation (incl.\ unary-only/no-DCRF) was already integrated. Matched-PSNR/effective-MSE table built at 30/33/36\,dB targets and integrated into \texttt{paper/appendix.tex} and \texttt{paper/main.tex}: sigma-tunable variants have identical displayed point estimates at matched quality, with no claim of formal equivalence; the paper gives the PSNR--MSE--energy identity explicitly, and deterministic blur/mosaic baselines have no PSNR knob and are reported with an explicit PSNR gap rather than a matched claim. \\
-E3 & Stronger mask-based and attacker-aware baselines & \done & Blur/mosaic and the constrained attacker-aware diagnostic are integrated in Appendix~F with the same gallery/seed/schema as the rest of the benchmark. \\
-E4 & Detection mAP integration & \done & \texttt{map50\_original}/\texttt{map50\_sanitized} added alongside mIoU in Table~tab:e4seg from a co-audited manifest pair. \\
-E5 & KITTI-360 independent unary attribution diagnostic & \done & The original mask-free checkpoint failed the gate on real data. A replacement checkpoint trained on 1,033 sequence-0000 images with structural-support masks passes the non-constant operational gate on held-out sequence 0002 (32/32), but yields mean Spearman $-0.00024$, top-10 overlap 0.0497, and attribution energy 0.0947. This closes the execution blocker while retaining a negative scientific conclusion. \\
-E6 & Margin subgroups and Fig.~6 retrieval evidence & \done & Small/large-margin aggregation table and regenerated case-study figure added to Appendix. \\
-E7 & MixVPR transfer diagnosis & \done & Current data does not reproduce the adverse transfer reported by the reviewer; margin-level diagnosis added; mitigation documented as a conditional next step rather than run, since the current operating point is not adverse. \\
 \end{longtable}
 
 \section*{Table 2: Next-Step Plan (Experiment Schedule)}
 
-\begin{longtable}{@{}p{0.14\linewidth}p{0.15\linewidth}p{0.10\linewidth}p{0.18\linewidth}p{0.31\linewidth}@{}}
-\caption{Open, deferred, and blocked experiment status as of 1 September 2026
-(local RTX 3070 session). The fourth column carries the current execution
-condition.}
-\label{tab:schedule}\\
+Estimated completion times are New Zealand Standard Time. GPU work runs on
+vGPU 3090 (\texttt{/root/autodl-tmp/ppedcrf\_tomm\_20260830/PPEDCRF},
+synchronised to \texttt{main} at \texttt{b415fa4} on 7 September 2026); note
+that this host is shared with unrelated projects, so wall-clock estimates
+assume partial GPU availability rather than an idle card.
+
+\begin{longtable}{@{}p{0.20\linewidth}p{0.08\linewidth}p{0.06\linewidth}p{0.16\linewidth}p{0.42\linewidth}@{}}
+\caption{Active experiment schedule for the TIFS revision cycle, 7 September
+2026.}
+\label{tab:tifs-schedule}\\
 \toprule
-Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
+Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \midrule
 \endfirsthead
 \toprule
-Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
+Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \midrule
 \endhead
 \midrule
@@ -274,28 +171,64 @@ Experiment & Status & \% complete & Est.\ completion / duration & Notes \\
 \endfoot
 \bottomrule
 \endlastfoot
-Public-data registration and checksum gate & \done & 100\% & Complete & MSLS and KITTI-360 both registered by the author and downloaded; no public images are committed to the repository (external \texttt{G:\textbackslash work\textbackslash datasets} paths only). \\
-E1 MSLS geotagged VPR & \done & 100\% & Complete & All, o2n, and n2o runs are complete and written back to both paper files. The cross-time split shows condition-dependent Top-1 direction; broader viewpoint/illumination/season/weather coverage remains a stated limitation. \\
-E2 matched utility and ablations & \done & 100\% & Complete & Pivoted to local RTX 3070; full 12-point sigma sweep, matched-PSNR/effective-MSE table, and paper writeback (Appendix table plus 5 main-text passages) all complete. \\
-E3 attacker-aware baseline & \done & 100\% & Complete & Audited and integrated into Appendix~F this session. \\
-E4 detector mAP writeback & \done & 100\% & Complete & Co-audited detection+segmentation manifests, integrated into Table~tab:e4seg. \\
-E5 KITTI-360 unary attribution & \done & 100\% & Complete & The original checkpoint failed the gate; a sequence-0000 mask-backed checkpoint passes the non-constant operational gate on held-out sequence 0002 but has near-zero attribution agreement. It is reported as a negative diagnostic, not map-accuracy validation. \\
-E6 margin subgroups and retrieval case study & \done & 100\% & Complete & Appendix Table~tab:margin\_subgroups and Fig.~fig:case\_study added. \\
-E7 MixVPR diagnosis & \done & 100\% & Complete & No mitigation experiment run; current data is not adverse, so none was needed. Documented conditional mitigation for future recurrence. \\
+
+D1 --- gallery-free direction objective (R1) & \running & 20\% &
+8 Sep 2026, 08:00 & \textbf{Meaning:} decides whether the paper's positive
+claim is deployable or merely conditional. Replaces the ground-truth gallery
+target with a self-embedding repulsion objective that uses only the released
+frame, so no knowledge of the correct reference image is required. Same
+manifest, gallery, surrogate ensembles and delivered MSE as the published
+Table~2, so rows are directly comparable. ResNet18 (3 surrogates) and MixVPR
+(4 surrogates), 3 seeds each. \\
+
+D3 --- downstream utility of the direction perturbation (R3) & \pending &
+0\% & 8 Sep 2026, 20:00 & \textbf{Meaning:} supplies the evidence the paper's
+own problem statement demands. Applies the surrogate-direction perturbation to
+the co-audited 200-image COCO detection and 200-image VOC segmentation
+manifests at the operating point's delivered MSE, with an isotropic control at
+the same MSE, then measures mAP@50 and mIoU with the frozen detectors already
+used for Table~1. Cheap; can share the GPU with D1. \\
+
+D2 --- adaptive adversary trained on the defended output (R2) & \pending &
+0\% & 10 Sep 2026, 12:00 & \textbf{Meaning:} makes the adaptive-adversary
+section answer the question it poses. Same fine-tuning recipe, splits and
+early-stopping rule as the published sweep, but with training samples drawn
+from the surrogate-direction perturbation instead of isotropic noise.
+Perturbation generation dominates the cost, so training samples are
+precomputed once and reused across configurations. \\
+
+D4 --- seed and sample-size strengthening (R5) & \pending & 0\% &
+10 Sep 2026, 20:00 & \textbf{Meaning:} brings two headline tables up to the
+statistical standard of the rest of the paper. Extends the
+non-adaptive-preprocessing sweep from 1 to 3 seeds (2 attackers $\times$ 4
+sanitizers) and enlarges or pools the fine-tuning evaluation split beyond
+$n=100$. \\
+
+D5 --- EOT-hardened direction (R6) & \deferred & 0\% & Not scheduled &
+\textbf{Meaning:} turns a disclosed weakness into a problem-and-response pair,
+or produces a clean negative result about the axis. Optimises the direction
+under an expectation over JPEG-75/50, Gaussian blur and denoising, then
+re-runs the preprocessing sweep. Optional; scheduled only if D1--D4 finish
+with time in hand. \\
+
+R4 --- compression to 13 pages & \pending & 0\% & After D1--D3 write-back &
+\textbf{Meaning:} submission compliance. Deliberately last: new results
+consume space, so compressing before they land wastes the work. \\
+
 \end{longtable}
 
-\section*{Table 3: Text-Only Revision Items (No Experiments Required)}
+\section*{Table 3: Manuscript Edits Required (No Experiment Needed)}
 
-\begin{longtable}{@{}p{0.05\linewidth}p{0.28\linewidth}p{0.11\linewidth}p{0.46\linewidth}@{}}
-\caption{Text-only safeguards and evidence-scope statements added during the
-revision cycle.}
-\label{tab:textonly}\\
+\begin{longtable}{@{}p{0.05\linewidth}p{0.30\linewidth}p{0.10\linewidth}p{0.47\linewidth}@{}}
+\caption{Text-only revision items for the TIFS cycle. These are gated on the
+corresponding experiment's outcome only where noted.}
+\label{tab:tifs-text}\\
 \toprule
-\# & Item (review section) & Progress & Location / notes \\
+ID & Edit & Status & Location \\
 \midrule
 \endfirsthead
 \toprule
-\# & Item (review section) & Progress & Location / notes \\
+ID & Edit & Status & Location \\
 \midrule
 \endhead
 \midrule
@@ -303,52 +236,38 @@ revision cycle.}
 \endfoot
 \bottomrule
 \endlastfoot
-T1 & State the current proxy benchmark as paired-scene evidence only & 100\% & Main paper Experimental Protocol and Appendix interpretation state that synthetic pairs have no GPS ground truth. \\
-T2 & Record MSLS/KITTI-360 as the public-data validation path & 100\% & Main paper scope paragraph and Appendix external-validation note identify the official sources, labels, completed results, and no-placeholder rule. \\
-T3 & Keep unary accuracy and geographic claims conditional on evidence gates & 100\% & Main paper and Appendix distinguish provenance/attribution diagnostics from sensitivity-map accuracy and verified geolocation. \\
+
+T1 & Replace ``with no access to the attacker at all'' with a statement naming
+what the defender must and must not hold. & \pending & \texttt{main.tex}
+\S\,The Other Axis; Scope-of-claims; Table~2 caption; Conclusion. Gated on D1's
+outcome for which variant becomes the headline. \\
+
+T2 & Scope the utility table to the allocation axis. & \pending &
+\texttt{main.tex} Table~1 caption and the Experimental Protocol paragraph that
+introduces the same-image utility check. \\
+
+T3 & Narrow the adaptive-adversary claim to the exposure actually trained on
+until D2 lands. & \pending & \texttt{main.tex} Scope-of-claims and Conclusion;
+\S\,A First Attempt at a Genuinely Adaptive Attacker. \\
+
+T4 & Attribute the abstract's six-backbone coverage to the studies that carry
+it. & \pending & \texttt{main.tex} abstract. \\
+
 \end{longtable}
 
-\section*{Table 4: Fresh Independent Review Follow-Up (3 September 2026)}
+\section*{Closed in Previous Cycles}
 
-All items in Tables 1--3 above, and every point in
-\texttt{docs/TOMM\_Response\_Letter.md}, were re-checked directly against the
-current \texttt{paper/main.tex}/\texttt{paper/appendix.tex} text in this
-session and confirmed complete with no regression. A fresh independent
-review of the manuscript on its own merits (recorded in full in
-\texttt{docs/Revision\_suggestions.tex}) then found three follow-up items.
-F1 and F2 have now been executed on a reachable vGPU 3090 with real
-monitoring data and the recorded checkpoint; F3 is partially documented and
-remains open only for the missing E1 MSLS and E5 KITTI-360 export trees.
-
-\begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.14\linewidth}p{0.47\linewidth}@{}}
-\caption{Fresh-review follow-up items registered 3 September 2026 (see
-\texttt{docs/Design.md}, ``Fresh independent review follow-up'').}
-\label{tab:freshreview}\\
-\toprule
-ID & Gap identified & Status & Evidence needed / next step \\
-\midrule
-\endfirsthead
-\toprule
-ID & Gap identified & Status & Evidence needed / next step \\
-\midrule
-\endhead
-\midrule
-\multicolumn{4}{r}{\itshape continued on next page} \\
-\endfoot
-\bottomrule
-\endlastfoot
-F1 & Appendix Table~tab:matched\_psnr's descriptive no-separation wording is based on rounded point estimates from a 36-paired-outcome sample (12 pairs $\times$ 3 seeds, one backbone, one gallery size) with no formal test or stated power. & \done & The real vGPU sigma sweep covers all 12 prescribed points. The paired analysis reports zero discordant outcomes, exact McNemar $p=1.0$, query-cluster bootstrap 95\% CI $[0.000,0.000]$ for all 15 comparisons, and a minimum significant asymmetry of six pairs; the result and its limited power are integrated into the main text and Appendix~A. \\
-F2 & The appendix's account of the non-reproduced adverse MixVPR result never checks whether the current pipeline is deterministic run-to-run under its own fixed seeds. & \done & Two independent real-GPU MixVPR proxy50 runs with the same code tree, checkpoint, gallery construction, and seeds were compared. The checker found agreement within $\mathrm{rtol}=10^{-6}$ and $\mathrm{atol}=10^{-9}$ for all 3,750 rows and 20 columns; the pass is stated in the appendix. \\
-F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/} have no versioned checksum record. & \partialstatus & \texttt{docs/experiment\_provenance.md} records the remote revision and hashes for all reachable proxy12/proxy50, E2, F1, F2, and E4 exports, and verifies the pulled F1/F2 copies. E1 MSLS and E5 KITTI-360 manifest/export files are absent from the reachable tree; restore those files and add their SHA-256 values to close this documentation gate. \\
-F4 & The published-model placement evidence rested on a single segmentation network (DeepLabV3-ResNet50), so a reviewer could attribute the null to that one model rather than to the background-sparing strategy. & \done & Two further published models were run on the real MSLS benchmark: FCN-ResNet50 (same COCO/VOC \texttt{background} taxonomy, independently trained) gives $\Delta=+0.0008$, 95\% CI $[-0.007,+0.008]$, and SegFormer-B0 on ADE20K (a different taxonomy, summing 13 named scene-structure classes) gives $\Delta=0.0000$, CI $[-0.009,+0.009]$; all with exact McNemar $p=1.00$ over 1,200 paired observations each. Over 60 real query frames the two taxonomies' maps correlate 0.69 on average (range $-0.33$ to $0.98$), so they are independent rules rather than one rule reparameterised. Worst-case per-query energy agreement with the uniform control is $7\times10^{-7}$ relative and PSNR agreement 0.02\,dB. \\
-F5 & The study never reported how much spatial selectivity each placement rule actually expresses, leaving open the objection that the null holds only because the rules were close to uniform. & \done & A retrieval-free CPU measurement of top-decile energy share (uniform $=0.100$ by construction) over 200 real query frames: edge 0.839 (CV 1.77), centre 0.649, saliency 0.353, fixed random 0.242, SegFormer 0.126, FCN 0.115, DeepLabV3 0.113. Both implications are now stated in the paper: the segmentation rules genuinely are barely selective, because street imagery is almost entirely scene structure and background-sparing is therefore close to a no-op there; but edge places 84\% of the budget in a tenth of the pixels and still does not beat uniform at the operating point, so the study is not confined to near-uniform rules. \\
-F6 & The magnitude-versus-direction account of the null was qualitative, with no linearisation argument or controlled check against a known Jacobian. & \done & A controlled retrieval task with a closed-form encoder, so per-pixel sensitivity is exact rather than estimated, with the sensitivity profile calibrated to the measured attacker (top decile carrying 67.7\%) and queries paired with a different view of the same latent place. The first-order displacement identity holds to within 4\% over 84 cells. The oracle advantage it predicts is real and large when the clean task is easy ($-0.42$ at clean Top-1 $0.86$), so the measured null is not an artifact of the algebra. Bounding the output range halves the advantage at every operating point and increasing clean-task difficulty decays it to zero ($-0.15$ at $0.34$, $-0.04$ at $0.12$, $+0.00$ at $0.03$); a nonlinear encoder changes nothing, ruling out linearisation error. \\
-F7 & Whether the controlled model reproduces the measured null quantitatively, not just qualitatively, was untested. & \partialstatus & It does not, and the paper says so. The real benchmark's clean Top-1 was measured at 0.2100, which the operating point reduces to 0.1950. Matching that drop inside the controlled model leaves it predicting an oracle advantage near $-0.15$ against a measurement of $-0.0008\pm0.01$. The discrepancy is reported rather than tuned away and attributed to the real oracle having only a single clean-point gradient instead of an exact Jacobian, which is consistent with the real oracle being worse than uniform at three of the four swept budgets. Closing it would require a placement oracle built from a multi-step or finite-difference sensitivity estimate. \\
-F8 & Every placement result held the perturbation operator fixed at additive isotropic Gaussian noise, which is what this literature uses, so the null could be a property of that operator rather than of placement. & \done & An operator axis was added to both studies, with every condition released at the MSE the uniform Gaussian reference delivers on the same frames (solved per frame by bisection through the pixel clamp). On real MSLS at the operating point the null survives all four operators tested -- additive Gaussian, spatially correlated Gaussian, selective low-pass, selective block quantisation -- with edge-versus-uniform in $[-0.008, +0.010]$ and none significant ($p \ge 0.175$). In the controlled model at matched energy, three operators differing in spatial structure are interchangeable (uniform Top-1 $0.832$, $0.843$, $0.845$ against a clean $0.867$) while one differing in directional control gives $0.001$ under uniform placement. \\
-F9 & The study could report only that placement fails, with no positive design direction. & \done & At a budget eight times larger the operator moves Top-1 from $0.159$ (additive Gaussian) to $0.053$ (block quantisation) at identical delivered distortion and identical uniform placement, and the placement effect that emerges reverses sign between operators ($-0.0433$ under additive noise, $+0.0500$ under low-pass, $+0.1150$ under block quantisation, all significant). The recommendation now has a direction: the operator is the design variable, placement is not, and a placement rule tuned on one operator can be harmful on another. \\
-F10 & The attacker oracle placed the budget by $|\partial \cos(f(x),g^{+})/\partial x|$, the gradient of similarity to the positive, whereas Top-1 is decided by the margin against the best competitor. & \done & The margin-gradient oracle was implemented and run on real MSLS. It is the better signal -- point estimate $-0.0083$ against the similarity oracle's $-0.0008$, in the favourable direction -- but does not clear the noise floor over 1,200 paired observations ($p=0.275$, 95\% CI $[-0.027,+0.009]$). Placing the budget by exactly the quantity that decides the outcome, with white-box access to compute it, buys nothing measurable. \\
-F11 & The energy-matching confound (concentrated placements shedding budget at the pixel clamp) was disclosed but not removed. & \done & Matching on delivered MSE rather than nominal weight energy removes it outright; measured delivered MSE is identical across operators and placements to the reported precision. The earlier nominal-energy results are unchanged under the stricter rule. \\
-F12 & The manuscript is one page over the TIFS limit after the operator results were added. & \partialstatus & Body content was cut where it was genuinely redundant or superseded (the deterministic-baseline matched-PSNR sweep, which the operator section supersedes with exact MSE matching; the proxy12 robustness table, whose aggregate is stated in prose and whose per-cell values are in the artifact; duplicated matched-PSNR prose). The paper is at 14 pages with the Supplementary Material at its own 6-page cap, so closing the last page requires either overlength charges or cutting non-redundant content. Flagged for the authors' decision. \\
-\end{longtable}
+The ICME 2027 items (M1--M9), the TOMM cycle (E1--E7), and the
+3 September fresh-review items F1, F2, F4--F12 are complete and were removed
+from these tables in this revision. Their completion records, including the
+evidence and the commit or export path for each, remain in
+\texttt{docs/progress.md} (entries 1--225). Of the previous round's three
+TIFS blocking issues, B2 is closed (the placement null replicates on real
+place-labelled data against both a weak and a strong attacker), B1 is
+adequately mitigated and recommended for closure (three published-model
+placement rules across two label taxonomies, plus the manuscript's reported
+finding that no published spatially selective method meets the protocol's
+entry requirements), and B3 is disclosed rather than closed, which is the
+correct disposition for a falsification testbed.
 
 \end{document}

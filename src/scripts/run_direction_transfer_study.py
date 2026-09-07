@@ -15,6 +15,17 @@ are compared at matched delivered distortion:
   transfer_N    direction from N surrogate backbones, evaluation backbone held out
   isotropic     the operating-point control: same budget, no direction
 
+Two optimisation objectives are available, and the difference between them is
+what the defender is assumed to know:
+
+  positive  push the released frame away from the embedding of its own correct
+            gallery entry. This is the stronger direction, but it presumes the
+            defender can identify the reference image the frame matches --
+            which is the very fact the attacker is trying to recover.
+  self      push the released frame away from *its own* clean embedding. This
+            needs nothing but the frame in hand, so it is what a deployed
+            sanitizer can actually compute.
+
 Every condition is rescaled to deliver the same mean squared error on the same
 frames, so the comparison isolates direction from budget. If transfer works,
 the negative results imply a usable defense; if it does not, they imply that
@@ -182,6 +193,14 @@ def main() -> int:
                          "restrict evaluation to, e.g. the held-out test "
                          "split written by finetune_adaptive_attacker.py so "
                          "fine-tuning and evaluation never share queries.")
+    ap.add_argument("--objective", default="positive",
+                    choices=("positive", "self"),
+                    help="What the perturbation is optimised away from. "
+                         "'positive' targets the query's correct gallery "
+                         "embedding and therefore assumes the defender knows "
+                         "which reference image the frame matches; 'self' "
+                         "targets the frame's own clean embedding and needs "
+                         "no gallery knowledge at all.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
 
@@ -250,11 +269,21 @@ def main() -> int:
         print(f"[transfer] resuming, {len(done)} rows already present",
               flush=True)
 
-    fields = ["query_id", "condition", "seed", "sanitizer", "correct_rank",
-              "top1_place", "correct_place", "effective_mse", "psnr"]
+    fields = ["query_id", "condition", "seed", "sanitizer", "objective",
+              "correct_rank", "top1_place", "correct_place", "effective_mse",
+              "psnr"]
     new = not out.is_file()
+    if not new:
+        # An export written before the objective column existed must keep its
+        # own header, or appended rows would be shifted by one column against
+        # it. Resuming such a file is still safe; it just stays on the old
+        # schema, and its objective is implicitly "positive".
+        with open(out, newline="", encoding="utf-8") as probe:
+            existing = next(csv.reader(probe), None)
+        if existing:
+            fields = existing
     fh = open(out, "a", newline="", encoding="utf-8")
-    writer = csv.DictWriter(fh, fieldnames=fields)
+    writer = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
     if new:
         writer.writeheader()
 
@@ -281,7 +310,17 @@ def main() -> int:
                         use = [ev]
                     else:
                         use = surr[: int(cond.split("_")[1])]
-                    tgts = [gal_emb[b][pos[0]].to(device) for b in use]
+                    if args.objective == "self":
+                        # Gallery-free: the only thing the perturbation is
+                        # steered away from is the frame's own clean
+                        # embedding under each surrogate, so nothing about
+                        # the reference database is required.
+                        with torch.no_grad():
+                            tgts = [normalised_embedding(
+                                embedders[b], frame, sizes[b]).detach()
+                                for b in use]
+                    else:
+                        tgts = [gal_emb[b][pos[0]].to(device) for b in use]
                     with torch.enable_grad():
                         delta = directional_delta(
                             frame, tgts, [embedders[b] for b in use],
@@ -300,6 +339,7 @@ def main() -> int:
                 writer.writerow({
                     "query_id": qid, "condition": cond, "seed": seed,
                     "sanitizer": args.sanitizer,
+                    "objective": args.objective,
                     "correct_rank": rank, "top1_place": top1_place,
                     "correct_place": want, "effective_mse": f"{mse:.6f}",
                     "psnr": f"{10 * torch.log10(torch.tensor(255.0 ** 2 / max(mse, 1e-9))):.4f}",

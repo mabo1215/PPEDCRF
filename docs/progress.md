@@ -990,3 +990,64 @@ held-out 攻防对比(`--eval_checkpoint` 加载微调权重,gallery 仍用 stoc
   --seeds 1234 --output <outdir>/adapted_eval.csv
 ```
 注:`split_queries` 只依赖 `n_test`/`n_val`/`seed`,所以同参数下各次运行的 held-out 划分**完全相同**,stock 基线可跨配置复用(用 `diff` 比对两个 `.test_query_ids.json` 确认后再复用)。
+
+---
+
+## 本轮更新（2026-09-07，TIFS 第三轮独立评审 + 文档校正 + D1/D2/D3 实验启动）
+
+用户要求：先更新 `docs/RevisionSuggestions.tex`、`docs/ExperimentProgress.tex` 的表、
+`docs/progress.md` 和 `USAGE.md`，再按给出的顺序开始修改，需要实验就在 vGPU 3090 上跑。
+
+226. 【已完成】**核对论文与实验记录后发现三个只读代码才能发现的缺口，全部与论文的"正面结论"有关**。
+    这三条不是从论文文字里看出来的，是逐行读 `src/scripts/` 下真正产出数字的脚本发现的，
+    因此上一轮（2026-09-04）评审给出的"accept, conditional on minor revisions"结论不成立。
+    - **R1（最严重）：可迁移方向扰动其实需要"真值参考图"**。`run_direction_transfer_study.py:284`
+      的优化目标是 `gal_emb[b][pos[0]]`——即该 query **真值 place 对应的 gallery 条目**的 embedding。
+      也就是说 surrogate 版虽然不碰攻击者模型，但仍需知道这一帧对应哪张地理参考图，而这正是攻击者
+      想要恢复的信息。论文 `main.tex:797` 写的是 "recovering 67% of the white-box benefit with
+      **no access to the attacker at all**"，全文没有任何一处披露这个前提。审稿人只要读一眼开源代码
+      就会发现，读出来的观感是 overclaim 而不是 omission。
+    - **R2（严重）：自适应对手微调用的是各向同性噪声，不是本文提出的方向扰动**。
+      `finetune_adaptive_attacker.py:242` 确认训练样本是 `torch.randn` + `release_at_mse`。
+      论文 `main.tex:955` 如实写了 "(isotropic, delivered-MSE-matched) output"，但
+      Scope-of-claims 与 Conclusion 由此得出的结论是"anticipates the defense outright … fared
+      no better"——测的分布和声称的防御对不上。8 组超参数扫描本身很扎实，只是扎实在了错误的分布上。
+    - **R3（重要）：方向轴完全没有下游效用证据**。`grep mAP\|mIoU` 确认全文只有 `main.tex:367`
+      的 E4 表（200 COCO + 200 VOC，$\sigma_0=8$），那是**机制自身加性扰动**的效用，属于 allocation 轴。
+      方向扰动的画质证据只有 MSE 19.19 / PSNR 35.3 dB。对抗方向扰动恰恰是 PSNR 与任务效用最容易
+      背离的一类扰动，而本文的立论就是 utility-preserving sanitization。论文既没有测，也没有把这个
+      缺口写成 limitation。
+    - 另外确认的次级问题：R4 页数 14 > 13（硬上限，差约 1/4 页）；R5 预处理表只有 1 seed（全文其他
+      核心表都是 3 seed pooled）、微调对手 held-out 只有 n=100 且 1 seed；R6 §Robustness 披露了
+      "常规预处理几乎恢复全部白盒界"却没有任何防护端回应；R7 摘要里 "six attacker backbones" 与真实
+      数据结果（只有 ResNet18 + MixVPR）连在同一句里，容易被读成真实数据覆盖六个骨干。
+
+227. 【已完成】**`USAGE.md` 的 venue 行从 ICLR 2027 更正为 IEEE TIFS**。
+    规则文件按这一行选择评审标准，而论文实际是 IEEEtran journal 模板、作者块公开（单盲）、13 页上限，
+    不改的话下一轮自动评审会按 ICLR 的要求（双盲、9 页、ICLR 模板）去评一篇 TIFS 稿。同时把
+    TIFS 硬规则（初投 13 页 / 修改稿 16 页 / supplementary 建议 ≤6 页 / 超页费只在发表阶段收、
+    买不到初投第 14 页）和 PoPETs 备选截稿日一并写进该节，避免以后再靠翻 progress.md 第 211 条。
+
+228. 【已完成】**`docs/RevisionSuggestions.tex` 整段重写为第三轮独立 TIFS 评审**（英文 LaTeX）。
+    明确声明不继承上一轮结论，并写清上一轮那份文件自身是自相矛盾的：它第 510 行起是 TIFS 评估，
+    末尾 "Final Assessment" 却还在按 ICME 6 页给"accept with minor revisions"。新文件结构为
+    R1–R9 九条发现（每条带"Finding + Required actions"）、carried-over 条目（B1 建议关闭、B2 已闭合、
+    B3 属于如实披露、F3 仍为部分完成）、按优先级排序的 D1–D5 工作项、Minimum Revision Package
+    和 Final Assessment。总体结论从"accept with minor revisions"改为 **major revision**：
+    负面结论（allocation 无效）已经站得住，卡住论文的是正面结论。
+
+229. 【已完成】**`docs/ExperimentProgress.tex` 按约定重写为"只保留未完成/进行中"**。
+    删掉了全部 ICME（M1–M9）与 TOMM（E1–E7）已完成表格，以及 F1/F2/F4–F12 已完成行；
+    现在是三张表：Table 1（R1–R7 + F3 + B3 的开放项与完成门槛）、Table 2（D1–D5 与压页的实验排期，
+    含完成百分比、新西兰时间预估、每项"意义"说明）、Table 3（T1–T4 纯文字修改项）。
+    最后用一段说明历史完成记录去向（progress.md 第 1–225 条），避免删表等于丢历史。
+
+230. 【进行中】**按 R1 → R3 → R2 → 文字修改 → 压页的顺序开始执行**，GPU 工作放 vGPU 3090。
+    - vGPU 3090 状态核实（2026-09-07 15:0x NZST）：可达，**GPU 已挂载**（RTX 3090，49152 MiB），
+      但**这台是共享机**——连上时已有其他项目占用 22231 MiB / 52% 利用率，因此排期按"部分可用"估算，
+      不按独占估算。`/root/autodl-tmp` 剩余 583G。
+    - 远端仓库原本停在 `73934df` 且 `src/scripts/run_direction_transfer_study.py` 有一份**主机本地未提交改动**。
+      逐行核对确认那份改动就是后来已在本地提交为 `08557a1` 的 `--eval_checkpoint`/`--query_id_file`，
+      属于已被上游取代的重复内容。按"删数据前先确认、优先选可逆做法"的铁律，用 `git stash push`
+      （可逆）而不是 `git checkout --`（不可逆）收起它，再 `reset --hard origin/main` 同步到 `b415fa4`。
+

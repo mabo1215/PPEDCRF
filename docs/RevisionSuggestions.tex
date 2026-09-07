@@ -13,647 +13,354 @@
 \setlength{\parskip}{5pt}
 
 \title{Independent Academic Review and Revision Plan\\
-for IEEE International Conference on Multimedia and Expo (ICME 2027)\\
-\large Second Independent Review: Post-GPU-Session Reassessment}
+for IEEE Transactions on Information Forensics and Security (IEEE TIFS)\\
+\large Third Independent Review: Post-Direction-Pivot Reassessment}
 \author{}
-\date{September 4, 2026}
+\date{7 September 2026}
 
 \begin{document}
 \maketitle
 
 \section*{Review Basis and Scope}
 
-This is a new, independent, venue-driven review of the current repository
-state, conducted directly from \texttt{paper/main.tex},
-\texttt{paper/appendix.tex}, the generated main and appendix PDFs, and the
-implementation and exported evaluation data under \texttt{src/}. It does not
-inherit conclusions from the prior review round (the September 3, 2026
-version of this file, archived in \texttt{docs/progress.md} and
-\texttt{docs/ExperimentProgress.tex}); every finding below was re-checked
-against the manuscript and its cited data as it exists today.
+This review is independent of every previous round. It does not inherit the
+conclusions of the 4 September 2026 version of this file, which was written
+before the manuscript was restructured around the direction axis and before
+the G1 strong-attacker and G2 adaptive-adversary studies existed. The prior
+file's closing recommendation (``accept, conditional on minor revisions'',
+with a six-page ICME limit as the only blocker) is superseded in full: it was
+internally inconsistent with its own TIFS section, and it described a
+manuscript that no longer exists.
 
-The official ICME 2027 paper kit is still not published as of this review, so
-the requirements below are taken from the immediately preceding edition,
-which states them explicitly: English letter-size PDF in the official IEEE
-conference template, ``no longer than 6 pages, including all text, figures,
-and references,'' double-blind review with author identification replaced by
-an anonymous placeholder, embedded fonts, and optional supplementary material
-up to 50\,MB. Unlike the prior round, these are no longer treated as a
-conservative guess: ICME has applied a 6-page limit for many years, so the
-limit should be planned against as real and re-confirmed, not discovered,
-once the 2027 kit appears.
+Everything below was checked directly against the current repository state:
+
+\begin{itemize}
+  \item \texttt{paper/main.tex} and the compiled \texttt{paper/main.pdf}
+  (14 pages, 0 LaTeX errors, 0 undefined references, 0 overfull boxes).
+  \item \texttt{paper/supplementary.tex} and \texttt{paper/supplementary.pdf}
+  (8 pages, same clean build status).
+  \item The implementation actually used to produce the headline numbers,
+  in particular \texttt{run\_direction\_transfer\_study.py},
+  \texttt{finetune\_adaptive\_attacker.py} and
+  \texttt{evaluate\_same\_image\_utility.py}, read line by line rather than
+  taken from their descriptions in the manuscript.
+\end{itemize}
+
+Three of the findings below (R1, R2, R3) come from that last step and could
+not have been found from the manuscript text alone. They are the reason this
+review does not agree with the previous round's assessment.
+
+\paragraph{Venue rules applied.}
+IEEE TIFS, IEEE Signal Processing Society rules: a Regular Paper is limited to
+\textbf{13 double-column pages at initial submission} (all text, figures,
+tables and references included) and 16 pages at revision; Supplementary
+Material is \emph{recommended} to stay within 6 pages, which is guidance
+rather than a hard cap; overlength charges are levied at publication only and
+cannot buy a fourteenth page at submission. Review is single-anonymized:
+reviewers are anonymous, authors are disclosed, so the manuscript's open
+author block is correct and no anonymization work is required.
 
 \section*{Overall Recommendation}
 
-\textbf{Recommendation: Accept, conditional on minor revisions.} The one
-blocking pre-submission action is returning the main body to the 6-page
-limit; all scientific items from the prior rounds are now closed.
-Confidence: high.
+\textbf{Major revision.} The manuscript is scientifically far stronger than in
+previous rounds: the negative result on allocation is now replicated on real
+geo-labelled data against both a weak and a production-grade attacker, the
+mechanistic account is verified against an exactly known Jacobian, and the
+paper reports a positive finding rather than only a null. What blocks it is
+not the negative result but the \emph{positive} one. The direction claim, on
+which the paper's contribution now rests, carries an undisclosed information
+assumption (R1), is defended against an adaptive adversary that was adapted to
+a different perturbation than the one being claimed (R2), and has no
+utility evidence at all in a paper whose stated objective is
+utility-preserving sanitization (R3).
 
-This assessment is a substantial change from the prior round's ``reject in
-current form.'' The manuscript's central mechanistic claim -- that the
-learned support map identifies privacy-relevant pixels beyond what noise
-energy alone would explain -- is no longer asserted; the paper now explicitly
-describes the map as a heuristic, quality-preserving weighting, supported by
-an energy-matched spatial-causality test that finds zero discordant outcomes
-across 2,700 paired queries and six backbones. This reframing, rather than
-being a weakness, is the single most important reason the paper is now
-internally consistent: every remaining claim is scoped to what the evidence
-actually shows.
-
-The evaluation is now genuinely broad. A real, place-labeled benchmark
-(MSLS) validates the black-box retrieval effect across six attacker
-backbones and three official manifests (18 cells, with a place-cluster
-bootstrap correctly identifying which cells are individually significant),
-and a white-box sign-gradient attacker -- previously validated only on the
-synthetic proxy -- now also runs against this same real benchmark, showing
-the fixed-budget mechanism is not robust to an adaptive adversary on real
-geographic data either. The matched-privacy-utility null result (no
-detectable Top-1 difference between PPEDCRF, its four ablations, and global
-Gaussian noise at matched image quality) is no longer a single-backbone
-curiosity: it has been replicated, with the same statistical procedure, on
-five additional backbones, with 89 of 90 total comparisons showing zero
-discordant pairs. Cluster-aware uncertainty (place-cluster or query-cluster
-bootstrap, as appropriate) is now reported everywhere a paired comparison is
-made: the real-place table, the sequence-length/pooling table, and the
-matched-PSNR table.
-
-What remains is now narrow. The main body is 7 pages against a limit that
-this cycle confirmed is a hard 6 pages including references, so it must be
-trimmed before submission --- it was already shown to compress to 6 pages
-without losing evidence, and sits at 7 only because the full related-work
-section was deliberately restored. All three MSLS manifests now cover eight
-cities across six backbones; only the viewpoint/illumination/season/weather
-axes remain uncovered, and season/weather are absent from the source metadata
-entirely. The anonymous one-command reviewer artifact, previously the largest
-open gap, is now built and verified end to end.
-
-\subsection*{Reviewer scorecard}
-
-Internal assessment on a 1--10 scale, not an official ICME 2027 rubric (the
-2027 kit is not yet available).
-
-\begin{itemize}
-  \item Scope fit: 8/10. Multimedia privacy and visual place retrieval remain
-  squarely in scope; the threat model is now stated with more precision.
-  \item Technical correctness: 7/10 (up from 3/10). The central mechanism is
-  correctly and honestly reframed as heuristic rather than validated
-  sensitivity-guided; every remaining quantitative claim is now backed by a
-  completion-gated, checksummed export.
-  \item Novelty: 6/10. The energy-matched spatial-causality test itself is a
-  clean, transferable contribution independent of whether the underlying map
-  is privacy-optimal.
-  \item Significance: 6/10. The empirical, attacker- and condition-dependent
-  trade-off is now precisely bounded rather than overclaimed; the paper is
-  honest that this is a bounded, not universal, privacy benefit.
-  \item Experimental strength: 8/10 (up from 3/10). Real place data, six
-  backbones, white-box and black-box threat models, cluster-aware
-  significance testing throughout, and a formal null result replicated
-  across backbones.
-  \item Clarity: 7/10. The evidence hierarchy (validated mechanism claims vs.
-  proxy-only diagnostics vs. explicitly negative findings) is now clearly
-  separated between main text and appendix.
-  \item Reproducibility: 9/10 (up from 3/10). Checksummed remote exports,
-  real unit tests, a renamed/warned placeholder script, and now an anonymous
-  one-command artifact that recomputes all 53 reported values from the raw
-  exports with zero mismatches.
-  \item Reviewer confidence: 8/10. Based on direct inspection of the compiled
-  PDFs, the LaTeX source, and the underlying per-query CSV exports for the
-  claims checked in this review.
-\end{itemize}
-
-\subsection*{Strengths}
-
-\begin{itemize}
-  \item The paper now states, and demonstrates with a dedicated experiment,
-  that its own learned spatial map is not shown to matter beyond total
-  perturbation energy -- a rare and valuable level of self-scrutiny for a
-  privacy mechanism paper.
-  \item The white-box attacker result is reported identically on both the
-  synthetic proxy and the real MSLS benchmark, with explicit, repeated
-  framing that this is a different threat model from the black-box transfer
-  table, exactly as the original review's Additional Technical Comment 4
-  requested.
-  \item Cluster-aware uncertainty is applied consistently: place clusters for
-  MSLS, query/pair clusters for the paired-scene benchmarks, with the
-  resulting significant/non-significant cell counts reported honestly rather
-  than only as directional summaries.
-  \item Negative and adverse findings remain disclosed and are not
-  softened: the o2n cross-time adverse result, the near-zero KITTI-360
-  attribution agreement, and the matched-PSNR null result are all still
-  present and, if anything, more precisely characterized than before.
-\end{itemize}
-
-\section*{Technical Summary}
-
-PPEDCRF predicts a spatial support map, refines it with a recurrent
-spatio-temporal module (explicitly described as recurrent refinement rather
-than a formally derived mean-field energy), converts it to a non-central
-perturbation weight, and adds indexed per-frame Gaussian noise at a
-Gaussian-inspired calibration index (explicitly disclaimed as not a formal
-$(\varepsilon,\delta)$-DP guarantee).
-
-On the 12-pair paired-scene proxy, PPEDCRF changes ResNet18 Top-1 from 0.833
-to $0.722\pm0.048$ at 36.17\,dB PSNR, versus $0.639\pm0.127$ at 30.20\,dB for
-global Gaussian noise. On the real, place-labeled MSLS benchmark (200
-queries, 1000-image gallery, Manila and Toronto), the primary manifest
-changes Top-1 from 0.170 to 0.152; extended to five further backbones across
-all three official manifests, 14 of 18 cells are protective in point
-estimate, with a place-cluster bootstrap finding 5 individually significant.
-The official cross-time subtasks are condition-dependent: o2n moves from
-0.140 to $0.168\pm0.009$ (adverse), n2o from 0.155 to $0.137\pm0.006$
-(protective). A wider 8-city, 400-query, 2,000-gallery extension of the
-primary manifest confirms the protective direction in all six backbones,
-and the white-box diagnostic collapses Top-1 to $0.000$--$0.055$ across all
-six backbones on both manifest scales.
-
-An energy-matched spatial-causality test (uniform, rolled, and permuted
-same-energy controls against the learned map, 2,700 paired queries, six
-backbones, three gallery sizes) finds zero discordant McNemar outcomes for
-every comparison: retrieval degradation tracks total perturbation energy, not
-which pixels carry it. A white-box sign-gradient attacker (20 steps,
-$\ell_\infty=8$, ResNet18) drives Top-1 to 0.000 on the proxy and to
-$0.000$--$0.010$ on all three real MSLS manifests, at a visual budget close
-to PPEDCRF's own. A matched-PSNR sweep (12 sigma points, three targets) finds
-identical displayed Top-1 across PPEDCRF, its four ablations, and global
-noise for the default ResNet18 attacker, and this null result replicates (89
-of 90 total comparisons with zero discordant pairs) across five further
-backbones and (30 of 30 comparisons) across two further gallery sizes (12,
-100). A genuine matched-PSNR comparison against the deterministic mask-guided
-baselines (kernel/block-size sweep) finds both retain substantially higher
-Top-1 than PPEDCRF at their most permissive swept setting, with one
-exception where blur is instead lower at an essentially matched PSNR. A
-sequence-length/pooling robustness check (clip lengths 1--7,
-four pooling strategies, six backbones, 33,600 rows) finds PPEDCRF's Top-1
-does not systematically erode under a stronger multi-frame attacker, with a
-query-cluster bootstrap now formalizing that description (28 of 96 cells
-significantly favor PPEDCRF over global noise in retained accuracy at equal
-budget; 11 of 96 differ from raw, not uniformly in one direction).
+None of the three requires new data collection, a new dataset, or an external
+system. All three are reachable with the code, manifests and GPU access
+already in the repository.
 
 \section*{Major Findings and Required Revisions}
 
-\paragraph{M1 -- Format verified; page count is a known, deliberate overage}
+\subsection*{R1 --- Critical: the ``no attacker access'' direction result
+silently requires the true reference image}
 
-Format compliance was checked directly rather than assumed. The manuscript
-compiles as a genuine IEEE conference submission
-(\texttt{documentclass[10pt,conference,letterpaper]\{IEEEtran\}}), on
-letter-size pages ($612\times792$\,pt), with \emph{all} fonts embedded and
-Type~1, an author block reading ``Anonymous Submission'' with real author
-metadata commented out, and a 152-word abstract. BibTeX reports zero
-warnings and the build has zero undefined references or citations.
+\textbf{Finding.} The transferable direction is optimised against the
+embedding of the query's \emph{correct} gallery entry. In
+\texttt{run\_direction\_transfer\_study.py}, the optimisation target for both
+the white-box and every surrogate condition is
+\texttt{gal\_emb[b][pos[0]]}, where \texttt{pos[0]} is the first gallery index
+whose place label equals the query's ground-truth place. The manuscript never
+states this. It says instead that three surrogates reach Top-1 $0.0625$
+against $0.1900$ ``with no access to the attacker at all''.
 
-\emph{Venue changed.} The manuscript now targets IEEE TIFS rather than ICME,
-which changes every constraint in this item: review is single-anonymized (so
-the anonymous author block was wrong and real authorship is restored), the
-initial-submission limit is 13 double-column pages \emph{including appendices
-and references}, and supplementary material is capped at 6 pages. The paper
-has been converted to \texttt{IEEEtran journal}, the core appendices merged
-into the body at exactly 13 pages, and the supporting material split into a
-6-page supplement. Both build with zero BibTeX warnings and zero undefined
-references. The ICME discussion below is retained for provenance.
+That sentence is literally true about the attacker's \emph{model} and
+misleading about the attacker's \emph{gallery}. A defender running this
+procedure must already know which geo-tagged reference image the released
+frame matches --- which is precisely the fact the attacker is trying to
+recover. A TIFS reviewer who reads the released code will find this, and it
+will read as an overclaim rather than an omission.
 
-The ICME page limit itself was no longer an open question. The ICME 2027 kit is
-still unpublished, but the immediately preceding edition states the rule
-explicitly: ``Papers must be no longer than 6 pages, including all text,
-figures, and references,'' with double-blind review and up to 50\,MB of
-optional supplementary material. ICME has held a 6-page limit for many
-years, so the previously assumed ``conservative placeholder'' should now be
-treated as the near-certain real limit, and a main body over 6 pages as a
-genuine desk-reject risk rather than a provisional overage.
-
-The main body was compressed to exactly 6 pages in this cycle by removing
-duplicated prose (the conclusion restated results already given in the
-evaluation section, and several protocol paragraphs duplicated appendix
-material), with no experimental evidence dropped. The authors then elected to
-restore the full seven-cluster related-work section --- previously commented
-out, leaving the compiled paper with only 11 references and an 84-word
-related-work subsection --- which returns the main body to 7 pages with all 43
-references. \emph{This is a deliberate, informed trade-off}: related-work
-depth and citation coverage were judged more valuable than the seventh page,
-on the understanding that the paper must be cut back to 6 pages before actual
-submission. Required action before submitting: reduce the main body to 6
-pages, most cheaply by re-compressing the related-work section (its citations
-can be retained while its prose is shortened) rather than by removing
-evidence.
-
-\paragraph{M2 -- Resolved: the map is honestly scoped, not validated as
-sensitivity-optimal}
-
-The prior review's central objection -- that the unary checkpoint is
-near-constant and the KITTI-360 diagnostic shows negative attribution
-agreement, undermining any sensitivity-guided framing -- is fully accepted by
-the current manuscript rather than argued against. The paper states this
-directly (near-constant checkpoint, negative E5 attribution) and does not
-claim sensitivity-map accuracy anywhere. The energy-matched spatial-causality
-test is the correct complementary experiment: it does not attempt to
-rehabilitate the map's accuracy, but instead asks the separable question of
-whether spatial placement matters at all versus noise energy alone, and
-reports a clean negative answer (zero discordant pairs across every
-same-energy control). Combined, these two results support exactly the
-language the paper now uses -- ``heuristic, quality-preserving weighting,''
-not ``privacy-optimal placement.''
-
-\emph{Superseded by a later finding.} The energy-matched null this verdict
-rested on has since been shown to be largely an artifact: the released
-checkpoint's map is numerically constant (unary range $[0.4991,0.5015]$,
-spatial CV $6\times10^{-4}$, support coverage $1.000$), so redistributing it
-uniformly, cyclically or by permutation are all near-no-ops. The paper now
-says so explicitly and rebuilds the placement claim on eight independently
-constructed placements over two checkpoints, an attacker-gradient oracle, and
-a budget sweep. The map-recalibration follow-up suggested here was in effect
-performed, by evaluating a second mask-supervised checkpoint whose map is
-genuinely selective: it does not beat uniform either, and is significantly
-worse on one backbone.
-
-\paragraph{M3 -- Substantially resolved; one disclosed data limitation
-remains}
-
-The primary evaluation is now a genuine place-labeled benchmark (official
-MSLS \texttt{unique\_cluster} place ids, not mined visual similarity),
-covering six backbones (including three dedicated VPR architectures) across
-three official manifests, with exact filtering, split, query, gallery, and
-place-cluster counts reported, and a place-cluster bootstrap correctly
-identifying that only 5 of 18 backbone--manifest cells are individually
-significant despite 14 showing the protective point-estimate direction. Both
-black-box transfer and a separate white-box adaptive-attacker setting are
-now evaluated on this same real data, clearly labeled as distinct threat
-models per the prior review's own instruction. The synthetic proxies are
-retained only as supplementary stress tests. O2N is analyzed and reported as
-adverse rather than hidden.
-
-The city-coverage item is now closed. All three manifests were rebuilt at
-8-city scale (400 queries, 2,000-image gallery, drawn from raw MSLS archives
-already on disk -- no further download was in fact needed, correcting an
-earlier assumption in this review) and evaluated against all six attacker
-backbones, plus the white-box diagnostic on each. The primary manifest is
-protective in all six backbones; across the 12 cross-time cells, 9 are
-protective, one is exactly tied, and 2 are adverse.
-
-That wider sample also \emph{revises} an earlier conclusion, which is the
-scientifically important part. At two cities the four adverse cells fell
-mostly on \texttt{n2o} and were spread across ResNet50, VGG16, and
-Patch-NetVLAD, supporting a ``cross-time direction-dependence'' reading. At
-8-city scale those three backbones are clearly protective on both directions,
-and the only adverse cells are ResNet18 on \emph{both} directions. The
-honest reading is that the earlier direction-dependence was partly
-small-sample structure, and that adverse behavior tracks the weakest attacker
-backbone instead. The manuscript now reports both and does not overclaim the
-cross-time effect as uniformly protective, since the paper's own default
-attacker remains adverse there.
-
-What remains genuinely open is only the
-viewpoint/illumination/season/weather axes, which are unchanged: queries are
-still overwhelmingly day/Forward-view, and season and weather are absent from
-the MSLS metadata itself (confirmed dataset-wide, so they cannot be expanded
-into from this source at all). This is a correctly disclosed source-data
-limitation rather than an unaddressed validity gap.
-
-\paragraph{M4 -- Resolved: frame-level claim matches the evaluated threat
-model}
-
-The paper is reframed as frame-level release-side sanitization, with
-temporal processing described as an optional consistency prior rather than a
-claimed sequence-level privacy guarantee. The previously misdescribed
-``wiener'' noise mode is confirmed, by direct code inspection, to already be
-a deprecated alias for the actual indexed-Gaussian process, matching what the
-paper states. A real sequence-level attacker (clip lengths 1--7, four pooling
-strategies including a best-frame oracle, six backbones) was run and shows no
-systematic erosion of the frame-level effect, with flicker and
-perturbation-stability metrics quantifying the temporal-consistency
-contribution. A query-cluster bootstrap, added in this review cycle, now
-formalizes rather than only qualitatively describes that ``no systematic
-deviation'' claim. No further action required for M4.
-
-\paragraph{M5 -- Resolved: matched-quality null result replicated across all
-backbones}
-
-The prior review's key demand -- tune to a common PSNR/MSE target on
-identical pairs and seeds, rather than comparing native operating points --
-is met, and the resulting null result (no detectable Top-1 difference
-between PPEDCRF, its ablations, and global Gaussian noise at matched
-quality) is now confirmed, with the identical statistical procedure, across
-all six attacker backbones used elsewhere in the paper (89 of 90 total
-comparisons with zero discordant pairs; the one exception is a single
-discordant pair, still far from significance). Perturbation energy,
-affected-pixel fraction, effective standard-deviation quantiles, and
-clipping rate are all reported (Appendix, Spatial-Causality Validation
-section). Figure captions distinguish the visualization setting
-($\sigma_0=24$) from the headline operating point ($\sigma_0=8$). Trade-off
-language, not superiority language, is used throughout.
-
-Both remaining items from the original M5 request are now addressed. The
-matched-quality comparison has been extended from one gallery size (48) to
-three (12, 48, 100); all 30 additional paired comparisons against
-\texttt{global\_noise} again show zero discordant pairs, so the null result
-is not an artifact of one gallery size. The deterministic mask-guided
-baselines, previously reported only at a single native (unmatched) operating
-point, now have a genuine matched-PSNR comparison via a kernel/block-size
-sweep, extended in this cycle to finer settings (kernel 3; blocks 2 and 3) so
-that the higher targets are actually reachable. Mosaic now matches closely at
-every target (block 3 gives 32.34\,dB against the 33\,dB target, block 2
-gives 36.64\,dB against 36\,dB), and the blur kernel, being a discrete odd
-integer, \emph{brackets} the 36\,dB target from both sides (kernel 5 at
-34.40\,dB, kernel 3 at 37.95\,dB) rather than matching it -- a structural
-granularity limit of the parameter, not an unmet experiment.
-
-The resulting comparison is reported with its actual direction rather than
-smoothed into a single ordering. At the paper's headline high-fidelity
-operating point (36\,dB) \texttt{full} is the most protective of the three
-(Top-1 0.722, versus 0.833 for closely matched mosaic and 0.833--0.917 for
-blur on either side). At lower fidelity the ordering reverses, with both
-baselines reaching Top-1 0.583 near 30--32\,dB against \texttt{full}'s
-0.639--0.667. The consistent reading is that the deterministic baselines buy
-privacy by destroying image quality, and are clearly \emph{less} protective
-than \texttt{full} at matched high quality. This closes the residual noted in
-the previous cycle.
-
-\paragraph{M6 -- Resolved: DP-style language is consistent}
-
-A direct grep-level check across the abstract, method, related work, and
-appendix in this review cycle finds consistent use of ``Gaussian-inspired
-calibration index'' language, with no residual claim of a formal
-$(\varepsilon,\delta)$-DP guarantee for the release mechanism. The
-calibration constant's worked numerical example was previously corrected
-(the earlier arithmetic error is not present in the current text). No further
-action required.
-
-\paragraph{M7 -- Resolved: cluster-aware inference is now used consistently}
-
-Every paired comparison in the paper now uses the correct independent unit.
-The energy-matched spatial-causality test is exact and trivially
-cluster-robust (zero discordant pairs admits no sampling variance regardless
-of clustering scheme). The real-place MSLS table uses a place-cluster
-bootstrap (2,000 resamples over official \texttt{unique\_cluster} ids). The
-matched-PSNR comparison uses a query-cluster bootstrap plus exact McNemar,
-with the sample size's limited power stated explicitly (six discordant pairs
-needed for significance at $n=36$) rather than glossed over. The
-sequence-length/pooling table, the one location still using only a
-qualitative description as of the prior review round, now has the matching
-query-cluster bootstrap added in this cycle. No further action required.
-
-\paragraph{M8 -- Substantially resolved; a packaged artifact remains a
-scope decision}
-
-The two concrete reproducibility traps the original review named by file are
-both fixed: the random-placeholder evaluation entry point is renamed from
-\texttt{run\_eval.py} to \texttt{demo\_pipeline\_smoke.py} with its
-\texttt{DummySensitiveRegionNet} renamed to \texttt{RandomUntrainedUnaryNet}
-and an unmistakable warning docstring, and the previously vacuous smoke test
-(\texttt{assert True}) is replaced with six real tests covering DCRF
-shape/range, temporal-state reset, NCP allocation, noise-injector clipping,
-deterministic seeding, and zero-mask no-op behavior. Remote GPU runs in this
-review cycle produced SHA-256-checksummed exports, verified bit-identical
-after pulling results back locally, with the producing commit recorded.
-
-The larger deliverable the original review described -- an anonymous,
-one-command artifact with manifests, pinned dependencies, and a
-raw-output-to-table verifier -- has now been assembled. The bundle runs
-CPU-only with no GPU, network, dataset, or checkpoint: it verifies 332
-released exports against a SHA-256 manifest, then recomputes 53 reported
-values (Top-1 for all six backbones on the 8-city primary manifest and both
-8-city cross-time subtasks, white-box attacker-aware Top-1 on all three,
-achieved PSNR and Top-1 at every swept blur/mosaic point, and the
-zero-discordant-pair significance claims at gallery sizes 12 and 100)
-directly from the raw per-query CSVs, printing per-claim pass/fail. On the
-current exports all 53 claims reproduce with zero mismatches, which
-establishes that the paper's tables were derived from the data rather than
-transcribed. Dependencies are pinned to the exact versions of the machine
-that produced the runs, all internal paths are relative, and the bundle was
-scrubbed of absolute host paths (36 metadata files contained an absolute
-remote path whose directory name would also have disclosed the manuscript's
-earlier submission history). At 23\,MB it fits the 50\,MB supplementary
-allowance with room to spare.
-
-What remains is only the hosting decision -- whether the bundle travels as
-supplementary material or as an anonymized repository link -- which depends
-on the 2027 submission site and is properly the authors' call, not a
-technical gap.
-
-\paragraph{M9 -- Adequately organized for the current page budget}
-
-The main body now carries only the threat model, the validated
-spatial-causality evidence, the primary real benchmark, the matched and
-cluster-aware evidence, and limitations; legacy tables, full transfer
-matrices, provenance logs, and diagnostic notes are in the appendix. Plus/minus
-values are consistently documented as seed standard deviations where
-applicable, with a caption-level note distinguishing deterministic
-(exact) from stochastic (mean$\pm$std) rows. The O2N adverse case and the
-negative KITTI-360 diagnostic remain featured in the main narrative rather
-than pushed to a footnote. A final visual/formatting pass against the actual
-2027 template remains open only because that template does not exist yet.
-
-\section*{Additional Technical Comments}
-
+\textbf{Required actions.}
 \begin{enumerate}
-  \item The DCRF update is consistently called a recurrent refinement module
-  rather than mean-field-inspired without derivation, matching the prior
-  review's requested fix.
-  \item Tensor dimensions, mask resolution, normalization range, noise units,
-  and clipping order are documented; a runtime performance note
-  ($<$50\,ms on RTX 3090 at 192$\times$320) is present after Algorithm 1.
-  \item NCP support area, effective noise quantiles ($1.54\%\pm0.92\%$
-  clipping fraction), and effective-weight energy statistics are now reported
-  in the appendix, closing a gap the prior review round had left as data
-  collected but not written up.
-  \item The white-box sign-gradient experiment is labeled a separate threat
-  model in every location it appears (proxy and, now, real MSLS) and is not
-  compared directly with black-box results, exactly as requested.
-  \item Recent VPR, retrieval-aware sanitization, and privacy--utility
-  literature remains cited (42 references, seven topic clusters per the
-  related-work section); this review did not find an obvious missing
-  category, though a literature review was not this cycle's focus and a
-  fresh check nearer submission is reasonable due diligence.
-  \item BibTeX metadata is clean: both \texttt{main.blg} and
-  \texttt{appendix.blg} report zero warnings in this review cycle's build.
-  \item No TOMM references remain in the compiled text, comments, output
-  directories, or captions (checked by direct grep in this review cycle).
-  \item Limitations on domain shift, multiple-frame access, attacker
-  adaptation, place-label dependence (Manila/Toronto only), absence of formal
-  DP, and the negative map-validation diagnostic are all present in the
-  conclusion/limitations paragraph.
+  \item \textbf{Experiment (D1).} Re-run the direction-transfer protocol with
+  a \emph{gallery-free} objective that uses only the released frame --- for
+  example, maximising the distance between the perturbed frame's embedding and
+  its own clean embedding under the surrogate ensemble. Evaluate against both
+  ResNet18 and MixVPR at the same delivered MSE, three seeds, so the new
+  numbers are directly comparable with Table~2 of the manuscript.
+  \item \textbf{If it transfers:} promote the gallery-free variant to the
+  paper's deployable claim and demote the positive-targeted variant to an
+  upper bound alongside white-box. This strengthens the paper materially: the
+  central positive result becomes genuinely deployable rather than
+  conditionally deployable.
+  \item \textbf{If it does not transfer:} keep the current result but restate
+  the threat model explicitly, in the Scope-of-claims paragraph, in
+  \S\,``The Other Axis'', in the Table~2 caption and in the Conclusion. The
+  honest framing is available and defensible --- a fixed installation knows
+  its own site and can hold its own reference view --- but it must be
+  \emph{stated}, and the gallery-free negative result must be reported
+  alongside it.
+  \item \textbf{Either way:} the phrase ``with no access to the attacker at
+  all'' must be replaced by a statement that names what the defender does and
+  does not need.
 \end{enumerate}
 
-\section*{Minimum Revision Package -- Status}
+\subsection*{R2 --- Critical: the adaptive adversary was adapted to the wrong
+perturbation}
 
+\textbf{Finding.} \S\,``A First Attempt at a Genuinely Adaptive Attacker''
+concludes that an attacker which anticipates the defense gains nothing. The
+training data behind that conclusion is isotropic noise:
+\texttt{finetune\_adaptive\_attacker.py} builds every training and validation
+sample with \texttt{torch.randn} passed through \texttt{release\_at\_mse}, and
+the manuscript correctly describes them as ``isotropic,
+delivered-MSE-matched'' outputs.
+
+The mismatch is between what was measured and what is claimed. The defense the
+paper proposes is the \emph{direction} perturbation; an adversary that
+anticipates \emph{that} defense would fine-tune on direction-perturbed frames.
+Training on isotropic noise and then evaluating against the direction attack
+measures robustness to a noise-adapted attacker, which is not the threat the
+section is answering. The eight-configuration sweep and the MixVPR replication
+are thorough, but they are thorough about the wrong distribution.
+
+\textbf{Required actions.}
 \begin{enumerate}
-  \item Double-blind, two-column IEEE conference PDF: \textbf{done}, pending
-  final verification once the real 2027 template is published.
-  \item Title, abstract, and threat model honestly identifying frame-level
-  release and attacker access: \textbf{done}.
-  \item Either held-out map validation or a complete heuristic reframe:
-  \textbf{done} (heuristic reframe, supported by the energy-matched
-  causality test).
-  \item Primary public place-labeled evaluation across multiple attackers
-  with cluster-aware uncertainty: \textbf{done}; all three manifests now span
-  eight cities across all six backbones, leaving only the
-  viewpoint/illumination/season/weather axes as a disclosed source-data
-  limitation.
-  \item Matched-quality privacy--utility curves with realized perturbation
-  statistics: \textbf{done}, across all six backbones and three gallery
-  sizes, including a genuine matched-PSNR comparison against the
-  deterministic baselines over a sweep fine enough to reach the higher
-  targets.
-  \item Correct location-level inference and explicit seed/data-uncertainty
-  separation: \textbf{done} everywhere a paired comparison is reported.
-  \item Anonymous one-command artifact with manifests, hashes, pinned
-  environments: \textbf{done} -- a 23\,MB CPU-only bundle verifies 332 exports
-  against a SHA-256 manifest and recomputes 53 reported values from the raw
-  per-query CSVs (all reproduce, zero mismatches); only the hosting channel
-  remains an authors' decision.
-  \item Concise failure-analysis section centered on the negative map
-  diagnostic, adverse MSLS O2N result, and matched-PSNR null result:
-  \textbf{done}, and now includes the additional confirmations from this
-  review cycle (white-box on real data, matched-PSNR replication,
-  sequence-length cluster bootstrap).
+  \item \textbf{Experiment (D2).} Repeat the fine-tuning study with training
+  samples generated by the surrogate-ensemble direction perturbation (and,
+  where affordable, by the white-box perturbation as a strictly stronger
+  adversary), reusing the existing split protocol, hard-negative mining,
+  early-stopping rule and evaluation script unchanged so the comparison is
+  clean.
+  \item Report the direction-trained adversary in the same table as the
+  existing isotropic-trained one rather than replacing it: the contrast
+  between the two is itself informative about what the attacker can learn from
+  which exposure.
+  \item Until D2 exists, narrow the claim in the Scope-of-claims paragraph and
+  the Conclusion from ``an attacker that anticipates the defense outright
+  \ldots\ fared no better'' to what was actually tested.
 \end{enumerate}
 
-\section*{TIFS Readiness Assessment (4 September 2026)}
+\subsection*{R3 --- Major: the direction axis has no downstream-utility
+evidence}
 
-This section supersedes the ICME-oriented judgements above. The target venue
-is now IEEE TIFS, the manuscript has been reframed around the energy-matched
-protocol, and the evidence base changed substantially. The assessment below is
-deliberately unflattering: it is an estimate of what TIFS reviewers would do
-with the manuscript as it stands today.
+\textbf{Finding.} The paper's problem statement is utility-preserving
+sanitization, and its only utility evidence --- Table~1, mAP@50 and mIoU over
+200 COCO detection and 200 VOC segmentation images with frozen Faster R-CNN
+and DeepLabV3 --- is measured at $\sigma_0=8$ on the mechanism's own additive
+perturbation. That is the allocation axis. For the direction axis, which is
+the paper's positive contribution, the sole quality evidence is a distortion
+figure: $19.19$ MSE, $35.3$\,dB PSNR.
 
-\subsection*{Estimated outcome}
+PSNR is not utility, and adversarially-directed perturbations are exactly the
+family for which the two diverge: a perturbation optimised to move an
+embedding can damage a detector or segmenter far more than isotropic noise of
+identical energy. A reviewer will ask whether the paper's recommendation ---
+design for direction, not distribution --- costs the downstream task the
+mechanism exists to preserve. The manuscript currently cannot answer, and does
+not flag the gap.
 
-\textbf{Major revision at best; rejection is the more likely first-round
-outcome.} This is \emph{not} a weak-accept. The reason is a single structural
-mismatch: the paper's claims are about a \emph{class} of spatially selective
-privacy mechanisms, while its evidence comes entirely from mechanisms and
-placement rules the authors constructed themselves, evaluated on a mined
-proxy benchmark.
+\textbf{Required actions.}
+\begin{enumerate}
+  \item \textbf{Experiment (D3).} Run the existing same-image utility audit
+  (\texttt{evaluate\_same\_image\_utility.py}, frozen DeepLabV3-ResNet50 and
+  Faster R-CNN ResNet50-FPN, the co-audited 200+200 manifest) on frames
+  carrying the surrogate-ensemble direction perturbation at the operating
+  point's delivered MSE, with the isotropic control at the same delivered MSE
+  as the paired comparison, and add both rows to Table~1.
+  \item Whatever the outcome, state it. A result showing direction preserves
+  utility comparably to isotropic noise closes the paper's last evidential
+  gap; a result showing it does not is a real limitation that belongs in the
+  Scope-of-claims paragraph rather than in a reviewer's report.
+  \item Independently of D3, the Table~1 caption and the protocol paragraph
+  must say explicitly that the reported utility covers the allocation axis
+  only.
+\end{enumerate}
 
-\subsection*{Blocking issues}
+\subsection*{R4 --- Blocking (submission compliance): 14 pages against a
+13-page hard limit}
 
-\paragraph{Status update (2026-09-05): B1 partially closed, B2 closed, B3 open.}
-B2 is closed: the placement null now replicates on the real place-labelled
-MSLS benchmark (400 queries, 2,000-image gallery, 277 official place ids,
-1,200 paired observations per comparison), with every difference from uniform
-inside $\pm0.01$ Top-1 and the sensitivity statistics reproducing almost
-item-for-item.
+\textbf{Finding.} \texttt{main.pdf} is 14 pages. The final page carries
+approximately 1{,}188 characters of reference-list overflow and its content
+ends at $y=236$ of $792$ points, so roughly one quarter of a page must be
+recovered. Every lossless lever recorded in previous rounds is spent: the
+main-body appendices were moved wholesale into the Supplementary Material,
+duplicated protocol prose was deleted, the deterministic-baseline subsection
+was folded, and repeated figures in the Conclusion were turned into
+back-references. Cutting the reference list is not an acceptable option: the
+related-work section was expanded from 17 to 42 references in a previous round
+in direct response to a review comment.
 
-B1 is partially closed. Three placement rules driven by published pretrained
-models -- DeepLabV3-ResNet50, FCN-ResNet50 and SegFormer-B0/ADE20K, spanning
-two different label taxonomies whose maps correlate only 0.55--0.75 -- all
-give the same null. A literature search for a published spatially selective
-location-privacy mechanism that both emits per-pixel placement weights and
-released code found none, and the paper now reports that as a finding. What
-remains unavailable is a re-run of a specific published system, so B1 is
-mitigated rather than closed.
-
-Two items from ``Required work'' are now done. Item~1 (real MSLS) is complete.
-Item~3 (formalise the mechanistic account) is complete and went further than
-asked: besides the first-order derivation, a controlled retrieval task with an
-exactly known Jacobian verifies the displacement identity to within 4\%, shows
-the oracle advantage it predicts is real, and then removes that advantage by
-switching on a bounded output range and realistic task difficulty while ruling
-out linearisation error. The controlled model does \emph{not} reproduce the
-null quantitatively -- matched to the benchmark's observed accuracy drop it
-still predicts about $-0.15$ against a measured $-0.0008$ -- and that gap is
-reported in the paper rather than tuned away. Item~4 (rebalance the
-manuscript) is done: the method section was compressed to match its role as a
-testbed, bringing the paper back to the 13-page limit.
-
-B3 is untouched.
-
-\paragraph{B1 -- No published mechanism is ever tested.}
-Of the eight placements evaluated, saliency, edge, centre-bias and fixed-random
-are \emph{proxies we constructed}, not systems from the literature; the learned
-map is our own, and the released checkpoint of it is degenerate. A reviewer
-will reasonably ask which published spatially selective privacy method was
-actually run through the protocol, and at present the answer is none. This is
-the single most damaging gap, because the generality claim rests on it.
-
-\paragraph{B2 -- The placement evidence is on a synthetic proxy, not real
-geographic data.}
-Verified directly against the exports: the placement study's per-query records
-carry no \texttt{place\_id}, \texttt{city}, or \texttt{subtask} field. Every
-placement result -- including the headline null, the oracle result, and the
-high-budget reversal -- comes from the mined paired-scene corpus with
-synthetic \texttt{loc\_xxx} identifiers. The real place-labeled MSLS benchmark
-is used only for the black-box and white-box transfer results, which are now
-supplementary. The obvious reviewer question, whether the placement null
-survives on real geo-labeled data, is currently unanswerable from our data.
-
-\paragraph{B3 -- Neither checkpoint is a well-designed selective privacy
-mechanism.}
-The released checkpoint's map is constant, which the paper now discloses. The
-mask-supervised checkpoint is genuinely non-uniform, but it was trained on
-KITTI-360 structural masks for the E5 attribution diagnostic, not designed as
-a privacy-sensitivity predictor. A reviewer may therefore characterise the
-whole testbed as a strawman, and the negative result as uninformative about
-mechanisms that were actually engineered for this purpose.
-
-\subsection*{Secondary weaknesses}
+\textbf{Required action.} Move
+\S\,``Controlled Paired-Scene Retrieval Benchmark'' and its module-ablation
+table into the Supplementary Material, leaving a three-sentence pointer in the
+main body. This is the safest remaining cut and it is larger than the gap:
 
 \begin{itemize}
-  \item The direction-versus-location account is qualitative. No linearisation
-  argument, bound, or controlled synthetic check with a known Jacobian is
-  given, so it reads as an interpretation rather than a result.
-  \item Sample sizes remain small (36--150 paired observations per comparison).
-  \item Scope is one task, one modality, and one attacker family (cosine
-  similarity over fixed embeddings).
-  \item The manuscript is structurally unbalanced: the method section still
-  occupies space proportionate to a proposed mechanism, when the mechanism's
-  role is now to be falsified.
+  \item The manuscript already designates this benchmark as secondary
+  evidence --- the protocol paragraph states that the real place-labelled
+  MSLS benchmark ``is the primary evidence throughout''.
+  \item The table's finding (the four module ablations are indistinguishable
+  from each other and from global noise) is already reproduced, in a stronger
+  form, by the multi-backbone matched-PSNR analysis in the Supplementary
+  Material.
+  \item The Supplementary Material's 6-page figure is a recommendation, not a
+  cap, so the material has somewhere to go.
 \end{itemize}
 
-\subsection*{Required work, in priority order}
+Sequence this cut \emph{after} D1--D3, since new results will consume space
+and compressing first wastes the work.
+
+\subsection*{R5 --- Moderate: two headline tables are under-seeded relative to
+the rest of the paper}
+
+\textbf{Finding.} The non-adaptive-preprocessing table is 400 queries at
+\textbf{one} seed per cell, while every other core table in the paper is
+pooled over three seeds. The fine-tuned-adversary table rests on
+\textbf{$n=100$} held-out queries at one seed, and its central claim is an
+exact zero-discordant-pair result --- a claim whose credibility depends
+directly on sample size.
+
+\textbf{Required action (D4).} Extend the preprocessing sweep to three seeds
+and enlarge the fine-tuning evaluation split beyond 100 queries (or pool over
+seeds), then restate both tables. Both runs are cheap and neither needs new
+data.
+
+\subsection*{R6 --- Moderate: a disclosed vulnerability with no defense-side
+response}
+
+\textbf{Finding.} \S\,``Robustness to Non-Adaptive Preprocessing'' honestly
+reports that routine JPEG recompression, blurring or denoising recovers most
+of the white-box bound (MixVPR white-box Top-1 rises from $0.0500$ to
+$0.4700$--$0.5800$), and that for one weak-attacker cell the transfer
+advantage becomes statistically indistinguishable from the isotropic control.
+The paper stops there. A defense paper that identifies a cheap, non-adversarial
+countermeasure to its own proposal and does not attempt a response invites the
+reviewer to conclude the proposal is not viable.
+
+\textbf{Required action (D5, optional but now higher-priority than previously
+judged).} Optimise the direction with an expectation over the same
+transformations (EOT over JPEG-75/50, Gaussian blur, denoising) and report
+whether preprocessing robustness is restored. If it is, the section turns from
+a disclosed weakness into a problem-and-response pair. If it is not, that is a
+publishable negative result about the axis and should be stated as one. This
+was previously logged as optional hardening; the published preprocessing
+result is what raises it.
+
+\subsection*{R7 --- Minor: the abstract's backbone coverage reads wider than
+the real-data evidence}
+
+\textbf{Finding.} The abstract lists ``six attacker backbones'' inside the
+same sentence as the real-benchmark placement result. The six backbones come
+from the synthetic proxy and transfer studies; the real place-labelled results
+use ResNet18 and MixVPR. The body separates these correctly, the abstract's
+compression does not.
+
+\textbf{Required action.} Rephrase so the six-backbone coverage is attributed
+to the studies that carry it.
+
+\subsection*{R8 --- Minor: utility table scope}
+
+Covered as the third item of R3: Table~1 must be scoped to the allocation axis
+in its caption and in the protocol text.
+
+\subsection*{R9 --- Editorial/process: stale venue configuration}
+
+\textbf{Finding.} The venue line in \texttt{USAGE.md} named ICLR 2027 while
+the manuscript is in IEEEtran journal format with a disclosed author block and
+a 13-page target. Since the repository rules read that line to choose review
+standards, an automated cycle would have reviewed a TIFS submission against
+ICLR's requirements.
+
+\textbf{Status.} Corrected on 7 September 2026: the line now names IEEE TIFS
+and records the page, supplementary and single-anonymized rules, with PoPETs
+retained as the documented fallback.
+
+\section*{Carried-Over Items From Previous Rounds}
+
+These were open at the last review and are re-assessed here rather than
+re-opened.
+
+\begin{itemize}
+  \item \textbf{B1 --- no published selective mechanism is run through the
+  protocol.} Now adequately mitigated. Three placement rules driven by
+  published segmentation models spanning two label taxonomies give the same
+  null, and the manuscript reports, as a finding, that a literature search
+  found no published spatially selective location-privacy method that both
+  emits per-pixel placement weights and released code. Recommend closing;
+  further effort here has poor return relative to R1--R3.
+  \item \textbf{B2 --- placement evidence on a synthetic proxy.} Closed. The
+  null replicates on the real place-labelled benchmark with 1{,}200 paired
+  observations per comparison, and now also against MixVPR.
+  \item \textbf{B3 --- neither checkpoint is a well-designed selective
+  mechanism.} Disclosed rather than closed, which is the correct disposition:
+  the released map's constancy is reported as a finding of the protocol, and
+  the mask-supervised checkpoint's provenance is stated.
+  \item \textbf{F3 --- provenance checksums for paper-facing exports.}
+  Still partial; \texttt{docs/experiment\_provenance.md} covers the reachable
+  export trees only. Non-blocking.
+\end{itemize}
+
+\section*{Required Work, in Priority Order}
 
 \begin{enumerate}
-  \item \textbf{Run the placement protocol on the real MSLS benchmark.} Closes
-  B2. The manifests, imagery, and checkpoints already exist; the study script
-  needs a geotagged data path alongside its current proxy path. Cheap relative
-  to its value.
-  \item \textbf{Put at least one published selective mechanism through the
-  protocol.} Closes B1 and is what actually determines TIFS viability. Requires
-  obtaining or reimplementing an external method, so it is the largest item.
-  \item \textbf{Formalise the mechanistic account.} A first-order argument plus
-  a synthetic experiment with a known Jacobian would convert an interpretation
-  into a result. No GPU required.
-  \item \textbf{Rebalance the manuscript} so the method section is proportionate
-  to its role as a testbed.
+  \item \textbf{D1 --- gallery-free direction objective} (R1). Closes the
+  paper's largest overclaim risk and, if it succeeds, upgrades the central
+  contribution from conditional to deployable. Local or single-GPU;
+  reuses the existing pipeline.
+  \item \textbf{D3 --- downstream utility of the direction perturbation}
+  (R3). Supplies the evidence the paper's own problem statement demands.
+  Reuses the existing utility audit.
+  \item \textbf{D2 --- adaptive adversary trained on the defended output}
+  (R2). Makes the adaptive-adversary section answer the question it poses.
+  \item \textbf{Manuscript revisions} (R1--R3, R7, R8): threat-model
+  disclosure, utility scoping, adaptive-adversary restatement, abstract
+  phrasing.
+  \item \textbf{D4 --- seed and sample-size strengthening} (R5).
+  \item \textbf{R4 --- compression to 13 pages}, performed last, once the new
+  results are in.
+  \item \textbf{D5 --- EOT hardening} (R6), optional; report either outcome.
 \end{enumerate}
 
-Items 1 and 3 are within reach and would move the paper from the rejection
-boundary into credible major-revision territory. Item 2 is what would make it
-competitive for acceptance. If item 2 is judged not worth the effort, the
-honest conclusion is that this work fits PoPETs better than TIFS: that venue
-accepts ``we propose a test and demonstrate it on our own system'' without
-requiring coverage of the published literature, and the three PoPETs-mandatory
-sections are already drafted.
+\section*{Minimum Revision Package}
+
+A submission-ready manuscript requires, at minimum: D1 executed and its
+outcome reflected in the threat model wherever the direction claim appears;
+D3 executed and reported, or the utility gap explicitly disclosed as a
+limitation; D2 executed, or the adaptive-adversary claim narrowed to the
+isotropic exposure actually tested; and the main body at 13 pages. D4 and D5
+strengthen the paper but do not block it.
 
 \section*{Final Assessment}
 
-The paper has moved from a manuscript whose central mechanistic claim was
-unsupported to one whose central claim (heuristic, energy-driven, bounded
-privacy benefit) is now the claim the evidence actually supports. Every
-scientific finding from the prior rounds has been resolved with new
-completion-gated evidence or converted into an honestly disclosed
-limitation. In this cycle the three remaining substantive items all closed:
-the MSLS city-coverage gap (all three manifests now at eight cities across
-six backbones, with the earlier cross-time direction-dependence reading
-correctly revised in light of the wider sample), the deterministic-baseline
-matched-PSNR comparison (sweep extended until the higher targets are
-reachable, with the blur bracketing explained as parameter granularity), and
-the anonymous reproducibility artifact (built, anonymity-scrubbed, and
-verified to recompute all 53 reported values from raw exports).
-
-One item is now \emph{more} pressing than the previous round judged it.
-Page length is no longer a provisional concern: the preceding ICME edition
-states a hard 6-page limit including references, so the current 7-page main
-body is a genuine desk-reject risk. The body was demonstrably compressible to
-6 pages without losing evidence; it sits at 7 only because the authors
-deliberately restored the full related-work section, and it must be cut back
-before submission.
-
-The recommended decision is therefore \textbf{accept, conditional on minor
-revisions}, with the single blocking pre-submission action being the return
-to 6 pages (most cheaply by re-compressing related-work prose while keeping
-its citations). Remaining non-blocking items are the
-viewpoint/illumination/season/weather coverage that the MSLS source data
-cannot supply, and the choice of hosting channel for the artifact bundle. No
-further GPU-scale experiment is required.
+The negative result is settled and well evidenced; the positive result is not
+yet. Every remaining blocker is a property of the direction claim --- what the
+defender must know to produce it (R1), what an adversary who anticipates it
+can do (R2), and what it costs the task the frame is released for (R3) --- and
+each is answerable with the infrastructure already in the repository. Closing
+R1--R3 converts the paper's contribution from ``we located the leverage'' into
+``we located the leverage, and here is what it requires, resists and costs'',
+which is the version that survives TIFS review. Sequencing matters only in one
+respect: page compression is last, because it is the only item whose work is
+undone by the others.
 
 \end{document}
