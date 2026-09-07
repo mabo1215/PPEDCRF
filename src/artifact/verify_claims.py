@@ -245,6 +245,34 @@ SANITIZE_CLAIMS = [
     ("mixvpr",   "denoise", "transfer_4", 0.7300, 0.5392, 0.7017),
 ]
 
+# Preprocessing under the gallery-free objective, unhardened. Three seeds.
+# (backbone, sanitizer, transfer condition, isotropic, white box, transfer)
+SANFREE_CLAIMS = [
+    ("resnet18", "jpeg75",  "transfer_3", 0.2050, 0.0133, 0.1167),
+    ("resnet18", "jpeg50",  "transfer_3", 0.1992, 0.0533, 0.1500),
+    ("resnet18", "blur",    "transfer_3", 0.1725, 0.0217, 0.1433),
+    ("resnet18", "denoise", "transfer_3", 0.1417, 0.0617, 0.1067),
+    ("mixvpr",   "jpeg75",  "transfer_4", 0.7875, 0.5733, 0.7633),
+    ("mixvpr",   "jpeg50",  "transfer_4", 0.7667, 0.7042, 0.7558),
+    ("mixvpr",   "blur",    "transfer_4", 0.7642, 0.5800, 0.7325),
+    ("mixvpr",   "denoise", "transfer_4", 0.7300, 0.5625, 0.7250),
+]
+
+# The same sweep with the direction optimised in expectation over those
+# transforms. (backbone, sanitizer, transfer condition, transfer, white box)
+EOT_CLAIMS = [
+    ("resnet18", "none",    "transfer_3", 0.0167, 0.0050),
+    ("resnet18", "jpeg75",  "transfer_3", 0.0258, 0.0042),
+    ("resnet18", "jpeg50",  "transfer_3", 0.0467, 0.0058),
+    ("resnet18", "blur",    "transfer_3", 0.0550, 0.0042),
+    ("resnet18", "denoise", "transfer_3", 0.0492, 0.0117),
+    ("mixvpr",   "none",    "transfer_4", 0.6958, 0.0083),
+    ("mixvpr",   "jpeg75",  "transfer_4", 0.7042, 0.0250),
+    ("mixvpr",   "jpeg50",  "transfer_4", 0.7075, 0.1233),
+    ("mixvpr",   "blur",    "transfer_4", 0.6583, 0.0192),
+    ("mixvpr",   "denoise", "transfer_4", 0.6258, 0.0975),
+]
+
 # Downstream utility of the direction perturbation, per-image means over the
 # repeated runs. (task, condition, value printed in the paper)
 UTILITY_CLAIMS = [
@@ -629,6 +657,60 @@ def main() -> int:
                   f"paper={want:.4f} recomputed={got:.4f} (n={len(sel)})")
             if not ok:
                 failures.append(f"sanitize/{backbone}/{san}/{name}: "
+                                f"paper={want:.4f} recomputed={got:.4f}")
+
+    print("\n== Preprocessing, gallery-free objective (unhardened) ==")
+    for backbone, san, cond, exp_iso, exp_wb, exp_tr in SANFREE_CLAIMS:
+        f = root / "sanitize_galleryfree" / backbone / f"{san}.csv"
+        if not f.is_file():
+            failures.append(f"sanfree/{backbone}/{san}: absent")
+            print(f"  MISSING  {backbone}/{san}")
+            continue
+        df = pd.read_csv(f)
+        hit = (df.correct_rank == 1).astype(float)
+        for name, want, c in (("isotropic", exp_iso, "isotropic"),
+                              ("white box", exp_wb, "white_box"),
+                              ("transfer", exp_tr, cond)):
+            sel = hit[df.condition == c]
+            if sel.empty:
+                failures.append(f"sanfree/{backbone}/{san}/{name}: no rows")
+                continue
+            checked += 1
+            got = float(sel.mean())
+            ok = abs(got - want) <= 0.002
+            print(f"  {'OK  ' if ok else 'FAIL'}  {backbone}/{san}/{name:9s} "
+                  f"paper={want:.4f} recomputed={got:.4f} (n={len(sel)})")
+            if not ok:
+                failures.append(f"sanfree/{backbone}/{san}/{name}: "
+                                f"paper={want:.4f} recomputed={got:.4f}")
+
+    print("\n== The same directions hardened over those transforms (EOT) ==")
+    for backbone, san, cond, exp_tr, exp_wb in EOT_CLAIMS:
+        f = root / "direction_eot" / backbone / f"{san}.csv"
+        if not f.is_file():
+            failures.append(f"eot/{backbone}/{san}: absent")
+            print(f"  MISSING  {backbone}/{san}")
+            continue
+        df = pd.read_csv(f)
+        hit = (df.correct_rank == 1).astype(float)
+        checked += 1
+        spread = float(df.effective_mse.max() - df.effective_mse.min())
+        if spread > 1e-3:
+            failures.append(f"eot/{backbone}/{san}: delivered MSE not matched")
+            print(f"  FAIL  {backbone}/{san}: MSE spread {spread:.2e}")
+        for name, want, c in (("transfer", exp_tr, cond),
+                              ("white box", exp_wb, "white_box")):
+            sel = hit[df.condition == c]
+            if sel.empty:
+                failures.append(f"eot/{backbone}/{san}/{name}: no rows")
+                continue
+            checked += 1
+            got = float(sel.mean())
+            ok = abs(got - want) <= 0.002
+            print(f"  {'OK  ' if ok else 'FAIL'}  {backbone}/{san}/{name:9s} "
+                  f"paper={want:.4f} recomputed={got:.4f} (n={len(sel)})")
+            if not ok:
+                failures.append(f"eot/{backbone}/{san}/{name}: "
                                 f"paper={want:.4f} recomputed={got:.4f}")
 
     print("\n== Downstream utility of the direction perturbation ==")
