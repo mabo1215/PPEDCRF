@@ -1370,3 +1370,72 @@ held-out 攻防对比(`--eval_checkpoint` 加载微调权重,gallery 仍用 stoc
     的链条后关闭,并**主动验证 SSH 不可达**(均为 Connection refused)而不是只看命令返回值。
     关 2c 前额外查证了今天移过去的 4.8G 在本机(G 盘 24 城市)和 vGPU(7,623 文件)都有副本,
     因为 `/root/autodl-tmp` 不保证跨停机存活。
+
+## 本轮(2026-09-08 上午,进度核查 + 摘要纠错 + 附录合并)
+
+255. 【已完成】**摘要里查出并修掉一处被取代的旧口径数字——它和自己的正文互相矛盾**。
+    摘要写的是 "MixVPR's white-box Top-1 rises from 0.05 to 0.47--0.59",
+    而同一件事正文(§Robustness)现在写的是 gallery-free 口径的 "recovers from 0.0008 to 0.5625--0.7042"。
+    0.47/0.59 来自已经移进补充材料的 reference-targeted 表(0.4717/0.5850)。已改成 0.0008 → 0.56--0.70,
+    并顺带补上摘要里缺的那半句:强攻击者下四档预处理有两格失去显著性,EOT 恰好把这两格修回来。
+    - **第 253 条的审计为什么会漏掉它**:那次扫的是全精度串 `0.4717`,而摘要里写的是四舍五入的 `0.47`。
+      **纪律**:换表后的旧值审计必须连同四舍五入形式一起扫(0.4717/0.47/0.472 都要扫),不能只扫导出精度。
+
+256. 【已完成】**`USAGE.md` 的 venue 行又退回 ICLR 2027,已恢复为 IEEE TIFS**。
+    第 227 条记录过这次修正,但 HEAD 里就是 ICLR——那次修改丢了(今天 09:56 有东西把文件写回了 9-3 的内容,
+    大概率是规则模板被重新复制进来时覆盖的)。不恢复的话下一轮自动评审会拿 ICLR 的双盲、9 页、ICLR 模板
+    去评一篇 IEEEtran 单盲 13 页的稿子。这次连同 TIFS 硬规则(13/16 页、supplementary 建议 ≤6 页、
+    超页费买不到初投第 14 页、单盲)一起写回该节,并把 PoPETs 留作备选,已在 `ExperimentProgress.tex`
+    里立成 V1 条,因为这个回退可以再发生一次。
+
+257. 【已完成】**两份重叠的附录文档合并成一份,`appendix.tex` 退役**。
+    仓库里长期同时存在 `appendix.tex`(15 页,legacy,自称 "superseded")和 `supplementary.tex`(11 页,当前投稿用),
+    后者是前者的压缩改写 + direction 时代的新章节。读者拿到两份内容重叠的附录,是真实的投稿风险。
+    - **正文本身没有 appendix 段落**——`main.tex` 到 Conclusion 就结束了,`.tifs_build.md` 里
+      "main.tex includes appendices" 是过期描述,已改正。
+    - **并入的(appendix-only 且仍支撑现有结论)**:energy-matched 控制的全量数据(pooled 表 + 逐骨干表 +
+      逐控制的能量门误差 + 配对 margin 差),proxy50 扩展表(50 组配对 × 8 骨干),margin 分解表,
+      以及跑两遍完全一致的确定性核查;proxy 基准的适用范围声明折进 Secondary Benchmarks 开头。
+    - **没并的(已被取代,写明原因)**:legacy 检测/分割训练曲线(supplementary 自己已声明"本文不使用"),
+      unary 逐层结构(在 artifact 里),deterministic matched-PSNR 表(正文 operator study 以匹配投递 MSE 的
+      更强形式取代),定性检索案例图(supplementary 已有自己的定性图)。原文件保留为
+      `paper/backup/appendix_pre_supplementary_merge.tex`,并从 `build.bat` 里摘掉。
+    - **顺带修掉两处结构缺陷**:(a) "Multi-Backbone Extension" 和 "Gallery-Size Extension of the
+      Matched-PSNR Sweep" 两个小节被错挂在 §Sequence-Length 下面,而且正文写着"the result above uses the
+      default ResNet18 attacker only"——指的是排在它们后面的 matched-PSNR 节,即前向引用;已移到自己的节下。
+      (b) §Secondary Benchmarks 里的 B/C 两个小节是同一份文件里另外两节的摘要版(而且都把全文归给"the main
+      paper"),是上一轮把正文 §K/L/M 整体搬过来时留下的重复;已折叠成指针,保留 B 里独有的那句分析
+      (5.97 dB 质量优势来自常数图只施加一半幅度,不是选择性收益)。
+
+258. 【已完成】**附录里最值得进正文的一条已提升:margin 分解**。
+    正文 §Why Allocation Cannot Decide a Ranking 原本只有一阶理论 + 为什么预测失效,现在补上同一论点的实证形式:
+    按干净 margin 中位数切分,加性预算把本来就不确定的那一半从 0.465 打到 0.377,
+    对已经确信的那一半几乎无效(1.000 → 0.987),差约 6.8 倍;各攻击骨干聚合 Δ 差异大,差的是各自有多少
+    query 贴着自己的判定边界,不是机制行为不同。正文仍然 **13 页**(第 13 页右栏原本就只用了 67%)。
+
+259. 【已完成】**发现并修好了构建链路上的一个真实缺陷:本机 bibtex 一直是失败的**。
+    `build.bat` 走 latexmk 时因为 MiKTeX 找不到 perl 而回退到 pdflatex/bibtex,而回退路径里 bibtex 的工作目录是
+    `build/`,`ref.bib` 在 `paper/`,所以 bibtex 每次都报 "I couldn't open database file ref.bib" 并把
+    `main.bbl` 写空——**此前之所以还能出 13 页,是因为 `build/` 里躺着 9-3 生成的旧 `main.bbl` 被反复复用**。
+    也就是说 9-8 之前记录的页数是拿一份过期参考文献量出来的。这次用 `BIBINPUTS` 指向 `paper/` 重新生成
+    (47 条 bibitem,0 条 "didn't find database entry"),重量:**正文 13 页、附录 12 页,两份都是
+    0 未定义引用、0 未定义文献、0 overfull box**。页数没变,但现在这个 13 页是真的。
+
+260. 【已完成】**按第 237 条纪律,对着渲染 PDF 逐条核验了本轮所有搬迁和新增**(17 项:并入的两张
+    energy-matched 表、proxy50 表的 CLIP 行与最大 Δ、margin 表两行、确定性核查、proxy 范围声明、
+    正文新增段与 6.8 倍、摘要新数字;外加两项"必须不在":摘要旧区间、legacy 检测图)。全部通过。
+    核验脚本第一轮报了两个 MISS,查明是**我自己写的检查串带了 LaTeX 标记**(`$6.8`、`$0.0008$`),
+    渲染文本里当然没有——不是内容缺失,已修正检查串后复跑全绿。这和第 247 条那次"小写标题造成假阴性"
+    是同一类教训:核查脚本自己报的 MISS,先怀疑核查脚本。
+
+261. 【已完成】**`docs/ExperimentProgress.tex` 按约定重写**:Table 1 只留 A1(附录页数决策)、F3(阻塞在
+    取不到导出树)、B3(如实披露)、V1(venue 行回退);Table 2 的 D1--D5 和 R4 全部移走(已完成),
+    只留"全新独立评审(Stage 9')""A1 决策""F3 回填";Table 3 记入本轮新做的 T5--T7。
+    **当前状态:`docs/RevisionSuggestions.tex` 已无可执行项**,按仓库规则下一步就是全新独立评审,
+    但用户要求在此暂停(切模型),所以没有触发 Stage 9'。
+
+262. 【遗留】**附录 12 页,比约定的 11 页多 1 页**。多出来的是本轮并回来的约 2.6 栏证据;
+    折叠重复小节收回约 0.8 栏,不够跨过页边界。要回到 11 页需要再腾约 1.3 栏,最便宜的一处是
+    proxy50 固定预算表及其正文(本轮并回来的东西里最偏旧框架的一项);其余任何一处都要以丢证据为代价。
+    TIFS 对 supplementary 的 ≤6 页是**建议不是硬上限**,所以 11 页和 12 页在合规意义上是同一档。
+    等用户定。

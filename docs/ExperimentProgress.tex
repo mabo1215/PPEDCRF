@@ -23,43 +23,51 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{7 September 2026 --- IEEE TIFS revision cycle. This file was reset to
-carry \emph{only} open, running and not-yet-started work, per the repository
+\date{8 September 2026 --- IEEE TIFS revision cycle. This file carries
+\emph{only} open, running and not-yet-started work, per the repository
 convention that completed items are removed from these tables once they are
-recorded in \texttt{docs/progress.md}. All ICME- and TOMM-era tables, whose
-items are closed, were removed in this revision; their completion records
-remain in \texttt{docs/progress.md} entries 1--225.}
+recorded in \texttt{docs/progress.md}.}
 
 \begin{document}
 \maketitle
 
 \section*{Scope of This Revision Cycle}
 
-The active review is the third independent review recorded in
-\texttt{docs/RevisionSuggestions.tex} (7 September 2026), conducted against
-IEEE TIFS. It supersedes the ICME-oriented and 4 September TIFS assessments
-in that file's earlier versions.
+The third independent review in \texttt{docs/RevisionSuggestions.tex}
+(7 September 2026, IEEE TIFS) is \textbf{exhausted}: every actionable item it
+raised --- R1--R3, R5--R8, R10--R12 and the R4 page compression --- is closed,
+and the five experiments it required (D1--D5) have landed in the manuscript.
+What remains below is not review work. It is one page-budget decision, one
+documentation backfill that is blocked on data this machine cannot reach, and
+one disposition (B3) that is deliberately disclosed rather than closed.
 
-Its central conclusion is that the manuscript's \emph{negative} result
-(allocation is inert) is settled and well evidenced, while its \emph{positive}
-result (direction is where the leverage is) has three open gaps --- R1, R2 and
-R3 below --- that were found by reading the implementation rather than the
-manuscript, and that cannot be closed by editing text alone. Percentages
-describe repository completion, not scientific completion; no smoke test or
-proxy-only result is eligible for a real-place claim.
+Because no actionable review item remains, the repository rule that applies
+next is the fresh independent review protocol: start a new venue-driven review
+from the current \texttt{main.tex} and \texttt{supplementary.tex} and rewrite
+\texttt{docs/RevisionSuggestions.tex} from scratch. That is the single
+scheduled next action in Table~2, and it is held pending an explicit go-ahead.
 
-\section*{Table 1: TIFS Revision Items --- Open and Partial Only}
+\paragraph{Document state, rebuilt and measured on 8 September 2026.}
+\texttt{main.pdf} 13 pages (the TIFS initial-submission hard limit),
+\texttt{supplementary.pdf} 12 pages, both with 0 undefined references,
+0 undefined citations and 0 overfull boxes. \texttt{appendix.tex} no longer
+exists as a separate document: its unique evidence was merged into
+\texttt{supplementary.tex} and the file was retired to
+\texttt{paper/backup/appendix\_pre\_supplementary\_merge.tex}. The main text
+contains no appendix sections.
+
+\section*{Table 1: Open and Partial Items}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.27\linewidth}p{0.12\linewidth}p{0.48\linewidth}@{}}
-\caption{Open items from the 7 September 2026 independent TIFS review.
-Completed items are not listed; see \texttt{docs/progress.md}.}
+\caption{Everything still open after the third TIFS review cycle. Completed
+items are not listed; their records are in \texttt{docs/progress.md}.}
 \label{tab:tifs-open}\\
 \toprule
-ID & Review gap & Status & Completion gate / next step \\
+ID & Item & Status & Completion gate / next step \\
 \midrule
 \endfirsthead
 \toprule
-ID & Review gap & Status & Completion gate / next step \\
+ID & Item & Status & Completion gate / next step \\
 \midrule
 \endhead
 \midrule
@@ -68,123 +76,29 @@ ID & Review gap & Status & Completion gate / next step \\
 \bottomrule
 \endlastfoot
 
-R1 & The transferable direction is optimised against the \emph{true positive
-gallery embedding} (\texttt{gal\_emb[b][pos[0]]}), so the ``no access to the
-attacker at all'' claim hides a requirement that the defender already know
-which geo-tagged reference image the frame matches. Undisclosed in the
-manuscript. & \done & D1 done, 400 queries $\times$ 3 seeds on both backbones,
-energy gate exact. The gallery-free objective is \emph{stronger}: ResNet18
-$0.0358$ vs isotropic $0.1967$ ($\Delta=-0.1608$, $p=1.9\times10^{-41}$) against
-the reference-targeted $-0.1275$; MixVPR $0.7342$ vs $0.7800$ ($-0.0458$) against
-$-0.0442$, white-box tightening from $0.0500$ to $0.0008$. Promoted to the
-paper's deployable claim. Superseded gate text: D1 (gallery-free objective) on both
-backbones at matched delivered MSE, three seeds; then either promote the
-gallery-free variant to the deployable claim, or restate the threat model in
-Scope-of-claims, \S\,The Other Axis, the Table~2 caption and the Conclusion.
-Gate: no sentence in the paper asserts attacker-free operation without naming
-what the defender must hold. \\
+A1 & Appendix page budget. Merging the retired \texttt{appendix.tex} back into
+\texttt{supplementary.tex} restored roughly 2.6 columns of evidence that the
+earlier compression had dropped --- the full energy-matched control data
+(pooled and per-backbone tables), the proxy50 scaling table and the
+margin-subgroup decomposition --- which takes the appendix from 11 to 12
+pages. Collapsing two subsections that restated other sections of the same
+document returned about 0.8 columns, which was not enough to cross the page
+boundary. & \pending & A decision, not a task. Either accept 12 pages (TIFS
+recommends $\leq 6$ for supplementary material as \emph{guidance}, not a cap,
+so 11 and 12 are equally non-compliant with the recommendation and equally
+permitted), or free about 1.3 columns. The cheapest 1.3 columns are the
+proxy50 fixed-budget table and its prose, which is the most legacy-framed of
+the restored material. Nothing else can be cut without losing evidence. \\
 
-R2 & The adaptive adversary was fine-tuned on \emph{isotropic}
-delivered-MSE-matched output (\texttt{torch.randn} +
-\texttt{release\_at\_mse}), not on the direction perturbation the paper
-proposes, so the section measures robustness to a noise-adapted attacker
-rather than to a defense-aware one. & \done & D2 done on both backbones with
-validation median rank added (Top-1 alone was unfalsifiable at a two-of-fifty
-baseline). The adapting attacker improves rank $85\to64$--$70$ and MRR
-$0.074\to0.088$--$0.091$ but never Top-1; the identical recipe on the isotropic
-exposure does lift Top-1 $0.30\to0.36$, so the procedure has power. MixVPR: no
-configuration improves on $0.84$ at median rank $1$. Written into the paper.
-Superseded gate text: repeat the
-fine-tuning sweep with direction-perturbed training samples, same splits,
-hard-negative mining and early-stopping rule; report alongside the existing
-isotropic-trained row rather than replacing it. Gate: the adaptive-adversary
-claim in Scope-of-claims and the Conclusion matches the exposure actually
-trained on. \\
-
-R3 & No downstream-utility evidence exists for the direction axis. Table~1's
-mAP/mIoU is measured at $\sigma_0=8$ on the mechanism's own additive
-perturbation (allocation axis); the direction result is supported only by
-$19.19$ MSE / $35.3$\,dB PSNR, and PSNR is not utility for adversarially
-directed perturbations. & \done & D3 run: at identical delivered MSE the
-direction costs $0.058$ more per-image AP@50 ($p=5.8\times10^{-14}$) and
-$0.048$ more per-image IoU ($p=4.7\times10^{-9}$) than the isotropic control
-over 200 images per task; clean/isotropic rows reproduce the published table to
-within $0.002$. Written into the main text, the supplementary, Scope-of-claims
-and the Conclusion as a limit on the recommendation. Superseded gate text:
-same-image utility audit
-under the surrogate-direction perturbation at the operating point's delivered
-MSE, with an isotropic control at the same MSE; both rows added to Table~1.
-Gate: the paper either reports direction-axis utility or discloses its absence
-as a limitation, and Table~1's caption states its axis scope. \\
-
-R4 & \texttt{main.pdf} is now \textbf{15} pages against a 13-page TIFS
-initial-submission hard limit. The earlier ``14 pages, a quarter page over''
-record was never the real starting point: it was measured on a PDF that was
-silently missing the whole Experimental Protocol section (R12). Restoring that
-section and adding the D1, D2 and D3 results accounts for the rest. & \pending & Move
-\S\,Controlled Paired-Scene Retrieval Benchmark and its module-ablation table
-into \texttt{supplementary.tex}, leaving a three-sentence pointer. Perform
-\emph{after} D1--D3 so new results do not undo the compression. Gate: 13
-pages, 0 errors, 0 overfull boxes, 0 undefined references, no dangling
-\texttt{\textbackslash ref}. \\
-
-R5 & Two headline tables are under-seeded relative to the rest of the paper:
-the non-adaptive-preprocessing sweep is 1 seed (all other core tables pool 3),
-and the fine-tuned-adversary result rests on $n=100$ held-out queries at 1
-seed while claiming an exact zero-discordant-pair outcome. & \pending &
-Experiment D4: extend the preprocessing sweep to 3 seeds; enlarge or pool the
-fine-tuning evaluation split. Gate: both tables state a seed count consistent
-with the rest of the paper. \\
-
-R6 & \S\,Robustness to Non-Adaptive Preprocessing discloses that routine JPEG,
-blur and denoising recover most of the white-box bound, with no defense-side
-response attempted. & \deferred & Experiment D5 (EOT over the same
-transformations), optional. Report either outcome; a failure is a publishable
-negative result about the axis. Previously logged as optional hardening ---
-raised in priority because the preprocessing weakness is now published in the
-manuscript itself. \\
-
-R7 & The abstract's ``six attacker backbones'' sits in the same sentence as
-the real-benchmark placement result; the six backbones come from the proxy and
-transfer studies, while real place-labelled results use ResNet18 and MixVPR.
-& \pending & Rephrase the abstract so backbone coverage is attributed to the
-studies that carry it. Text-only. \\
-
-R12 & An unterminated \texttt{\textbackslash begin\{comment\}} silently removed
-\texttt{\textbackslash section\{Experimental Evaluation\}} and the entire
-Experimental Protocol subsection from the compiled paper (the \texttt{comment}
-environment does not nest, so it ran to the next \texttt{\textbackslash
-end\{comment\}} 57 lines later). LaTeX warns about none of it. Part of the
-earlier 16-to-14-page reduction was this accidental deletion, not compression.
-& \done & Stray opener removed; the section, its protocol text and its labels
-are back in the PDF, the deliberately hidden datasets table stays hidden, and
-the build reports 0 undefined references. Standing consequence for R4: verify
-every remaining cut against the \emph{rendered PDF}, never against the source.
-\\
-
-R10 & The main text stated that the same-image mAP/mIoU values are ``in the
-Supplementary Material''. They were in no submitted document: the table
-survived only as a \texttt{\textbackslash begin\{comment\}} block in
-\texttt{main.tex} after an earlier compression pass. & \done & Restored as a
-real section of \texttt{supplementary.tex}, scoped to the allocation axis, and
-the commented duplicate removed so the two cannot drift. Verified no
-\texttt{\textbackslash ref} pointed at the deleted label. \\
-
-R11 & The gallery-free direction objective starts at its own stationary point:
-the clean frame maximises self-similarity, so the gradient is zero there and
-\texttt{sign()} returns zero. On MixVPR this left 37\% of white-box queries
-completely unperturbed while still being recorded as direction conditions. &
-\done & Fixed with a seeded random start (1.0 pixel units for the self
-objective, 0.0 for the gallery-targeted one, so published runs reproduce
-unchanged), a zero-perturbation guard, and \texttt{zlib.crc32} rather than
-\texttt{hash()} for reproducibility. Affected partial runs set aside as
-\texttt{*\_zerostart\_flawed} and re-run. \\
-
-F3 & Paper-facing CSV/JSON exports under the git-ignored \texttt{src/outputs/}
-have a provenance record only for the reachable export trees. & \partialstatus
-& Add SHA-256 entries for the E1 MSLS and E5 KITTI-360 trees to
-\texttt{docs/experiment\_provenance.md} when those files are next reachable.
-Non-blocking documentation gate. \\
+F3 & Paper-facing CSV/JSON exports under the git-ignored
+\texttt{src/outputs/} have SHA-256 provenance for the reachable export trees
+only; the E1 MSLS and E5 KITTI-360 trees are still missing. &
+\blocked & Blocked on data, not on effort: the
+\texttt{src/outputs/icme2027\_*} export trees are not on this machine (the
+drive holding the second copy is not mounted here), so neither the checksums nor the
+\texttt{verify\_claims.py} artifact run can be reproduced locally. Backfill
+into \texttt{docs/experiment\_provenance.md} when those trees are next
+reachable. Non-blocking for submission. \\
 
 B3 & Neither checkpoint of the tested mechanism was engineered as a privacy
 map: the released one is numerically constant, the mask-supervised one was
@@ -192,26 +106,30 @@ trained for the attribution diagnostic. & \partialstatus & Disclosed rather
 than closed, which is the correct disposition for a falsification testbed. No
 further action planned; listed so it is not silently dropped. \\
 
+V1 & The venue line in \texttt{USAGE.md} had reverted to ICLR 2027, undoing
+the correction recorded as \texttt{progress.md} entry 227. Any automated cycle
+reading that line would have reviewed an IEEEtran single-anonymised 13-page
+TIFS submission against ICLR's double-blind 9-page rules. & \done &
+Restored to IEEE TIFS on 8 September 2026, with the page, supplementary and
+single-anonymised rules written back into that section and PoPETs kept as the
+documented fallback. Listed here because the regression happened once and can
+happen again whenever the rule template is re-copied into this repository. \\
+
 \end{longtable}
 
-\section*{Table 2: Next-Step Plan (Experiment Schedule)}
-
-Estimated completion times are New Zealand Standard Time. GPU work runs on
-vGPU 3090 (\texttt{/root/autodl-tmp/ppedcrf\_tomm\_20260830/PPEDCRF},
-synchronised to \texttt{main} at \texttt{b415fa4} on 7 September 2026); note
-that this host is shared with unrelated projects, so wall-clock estimates
-assume partial GPU availability rather than an idle card.
+\section*{Table 2: Next-Step Plan}
 
 \begin{longtable}{@{}p{0.20\linewidth}p{0.08\linewidth}p{0.06\linewidth}p{0.16\linewidth}p{0.42\linewidth}@{}}
-\caption{Active experiment schedule for the TIFS revision cycle, 7 September
-2026.}
+\caption{Scheduled work as of 8 September 2026. No experiment is running: the
+D1--D5 programme is complete and both billed GPU hosts are confirmed powered
+down. Estimated completion times are New Zealand Standard Time.}
 \label{tab:tifs-schedule}\\
 \toprule
-Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
+Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \midrule
 \endfirsthead
 \toprule
-Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
+Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \midrule
 \endhead
 \midrule
@@ -220,56 +138,38 @@ Experiment & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-D1 --- gallery-free direction objective (R1) & \done & 100\% &
-Complete (7 Sep 2026) & \textbf{Meaning:} decides whether the paper's positive
-claim is deployable or merely conditional. Replaces the ground-truth gallery
-target with a self-embedding repulsion objective that uses only the released
-frame, so no knowledge of the correct reference image is required. Same
-manifest, gallery, surrogate ensembles and delivered MSE as the published
-Table~2, so rows are directly comparable. ResNet18 (3 surrogates) and MixVPR
-(4 surrogates), 3 seeds each. \\
+Fresh independent review (Stage 9') & \pending & 0\% & On go-ahead;
+same-day once started & \textbf{Meaning:} the current review file has no
+actionable item left, so the repository rule is to review the manuscript again
+from scratch against IEEE TIFS and overwrite
+\texttt{docs/RevisionSuggestions.tex} in English-only \LaTeX. The manuscript
+has changed substantially since the 7 September review --- gallery-free
+objective promoted to the headline claim, the two preprocessing tables merged,
+EOT hardening added, the body compressed from 15 to 13 pages and the appendix
+merged --- so the previous review no longer describes the document under
+review. Held pending an explicit go-ahead. No GPU required. \\
 
-D3 --- downstream utility of the direction perturbation (R3) & \done &
-100\% & Complete (7 Sep 2026, 16:30) & \textbf{Meaning:} supplies the evidence the paper's
-own problem statement demands. Applies the surrogate-direction perturbation to
-the co-audited 200-image COCO detection and 200-image VOC segmentation
-manifests at the operating point's delivered MSE, with an isotropic control at
-the same MSE, then measures mAP@50 and mIoU with the frozen detectors already
-used for Table~1. Cheap; can share the GPU with D1. \\
+A1 decision --- appendix page budget & \pending & 0\% & On decision &
+\textbf{Meaning:} whether the appendix ships at 12 pages or is cut back to 11.
+See Table~1, row A1, for what the 1.3 columns would have to come out of. No
+GPU required. \\
 
-D2 --- adaptive adversary trained on the defended output (R2) & \done &
-100\% & Complete (7 Sep 2026) & \textbf{Meaning:} makes the adaptive-adversary
-section answer the question it poses. Same fine-tuning recipe, splits and
-early-stopping rule as the published sweep, but with training samples drawn
-from the surrogate-direction perturbation instead of isotropic noise.
-Perturbation generation dominates the cost, so training samples are
-precomputed once and reused across configurations. \\
-
-D4 --- seed and sample-size strengthening (R5) & \running & 5\% &
-8 Sep 2026, 12:00 & \textbf{Meaning:} brings two headline tables up to the
-statistical standard of the rest of the paper. Extends the
-non-adaptive-preprocessing sweep from 1 to 3 seeds (2 attackers $\times$ 4
-sanitizers) and enlarges or pools the fine-tuning evaluation split beyond
-$n=100$. \\
-
-D5 --- EOT-hardened direction (R6) & \running & 20\% & 8 Sep 2026, 12:00 &
-\textbf{Meaning:} turns a disclosed weakness into a problem-and-response pair,
-or produces a clean negative result about the axis. Optimises the direction
-under an expectation over JPEG-75/50, Gaussian blur and denoising, then
-re-runs the preprocessing sweep. Optional; scheduled only if D1--D4 finish
-with time in hand. \\
-
-R4 --- compression to 13 pages & \pending & 0\% & After D1--D3 write-back &
-\textbf{Meaning:} submission compliance. Deliberately last: new results
-consume space, so compressing before they land wastes the work. \\
+F3 checksum backfill & \blocked & --- & When the export trees are
+reachable & \textbf{Meaning:} completes the provenance record for the E1 MSLS
+and E5 KITTI-360 export trees. Cannot start on this machine; needs the
+\texttt{src/outputs/icme2027\_*} trees mounted. This also gates any local
+re-run of \texttt{src/artifact/verify\_claims.py}, whose last recorded run
+(228 checks, 0 mismatches) was made where those exports were reachable. \\
 
 \end{longtable}
 
-\section*{Table 3: Manuscript Edits Required (No Experiment Needed)}
+\section*{Table 3: Manuscript Edits}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.30\linewidth}p{0.10\linewidth}p{0.47\linewidth}@{}}
-\caption{Text-only revision items for the TIFS cycle. These are gated on the
-corresponding experiment's outcome only where noted.}
+\caption{Text-only revision items. All items from the third TIFS review
+(T1--T4) are closed and removed; the rows below are the edits made on
+8 September 2026 that are not yet covered by any review file, kept visible for
+one cycle so the next review does not rediscover them as findings.}
 \label{tab:tifs-text}\\
 \toprule
 ID & Edit & Status & Location \\
@@ -285,37 +185,43 @@ ID & Edit & Status & Location \\
 \bottomrule
 \endlastfoot
 
-T1 & Replace ``with no access to the attacker at all'' with a statement naming
-what the defender must and must not hold. & \done & \texttt{main.tex}
-\S\,The Other Axis; Scope-of-claims; Table~2 caption; Conclusion. Gated on D1's
-outcome for which variant becomes the headline. \\
+T5 & The abstract still reported the preprocessing white-box recovery in the
+superseded reference-targeted terms ($0.05 \to 0.47$--$0.59$) while the body
+reported the gallery-free measurement of the same quantity
+($0.0008 \to 0.5625$--$0.7042$), so the abstract contradicted its own results
+section. Rewritten to the gallery-free range and extended to state the two
+non-significant cells and their repair by EOT. & \done &
+\texttt{main.tex} abstract. The 7 September audit missed it because it scanned
+for the full-precision string \texttt{0.4717}; the abstract carried the
+rounded form. \\
 
-T2 & Scope the utility table to the allocation axis. & \done &
-\texttt{main.tex} Table~1 caption and the Experimental Protocol paragraph that
-introduces the same-image utility check. \\
+T6 & Merge the retired standalone appendix into the single appendix document
+and remove the duplication the earlier compression left behind. & \done &
+\texttt{supplementary.tex}: energy-matched control data restored, proxy50
+scaling and margin decomposition added, the two matched-PSNR subsections moved
+out of the sequence-length section they had been filed under, and the two
+secondary-benchmark subsections that restated other sections of the same file
+collapsed to pointers. \\
 
-T3 & Narrow the adaptive-adversary claim to the exposure actually trained on
-until D2 lands. & \done & \texttt{main.tex} Scope-of-claims and Conclusion;
-\S\,A First Attempt at a Genuinely Adaptive Attacker. \\
-
-T4 & Attribute the abstract's six-backbone coverage to the studies that carry
-it. & \done & \texttt{main.tex} abstract. \\
+T7 & Promote the margin decomposition into the main text: an additive budget
+moves the queries whose margin was already small ($0.465 \to 0.377$) and
+leaves confident ones alone ($1.000 \to 0.987$), which is the empirical form
+of the mechanism section's own argument and explains the spread in aggregate
+deltas across attacker backbones. & \done & \texttt{main.tex}
+\S\,Why Allocation Cannot Decide a Ranking. Main text stays at 13 pages. \\
 
 \end{longtable}
 
-\section*{Closed in Previous Cycles}
+\section*{Closed in This Cycle}
 
-The ICME 2027 items (M1--M9), the TOMM cycle (E1--E7), and the
-3 September fresh-review items F1, F2, F4--F12 are complete and were removed
-from these tables in this revision. Their completion records, including the
-evidence and the commit or export path for each, remain in
-\texttt{docs/progress.md} (entries 1--225). Of the previous round's three
-TIFS blocking issues, B2 is closed (the placement null replicates on real
-place-labelled data against both a weak and a strong attacker), B1 is
-adequately mitigated and recommended for closure (three published-model
-placement rules across two label taxonomies, plus the manuscript's reported
-finding that no published spatially selective method meets the protocol's
-entry requirements), and B3 is disclosed rather than closed, which is the
-correct disposition for a falsification testbed.
+D1 (gallery-free direction objective), D2 (adaptive adversary trained on the
+defended output), D3 (downstream utility of the direction perturbation),
+D4 (three-seed preprocessing sweep) and D5 (EOT hardening) are complete on
+both backbones, written into the manuscript, and recorded with their evidence
+in \texttt{docs/progress.md} entries 246--255. The R4 compression to 13 pages
+was performed last, as scheduled, and verified against the rendered PDF rather
+than the source. The ICME 2027 items (M1--M9), the TOMM cycle (E1--E7) and the
+3 September fresh-review items (F1, F2, F4--F12) remain closed from earlier
+cycles.
 
 \end{document}
