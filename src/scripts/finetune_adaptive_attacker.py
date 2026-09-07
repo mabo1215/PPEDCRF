@@ -58,6 +58,7 @@ import copy
 import json
 import random
 import sys
+import zlib
 from pathlib import Path
 from typing import Dict, List
 
@@ -187,12 +188,20 @@ def build_direction_cache(records, cache_dir: Path, args, gallery, gallery_ids,
                 tgts = [normalised_embedding(embedders[b], frame,
                                              sizes[b]).detach()
                         for b in args.direction_surrogates]
+        gstart = torch.Generator(device="cpu").manual_seed(
+            zlib.crc32(f"{rec['query_id']}|{args.seed}".encode()) & 0x7FFFFFFF)
         with torch.enable_grad():
             delta = directional_delta(
                 frame, tgts, [embedders[b] for b in args.direction_surrogates],
                 [sizes[b] for b in args.direction_surrogates],
                 args.direction_steps, args.direction_step_size,
-                args.direction_linf)
+                args.direction_linf,
+                random_start=args.direction_random_start,
+                generator=gstart)
+        if float(delta.abs().max()) == 0.0:
+            raise RuntimeError(
+                f"Zero perturbation for {rec['query_id']}: the random start "
+                f"is not doing its job.")
         released = release_at_mse(frame, delta, args.target_mse)
         torch.save(released.squeeze(0).cpu(),
                    cache_dir / f"{rec['query_id']}.pt")
@@ -294,6 +303,11 @@ def main() -> int:
     ap.add_argument("--direction_steps", type=int, default=20)
     ap.add_argument("--direction_step_size", type=float, default=1.0)
     ap.add_argument("--direction_linf", type=float, default=16.0)
+    ap.add_argument("--direction_random_start", type=float, default=None,
+                    help="uniform displacement (pixel units) before the first "
+                         "sign-gradient step; defaults to 1.0 for the 'self' "
+                         "objective, whose clean frame is a stationary point, "
+                         "and 0.0 for 'positive'.")
     ap.add_argument("--direction_cache", default="",
                     help="directory of cached direction-perturbed frames; "
                          "defaults to <output>.dircache. Reusable across "
@@ -303,6 +317,9 @@ def main() -> int:
     ap.add_argument("--test_ids_output", default="",
                     help="defaults to <output>.test_query_ids.json")
     args = ap.parse_args()
+    if args.direction_random_start is None:
+        args.direction_random_start = \
+            1.0 if args.direction_objective == "self" else 0.0
 
     test_ids_path = Path(args.test_ids_output) if args.test_ids_output else \
         Path(str(args.output) + ".test_query_ids.json")

@@ -33,6 +33,7 @@ import argparse
 import json
 import os
 import sys
+import zlib
 from pathlib import Path
 from typing import Dict, List, Mapping, Sequence
 
@@ -87,6 +88,12 @@ def parse_args() -> argparse.Namespace:
                     help="Delivered MSE every perturbed condition is matched "
                          "to; the operating point used throughout the paper.")
     ap.add_argument("--steps", type=int, default=20)
+    ap.add_argument("--random_start", type=float, default=1.0,
+                    help="uniform displacement (pixel units) before the first "
+                         "sign-gradient step. Required for this objective: "
+                         "the clean frame is a stationary point of the "
+                         "self-similarity objective, so a zero start leaves "
+                         "some frames unperturbed entirely.")
     ap.add_argument("--step_size", type=float, default=1.0)
     ap.add_argument("--linf", type=float, default=16.0)
     ap.add_argument("--seeds", type=int, nargs="+", default=[1234])
@@ -207,12 +214,22 @@ def main() -> int:
                         tgts = [normalised_embedding(
                             embedders[b], frame, sizes[b]).detach()
                             for b in args.surrogates]
+                    gstart = torch.Generator(device="cpu").manual_seed(
+                        zlib.crc32(
+                            f"{record['image_id']}|{seed}".encode())
+                        & 0x7FFFFFFF)
                     with torch.enable_grad():
                         delta = directional_delta(
                             frame, tgts,
                             [embedders[b] for b in args.surrogates],
                             [sizes[b] for b in args.surrogates],
-                            args.steps, args.step_size, args.linf)
+                            args.steps, args.step_size, args.linf,
+                            random_start=args.random_start,
+                            generator=gstart)
+                    if float(delta.abs().max()) == 0.0:
+                        raise RuntimeError(
+                            f"Zero perturbation for {record['image_id']}: the "
+                            f"random start is not doing its job.")
                     released = release_at_mse(frame, delta, args.target_mse)
                 mse = float((released - frame).square().mean())
                 row: Dict[str, object] = {

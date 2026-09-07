@@ -43,6 +43,7 @@ import csv
 import json
 import os
 import sys
+import zlib
 from pathlib import Path
 from typing import Dict, List, Sequence
 
@@ -106,6 +107,8 @@ def directional_delta(
     steps: int,
     step_size: float,
     linf: float,
+    random_start: float = 0.0,
+    generator: torch.Generator | None = None,
 ) -> torch.Tensor:
     """Sign-gradient descent on summed similarity across a surrogate ensemble.
 
@@ -113,9 +116,25 @@ def directional_delta(
     perturbation into a transferable one: a direction that lowers similarity
     for every surrogate is more likely to lower it for an unseen attacker than
     one tuned to a single network's idiosyncrasies.
+
+    `random_start` displaces the first iterate by a uniform perturbation of
+    that magnitude in pixel units. It is mandatory for the gallery-free "self"
+    objective and pointless for the gallery-targeted one. The reason is that
+    the self objective steers the frame away from *its own* clean embedding,
+    so the starting point is the objective's exact maximum, where the gradient
+    is zero: without a random start the sign of that gradient is decided by
+    floating-point noise, and for a sizeable fraction of frames it is exactly
+    zero, leaving the frame unperturbed and silently entering the study as a
+    "direction" condition that delivered no distortion at all. A random start
+    is the standard remedy and makes the first step well defined.
     """
     original = frame.detach().float()
-    candidate = original.clone()
+    if random_start > 0:
+        noise = torch.empty_like(original.cpu()).uniform_(
+            -random_start, random_start, generator=generator)
+        candidate = (original + noise.to(original.device)).clamp(0.0, 255.0)
+    else:
+        candidate = original.clone()
     for _ in range(max(1, steps)):
         candidate.requires_grad_(True)
         loss = torch.zeros((), device=frame.device)
@@ -201,8 +220,20 @@ def main() -> int:
                          "which reference image the frame matches; 'self' "
                          "targets the frame's own clean embedding and needs "
                          "no gallery knowledge at all.")
+    ap.add_argument("--random_start", type=float, default=None,
+                    help="uniform random displacement (pixel units) applied "
+                         "before the first sign-gradient step. Defaults to "
+                         "0.0 for the 'positive' objective, which reproduces "
+                         "every published run, and to 1.0 for 'self', where "
+                         "the unperturbed frame is a stationary point of the "
+                         "objective and a zero start yields no perturbation "
+                         "at all on some frames.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
+    if args.random_start is None:
+        args.random_start = 1.0 if args.objective == "self" else 0.0
+    print(f"[transfer] objective={args.objective} "
+          f"random_start={args.random_start}", flush=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[transfer] device={device}", flush=True)
@@ -290,6 +321,7 @@ def main() -> int:
     ev = args.eval_backbone
     ev_gal = (gal_emb[ev] / gal_emb[ev].norm(dim=-1, keepdim=True)
               .clamp_min(1e-12)).to(device)
+    zero_delta = 0
 
     for qi, rec in enumerate(queries, 1):
         qid = rec["query_id"]
@@ -321,11 +353,22 @@ def main() -> int:
                                 for b in use]
                     else:
                         tgts = [gal_emb[b][pos[0]].to(device) for b in use]
+                    # zlib.crc32, not hash(): Python randomises string
+                    # hashing per process, which would make the random start
+                    # -- and therefore the whole run -- irreproducible.
+                    gstart = torch.Generator(device="cpu").manual_seed(
+                        zlib.crc32(f"{qid}|{cond}|{seed}".encode()) & 0x7FFFFFFF)
                     with torch.enable_grad():
                         delta = directional_delta(
                             frame, tgts, [embedders[b] for b in use],
                             [sizes[b] for b in use], args.steps,
-                            args.step_size, args.linf)
+                            args.step_size, args.linf,
+                            random_start=args.random_start,
+                            generator=gstart)
+                    if float(delta.abs().max()) == 0.0:
+                        zero_delta += 1
+                        print(f"[transfer] WARNING zero perturbation for "
+                              f"{qid}/{cond}/seed{seed}", flush=True)
                 released = release_at_mse(frame, delta, args.target_mse)
                 mse = float((released - frame).square().mean())
                 sanitized = SANITIZERS[args.sanitizer](released)
@@ -350,6 +393,9 @@ def main() -> int:
             print(f"[transfer] {qi}/{len(queries)} queries", flush=True)
 
     fh.close()
+    if zero_delta:
+        print(f"[transfer] WARNING {zero_delta} conditions produced a zero "
+              f"perturbation and delivered no distortion", flush=True)
     print(f"[transfer] done -> {out}", flush=True)
     return 0
 
