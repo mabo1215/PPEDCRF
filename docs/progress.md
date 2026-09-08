@@ -2024,3 +2024,24 @@ paper's numbers can be checked.
      supplementary **4** 页、supplementary_extended **12** 页、titlepage 1 页;
      artifact 重建后 MANIFEST **524 行**(523 个 results 文件 + 报告 PDF),
      `sha256sum -c` 全过,`verify_claims.py` **228 项 0 mismatch**。
+
+306. 【已完成】**把 supplement(与正文)里读者可见的机器代码名换成论文写法**。用户指出
+     `permuted_energy` 这类标识符不该出现在论文里。
+     - **能量匹配控制那一节改成公式**:定义 $E(w)=\frac1n\sum_u w(u)^2$,三个控制写成
+       $w^{\mathrm{unif}}(u)=\sqrt{E(w_t)}$、$w^{\mathrm{shift}}(u)=w_t(u\ominus\tau)$、
+       $w^{\mathrm{perm}}=w_t\circ\pi$,能量守恒门槛也写成 $|E(w')/E(w_t)-1|\le10^{-6}$
+       ——比原来的括号解释更准:后两个是重排,所以严格守恒,这一点用文字说不清楚。
+     - **表格标签**:`full`→mechanism/PPEDCRF、`rolled`→shifted、
+       manifest 列 `all8`/`o2n8`/`n2o8` 与 `all`/`o2n`/`n2o` → primary/old→new/new→old
+       (共 63 行)、`global\_noise`→Global Gaussian noise;数据集字段
+       `train\_val`/`unique\_cluster` 改成 "train/validation release" 与
+       "unique-cluster place label",保留可核查性但不再是等宽代码。
+     - 正文同类的 4 处一并处理(`train\_val`、`unique\_cluster`×2、`background` 类名)。
+     - **渲染后全文扫描确认零残留**;页数守住:正文 13 页、supplement 4 页。
+       中途 supplement 一度涨到 5 页(第 5 页只剩参考文献),把新加的行内公式从独立编号
+       公式改回行内、并压掉两句冗余后回到 4 页。
+     - **踩坑**:用 Python 脚本批量改表格行时,`write_text` 在 Windows 上把整份 LF 文件
+       写成了 CRLF,`git diff` 从 10 行变成 557 行。已改回 LF。**以后脚本化改 .tex 一律
+       用二进制读写或显式 `newline=''`**,并在提交前看一眼 `git diff --stat` 是否合理。
+     - **未做**:extended report(`paper/backup/supplementary_extended.tex`)里还有约 100 处
+       同类标识符。它不是投稿件,本轮未动;要统一的话是一次单独的通读改写。
