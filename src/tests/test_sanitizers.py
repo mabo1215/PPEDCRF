@@ -14,7 +14,8 @@ import torch
 SRC_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SRC_ROOT))
 
-from eval.sanitizers import HELD_OUT, SANITIZERS, TRAINED  # noqa: E402
+from eval.sanitizers import (  # noqa: E402
+    HELD_OUT, RANDOM_ONE_POOL, SANITIZERS, TRAINED)
 from scripts.run_direction_transfer_study import (  # noqa: E402
     directional_delta, release_at_mse)
 
@@ -58,6 +59,26 @@ def test_random_one_is_deterministic_in_the_frame() -> None:
     a = SANITIZERS["random_one"](frame)
     b = SANITIZERS["random_one"](frame.clone())
     assert torch.equal(a, b)
+
+
+def test_random_one_pool_excludes_the_composites() -> None:
+    """The pool must not contain random_one, or a frame can recurse forever.
+
+    Checking membership rather than calling it: which slot a frame selects is
+    a function of its content, so a call-based test passes or fails by luck.
+    """
+    assert "random_one" not in RANDOM_ONE_POOL
+    assert "jpeg50_blur" not in RANDOM_ONE_POOL
+    assert set(RANDOM_ONE_POOL) <= set(SANITIZERS)
+
+
+def test_random_one_reaches_every_operator_in_its_pool() -> None:
+    hit = {RANDOM_ONE_POOL[
+        __import__("zlib").crc32(
+            SANITIZERS["none"](_frame(seed=s)).detach().to("cpu").clamp(0, 255)
+            .round().byte().numpy().tobytes()) & 0x7FFFFFFF
+        % len(RANDOM_ONE_POOL)] for s in range(200)}
+    assert len(hit) >= len(RANDOM_ONE_POOL) - 2, sorted(hit)
 
 
 class _ToyEmbedder(torch.nn.Module):

@@ -14,6 +14,7 @@ matching the frame representation used throughout eval/retrieval_attack.py.
 """
 from __future__ import annotations
 
+import zlib
 from typing import Callable, Dict
 
 import cv2
@@ -116,6 +117,13 @@ SANITIZERS: Dict[str, Callable[[torch.Tensor], torch.Tensor]] = {
 HELD_OUT = ("jpeg60", "jpeg30", "median3", "resize_half", "blur2", "bitdepth4")
 
 
+# The pool `random_one` draws from. Fixed at definition time and holding only
+# the simple operators: drawing from HELD_OUT instead would include
+# `random_one` itself once the composites below are appended to it, and a
+# frame whose checksum selected that slot would recurse without end.
+RANDOM_ONE_POOL = TRAINED + HELD_OUT
+
+
 def random_one(frame: torch.Tensor) -> torch.Tensor:
     """Apply one operator chosen uniformly from the trained and held-out sets.
 
@@ -123,10 +131,8 @@ def random_one(frame: torch.Tensor) -> torch.Tensor:
     frame always meets the same operator and the study stays reproducible
     without threading a generator through the evaluation loop.
     """
-    import zlib
-    pool = list(TRAINED) + list(HELD_OUT)
     key = zlib.crc32(_to_uint8_hwc(frame).tobytes()) & 0x7FFFFFFF
-    return SANITIZERS[pool[key % len(pool)]](frame)
+    return SANITIZERS[RANDOM_ONE_POOL[key % len(RANDOM_ONE_POOL)]](frame)
 
 
 def jpeg50_then_blur(frame: torch.Tensor) -> torch.Tensor:
