@@ -335,6 +335,19 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 # 遗留问题
 
+- monitoring 语料的来源没有在论文里点名【需要你提供,TOMM R3-5 的最后一项,见第 300 条】：
+  正文只写 "a frozen pool of 120 monitoring sequences",没有说这些视频是什么。R3-5 明确
+  要求披露 gallery 的来源,其余各项(取帧、配对、distractor、无 GPS 标签)都已披露并写明局限,
+  只差这一句。仓库里能查到的只有本机路径 `F:\work\datasets\monitoring\images`
+  (25,934 帧 / 3,710 个 clip id),没有记录它的出处。TIFS 评审也会问同样的问题。
+  需要你提供/决策：
+  1. 这 120 段(实际语料 3,710 个 clip)是公开数据集吗？如果是,数据集全名和 license 是什么？
+  2. 如果是自采或内部素材：可以怎么描述(采集场景、时间跨度、是否可公开)？涉及人像/车牌时
+     论文是否需要加一句伦理与合规说明？
+  3. 是否允许在论文里写明来源？若不允许公开,我就写成"an internal collection of ...,
+     not redistributable",但必须有一个可核查的描述,不能继续留空。
+  A: （待你填写）
+
 - ICME-M8 匿名一键复现 artifact 打包【需要你决策】：原审稿意见要求的两个具体可复现性陷阱（`run_eval.py` 误导性随机占位符、空的 smoke test）均已在代码层面修复；但审稿意见同时要求的"完整打包交付物"（relative-path manifest、pinned dependencies、raw-output-to-table verifier，供匿名评审下载复现）尚未开始组装。这是一个范围和托管方式的决策，不是可以单方面完成的技术任务。
   需要你提供/决策：
   1. 是否需要现在就开始组装这个 artifact 包？(如果 ICME 2027 官方 kit 还没发布，具体的 supplementary material 大小限制和托管方式也还不确定，可能需要等 kit 发布后再做更有针对性的打包)
@@ -1932,3 +1945,71 @@ paper's numbers can be checked.
 298. 【待办,不阻塞】正文第 146 行附近写"23 further paired tests on the real place-labelled
      benchmark",这个计数的构成没能从文字反推出来(我按几种口径数出的是 17/22/24)。
      不属于 R1,本轮未动;下一轮应把它与实际跑过的真实数据配对检验列表对齐后改准或改成范围表述。
+
+## 本轮(2026-09-08 晚续二,TOMM 审稿信逐条复核 + extended report 接进构建与 artifact)
+
+299. 【已完成】**把 `docs/TOMM_Response_Letter.md` 的 10 条意见对着当前稿子重核了一遍**。
+     必须重核的原因:第 95 条(2026-09-03)那次核对针对的是重构前的稿子,此后论文经历三次
+     主线重构、改投 TIFS、`appendix.tex` 退役换成 `supplementary.tex`、正文压到 13 页,
+     旧结论不能沿用。结果:**7 条完全落实、2 条以改写/删除方式消解、1 条差一句话**。
+
+     | 意见 | 状态 | 现在在哪 |
+     |---|---|---|
+     | R2-1 真实 place/GPS 数据集、更大 gallery、条件变化 | 已落实 | MSLS `unique_cluster`,8 城 400 query/2000 gallery + 两个官方跨时子任务;forward-view/daytime 的局限如实写明 |
+     | R2-2 matched PSNR/MSE/能量、更强基线、同图 mAP+mIoU | 已落实 | 已成为论文主线(energy-matched → matched delivered MSE);matched-PSNR 扫描在 supplement;白盒 + 两档自适应对手;同图 AP@50/IoU 逐图配对检验 |
+     | R3-1 unary predictor 来源/架构/训练/损失/独立评估 | 已落实 | `main.tex` §III(87,441 参数的新实现 encoder–decoder、BCE、声明不作为已验证敏感度估计)+ KITTI-360 独立归因检查 + "released map 数值恒定"这一发现 |
+     | R3-2 Eq.(2) 的 σ(·)、S(·) 核/步长/padding | 已落实 | sigmoid 显式给出;3×3 average pooling、stride 1、reflect padding |
+     | R3-3 NCP/时序消融或下调主张 | 已落实(两头都做) | supplement 两张表含 w/o temporal、w/o NCP、Unary-only+NCP、**No DCRF**,各格数字相同;正文已不再声称二者的贡献 |
+     | R3-4 6 dB 不能当等隐私优势 | 已落实 | 正文无该主张;supplement 写明 5.97 dB 来自"map≈0.5 只施加一半幅度" |
+     | R3-5 gallery 披露 | **差一项** | 构造全披露 + 明确承认"标识合成、无 GPS、不测真实地理身份";**但 120 段 monitoring 序列的来源从未在论文里点名**(见第 300 条) |
+     | R3-6 界定范围、大/小 margin 子组 | 已落实 | 正文按 clean margin 中位数分半:confident 半 1.000→0.987、uncertain 半 0.465→0.377(约 6.8×);完整 margin decomposition 表在 extended report |
+     | R3-7 Figure 6 缺检索证据 | 以删除消解 | 那张定性图已不在论文里(teaser 也被 `\begin{comment}` 注释),"无证据插图"的问题消失;但 reviewer 想要的带 rank/similarity 的案例现在论文里也没有 |
+     | R3-8 MixVPR adverse transfer | 已改写解决 | MixVPR 现在是全篇强攻击者;真实 MSLS 上全为负 delta(−0.010…−0.035),无 adverse transfer;缓解是 EOT 加固;跨骨干稳健性主张已整体撤下 |
+
+300. 【遗留】**R3-5 的最后一项:那 120 段 monitoring 序列的来源要你给一句话**。
+     论文只写 "a frozen pool of 120 monitoring sequences",没说它是什么。仓库里只有路径
+     `F:\work\datasets\monitoring\images`(25,934 帧 / 3,710 个 clip id),`docs/progress.md`
+     也没记来源。TIFS 评审同样会问这个。见文件末尾"遗留问题"一节的提问。
+
+301. 【已完成】**extended evidence report 此前是"论文引用了但没人能拿到"的状态,已修好**。
+     正文 3 处 + supplement 5 处引用 "the extended evidence report released with the code",
+     而它当时只以 `paper/backup/supplementary_extended.tex` 存在:在 backup 目录里、
+     `build.bat` 不编译它、artifact 包里也没有。R3-1 的 KITTI-360 完整诊断、R3-6 的
+     margin decomposition、R3-8 的 proxy50 表恰恰都被移进了这份文档。
+     - 已 `git mv` 到 `paper/supplementary_extended.tex`(backup/ 只放废弃稿)
+     - `build.bat` 增加一个构建目标,编译干净、无未定义引用,**12 页**
+     - artifact 里作为 `extended_evidence_report.pdf` 发布,并纳入 MANIFEST
+
+302. 【已完成】**`build_artifact.sh` 已严重过时,照它重跑会产出残缺包,已重写**。
+     它只拷 7 棵树,而现有 bundle 有 **17** 棵——说明当时的包是手工拼的,脚本从未跟上。
+     重写后:17 棵树全部按 `src/outputs` → bundle 的显式映射拷贝(含 `d4_3seed`→`sanitize_3seed`、
+     `sanfree_3seed`→`sanitize_galleryfree`、`direction_free_d1/*_merged.csv`→
+     `direction_transfer_galleryfree/*.csv` 这类改名),并把 EOT 表的拼接规则写进脚本。
+     - **EOT 拼接规则**:每个 backbone×condition 由三个 seed 的独立作业拼成,其中
+       ResNet18 的 seed 5678 跑在另一台机器上(`resnet18_local`),它的 `eot_none.csv`
+       里还混着一个中断的 9012 作业的 329 行。规则定为**按目录名义 seed 过滤行**,
+       这样每个条件正好三个 seed。
+     - **校验**:重建前先把旧 bundle 备份;重建后 498 → **523 个文件,旧文件一个没少**
+       (多出的 25 个是更完整的 `sensitivity_stats.jsonl`/`*_analysis.csv`);
+       `direction_eot` 与旧包**行多重集完全一致**(只是行序不同),
+       `run_metadata.json` 的差异只是 JSON 格式、对象相等。`verify_claims.py` **228/0**。
+     - 顺带把 `build_artifact.sh` 与 `run_verification.sh` 改成 `${PYTHON:-python3}`,
+       因为 Git Bash 下 `python3` 解析到 Microsoft Store 的占位程序,根本不是解释器。
+
+303. 【已完成,踩坑记录】**`targets_detection.json` 只存在于被 gitignore 的 bundle 里,
+     差一步就被 `rm -rf results` 删掉且无处可恢复**。它是 200 张 COCO 图的真值框清单,
+     `verify_claims.py` 的 detection 那 3 项全靠它,而它来自已关机主机(第 282 条)。
+     全仓库搜索确认它没有第二份副本。已复制到 `src/outputs/direction_utility_d3/detection/targets.json`
+     作为规范位置,脚本从那里取。
+     - **教训**:构建产物目录里不能存在"唯一副本"。凡是 `rm -rf` 会扫到的目录,
+       动它之前先确认里面每个文件在别处都有源头——这次是先做了整包备份才发现的。
+
+304. 【已完成】artifact 的 `README.md` 写着"verifies 76 reported values"(实际 228)、
+     Layout 只列 7 棵树(实际 17)。已按当前 18 组核验重写"What is checked"与 Layout,
+     并说明 `build_artifact.sh` 是重建这些产物的唯一受支持方式。`paper/.tifs_build.md`
+     同步更正(supplement 3→4 页、extended report 的新位置与去向、正文贴着 13 页上限的提醒)。
+
+305. 【已完成】收尾核验:`build.bat` 四份文档全部编译通过 —— main **13** 页、
+     supplementary **4** 页、supplementary_extended **12** 页、titlepage 1 页;
+     artifact 重建后 MANIFEST **524 行**(523 个 results 文件 + 报告 PDF),
+     `sha256sum -c` 全过,`verify_claims.py` **228 项 0 mismatch**。
