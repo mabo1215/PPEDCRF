@@ -180,15 +180,21 @@ def main() -> int:
     ap.add_argument("--root", default="")
     ap.add_argument("--eval_backbone", default="resnet18",
                     help="Held-out attacker; never a surrogate.")
+    # The published transfer and utility runs use this ensemble
+    # (launch_tifs_d6d7.sh, EOT_SAN block); auditing the release of a
+    # differently-optimised perturbation would not be comparable to Table IV.
     ap.add_argument("--surrogates", nargs="+",
-                    default=["resnet50", "vgg16", "vit_b_16"])
+                    default=["resnet50", "vgg16", "cosplace"])
     ap.add_argument("--conditions", nargs="+",
                     default=["direction", "direction_eot", "isotropic"])
     ap.add_argument("--target_mse", type=float, default=15.68)
     ap.add_argument("--steps", type=int, default=20)
     ap.add_argument("--step_size", type=float, default=1.0)
     ap.add_argument("--linf", type=float, default=16.0)
-    ap.add_argument("--random_start", type=float, default=8.0)
+    # 1.0 is run_direction_transfer_study's default for the "self" objective,
+    # which is the objective used here. A larger start is a different optimiser
+    # configuration and produces a weaker perturbation than the published one.
+    ap.add_argument("--random_start", type=float, default=1.0)
     ap.add_argument("--eot_sanitizers", nargs="*",
                     default=["jpeg", "blur", "resize", "noise"])
     ap.add_argument("--eot_samples", type=int, default=2)
