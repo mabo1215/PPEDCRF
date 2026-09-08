@@ -495,3 +495,211 @@ sentence in `paper/main.tex` section The Other Axis.
 
 **Cost.** 400 images x 4 conditions x 3 runs; minutes on any GPU. Fits the
 local card.
+
+## Fifth independent TIFS review (2026-09-08): A1-A8
+
+Source: `docs/RevisionSuggestions.tex`, the 8 September independent review
+(verdict: major revision, findings R1-R13, recommended experiments E1-E8).
+The review's E-labels collide with the older TOMM E1-E7 in this file, so its
+experiments are renamed A1-A8 here; the mapping to the review is stated in
+each row. Nothing below has been executed at the time of writing.
+
+### Which findings need experiments and which do not
+
+| Finding | Nature | Route |
+|---|---|---|
+| R1 numerical/version drift between prose and tables | text + audit | A1, then edit `paper/` |
+| R2 the allocation-cannot-decide-ranking claim is invalid as stated | text + theory | rewrite, no experiment required; A2 supports the replacement |
+| R3 "oracle"/"bound" language exceeds what is measured | text + measurement | rename now; A2 measures the quantity actually claimed |
+| R4 missing directly related prior work | text + baseline | cite now; A4 supplies the comparison |
+| R5 inference unit, clustering, multiplicity, equivalence | analysis | A1 (place-clustered re-analysis of existing exports) |
+| R6 three design factors are not isolated | experiment | A3 |
+| R7 matched distortion is not a utility frontier | experiment | A5 |
+| R8 adaptation claim rests on a restricted attacker | experiment | A6 |
+| R9 benchmark and attacker generalisation | experiment | A7 |
+| R10 Top-1 is not privacy; release boundary incomplete | analysis + experiment | A1 for Top-5/10, A8 for the serialised release |
+| R11 artifact is not a complete reviewer package | packaging | extend the existing artifact builder |
+| R12 method/optimiser specification | text | write the objective and operators out in the paper |
+| R13 checkable interpretation and display errors | text | edit `paper/` |
+
+### The export problem that gates A1
+
+The D6 per-query exports the current transfer table was generated from
+(`src/outputs/tifs_d6/`) are **not on this machine**: no file under
+`src/outputs/` mentions any held-out transform, and the summary JSONs
+`make_tifs_tables.py` reads are absent. `paper/generated/tab_transfer.tex`
+and `tab_sanitize.tex` are therefore the only surviving record of those
+numbers. This is the same failure mode as the `icme2027_placement_msls`
+episode and it has the same two routes: recover the tree, or regenerate it.
+Until one of them happens, A1 can reconcile the prose against the generated
+tables (which is what R1's table of mismatches actually compares), but it
+cannot recompute Top-5/Top-10 or re-cluster by place, because those need the
+raw rows.
+
+### A1 -- freeze one export per family and reconcile every number (review E1, R1/R5/R10)
+
+**Question.** Does every number printed in the manuscript come from one
+identified run, condition and inference method?
+
+**Code.** `src/scripts/audit_claim_consistency.py` (CPU, no GPU, no dataset).
+It holds a table of every headline claim in `paper/main.tex` and
+`paper/supplementary.tex` -- the value, the source it must agree with, and the
+sentence it appears in -- and checks each against the frozen generated tables
+and, where the raw export is present, against a recomputation from it. It
+prints one line per claim and exits non-zero on any mismatch, so it can run in
+the build loop. The point is the same as `verify_claims.py` but one level up:
+`verify_claims.py` checks table against export, this checks prose against
+table.
+
+**Analysis to add once the raw D6 rows are back.** Place-clustered bootstrap
+(277 places, queries carried whole) beside the query-level interval, as the
+review itself computed; Top-5 and Top-10 beside Top-1 for every direction
+condition; a stated equivalence margin for each "no benefit" claim.
+
+**Gate.** The audit script reports zero mismatches, and every negative claim
+in the paper is either backed by an interval inside a stated equivalence
+margin or reworded to "no benefit detected".
+
+### A2 -- what the sensitivity maps actually measure (review E2, R2/R3)
+
+**Question.** The paper identifies its top-decile concentration statistic with
+Jacobian column norms. `attacker_gradient_map` computes the gradient of a
+scalar cosine score and sums absolute RGB gradients, which is not
+$\lVert J_i \rVert_2$. How far apart are they, and does the margin-variance
+prediction of R2 track measured rank flips?
+
+**Code.** `src/scripts/measure_jacobian_columns.py` (local GPU is enough).
+Estimates per-pixel Jacobian column norms by random projection --
+$\lVert J_i \rVert_2^2 \approx \frac{1}{K}\sum_k (J^\top v_k)_i^2$ for
+$v_k$ standard normal, each term one vector-Jacobian product -- and compares
+that map against the positive-score gradient and the margin gradient by
+Spearman correlation, top-decile overlap and concentration. It then measures,
+per query, the predicted margin variance $v(w)=\sigma^2\sum_i a_i^2 w_i^2$
+against the realised margin change under the same weight map, and reports
+pre-clamp and post-clamp energy.
+
+**Gate.** Every sensitivity statistic in the paper names the quantity actually
+measured. If the three maps agree closely, the existing text stands with a
+renamed statistic; if they disagree, the mechanistic paragraph is rewritten
+around what was measured.
+
+### A3 -- isolate magnitude, sign and placement (review E3, R6) [primary GPU run]
+
+**Question.** The paper compares an optimised direction against weighted
+Gaussian noise and attributes the difference to direction. That comparison
+changes sign pattern, magnitude pattern and clipping behaviour at once. Which
+of them carries the effect?
+
+**Design.** One optimisation per (query, seed) produces the gallery-free
+direction $\delta$. From it, controls that hold delivered MSE fixed after
+clipping:
+
+| Condition | Keeps | Destroys |
+|---|---|---|
+| `direction` | sign and magnitude | --- |
+| `sign_shuffle` | per-pixel magnitude $\lvert\delta\rvert$ | sign pattern (seeded random signs) |
+| `magnitude_uniform` | sign pattern $\operatorname{sign}(\delta)$ | magnitude allocation (constant amplitude) |
+| `isotropic` | budget only | both |
+
+and the placement cross: $\delta$ reweighted by a placement map $w$
+(`uniform`, `edge`, `learned`) before rescaling, which is the missing cell of
+the operator/placement factorial. Every row records pre-clamp realised energy,
+post-clamp delivered MSE, maximum absolute perturbation and clipped fraction,
+so R6's objection that matched $\sum_i w_i^2$ is not matched realised energy
+is answered with a measurement rather than an argument.
+
+**Code.** `src/scripts/run_direction_factorial.py`, reusing
+`directional_delta`, `release_at_mse` and the placement maps already in the
+repository. Exports `top5_hit`/`top10_hit` alongside `correct_rank` so R10 is
+covered for this family from the start.
+
+**Run.** MSLS `manifest_all8.jsonl`, 400 queries, 2,000 gallery, seeds
+1234/1235/1236, delivered MSE 15.68, both attackers (ResNet18 with three
+surrogates, MixVPR with four). Six conditions x three placements is 18 cells
+per (query, seed), but only four optimisations are needed per (query, seed)
+because the placement and sign/magnitude variants are derived from the same
+$\delta$.
+
+**Gate.** The `direction` and `isotropic` cells reproduce the published
+transfer-table values to rounding; every row's delivered MSE is within
+$10^{-3}$ of target; no condition has a zero perturbation.
+
+**Cost.** Comparable to one D6 backbone pass: the optimiser dominates and runs
+once per (query, seed, surrogate set). Estimated 4-6 h per backbone on the
+vGPU 3090.
+
+### A4 -- the closest prior method, run under this protocol (review E4, R4)
+
+**Question.** Le et al. combine a spatial mask with multi-model PGD for
+location privacy. The paper's novelty claim needs that comparison rather than
+an argument that no such method exists.
+
+**Design.** Three arms at matched delivered distortion, same surrogate access,
+same restart budget, same query/gallery protocol: mask-guided multi-model PGD
+(perturbation confined to a mask, gradient averaged over the surrogate
+ensemble), full-frame multi-model PGD (this paper's direction), and the
+isotropic control. The mask is the one this repository can compute without
+new dependencies -- the segmentation background map already used as a
+published-model placement -- and the deviation from Le et al.'s CAM mask is
+recorded as an adaptation, not hidden.
+
+**Code.** `src/scripts/run_maskguided_pgd_baseline.py`.
+
+**Gate.** All three arms deliver the same MSE to $10^{-3}$; the report states
+the task adaptation (gallery ranking rather than scene classification)
+explicitly. Either outcome is written up.
+
+**Cost.** Same order as A3 for one backbone; 2-3 h on the vGPU 3090.
+
+### A5 -- privacy against measured utility, over budgets (review E5, R7)
+
+Sweep delivered MSE over four points spanning the claimed operating regime and
+report retrieval privacy against detector/segmenter metrics for isotropic,
+edge placement, gallery-free direction and the EOT-hardened direction, with a
+declared utility tolerance. `evaluate_direction_utility.py` gains
+`--target_mse` as a sweep and the hardened condition it already supports.
+Cross-dataset transfer (MSLS retrieval, VOC/COCO utility) is labelled as such.
+Local GPU is sufficient for the utility half; the retrieval half rides on A3.
+
+### A6 -- adaptation against the final hardened release (review E6, R8)
+
+Fine-tune the attacker on **hardened** releases with fresh randomness, add a
+gallery-rebuilding configuration, select on a larger and more informative
+validation set, and evaluate on a place-disjoint test split, reporting
+Top-1/5/10 and rank statistics. Extends `finetune_adaptive_attacker.py`.
+vGPU 3090, one session.
+
+### A7 -- external validity (review E7, R9)
+
+Replicate the decisive contrast on a geographic holdout (city-disjoint split
+of the existing 8-city manifest, which needs no new download) and on one more
+held-out strong VPR backbone, and audit cluster-based positives against
+GPS/heading positives from the MSLS metadata already on disk. vGPU 3090.
+
+### A8 -- what is actually released (review E8, R10)
+
+Save each released frame as PNG and as JPEG at a stated quality, decode it
+back, and re-measure delivered MSE, maximum absolute perturbation, clipped
+fraction and retrieval outcome. This closes the gap between the float tensor
+the optimiser produces and the file a deployment would transmit, and it checks
+whether `release_at_mse`'s post-optimisation scaling can push the perturbation
+past the $\ell_\infty$ projection that preceded it.
+`src/scripts/validate_serialized_release.py`; local GPU is sufficient.
+
+### Execution order
+
+1. A1 (CPU) and the R1/R13/R2/R3/R4/R12 text edits -- no GPU, done first,
+   because R1 says not to launch new benchmarks until the claims are stable.
+2. A8 and A2 on the local RTX 3070 -- both are small.
+3. A3 then A4 on the vGPU 3090, in that order: A3 is what R6 asks for and
+   also regenerates the direction cells that A1 needs at Top-5/10.
+4. A5, A6, A7 as a second GPU session, scoped by what A3/A4 return.
+
+### Writeback rules for this cycle
+
+No number enters `paper/` before its run passes the gate stated above. The
+published transfer table is not overwritten by A3: A3's `direction` and
+`isotropic` cells are a reproduction check, and if they disagree with the
+published values beyond rounding, that disagreement is itself reported rather
+than quietly replacing the table. Negative outcomes from A3-A8 are written up
+in the same detail as positive ones.
