@@ -2296,5 +2296,83 @@ paper's numbers can be checked.
      以"开卡 + N 小时"表示并注明原因,而不是编一个钟点。新增 X1 行(找回导出树)
      作为当前最高优先级,R11 从 70% 改为 **blocked**。
 
+337. 【已完成，推翻第 335 条】**vGPU 3090 可以连上了，而且九棵树里有四棵在它上面**。
+     第 335 条记录 `westd:22766` 是"TCP 能连但 SSH banner 超时，不可用"，现在公钥认证
+     直接握手成功并能执行命令（`ssh -p 22766 -o PreferredAuthentications=publickey
+     root@connect.westd.seetacloud.com`）。在
+     `/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF/src/outputs/` 下找到并拉回：
+     `tifs_a3`、`tifs_a3hi`、`tifs_a4`、`tifs_a7_o2n8`，共 48 个文件 7.2 MB。
+     - 拉回方式：`ssh ... "cd .../src/outputs && tar cf - <trees>" | tar xvf -`。
+     - 该机的卡是**关着的**（`nvidia-smi` 返回 `Permission denied`，无卡模式特征），
+       所以它只能用来取文件和跑 CPU 活，A5/A6/A7b 仍然无处可跑。
+     - 共享盘 `/autodl-fs/data` 上**没有任何 tifs 导出树**；
+       `ppedcrf_relay_20260908/` 里只有输入用的 tar（MSLS 图像、third_party、
+       vpr_cache、一个仓库快照），不是结果。
+     - PRO 6000 `westc:48305`、H800 `westc:44708`、2c `weste:42044` 仍然 refused。
+       剩下的十二棵树只可能在这三台上，等开机。
 
-下一步建议按这个顺序：X1 找回导出树（开卡第一件事）→ 本机可做的 A1 审计脚本与 R12 算子定义 → 本机 GPU 的 A2/A8 → 需要开卡的 A5/A6/A7b。
+338. 【已完成】**拉回来的四棵树把正文里 A3/A4/A7 的数字全部验证了一遍，逐格对上**。
+     - Table VI（A3 因子分解，两个预算 × 两个骨干 × 五个条件）：Top-1、Δ、p 全部复现。
+       复现门槛也复现了：MixVPR 0.7850 vs 0.7800、0.7342 vs 0.7317（≤0.005），
+       ResNet18 最大偏差 0.00747（正文写 ≤0.008，是个上界，成立）。
+     - Table VII（A4 mask-guided，gradient 掩码 0.25 覆盖）：ResNet18 0.0558/0.0408、
+       Δ=+0.0150、p=0.119；MixVPR 0.7650/0.7292、Δ=+0.0358、p=1.78e-4。全对。
+     - A7 old-to-new：ResNet18 −0.1183（p=2.78e-12）、MixVPR −0.0558（p=6.67e-7）。全对。
+     - 夹持损耗 4.69% / 1.10%、max|δ|=76.001 也都是从原始行算出来的，不再是转述。
+     - **仍无本地依据的**：A4 的 0.10/0.50 覆盖（`tifs_a4sweep`）、edge/saliency 掩码
+       （`tifs_a4mask`）、A3b 的 placement 交叉（`tifs_a3b`）、A7 new-to-old
+       （`tifs_a7_n2o8`）、`tifs5_analysis`。
+
+339. 【已完成，发现并修掉一处真实分歧】**分析脚本和 Table VI 的三个 p 值对不上**。
+     `analyze_direction_factorial.py` 自己先把差值为 0 的样本剔掉再交给 scipy，
+     scipy 看到的是一个短的、表面上无并列的样本，于是切换到 **精确 Wilcoxon 检验**；
+     而 Table VI 报的是**带并列校正的正态近似**。
+     - 具体差异：sign_shuffle 那三格，脚本给 0.35 / 0.72 / 0.25，论文写 0.33 / 0.66 / 0.23。
+     - 谁对：**论文对**。每个 query 在三个种子上平均后的 Top-1 差值只取五个值
+       （0、±1/3、±2/3），并列极重，精确检验的连续性假设不成立，近似才带并列校正。
+     - 已改成 `wilcoxon(diff, zero_method="wilcox", method="approx")`，脚本现在复现
+       0.33 / 0.66 / 0.23 / 0.09；加了两个回归测试钉住这个行为。
+     - **没有任何结论改变**——四格都离 0.05 很远，两条路径都判"与各向同性对照无法区分"。
+     - 教训：把零值预过滤掉再调 scipy，会静默改变检验方法。
+
+340. 【已完成】**`src/scripts/audit_claim_consistency.py` 写出来了**（第 336 条列的
+     A1 剩余项）。它把正文/生成表里的 **110 个已发表数字**编码成声明，每条带三样东西：
+     论文印出来的值、必须仍然出现在对应源文件里的字面串、以及从原始 per-query 行
+     重新计算它的配方。
+     - 结果：**106 条验证通过，0 条不一致，4 条无数据**（就是 A7 new-to-old 那四格，
+       树还没回来）。0 条字面串失踪。
+     - 退出码：不一致或字面串消失退 1，只有缺数据退 2，全绿退 0。缺树时它**报 no data
+       而不是静默跳过**，所以这份报告同时就是"哪些正文数字目前没有本地出处"的清单。
+     - 覆盖：Table VI 两个预算全部单元格、复现门槛、夹持测量、Table VII、A7、
+       Table IV（tab_transfer 全表）、Top-1/5/10 那句话、0.012 那个界。
+     - 待办：等 allocation 家族的树回来后把它们也编进声明表，并把这个脚本挂进
+       `src/artifact/run_verification.sh`。
+
+341. 【已完成】**R12 收尾：supplement 新增《Operator and EOT Definitions》一节**，
+     算子和 EOT 目标从"只有名字"变成"有定义"。
+     - 式 S1–S4：各向同性高斯、空间相关高斯（5 宽盒滤波后按经验标准差重标定）、
+       选择性低通（9 宽盒滤波）、块量化（8×8 块均值），核宽都按代码里的实际取值写。
+     - 式 S5：匹配"实测 MSE"的逐帧二分求解，**夹持写在目标函数里面**，并解释了
+       为什么夹持的位置正是"跨算子比较是在比结构而不是在比预算"的原因。
+     - 式 S6：无 gallery 的 EOT 目标，连同约束集（ℓ∞ ≤ 16、像素域 [0,255]）、
+       20 步符号梯度、步长 1、每步采两个变换的无偏估计、BPDA 写成
+       `x+δ+(T(x+δ)−(x+δ)).detach()`，以及为什么 self 目标**必须**随机起点
+       （δ=0 正是目标的极大点，梯度为零）。
+     - 正文的指针放在 Table VIII 的 caption 里。放正文段落里试过三次，
+       每次都把 main 顶到 14 页；caption 是 footnotesize，一行就装下了。
+
+342. 【已完成】**R13 最后一处残留找到并改掉**：结论段还写着文献"does not treat the
+     third as a variable at all"，这和同一轮刚加的 Le et al. / GeoShield 引用直接冲突
+     （第 329 条以为已经清干净了，其实只清了正文没清结论）。现在改成"has not compared
+     the third against them at matched distortion"，这才是本文实际证明的东西。
+     - 顺带删掉两处会被评审看见的"修改史痕迹"：
+       "and it is sharper than the claim it replaces"、
+       "and we say so rather than claim the pairing is unexplored"。
+     - 重建核验：main **13 页**（守住 TIFS 上限）、摘要 244 词、supplement 5 页、
+       0 未定义引用/citation、0 overfull box、**32 个单测通过**（原 30，第 339 条加了 2）。
+
+
+下一步建议按这个顺序：等 PRO 6000 / H800 / 2c 任意一台开机 → X1 取回剩下的十二棵树
+（开机第一条命令就是 `ls src/outputs/`，取完再启动任何新任务）→ 本机 GPU 可以直接做的
+A2 与 A8（注意本机是 RTX 4050 Laptop，不是之前记的 3070）→ 开卡后的 A5 / A6 / A7b →
+投稿前重写 cover letter。

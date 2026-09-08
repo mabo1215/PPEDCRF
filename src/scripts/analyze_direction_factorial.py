@@ -80,8 +80,18 @@ def compare(cond: Dict[str, float], ref: Dict[str, float],
     idx = rng.integers(0, len(queries), size=(n_boot, len(queries)))
     boot = diff[idx].mean(axis=1)
     lo, hi = np.percentile(boot, [2.5, 97.5])
-    nz = diff[diff != 0]
-    p = float(wilcoxon(nz).pvalue) if len(nz) else 1.0
+    # Zero handling is delegated to scipy ("wilcox" discards the ties at
+    # zero) and the normal approximation is requested explicitly. Dropping the
+    # zeros here instead would leave scipy a short, apparently untied sample
+    # and it would switch to the exact test -- which assumes continuous data.
+    # Per-query differences of a Top-1 indicator averaged over three seeds take
+    # five values, so they are heavily tied and the exact test does not apply;
+    # the approximation carries the tie correction. The two paths differ only
+    # where zeros dominate (p = 0.33 against 0.35 for the sign-shuffle cell),
+    # never near the decision boundary, but the published tables report the
+    # approximation and this is what regenerates them.
+    p = (float(wilcoxon(diff, zero_method="wilcox", method="approx").pvalue)
+         if np.any(diff != 0) else 1.0)
     return {"n": len(queries), "delta": float(diff.mean()),
             "lo": float(lo), "hi": float(hi), "p": p}
 

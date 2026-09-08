@@ -10,6 +10,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 import torch
 
 SRC_ROOT = Path(__file__).resolve().parents[1]
@@ -112,3 +113,42 @@ def test_saturated_frame_shows_the_clamp_taking_energy() -> None:
 def test_condition_names_are_the_ones_the_analysis_expects() -> None:
     assert CONDITIONS == ("direction", "sign_shuffle", "magnitude_uniform",
                           "isotropic")
+
+
+def test_paired_test_uses_the_tie_corrected_approximation() -> None:
+    """Pin the zero handling that decides the sign-shuffle p-values.
+
+    Per-query Top-1 differences averaged over three seeds take five values, so
+    a sign-shuffle contrast is mostly exact zeros with a handful of +/-1/3 and
+    +/-2/3 ties. Discarding the zeros before calling scipy leaves it a short,
+    apparently untied sample and it switches to the exact test, which assumes
+    continuous data and does not apply here. The published tables report the
+    tie-corrected normal approximation; this test fails if the analysis drifts
+    back to the exact path, which is how the script and Table VI came to
+    disagree (p = 0.35 against the published 0.33).
+    """
+    from scipy.stats import wilcoxon  # noqa: E402
+
+    from scripts.analyze_direction_factorial import compare  # noqa: E402
+
+    third = 1.0 / 3.0
+    diff = [0.0] * 372 + [third] * 8 + [-third] * 14 + [-2 * third] * 6
+    cond = {f"q{i}": d for i, d in enumerate(diff)}
+    ref = {f"q{i}": 0.0 for i in range(len(diff))}
+
+    got = compare(cond, ref)
+    expected = wilcoxon(diff, zero_method="wilcox", method="approx").pvalue
+    assert got["p"] == pytest.approx(expected)
+
+    nonzero_only = [d for d in diff if d != 0.0]
+    exact = wilcoxon(nonzero_only).pvalue
+    assert got["p"] != pytest.approx(exact), (
+        "compare() fell back to the exact test on tied data")
+
+
+def test_paired_test_reports_unity_when_nothing_differs() -> None:
+    """Two identical arms have no non-zero differences left to rank."""
+    from scripts.analyze_direction_factorial import compare  # noqa: E402
+
+    cond = {f"q{i}": 0.5 for i in range(20)}
+    assert compare(cond, dict(cond))["p"] == 1.0
