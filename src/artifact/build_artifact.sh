@@ -149,7 +149,7 @@ fi
 # only there, and says it is released with the code. Shipping it here is what
 # makes those citations resolvable.
 echo "== including the extended evidence report =="
-REPORT="$REPO_ROOT/paper/supplementary_extended.pdf"
+REPORT="$REPO_ROOT/paper/backup/supplementary_extended.pdf"
 if [ ! -f "$REPORT" ]; then
   echo "missing $REPORT -- build the paper first (paper/build.bat)" >&2
   exit 1

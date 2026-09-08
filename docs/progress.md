@@ -1982,9 +1982,14 @@ paper's numbers can be checked.
      而它当时只以 `paper/backup/supplementary_extended.tex` 存在:在 backup 目录里、
      `build.bat` 不编译它、artifact 包里也没有。R3-1 的 KITTI-360 完整诊断、R3-6 的
      margin decomposition、R3-8 的 proxy50 表恰恰都被移进了这份文档。
-     - 已 `git mv` 到 `paper/supplementary_extended.tex`(backup/ 只放废弃稿)
      - `build.bat` 增加一个构建目标,编译干净、无未定义引用,**12 页**
      - artifact 里作为 `extended_evidence_report.pdf` 发布,并纳入 MANIFEST
+     - **位置(按用户要求最终定在 backup/)**:先移到了 `paper/supplementary_extended.tex`,
+       用户随后要求移回 `paper/backup/`。因此 `build.bat` 的构建目标带上了源目录参数,
+       PDF 也写在源文件旁边(`paper/backup/supplementary_extended.pdf`)而不是 paper 根目录
+       ——根目录只放要提交的文档;`build_artifact.sh` 相应改从 backup/ 取这份 PDF。
+       即:文件放在 backup/,但它**不是废弃稿**,是论文引用、随代码发布的活文档,
+       这一点已写进 `paper/.tifs_build.md` 以免下次被当成历史文件清理掉。
 
 302. 【已完成】**`build_artifact.sh` 已严重过时,照它重跑会产出残缺包,已重写**。
      它只拷 7 棵树,而现有 bundle 有 **17** 棵——说明当时的包是手工拼的,脚本从未跟上。
