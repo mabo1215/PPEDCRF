@@ -24,9 +24,10 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{9 September 2026 --- IEEE TIFS, fifth independent review cycle. This
-file carries \emph{only} open, running and not-yet-started work; completed
-items are removed once recorded in \texttt{docs/progress.md}.}
+\date{9 September 2026, after the overnight GPU session --- IEEE TIFS, fifth
+independent review cycle. This file carries \emph{only} open, running and
+not-yet-started work; completed items are removed once recorded in
+\texttt{docs/progress.md}.}
 
 \begin{document}
 \maketitle
@@ -91,11 +92,13 @@ open}: the statistic is still called a gradient concentration where the paper
 means Jacobian column norms. Gate: experiment A2 measures both and the text
 names whichever was measured. \\
 
-R4 & Directly relevant prior work was missing. & \partialstatus & Le et al.\
-and GeoShield are cited where the paper explains why it does not re-run a
-published system, and the novelty claim is now the matched-distortion
-comparison. \textbf{Still open}: the protocol-matched baseline itself
-(experiment A4). \\
+R4 & Directly relevant prior work was missing. &
+\textcolor{DoneGreen}{\textbf{Measured}} & Le et al.\ and GeoShield are cited,
+and A4 ran the mask-guided baseline under this protocol at three coverages
+and three mask sources. The mask never beats the full-frame direction and
+loses monotonically as it tightens ($+0.063$ at coverage $0.10$, $+0.002$ at
+$0.50$), independently of which mask is used. \textbf{Remaining}: write the
+comparison into the paper, which turns the novelty claim into a tested one. \\
 
 R5 & Inference unit, clustering, multiplicity, equivalence margins. &
 \partialstatus & The transfer table already uses the query as the unit, and
@@ -104,12 +107,17 @@ this cycle removed the stale pair-level $p$-values from the prose.
 sharing one), a stated multiplicity policy, and equivalence margins for every
 ``no benefit'' sentence. Needs the D6 rows; part of A1. \\
 
-R6 & The protocol does not isolate magnitude, sign and placement. & \ready &
-Experiment A3 (Table~2). Code, tests and a local GPU smoke run are done. \\
+R6 & The protocol does not isolate magnitude, sign and placement. &
+\textcolor{DoneGreen}{\textbf{Measured}} & Experiment A3 ran at both budgets
+on both attackers: shuffling the signs removes the whole effect
+($p=0.33$ and $0.66$ at the operating point), flattening the magnitudes keeps
+$49$--$99\%$ of it, and pushing an optimised direction through edge placement
+destroys most of it. \textbf{Remaining}: write it into the manuscript, which
+replaces a qualitative claim with a decomposition. \\
 
 R7 & Matched distortion is not a utility frontier. & \pending & Experiment A5:
 sweep four measured budgets and report privacy against detector/segmenter
-metrics with a declared utility tolerance. Not started. \\
+metrics with a declared utility tolerance. Not started; needs a GPU session. \\
 
 R8 & The adaptation claim rests on a restricted attacker. & \partialstatus &
 The claim is now scoped in the text to the budget that produced it.
@@ -117,15 +125,21 @@ The claim is now scoped in the text to the budget that produced it.
 rebuild the gallery, evaluate on a place-disjoint split. \\
 
 R9 & Benchmark and attacker generalisation. & \partialstatus & The benchmark
-is now described as a custom subset and the cluster-label criterion is
-distinguished from the dataset's distance-and-heading protocol.
-\textbf{Still open}: experiment A7 --- geographic holdout, one more held-out
-VPR backbone, and the positives audit. \\
+is described as a custom subset and the cluster-label criterion is
+distinguished from the dataset's distance-and-heading protocol. A7 replicated
+the direction contrast on both official cross-time subtasks: four of four
+cells significant ($-0.038$ to $-0.176$). \textbf{Still open}: a second
+dataset, one more held-out VPR architecture, and the GPS/heading audit of
+cluster positives. \\
 
 R10 & Top-1 is not location privacy; the release boundary is incomplete. &
-\partialstatus & A3 exports Top-5/10 from the start. \textbf{Still open}:
-those metrics for the published conditions (needs the D6 rows), and experiment
-A8 on the serialised release. \\
+\partialstatus & Top-5/10 are now measured for every new condition, and they
+change the reading: against MixVPR the direction moves Top-1 $0.785\to0.734$
+while Top-5 only moves $0.870\to0.830$. The release boundary is measured too
+--- maximum perturbation reaches $74$--$76$ against an $\ell_\infty$
+projection of $16$, because the rescaling follows the projection.
+\textbf{Still open}: reporting both in the manuscript, and A8 on the decoded
+file. \\
 
 R11 & The artifact is not a complete, current reviewer package. &
 \partialstatus & The builder was repaired and now assembles all seventeen
@@ -151,10 +165,9 @@ V1 & \texttt{USAGE.md} is gitignored, so its venue line is unprotected. &
 \section*{Table 2: Next-Step Plan}
 
 \begin{longtable}{@{}p{0.19\linewidth}p{0.09\linewidth}p{0.05\linewidth}p{0.18\linewidth}p{0.41\linewidth}@{}}
-\caption{Scheduled work as of 9 September 2026, 00:30 NZST. Nothing is
-running: both billed GPU hosts are powered down. Estimated completion times
-are New Zealand Standard Time and are stated as offsets from GPU-on, because
-the start is the user's decision.}
+\caption{Scheduled work as of 9 September 2026, 02:00 NZST. Nothing is
+running: the overnight session finished at 01:38 and both billed hosts were
+powered down and confirmed unreachable. Times are New Zealand Standard Time.}
 \label{tab:tifs5-schedule}\\
 \toprule
 Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
@@ -170,30 +183,35 @@ Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-A3 --- magnitude/sign/placement factorial (R6, R10) & \ready & 45\%
-(code, tests, local smoke) & GPU-on $+$ 5\,h (ResNet18), $+$ 11\,h (both
-backbones) & \textbf{First run when the card comes up.} Four conditions
-$\times$ two placements from one optimisation per (query, seed):
-\texttt{direction}, \texttt{sign\_shuffle}, \texttt{magnitude\_uniform},
-\texttt{isotropic}. Answers which factor carries the effect, measures
-pre-clamp against delivered energy, and exports Top-5/10. Gate: the
-\texttt{direction} and \texttt{isotropic} cells reproduce
-Table~\ref{tab:tifs5-schedule}'s published transfer values to rounding.
-Commands in \texttt{docs/Design.md}. \\
+A3 --- magnitude/sign/placement factorial (R6, R10) & \done & 100\%
+& Finished 01:38 NZST, 9 September & 38,400 rows over two budgets and two
+attackers, all six jobs per cell exiting zero. Reproduction gate passed:
+MixVPR isotropic $0.7850$ against a published $0.7800$ and direction $0.7342$
+against $0.7317$; ResNet18 within $0.008$. Results in
+\texttt{docs/progress.md} entries 318--320. \\
 
-A4 --- mask-guided PGD baseline (R4) & \ready & 40\% (code, tests, local
-smoke) & GPU-on $+$ 14\,h & \textbf{Second run.} Le et al.'s mask-guided
-multi-model PGD against full-frame PGD and isotropic control, everything else
-held equal. Decides whether the novelty claim survives the closest prior
-method. Either outcome is written up. \\
+A4 --- mask-guided PGD baseline (R4) & \done & 100\% & Finished 01:36 NZST,
+9 September & 28,800 rows: the CAM analogue at three coverages on both
+attackers, plus edge and saliency masks at $0.25$. The mask never wins.
+Entry 321. \\
+
+A7 --- cross-time external validity (R9) & \done & 100\% & Finished 01:32
+NZST, 9 September & 9,600 rows on both official cross-time subtasks, four of
+four cells significant. Entry 322. \\
+
+\textbf{Paper writeback} --- A3, A4, A7 into the manuscript & \pending & 0\%
+& Next working session, no GPU & \textbf{The critical path now.} The
+decomposition replaces the qualitative direction-versus-allocation claim in
+\S\,What Allocation Moves; the mask baseline replaces the argument in
+\S\,Why we do not re-run a published system; Top-1/5/10 must be reported
+together per R10. All three additions land in a manuscript that has no spare
+page, so the writeback has to be planned against the page budget. \\
 
 A1 --- freeze one export per family, reconcile every number (R1, R5, R10) &
-\blocked & 30\% (prose reconciled against the generated table) & When the D6
-tree is recovered, else after A3 & Needs the D6 per-query rows, which are on
-no local drive. Two routes: recover the tree, or take A3's regenerated
-\texttt{direction}/\texttt{isotropic} cells as the frozen export. Then the
-place-clustered bootstrap, Top-5/10, equivalence margins, and the
-prose-versus-table audit script. \\
+\partialstatus & 40\% & After the writeback & The D6 rows are still missing,
+but A3's regenerated \texttt{direction}/\texttt{isotropic} cells now provide a
+frozen, artifact-covered export for that family. Remaining: place-clustered
+bootstrap, equivalence margins, and the prose-versus-table audit script. \\
 
 A2 --- what the sensitivity maps measure (R2, R3) & \pending & 10\% (design
 only) & Local GPU, 2\,h, any time & Random-projection estimate of Jacobian

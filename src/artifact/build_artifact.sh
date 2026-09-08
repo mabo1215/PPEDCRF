@@ -20,7 +20,7 @@ copy_tree() {  # $1 = tree under src/outputs, $2 = name inside results/
   local src="$OUT/$1" dst="results/$2" rel
   [ -d "$src" ] || { echo "missing export tree: $src" >&2; exit 1; }
   find "$src" -type f \( -name '*.csv' -o -name '*.json' -o -name '*.jsonl' \
-       -o -name 'DONE_STATUS.txt' -o -name '*.sha256' \) -print0 |
+       -o -name '*.txt' -o -name '*.sha256' \) -print0 |
     while IFS= read -r -d '' f; do
       rel="${f#"$src"/}"
       mkdir -p "$dst/$(dirname "$rel")"
@@ -74,6 +74,19 @@ copy_file direction_utility_d3/detection/targets.json \
 # --- controlled model with a known Jacobian --------------------------------
 copy_tree known_jacobian           known_jacobian
 copy_tree known_jacobian_operators known_jacobian_operators
+
+# --- fifth-review experiments (A3 factorial, A4 baseline, A7 cross-time) ----
+# Added in the same session that produced them: three export trees have
+# already been lost by leaving this step for later.
+copy_tree tifs_a3        factorial_mse15
+copy_tree tifs_a3hi      factorial_mse241
+copy_tree tifs_a3b       factorial_placements
+copy_tree tifs_a4        maskguided_cam25
+copy_tree tifs_a4sweep   maskguided_coverage
+copy_tree tifs_a4mask    maskguided_source
+copy_tree tifs_a7_o2n8   crosstime_old2new
+copy_tree tifs_a7_n2o8   crosstime_new2old
+copy_tree tifs5_analysis analysis_reports
 
 # --- EOT hardening: one file per condition, three seeds concatenated --------
 # The seeds were run as separate jobs, and one of them (ResNet18 seed 5678)
