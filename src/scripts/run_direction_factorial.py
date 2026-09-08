@@ -150,7 +150,11 @@ def release_with_stats(frame: torch.Tensor, delta: torch.Tensor,
     gain = 0.5 * (lo + hi)
     out, scaled, mse = released_at(gain)
     applied = out - frame
-    clipped = (scaled - applied).abs() > 1e-6
+    # Tolerance in pixel levels, not floating-point epsilon: (frame + scaled)
+    # - frame does not return scaled exactly in float32, so a 1e-6 threshold
+    # counts rounding noise as clipping and reports a clipped fraction of
+    # around 0.6 on frames where nothing is clipped at all.
+    clipped = (scaled - applied).abs() > 1e-2
     return {
         "frame": out,
         "effective_mse": mse,
