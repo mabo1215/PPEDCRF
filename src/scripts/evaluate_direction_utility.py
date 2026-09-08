@@ -67,6 +67,7 @@ from scripts.run_direction_transfer_study import (  # noqa: E402
     normalised_embedding,
     release_at_mse,
 )
+from eval.sanitizers import SANITIZERS  # noqa: E402
 
 IGNORE_INDEX = 255
 
@@ -101,6 +102,13 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--resize_w", type=int, default=320)
     ap.add_argument("--score_threshold", type=float, default=0.05)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--eot_sanitizers", nargs="*", default=[],
+                    help="if given, add a 'hardened_direction' condition "
+                         "optimised in expectation over these attacker-side "
+                         "transforms (same names as the transfer study), "
+                         "alongside the unhardened 'direction' so the two are "
+                         "paired within one run.")
+    ap.add_argument("--eot_samples", type=int, default=2)
     ap.add_argument("--output_dir", required=True)
     return ap.parse_args()
 
@@ -189,6 +197,15 @@ def main() -> int:
     sink = open(cache, "a", encoding="utf-8")
 
     conditions = ["clean", "isotropic", "direction"]
+    for name in args.eot_sanitizers:
+        if name not in SANITIZERS:
+            raise SystemExit(f"unknown sanitizer for EOT: {name!r}; "
+                             f"available: {sorted(SANITIZERS)}")
+    eot_ops = [SANITIZERS[n] for n in args.eot_sanitizers]
+    if eot_ops:
+        conditions.append("hardened_direction")
+    print(f"[utility-direction] conditions={conditions} "
+          f"eot={args.eot_sanitizers or 'off'}", flush=True)
 
     def emit(row: Mapping[str, object]) -> None:
         sink.write(json.dumps(row) + "\n")
@@ -218,6 +235,9 @@ def main() -> int:
                         zlib.crc32(
                             f"{record['image_id']}|{seed}".encode())
                         & 0x7FFFFFFF)
+                    # The hardened and unhardened directions share the same
+                    # random start, so their utility difference is a paired
+                    # comparison of the objective, not of the start.
                     with torch.enable_grad():
                         delta = directional_delta(
                             frame, tgts,
@@ -225,7 +245,10 @@ def main() -> int:
                             [sizes[b] for b in args.surrogates],
                             args.steps, args.step_size, args.linf,
                             random_start=args.random_start,
-                            generator=gstart)
+                            generator=gstart,
+                            eot_ops=(eot_ops if cond == "hardened_direction"
+                                     else ()),
+                            eot_samples=args.eot_samples)
                     if float(delta.abs().max()) == 0.0:
                         raise RuntimeError(
                             f"Zero perturbation for {record['image_id']}: the "

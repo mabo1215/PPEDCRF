@@ -1439,3 +1439,98 @@ held-out 攻防对比(`--eval_checkpoint` 加载微调权重,gallery 仍用 stoc
     proxy50 固定预算表及其正文(本轮并回来的东西里最偏旧框架的一项);其余任何一处都要以丢证据为代价。
     TIFS 对 supplementary 的 ≤6 页是**建议不是硬上限**,所以 11 页和 12 页在合规意义上是同一档。
     等用户定。
+
+## 本轮(2026-09-08 下午,第四轮独立 TIFS 评审 + 文本项全部落地 + D6/D7 代码就绪)
+
+263. 【已完成】**第四轮独立评审写入 `docs/RevisionSuggestions.tex`**(英文 LaTeX,8 页,不继承上一轮)。
+    评审基础:重编后的 `main.pdf`(13 页)与 `supplementary.pdf`(12 页)、逐行读的实现代码
+    (`run_direction_transfer_study.py`、`analyze_direction_transfer.py`、`analyze_eot_sweep.py`、
+    `evaluate_direction_utility.py`、`eval/sanitizers.py`),以及当天抓取的 SPS Information for Authors
+    (摘要 150--250 词、需 Index Terms、初投 13 页/修改稿 16 页、supplementary ≤6 页超出需 EiC 批准、单盲)。
+    结论:**major revision**,预期 R1 站得住即可接收。十条发现按严重度:
+    - **R1(方法学,重大)**:配对检验把 (query, seed) 当独立单元——`UNIT = ["query_id","seed"]`,
+      所谓 "n=1,200" 是 400 query × 3 seed。同一 query 的三个 seed 共享帧、gallery 和难度,
+      不一致对的计数最多被放大 3 倍,所有 p 值(10^-41 之类)都是在这个基础上算的。
+      论文自己在 proxy placement 用了 cluster-robust、在 E1 用了 place-cluster bootstrap,
+      **内部口径不一致**。大效应不受影响;MixVPR 的边缘格(Δ ≤ 0.03)显著性可能翻转。
+    - **R2(定位,重大)**:direction 轴就是对抗扰动用于隐私,而 50 条文献里没有 Oh 2017 / Fawkes /
+      LowKey / Liu 2017 / Dong 2018 / Athalye 2018 ×2(EOT、BPDA——代码 docstring 里写了 BPDA,论文没引)/
+      Guo 2018 / Xu 2018 / Dziugaite 2016 / Tramèr 2020。不补,审稿人会读成"发现了对抗扰动可迁移";
+      补上,贡献反而更清楚:新意在**同一预算下 allocation 与 direction 的受控对比**,不在扰动本身。
+    - **R3(评估,重大)**:EOT 加固只在它训练过的四种变换上评估,"attacker is free to choose a fifth"
+      但没试第五种。
+    - **R4(评估,中)**:加固方向的效用代价没测(D3 只测了未加固版)。
+    - **R5(呈现,重大)**:13 页正文**零图**,连补充材料也零图。
+    - **R6(合规,阻塞)**:摘要 538 词(上限 250),没有 Index Terms——desk check 就会被退。
+    - **R7(可复现,中)**:direction 优化器超参数全文未写(20 步、步长 1、ℓ∞=16、按投递 MSE 标量缩放、
+      gallery-free 的 ±1 随机起点及其原因);两个白盒数字(0.0000@1.22× 与 0.0033@1.0×)来自两个脚本、
+      两个 ℓ∞ 上界,读者不知道为什么不同;代码链接被注释掉了。
+    - **R8(合规,中)**:附录 12 页 vs SPS 的 6 页(超出需 EiC 批准)。
+    - **R9(清晰度,小)**:Scope-of-claims 一段 470 词、单句 230 词。
+    - **R10(一致性,小)**:三处小口径。
+    另外明确列出了**不需要再动的部分**(科学核心全部),避免下一轮空转。
+
+264. 【已完成】**R6:摘要 538 → 246 词(渲染 PDF 上量的),加 `IEEEkeywords`**。删掉了全部 p 值、n、
+    白盒百分比讨论和 known-Jacobian 句;保留问题、协议一句、allocation null 及其范围、operator 一句、
+    direction 两对 Top-1 与 gallery-free 属性、三条限定各一句。写了三稿才压到 250 以下(295 → 269 → 246)。
+
+265. 【已完成】**R2:`ref.bib` 加 11 条**(oh2017adversarial、shan2020fawkes、cherepanova2021lowkey、
+    liu2017delving、dong2018boosting、athalye2018synthesizing、athalye2018obfuscated、guo2018countering、
+    xu2018feature、dziugaite2016study、tramer2020adaptive),Related Work 新增一段
+    "Adversarial perturbation as a privacy mechanism",五处 point-of-use 引用(sign-gradient、
+    surrogate ensemble、EOT、BPDA、adaptive attack),Contributions 第三条改写为"新意是受控对比而非扰动本身"。
+
+266. 【已完成】**R7:§The Other Axis 新增 "How the direction is computed" 一段**——优化器、上界、
+    按投递 MSE 的标量缩放、随机起点及其原因(并如实写明这是我们自己踩过并修掉的坑)、EOT 按步采样;
+    一句话解释两个白盒数字为何不同;作者脚注恢复代码链接 `github.com/mabo1215/PPEDCRF`
+    (**待用户确认该仓库是否公开**)。EOT 每步采样数没写具体值——D5 的启动命令行没记进 progress.md,
+    脚本默认是 2,但无法确认实际用的就是 2,所以只写"按步采样"。**教训:实验启动命令必须原样记录。**
+
+267. 【已完成】**R9/R10 + 三轮追加压缩**。Scope-of-claims 479 → 258 词(三条编号声明 + 一句限定);
+    "Why we do not simply re-run" 202 → 110;fraction-of-white-box 与 selectivity 段各收紧;
+    Conclusion 503 → 423;protocol 的 scope/comparability 两段合一;mechanism 收尾两段合一;
+    caveat 段、published-model placements 段、E1 段、KITTI-360 段、known-Jacobian 收尾、
+    adaptive 第一曝光段、intro 两段、hardening 讨论段(图 3 已承载数字)、utility-cost 段。
+    结论"six attacker backbones"改为"六个骨干在受控基准、两个在真实基准";operator 表 MSE 标签 15.7 → 15.68。
+
+268. 【已完成】**R5:三张图进正文,正文守住 13 页**(第 13 页右栏 89%)。
+    - 图 1 协议示意图:TikZ 画在 `main.tex` 里,一帧一预算三种花法 → 同一 held-out 攻击者 → 配对 Top-1。
+    - 图 2 预算依赖:`src/scripts/make_tifs_review_figures.py` 从附录 `tab:placement_budget` 的数字生成,
+      emphasis 形式(edge/learned/oracle 着色,其余灰),★ 标 50 组配对下显著的三格;替换了原来那段密集文字。
+    - 图 3 预处理 × 加固:同脚本,从 `tab:sanitize` 生成,分组柱状,n.s. 标两格;原表整体移入补充材料新节
+      "Non-Adaptive Preprocessing and EOT Hardening, Full Table"。
+    - 数字从 .tex 表格转录,脚本里对锚点值做了 assert,图和表不会各说各话。
+    - 调色板用 dataviz skill 的参考调色板(slot 1--3 + muted ink);本机没有 node,
+      `validate_palette.js` 跑不了,依据的是该调色板文件里记录的已验证结论。
+    - 图 3 第一次插入后被第四轮压缩脚本的 span 替换**整段吞掉**(它落在被替换区间里),编译出现三处
+      `fig:sanitize` 未定义——靠 0-warning 门禁抓到,已补回。**教训:span 替换的终点标记要选在
+      浮动体之前,不能跨过它。**
+
+269. 【已完成】**D6 代码(R3)**:`eval/sanitizers.py` 新增 8 个 held-out 攻击者端变换
+    (jpeg60 同族内插、jpeg30、median3、resize_half、blur2、bitdepth4、random_one(按帧内容取种)、
+    jpeg50_blur 叠加),并显式列出 `TRAINED` / `HELD_OUT`;`run_direction_transfer_study.py` 新增
+    `--eval_sanitizers`,**每个 (query, condition, seed) 只优化并投递一次**,只重复攻击者的嵌入步,
+    resume 键加上 sanitizer 列;不传该参数时行为与已发表一致。`tests/test_sanitizers.py` 6 项通过
+    (形状/范围/dtype、训练集与保留集不相交、random_one 确定性、toy embedder 上 optimise-once /
+    evaluate-many 路径在 MSE 15.68 上闭合)。全套 pytest 13 项通过。
+
+270. 【已完成】**D7 代码(R4)**:`evaluate_direction_utility.py` 新增 `--eot_sanitizers`,
+    加 `hardened_direction` 条件,与未加固方向共用同一随机起点,使效用差是目标函数的配对比较。
+    D6/D7 计划已写入 `docs/Design.md`(问题、代码、运行命令、分析口径、写回位置、成本、smoke 门禁)。
+
+271. 【已完成】**R1 分析工具就绪,但数据不在本机**:`analyze_direction_transfer.py` 新增 `--unit query`
+    (逐 query 按 seed 平均,query-cluster bootstrap 95% CI,Wilcoxon,worse/better 计数),
+    合成数据上两种单元跑通。**真实重算被阻塞**:`src/outputs/icme2027_*` 导出树不在本机,
+    G 盘没挂载,两台计费主机已关机。R1 是 minimum package 里唯一未落地的项。
+
+272. 【已完成】**渲染核验 22 项全过**(摘要渲染后 246 词、Index Terms、新 RW 段、优化器段、白盒桥接句、
+    代码链接、三张图的 caption、三条新文献出现在参考文献、margin 段仍在、scope 改写、结论口径、
+    表 II 标签;补充材料的新节、搬过去的表格单元格、参考文献表;三项"必须不在")。
+    两份文档 0 overfull、0 未定义引用/文献、bibtex 0 缺失。
+
+273. 【遗留】本轮未完成、等外部条件的项:
+    - **R1** 重算:需要挂载导出树(G 盘)或从远端拉回;纯分析、不需要 GPU。
+    - **D6 / D7** 运行:需要开一台 GPU 主机,按 Design.md 的命令跑;D6 每骨干一次优化 + 13 个前向,
+      D7 400 图 × 4 条件 × 3 次。
+    - **R8** 附录页数:12 页 vs 6 页规则,建议在 cover letter 申请或拆分,等用户定。
+    - 代码链接是否公开:等用户确认。

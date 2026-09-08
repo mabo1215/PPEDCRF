@@ -225,6 +225,15 @@ def main() -> int:
                          "attacker applies to the received frame before "
                          "embedding it, e.g. jpeg75/jpeg50/blur/denoise. "
                          "'none' reproduces the original (non-adaptive) study.")
+    ap.add_argument("--eval_sanitizers", nargs="*", default=[],
+                    help="evaluate every released frame under each of these "
+                         "attacker-side transforms, writing one row per "
+                         "transform, instead of the single --sanitizer. The "
+                         "perturbation is optimised and released once per "
+                         "(query, condition, seed) and only the attacker's "
+                         "embedding step is repeated, so a held-out-transform "
+                         "study costs one optimisation pass plus one forward "
+                         "pass per transform.")
     ap.add_argument("--eval_checkpoint", default="",
                     help="G2 tier-2 adaptive adversary: state_dict checkpoint "
                          "for the eval_backbone, e.g. from "
@@ -272,9 +281,15 @@ def main() -> int:
             raise SystemExit(f"unknown sanitizer for EOT: {name!r}; "
                              f"available: {sorted(SANITIZERS)}")
     eot_ops = [SANITIZERS[n] for n in args.eot_sanitizers]
+    eval_sanitizers = list(args.eval_sanitizers) or [args.sanitizer]
+    for name in eval_sanitizers:
+        if name not in SANITIZERS:
+            raise SystemExit(f"unknown evaluation sanitizer: {name!r}; "
+                             f"available: {sorted(SANITIZERS)}")
     print(f"[transfer] objective={args.objective} "
           f"random_start={args.random_start} "
-          f"eot={args.eot_sanitizers or 'off'}", flush=True)
+          f"eot={args.eot_sanitizers or 'off'} "
+          f"eval_sanitizers={eval_sanitizers}", flush=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[transfer] device={device}", flush=True)
@@ -337,7 +352,8 @@ def main() -> int:
     if out.is_file():
         with open(out, newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                done.add((r["query_id"], r["condition"], r["seed"]))
+                done.add((r["query_id"], r["condition"], r["seed"],
+                          r.get("sanitizer", "none")))
         print(f"[transfer] resuming, {len(done)} rows already present",
               flush=True)
 
@@ -373,7 +389,9 @@ def main() -> int:
             continue
         for seed in args.seeds:
             for cond in conditions:
-                if (qid, cond, str(seed)) in done:
+                pending = [name for name in eval_sanitizers
+                           if (qid, cond, str(seed), name) not in done]
+                if not pending:
                     continue
                 if cond == "isotropic":
                     g = torch.Generator(device="cpu").manual_seed(seed)
@@ -413,24 +431,28 @@ def main() -> int:
                               f"{qid}/{cond}/seed{seed}", flush=True)
                 released = release_at_mse(frame, delta, args.target_mse)
                 mse = float((released - frame).square().mean())
-                sanitized = SANITIZERS[args.sanitizer](released)
-                with torch.no_grad():
-                    qe = normalised_embedding(embedders[ev], sanitized, sizes[ev])
-                    sims = ev_gal @ qe.flatten()
-                    order = torch.argsort(sims, descending=True)
-                    rank = next(i + 1 for i, j in enumerate(order.tolist())
-                                if place_of[gallery_ids[j]] == want)
-                    top1_place = place_of[gallery_ids[int(order[0].item())]]
-                writer.writerow({
-                    "query_id": qid, "condition": cond, "seed": seed,
-                    "sanitizer": args.sanitizer,
-                    "objective": args.objective,
-                    "correct_rank": rank, "top1_place": top1_place,
-                    "correct_place": want, "effective_mse": f"{mse:.6f}",
-                    "psnr": f"{10 * torch.log10(torch.tensor(255.0 ** 2 / max(mse, 1e-9))):.4f}",
-                })
-                fh.flush()
-                os.fsync(fh.fileno())
+                # One released frame, several attackers' preprocessing: the
+                # perturbation above is the expensive part and is shared.
+                for name in pending:
+                    sanitized = SANITIZERS[name](released)
+                    with torch.no_grad():
+                        qe = normalised_embedding(embedders[ev], sanitized,
+                                                  sizes[ev])
+                        sims = ev_gal @ qe.flatten()
+                        order = torch.argsort(sims, descending=True)
+                        rank = next(i + 1 for i, j in enumerate(order.tolist())
+                                    if place_of[gallery_ids[j]] == want)
+                        top1_place = place_of[gallery_ids[int(order[0].item())]]
+                    writer.writerow({
+                        "query_id": qid, "condition": cond, "seed": seed,
+                        "sanitizer": name,
+                        "objective": args.objective,
+                        "correct_rank": rank, "top1_place": top1_place,
+                        "correct_place": want, "effective_mse": f"{mse:.6f}",
+                        "psnr": f"{10 * torch.log10(torch.tensor(255.0 ** 2 / max(mse, 1e-9))):.4f}",
+                    })
+                    fh.flush()
+                    os.fsync(fh.fileno())
         if qi % 25 == 0:
             print(f"[transfer] {qi}/{len(queries)} queries", flush=True)
 

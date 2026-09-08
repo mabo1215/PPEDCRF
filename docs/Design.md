@@ -399,3 +399,99 @@ raw and `full` (PPEDCRF) rows on the same manifests, with the same
 diagnostic-not-comparable framing already used for the proxy version, and one
 sentence in the main-text M3 discussion cross-referencing it. No change to
 the black-box six-backbone headline table.
+
+## Fourth independent TIFS review (2026-09-08): D6 and D7
+
+Source: `docs/RevisionSuggestions.tex`, findings R3 and R4. Both experiments
+re-use the direction-transfer pipeline unchanged except where stated; neither
+adds a new benchmark, backbone or objective. No number from a smoke test may
+reach the paper.
+
+### D6 -- held-out attacker-side transforms for the EOT-hardened direction (R3)
+
+**Question.** The hardened direction is optimised in expectation over
+{JPEG-75, JPEG-50, blur sigma=1, NLM denoise} and, so far, evaluated only
+against those four. Does the repair generalise to transforms the optimiser
+never saw, or is it fitted to the training set?
+
+**Code (done 2026-09-08, `src/eval/sanitizers.py`,
+`src/scripts/run_direction_transfer_study.py`).**
+- New attacker-side operators, registered in `SANITIZERS` and listed in
+  `HELD_OUT`: `jpeg60` (in-family parameter, interpolation), `jpeg30`
+  (beyond the trained range), `median3`, `resize_half` (bilinear down and
+  up), `blur2` (sigma=2), `bitdepth4`, `random_one` (one operator chosen
+  uniformly from trained+held-out, seeded by frame content) and
+  `jpeg50_blur` (two trained operators stacked). `TRAINED` names the four
+  the hardening saw.
+- `--eval_sanitizers a b c ...` evaluates every released frame under each
+  listed transform and writes one row per transform, keyed
+  `(query_id, condition, seed, sanitizer)` for resume. The perturbation is
+  optimised and released once per `(query, condition, seed)`; only the
+  attacker's embedding step repeats, so the held-out study costs one
+  optimisation pass per (backbone, seed) plus one forward pass per transform.
+  Without the flag the driver behaves exactly as before.
+- Tests: `src/tests/test_sanitizers.py` (shape/range/dtype for every
+  operator, trained/held-out disjointness, determinism of `random_one`, and
+  the optimise-once/evaluate-many path on a toy embedder at MSE 15.68).
+
+**Runs (remote GPU; MSLS `manifest_all8.jsonl`, 400 queries, 2,000 gallery,
+seeds 1234 1235 1236, `--target_mse 15.68`, `--objective self`).**
+For each backbone, two invocations sharing everything but the optimiser:
+
+```
+# unhardened gallery-free direction, evaluated under every transform
+python src/scripts/run_direction_transfer_study.py --manifest <all8> --root <msls> \
+  --eval_backbone resnet18 --surrogates resnet50 vgg16 cosplace \
+  --objective self --seeds 1234 1235 1236 \
+  --eval_sanitizers none jpeg75 jpeg50 blur denoise jpeg60 jpeg30 median3 \
+                    resize_half blur2 bitdepth4 random_one jpeg50_blur \
+  --output src/outputs/tifs_d6/resnet18_self_multisan.csv
+# hardened (EOT over the four trained transforms), same evaluation list
+python src/scripts/run_direction_transfer_study.py ... --eot_sanitizers jpeg75 jpeg50 blur denoise \
+  --output src/outputs/tifs_d6/resnet18_self_eot_multisan.csv
+```
+MixVPR: `--eval_backbone mixvpr --surrogates resnet18 resnet50 vgg16 cosplace`.
+The `none` and four trained columns must reproduce the published Table 4
+cells to within rounding; that is the completion gate for the run itself.
+
+**Analysis.** `analyze_eot_sweep.py` per sanitizer, with the isotropic control
+under the same transform as the paired reference, and -- per review R1 -- the
+query as the unit of inference (query-cluster bootstrap CI over 400 queries
+carrying all three seeds), not `(query, seed)`.
+
+**Paper write-back.** A second block of the preprocessing table (or a compact
+new table) in `paper/main.tex` for the eight held-out transforms, unhardened
+against hardened, both backbones; one paragraph stating whether the repair
+generalises. Either outcome is reported.
+
+**Cost.** One optimisation pass per (backbone, seed): 400 queries x 6-7
+conditions x 20 steps x 3-4 surrogates, plus 13 cheap forward passes per
+released frame. Comparable to the D5 EOT run per backbone; expected to fit
+one GPU session per backbone. Two hardened conditions (isotropic and white_box
+are included in each run) are shared with the published table.
+
+**Smoke test (local RTX 4050, 6 GB).** `pytest src/tests/test_sanitizers.py`
+(CPU, toy embedder) plus `--limit 3 --seeds 1234` on any three MSLS queries
+if the dataset is mounted; otherwise the pytest path is the gate for pushing.
+
+### D7 -- downstream utility of the EOT-hardened direction (R4)
+
+**Question.** The utility cost (per-image AP@50, IoU) was measured for the
+unhardened surrogate direction. The paper now leads with the hardened
+variant; its utility cost is unmeasured.
+
+**Code.** `evaluate_direction_utility.py` gains the same `--eot_sanitizers`
+option as the transfer driver (pass-through to `directional_delta`), and a
+`hardened_direction` condition alongside `clean`, `isotropic` and
+`direction`. No other change.
+
+**Run.** Same 200-image VOC and 200-image COCO manifests, same frozen
+DeepLabV3-ResNet50 and Faster R-CNN ResNet50-FPN, delivered MSE 15.68, three
+independent runs, both the unhardened and hardened direction in the same run
+so the paired comparison is within-run.
+
+**Paper write-back.** One row in the supplementary utility table; one
+sentence in `paper/main.tex` section The Other Axis.
+
+**Cost.** 400 images x 4 conditions x 3 runs; minutes on any GPU. Fits the
+local card.
