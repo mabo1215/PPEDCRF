@@ -126,3 +126,55 @@ to hash. The existing `tomm_review_provenance/provenance.json` is an earlier
 architecture/probe record and is not a substitute for those missing
 scientific exports. F3 therefore remains partially complete until those two
 export trees are restored and their file-level checksums are appended here.
+
+## Export-tree digests (F3 backfill, 8 September 2026)
+
+The trees below were pulled from the vGPU 3090
+(`/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF`) to the local checkout and
+hashed independently on both machines with
+`src/scripts/export_tree_manifest.py`. A tree digest is the SHA-256 of the
+sorted `sha256  relative/path` listing of the tree, so two copies agree if and
+only if their digests agree. **All eleven digests matched**, which is what
+closes F3 for these trees: the local copies are byte-identical to the exports
+the paper's numbers were read from.
+
+| Export tree | Files | Bytes | Tree SHA-256 |
+|---|---|---|---|
+| `icme2027_revision_20260904` (E1 MSLS, six backbones x three manifests) | 223 | 18,361,710 | `abf4f8e328f30bfb6437d14863551997e870cd83f8496fc34f8028be8bf3700e` |
+| `icme2027_revision_20260904_session2` | 281 | 6,566,655 | `ef73a412ab5be411d46040dcc4d52fa11ec49c0e3464c0fd70e60d774e51a3fc` |
+| `icme2027_revision_20260904_session3` | 237 | 12,949,049 | `e33f49156813fd3fa4e9d8861cee9ea1d9f1246a1da55b192f21b5b3483d3796` |
+| `icme2027_revision_20260904_session4` | 86 | 8,969,150 | `0e92803f14e942d16693fc7f4d4b489ac3e6f48bb22db2d210ee7fd01fc499c3` |
+| `icme2027_placement_study` | 28 | 779,255 | `4a64c2124a6d6c9330eec7ba6102d2efd3f65435fde0ba4249bb56a43856c92b` |
+| `icme2027_placement_study_maskbacked` | 28 | 777,602 | `994a19a3f2c73dee86345d56247b18d5927aa6fc15fdfe2378bbf9b2145c3d69` |
+| `icme2027_placement_sigma_sweep` | 32 | 637,513 | `5845c3baf3ed74e5cc4b814f237338f02899551c0589cdfc99700b36a7e3bf48` |
+| `icme2027_placement_highsigma_50pair` | 16 | 1,295,320 | `e1785d373b1e39c1a98221a107c2ece601c288e4bd69fec72c7ddbf5790daa5b` |
+| `src/outputs/direction_free_d1` (gallery-free direction, D1) | 2 | 903,890 | `5b83d16aa106901af7858f015d2371d3dcfdf24cbfdaa0e2b9e4f1e6f0eca1e3` |
+| `src/outputs/direction_eot_d5` (EOT hardening, D5) | 11 | 2,367,596 | `681190d7ccbe67ecad49368c81dbad7fb59c7ffb79f39dca5e34ebfaadad91f5` |
+| `src/outputs/direction_positive_3seed` (reference-targeted comparison) | 1 | 647,864 | `9f5156ce3b7017fbc1d044ad0125eebc026b9a7e69bdabac00bdce027b50a96b` |
+
+Per-file listings are reproduced by running the same script without
+`--quiet`; they are not pasted here because 945 rows of hashes would bury the
+part of this record a reader actually uses.
+
+### What these trees do not cover
+
+Two gaps are recorded rather than papered over, because both bear on how the
+paper's numbers can be checked.
+
+1. **`icme2027_placement_msls` is not on this host at all.** That tree carries
+   the real place-labelled placement study --- the numbers behind the
+   manuscript's section on the null holding on real geographic data. It was
+   produced on a machine that has since been powered down. Until it is
+   recovered, `src/artifact/build_artifact.sh` cannot assemble a complete
+   bundle (it lists that tree as required) and `verify_claims.py` cannot be
+   run end to end here.
+
+2. **The direction exports on this host are a subset of what the published
+   tables report.** `direction_free_d1` holds three seeds over 299 queries for
+   ResNet18 and 236 for MixVPR, and `direction_eot_d5` holds 400 queries at
+   one seed per backbone (1234 for ResNet18, 9012 for MixVPR, plus a partial
+   5678). The manuscript's transfer table reports 400 queries pooled over
+   three seeds. The complete export was never on this machine, so the
+   published table cannot be recomputed from what is reachable --- which is
+   why the D6 runs of 8 September regenerate that table at full scale on one
+   consistent dataset instead of patching the partial exports together.
