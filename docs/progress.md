@@ -1821,3 +1821,47 @@ paper's numbers can be checked.
 287. 【教训】核验脚本第二次因为 **IEEEtran 把 caption 排成小型大写**报假阴性(第 247 条同款)。
     渲染文本里 caption 是全大写的,大小写敏感的匹配必然落空。**核验脚本对 caption 一律要
     大小写不敏感匹配**。
+
+## 本轮(2026-09-08 深夜,2c/PRO 6000 排查:placement_msls 的下落与中转准备)
+
+288. 【已完成】**四台主机全查过,`icme2027_placement_msls` 不在任何一台上**。
+    - **vGPU 3090**:已关机(Connection refused)。关机前 `find / -maxdepth 8` 全盘搜过,含 `autodl-fs`,没有。
+    - **2c 3080**(`ssh -p 42044 root@connect.weste.seetacloud.com`,本轮新记入 `saveway.txt`):
+      无卡模式在线。`find / -maxdepth 8` 没有该导出。它上面有的 `icme2027_*` 只有
+      `placement_study` / `placement_study_maskbacked` / `placement_sigma_sweep` /
+      `placement_highsigma_50pair` / `revision_20260904_session2,3,4`——**恰好都是我已经拉回本地的那七棵树**。
+    - **PRO 6000**(`ssh -p 48305`,96 GB Blackwell):没有该导出,MSLS 也只有 2 城市(manila/toronto,3,358 张)。
+    - **本机**:G 盘未挂载,没有副本。
+    - **共享卷**:第 240 条那次中转用的 tar 早已清理。
+    **用户判断它可能在家里的电脑上,因此本轮不重跑,先记录。**
+
+289. 【已完成】**8 城市 MSLS 已中转到共享卷待命**(用户原本要求传到 PRO 6000 后重跑,
+    后改为不重跑;tar 已经打好,保留下来,下次要跑省掉这一步)。
+    - 位置:`/root/autodl-fs/ppedcrf_relay_20260908/`(2c、PRO 6000、vGPU 挂的是**同一个卷**
+      `AutoFS:fswestbfourth985735`,所以传输**不经过本机**,遵守 src.md 的铁律)
+    - `msls8.tar` 1,596,426,240 B
+      `sha256 3f877afa1476ea0cf420fb1330ed199f274ac48512704e1b867fc404c533d3ab`
+      (= `data/msls`,8 城市 amman/boston/cph/london/manila/nairobi/toronto/zurich,
+      7,608 张图 + `manifest_all8.jsonl`)
+    - `third_party.tar` 364,554,240 B
+      `sha256 92abe42c22ecb0994729f7f90895c89c501fb9664adc377bbe200adf0a45d82b`
+      (= `src/third_party`,PRO 6000 差的主要是 Patch-NetVLAD 权重:2c 340M vs PRO 6000 27M)
+    - **为什么打 tar 而不是直接 cp**:共享卷 inode 只剩 42,845 个(79% 已用),
+      7,608 个散装文件会吃掉其中 18%。一个 tar 只占 1 个 inode。
+    - 不再需要时直接删该目录即可。
+
+290. 【已完成】**PRO 6000 的仓库已同步到 `9e104f2`**(原停在 `73934df`)。
+    同步被两样东西挡住,都已处理且**没有丢东西**:
+    - `run_direction_transfer_study.py` 有主机本地改动(38 行)——查明就是已并入上游的
+      `--eval_checkpoint` / `--query_id_file`,已 `git stash` 保留而非删除。
+    - `finetune_adaptive_attacker.py` 是未跟踪文件但上游已跟踪,移到 `.superseded/`。
+
+291. 【遗留】**R1 在真实地理数据 placement 表和 operator 表上仍未闭合**,原因是那份导出不可达。
+    两条出路,按代价排序:
+    - **A(便宜):导出还在家里的电脑上** → 拷回来跑 `analyze_placement_query_level.py`,
+      **R1 直接在已发表的数字上闭合**,不用开卡,论文那一节一个字都不用改。
+      要找的东西:一个叫 `icme2027_placement_msls` 的目录,里面是各 backbone 的 `per_query.csv`,
+      带 `placement` / `seed` / `query_id` / `correct_rank` 列。
+    - **B(贵):在 PRO 6000 重跑** → 数据已在共享卷待命(第 289 条),但**重跑产出的是新数字**,
+      §"The Null Holds on Real Geographic Data" 与 operator 表都要跟着改写。
+    在 A 被排除之前不走 B。
