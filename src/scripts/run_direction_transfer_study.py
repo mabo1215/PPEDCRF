@@ -225,6 +225,12 @@ def main() -> int:
                          "attacker applies to the received frame before "
                          "embedding it, e.g. jpeg75/jpeg50/blur/denoise. "
                          "'none' reproduces the original (non-adaptive) study.")
+    ap.add_argument("--conditions", nargs="*", default=[],
+                    help="restrict the run to these conditions, e.g. "
+                         "'isotropic white_box transfer_3'. Empty means all of "
+                         "isotropic, white_box and transfer_1..N, which is the "
+                         "published behaviour. Every named condition must be "
+                         "one the surrogate list can produce.")
     ap.add_argument("--eval_sanitizers", nargs="*", default=[],
                     help="evaluate every released frame under each of these "
                          "attacker-side transforms, writing one row per "
@@ -345,6 +351,13 @@ def main() -> int:
     surr = [b for b in names if b != args.eval_backbone]
     for k in range(1, len(surr) + 1):
         conditions.append(f"transfer_{k}")
+    if args.conditions:
+        unknown = [c for c in args.conditions if c not in conditions]
+        if unknown:
+            raise SystemExit(f"unknown condition(s) {unknown}; this surrogate "
+                             f"list produces {conditions}")
+        conditions = [c for c in conditions if c in args.conditions]
+    print(f"[transfer] conditions={conditions}", flush=True)
 
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
