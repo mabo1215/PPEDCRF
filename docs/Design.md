@@ -203,7 +203,7 @@ post-processing analysis over its output:
 |---|---|---|---|
 | F1 | The appendix's matched-PSNR "statistically indistinguishable" claim (`tab:matched_psnr`) is asserted from rounded point estimates on a 36-paired-outcome sample (12 pairs x 3 seeds, one backbone, one gallery size), with no formal test and no statement of test power. | Exact McNemar test and a query-level cluster bootstrap CI on the Top-1 difference between each sigma-tunable variant and `global_noise` at each matched-PSNR target, plus the minimum discordant-pair asymmetry that would reach significance at this sample size. | `matched_psnr_significance.csv` from `src/scripts/significance_test_matched_psnr.py`, integrated into Appendix Section 5 and the main-text/Conclusion wording softened to match the tested claim. |
 | F2 | The appendix states the current pipeline no longer reproduces an earlier reviewer-cited adverse MixVPR result, with no root cause identified, but never checks whether the *current* pipeline is even deterministic run-to-run under fixed seeds. | Two independent executions of the same benchmark invocation (same seeds, checkpoint, code revision), at minimum for the MixVPR proxy50 cell, diffed for exact numerical agreement. | A determinism verdict (pass, or a named mismatched field) from `src/scripts/check_run_determinism.py`, stated as one sentence in the appendix MixVPR subsection. |
-| F3 | Paper-facing CSV/JSON exports under `src/outputs/` are git-ignored; this session found none of the large `tomm_review_*` run directories present in its own working environment, with no lightweight versioned record of which run (by checksum) backs which paper table. | A provenance table recording, per export cited by a paper table/figure, its path, producing git commit SHA, and SHA-256 checksum. | New provenance table in `docs/experiment_progress.tex` or a new `docs/experiment_provenance.md`; documentation only, no experiment. |
+| F3 | Paper-facing CSV/JSON exports under `src/outputs/` are git-ignored; this session found none of the large `tomm_review_*` run directories present in its own working environment, with no lightweight versioned record of which run (by checksum) backs which paper table. | A provenance table recording, per export cited by a paper table/figure, its path, producing git commit SHA, and SHA-256 checksum. | New provenance table in `docs/experiment_progress.tex` or a new `docs/progress.md` (the experiment provenance section); documentation only, no experiment. |
 
 F1 and F2 required a machine with the real monitoring corpus, the
 `sensnet_final.pt` checkpoint, and CUDA. That execution requirement was met on
@@ -211,7 +211,7 @@ the reachable vGPU 3090 on 2026-09-03. The analysis code itself
 (`significance_test_matched_psnr.py`, `check_run_determinism.py`) remains
 GPU-free and was also schema-smoke-tested against synthetic sigma-sweep data
 (`src/scripts/make_synthetic_sigma_sweep.py`). F3 is documented in
-`docs/experiment_provenance.md`; it remains partial because the E1 MSLS and E5
+`docs/progress.md` (the experiment provenance section); it remains partial because the E1 MSLS and E5
 KITTI-360 export trees were not present on the reachable machine.
 
 ### Execution record for F1/F2 (completed 2026-09-03)

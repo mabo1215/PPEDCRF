@@ -430,9 +430,14 @@ frees roughly 1.5 columns, which is the budget for F1--F3.
 \section*{Carried-Over Items}
 
 \begin{itemize}
-  \item \textbf{F3 --- provenance checksums for paper-facing exports.} Still
-  partial and blocked on the same export trees R1 needs. Non-blocking, but
-  R1 and F3 should be done in the same session once the trees are mounted.
+  \item \textbf{F3 --- provenance checksums for paper-facing exports.}
+  Closed on 8 September 2026 for every reachable tree: eleven export trees
+  were pulled from the GPU host and hashed independently on both machines,
+  and all eleven tree digests match. The record is the experiment provenance
+  section of \texttt{docs/progress.md}. Two gaps are recorded there rather
+  than closed: \texttt{icme2027\_placement\_msls} is on no reachable
+  machine, and the direction exports that survive are a subset of what the
+  published transfer table reports.
   \item \textbf{B3 --- neither checkpoint is a designed privacy map.}
   Disclosed, which remains the correct disposition; no action.
   \item \textbf{A1 --- appendix page budget.} Subsumed by R8.

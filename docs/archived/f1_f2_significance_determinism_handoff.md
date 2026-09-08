@@ -14,7 +14,7 @@ reachable vGPU 3090. F1 completed the real 12-point sigma sweep and produced
 15 paired comparisons; F2 completed two real MixVPR proxy50 runs and passed
 the determinism checker for all 3,750 rows and 20 columns. The resulting
 paper updates are complete. The remaining provenance work is tracked in
-`docs/experiment_provenance.md`; E1 MSLS and E5 KITTI-360 exports were not
+`docs/progress.md` (the experiment provenance section); E1 MSLS and E5 KITTI-360 exports were not
 present on the reachable machine.
 
 Both items are **cheap** relative to the earlier E1-E7 revision cycle:

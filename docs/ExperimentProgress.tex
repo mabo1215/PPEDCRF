@@ -109,9 +109,13 @@ author footnote per review R7. & \pending & Confirm the repository is public
 and holds the evaluation exports the paper describes; otherwise point the
 footnote at the artifact bundle instead. \\
 
-F3 & SHA-256 provenance for the E1 MSLS and E5 KITTI-360 export trees. &
-\blocked & Same export trees as R1; do both in the session that mounts them.
-Non-blocking for submission. \\
+F3 & SHA-256 provenance for the paper-facing export trees. & \done &
+Closed 8 September 2026: eleven trees pulled from the GPU host and hashed
+independently on both machines, all eleven digests matching. Record in the
+experiment provenance section of \texttt{docs/progress.md}, which also names
+the two gaps left open --- \texttt{icme2027\_placement\_msls} is on no
+reachable machine, and the surviving direction exports are a subset of what
+the published transfer table reports, which is why D6 regenerates it. \\
 
 B3 & Neither checkpoint of the tested mechanism was engineered as a privacy
 map. & \partialstatus & Disclosed rather than closed; no action planned. \\
