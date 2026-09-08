@@ -97,6 +97,42 @@ and the paper's own words --- ``a property of the objective rather than a
 shortage of data'' --- are exactly the kind of sentence that has to be
 re-earned once the test is computed with the right unit.
 
+\section*{Status After the 8 September GPU Session}
+
+R3 and R4 are closed, and R1 is closed for the tables the session
+regenerated. Briefly, so the findings below can be read against what has since
+happened:
+
+\begin{itemize}
+  \item \textbf{R3 --- closed, and the answer is favourable.} Eight held-out
+  attacker-side transforms were added and both perturbations evaluated under
+  all thirteen, 400 queries $\times$ 3 seeds per cell. Unhardened, the
+  direction fails on one of the eight against ResNet18 and three against
+  MixVPR; hardened, all sixteen held-out cells are significant. Hardening over
+  four cheap transforms generalises to eight it never saw.
+  \item \textbf{R4 --- closed.} The hardened direction costs a further
+  $0.070$ per-image IoU against the unhardened one
+  ($p=1.4\times10^{-14}$), and global mIoU falls $0.601\to0.503$. Its
+  per-image AP is not measured: the detection manifest was on the GPU host and
+  is no longer reachable.
+  \item \textbf{R1 --- closed for the direction and preprocessing tables},
+  which the session regenerated at full scale and now reports with the query
+  as the unit. It remains open for the placement and operator tables, and is
+  blocked outright for the real-place placement table, whose export tree is on
+  no reachable machine.
+  \item One published claim is superseded. The manuscript said two MixVPR
+  cells fail unhardened, JPEG-50 at $p=0.21$ and denoising at $p=0.53$. On the
+  new three-seed run under query-level inference, denoising is significant
+  ($\Delta=-0.0192$, $p=3\times10^{-3}$) and only JPEG-50 fails
+  ($\Delta=-0.0100$, CI $[-0.029,+0.009]$).
+  \item A caution about R1's own framing below: the query-level test is not
+  uniformly weaker than the pair-level one. It is a different test --- Wilcoxon
+  over per-query differences uses magnitude, where McNemar counts only
+  discordance --- so some cells come out stronger (MixVPR one surrogate,
+  $6\times10^{-4}\to3\times10^{-4}$). The argument for it is that it is the
+  right unit, not that it is more conservative.
+\end{itemize}
+
 \section*{Major Findings and Required Revisions}
 
 \subsection*{R1 --- Major (methodology): the paired tests treat seed replicates

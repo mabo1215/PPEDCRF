@@ -1720,3 +1720,60 @@ paper's numbers can be checked.
    published table cannot be recomputed from what is reachable --- which is
    why the D6 runs of 8 September regenerate that table at full scale on one
    consistent dataset instead of patching the partial exports together.
+
+## 本轮(2026-09-08 下午至傍晚,vGPU 3090 跑 D6/D7 并回填)
+
+274. 【已完成】**D6/D7 在 vGPU 3090 上跑完,12 个 screen 并行,全部 EXIT=0**。
+    行数与预期分毫不差:D6 193,200 行(两骨干未加固各 46,800 + 六个按 seed 拆分的 EOT 各 15,600 +
+    两个 surrogate 消融 2,400/3,600),D7 4,800 行。**零条 "zero perturbation" 警告**——
+    第 269 条修的 random-start 站住了。拉回本地后远端/本地树摘要逐字节一致,随后关机并
+    **验证 SSH 不可达**(Connection refused)。
+    - 并行策略:先起 6 个,发现 GPU 只用了 5.6/48 GB、利用率低,于是把两个 EOT job 按 seed 拆成 6 个,
+      再补两个 surrogate 消融 job,共 12 个,峰值 17.8 GB、利用率 89%。瓶颈不是显卡而是 CPU 侧的
+      JPEG/denoise 往返,所以每个 job 限了线程数。
+
+275. 【已完成】**R3 有答案了,而且是正面的:加固能泛化到没训练过的变换**。
+    新增 8 个 held-out 攻击者端变换(jpeg60/jpeg30/median3/resize_half/blur2/bitdepth4/
+    random_one/jpeg50_blur),两种扰动在全部 13 种变换下评估,每格 400 query × 3 seed。
+
+    | | 未加固失效格 | 加固失效格 |
+    |---|---|---|
+    | ResNet18 | 1/8(blur2,Δ=−0.0025,CI 跨 0) | **0/8** |
+    | MixVPR | 3/8(jpeg60、jpeg30、resize_half) | **0/8** |
+
+    即:拿 4 个便宜的非对抗变换做期望优化,得到的方向能扛住 8 个从没见过的变换,
+    **包括一个组合变换和一个随机挑选**。这正是"该轴像一个设计变量"所缺的证据。
+    加固同时把白盒界从 0.36–0.71 收回到 0.0083–0.37。
+
+276. 【已完成】**R4 有答案了,而且是负面的——但必须写进论文**:加固的效用代价明显更大。
+    逐图配对(200 图 × 3 次独立运行):加固方向 vs isotropic 控制 **−0.124 IoU(p=1.2e−20)**,
+    vs 未加固方向再多 **−0.070 IoU(p=1.4e−14)**;全局 mIoU 0.601 → 0.503,而 mAP@50 只从
+    0.363 → 0.352——**额外代价几乎全落在分割上**。论文现在主推加固版,所以这条必须在正文和附录都写明。
+    - **一个测不了的格**:加固行的逐图 AP 需要检测 manifest 的真值框,那个文件只在已关机的主机上,
+      表里如实留 "---" 并在表注说明原因,没有用别的数字顶替。
+
+277. 【已完成】**R1 在本轮重生成的两张表上闭合,并更正了我自己对 R1 的一处判断**。
+    direction 表和 preprocessing 表现在按 **query 为推断单元**报告(逐 query 按 seed 平均、
+    query-cluster bootstrap 95% CI、Wilcoxon),McNemar 结果并列打印以便看出差异。
+    - **更正**:我此前说"pair 级把 p 值最多夸大 3 倍"。实际不是单向的——query 级是**另一种检验**
+      (Wilcoxon 用差值大小,McNemar 只数不一致对),所以有的格反而更强
+      (MixVPR 1 surrogate:6.4e−4 → 2.9e−4)。选它的理由是**单元正确**,不是它更保守。
+    - 仍是 pair 级的:placement 表、operator 表;**真实地理数据的 placement 表被彻底阻塞**——
+      它的导出树 `icme2027_placement_msls` 不在任何可达机器上。
+
+278. 【已完成】**一条已发表的结论被本轮数据取代**。论文原写"MixVPR 未加固有两格不过噪声底:
+    JPEG-50 p=0.21、denoise p=0.53"。新的 3 seed + query 级下,**denoise 显著了**
+    (Δ=−0.0192,p=3e−3),只剩 JPEG-50 不显著(Δ=−0.0100,CI [−0.029,+0.009])。
+    已按新数据改写,没有保留旧说法。
+
+279. 【已完成】**图表改为从分析结果自动生成,消除"表和正文各说各话"这一类错误**。
+    `analyze_tifs_d6.py --json` 产出每一格,`make_tifs_tables.py` 据此生成图 3、Table II
+    (`paper/generated/tab_transfer.tex`)和附录全表(`tab_sanitize.tex`),论文用 `\input` 引入。
+    本仓库已经两次出现表对、正文错的情况(第 253、263 条),这次是从机制上去掉,而不是再查一遍。
+
+280. 【已完成】**又踩了一次"span 替换跨过浮动体"**。改写 §Robustness 时替换区间的终点选在
+    下一个 subsection,而图 3 正好在区间内——**断言拦住了**(第 268 条那次是编译报未定义引用才发现)。
+    已把终点改到 `\begin{figure}` 之前并加断言检查该浮动体确实是目标图。
+
+281. 【已完成】**21 项渲染核验全过**,且核验脚本**从分析 JSON 反读数字**而不是硬编码,
+    即它核的是"论文 vs 实验",不是"论文 vs 我的记忆"。正文 13 页、附录 4 页,两份 0 warning。

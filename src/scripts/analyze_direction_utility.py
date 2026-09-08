@@ -69,7 +69,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--cache", required=True,
                     help="per_image.jsonl from evaluate_direction_utility.py")
-    ap.add_argument("--manifest", required=True)
+    ap.add_argument("--manifest", default="",
+                    help="required only for a detection export, whose "
+                         "per-image AP needs the ground-truth boxes. A "
+                         "segmentation export carries its own intersections "
+                         "and unions and needs no manifest.")
     ap.add_argument("--root", default="")
     ap.add_argument("--resize_h", type=int, default=192)
     ap.add_argument("--resize_w", type=int, default=320)
@@ -77,15 +81,27 @@ def main() -> int:
 
     rows = [json.loads(line) for line in
             open(args.cache, encoding="utf-8") if line.strip()]
-    records = load_utility_manifest(args.manifest, args.root)
-    resize_hw = (args.resize_h, args.resize_w)
-    targets_by_id = {r["image_id"]: load_target(r, args.root, resize_hw)[0]
-                     for r in records}
     metric = "AP@50" if "det" in rows[0] else "IoU"
+    if metric == "AP@50" and not args.manifest:
+        raise SystemExit("a detection export needs --manifest for the "
+                         "ground-truth boxes")
+    if args.manifest:
+        records = load_utility_manifest(args.manifest, args.root)
+        resize_hw = (args.resize_h, args.resize_w)
+        targets_by_id = {r["image_id"]: load_target(r, args.root, resize_hw)[0]
+                         for r in records}
+        ids = [r["image_id"] for r in records]
+    else:
+        targets_by_id = {}
+        seen = {}
+        for r in rows:                      # manifest order is the file order
+            seen.setdefault(r["image_id"], None)
+        ids = list(seen)
 
     scores = per_image_scores(rows, targets_by_id)
-    ids = [r["image_id"] for r in records]
-    conditions = ["clean", "isotropic", "direction"]
+    conditions = ["clean", "isotropic", "direction", "hardened_direction"]
+    conditions = [c for c in conditions
+                  if any((i, c) in scores for i in ids)]
     print(f"per-image {metric}, {len(ids)} images, "
           f"{len({r['seed'] for r in rows})} runs")
     for cond in conditions:
@@ -93,8 +109,13 @@ def main() -> int:
         print(f"  {cond:10s} mean={st.mean(vals):.4f}")
 
     print("paired comparisons (Wilcoxon signed-rank, two-sided):")
-    for a, b in (("isotropic", "clean"), ("direction", "clean"),
-                 ("direction", "isotropic")):
+    comparisons = [("isotropic", "clean"), ("direction", "clean"),
+                   ("direction", "isotropic")]
+    if "hardened_direction" in conditions:
+        comparisons += [("hardened_direction", "clean"),
+                        ("hardened_direction", "isotropic"),
+                        ("hardened_direction", "direction")]
+    for a, b in comparisons:
         pairs = [(scores[(i, a)], scores[(i, b)]) for i in ids
                  if (i, a) in scores and (i, b) in scores]
         diffs = [x - y for x, y in pairs]

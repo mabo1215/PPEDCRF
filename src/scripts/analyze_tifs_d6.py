@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import csv
 import glob
+import json
 import os
 from collections import defaultdict
 
@@ -102,7 +103,7 @@ def compare(hits, sanitizer, condition, n_boot=10000, seed=0):
     }
 
 
-def report(title, hits, sanitizers, condition):
+def report(title, hits, sanitizers, condition, into=None):
     print("\n== %s ==" % title)
     print("%-12s %6s %6s %8s %8s %8s %18s %10s %10s"
           % ("transform", "nq", "npair", "iso", "top1", "delta",
@@ -116,13 +117,21 @@ def report(title, hits, sanitizers, condition):
               % (san, st["n_queries"], st["n_pairs"], st["control"],
                  st["top1"], st["delta"], st["ci_low"], st["ci_high"],
                  st["wilcoxon_p"], st["mcnemar_p"]))
+        if into is not None:
+            into[san] = st
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", default="src/outputs/tifs_d6")
     ap.add_argument("--backbone", choices=("resnet18", "mixvpr"), required=True)
+    ap.add_argument("--json", default="",
+                    help="also write every cell to this path, so the figure "
+                         "and the LaTeX tables are generated from the same "
+                         "numbers the text quotes")
     args = ap.parse_args()
+    collected = {"backbone": args.backbone, "transfer": {},
+                 "unhardened": {}, "hardened": {}, "white_box": {}}
 
     tag = "r18" if args.backbone == "resnet18" else "mix"
     deployable = "transfer_3" if args.backbone == "resnet18" else "transfer_4"
@@ -156,17 +165,20 @@ def main() -> None:
         st = compare(hits_all, "none", cond)
         if st is None:
             continue
+        collected["transfer"][cond] = st
         print("%-12s %6d %8.4f %8.4f %+8.4f  [%+7.4f,%+7.4f] %10.2e %10.2e"
               % (cond, st["n_queries"], st["control"], st["top1"],
                  st["delta"], st["ci_low"], st["ci_high"],
                  st["wilcoxon_p"], st["mcnemar_p"]))
 
     report("unhardened, trained transforms", hits_plain,
-           ("none",) + TRAINED, deployable)
-    report("unhardened, HELD-OUT transforms", hits_plain, HELD_OUT, deployable)
+           ("none",) + TRAINED, deployable, collected["unhardened"])
+    report("unhardened, HELD-OUT transforms", hits_plain, HELD_OUT, deployable,
+           collected["unhardened"])
     report("EOT-hardened, trained transforms", hits_eot,
-           ("none",) + TRAINED, deployable)
-    report("EOT-hardened, HELD-OUT transforms", hits_eot, HELD_OUT, deployable)
+           ("none",) + TRAINED, deployable, collected["hardened"])
+    report("EOT-hardened, HELD-OUT transforms", hits_eot, HELD_OUT, deployable,
+           collected["hardened"])
 
     # White-box bound under each transform, both objectives.
     print("\n== white-box bound under each transform ==")
@@ -177,10 +189,19 @@ def main() -> None:
         wbe = [h for (s, c, _q, _sd), h in hits_eot.items()
                if s == san and c == "white_box"]
         if wb or wbe:
+            collected["white_box"][san] = {
+                "unhardened": float(np.mean(wb)) if wb else None,
+                "hardened": float(np.mean(wbe)) if wbe else None}
             print("%-12s %10s %10s"
                   % (san,
                      "%.4f" % np.mean(wb) if wb else "--",
                      "%.4f" % np.mean(wbe) if wbe else "--"))
+
+
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as fh:
+            json.dump(collected, fh, indent=1, sort_keys=True)
+        print("\n[json] %s" % args.json)
 
 
 if __name__ == "__main__":
