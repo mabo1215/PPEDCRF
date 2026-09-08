@@ -66,10 +66,12 @@ if str(REPO_SRC) not in sys.path:
 
 from eval.retrieval_attack import (  # noqa: E402
     RetrievalConfig,
-    build_gallery_embeddings,
     default_input_size_for_backbone,
     make_default_embedder,
     preprocess_for_embed,
+)
+from scripts.run_direction_transfer_study import (  # noqa: E402
+    embed_gallery_batched,
 )
 from scripts.run_geotagged_vpr_benchmark import (  # noqa: E402
     load_image,
@@ -402,6 +404,9 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--gallery_batch", type=int, default=64,
+                    help="Gallery images embedded per forward pass. Lower it "
+                         "on a card shared with other jobs.")
     ap.add_argument("--seed", type=int, default=1234)
     ap.add_argument("--synthetic", type=int, default=0,
                     help="Smoke-test mode: generate N synthetic queries "
@@ -440,9 +445,11 @@ def main() -> int:
     gallery_ids = sorted(gallery_by_id)
     gallery_images = torch.stack(
         [load_image(gallery_by_id[g]["path"], resize_hw) for g in gallery_ids])
-    with torch.no_grad():
-        gallery_emb = build_gallery_embeddings(
-            cfg, embedder, gallery_images.to(device)).cpu()
+    # Chunked, not one forward pass: the shared helper embeds the whole gallery
+    # at once, which at 2,000 images is several GB of activations and fails on
+    # a card shared with other tenants.
+    gallery_emb = embed_gallery_batched(
+        cfg, embedder, gallery_images.to(device), batch=args.gallery_batch)
     gallery_emb = gallery_emb / gallery_emb.norm(
         dim=-1, keepdim=True).clamp_min(1e-12)
     gallery_place = {g: gallery_by_id[g]["place_id"] for g in gallery_ids}

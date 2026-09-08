@@ -54,6 +54,7 @@ from eval.retrieval_attack import (  # noqa: E402
 from eval.sanitizers import SANITIZERS  # noqa: E402
 from scripts.run_direction_transfer_study import (  # noqa: E402
     directional_delta,
+    embed_gallery_batched,
     release_at_mse,
 )
 from scripts.run_geotagged_vpr_benchmark import (  # noqa: E402
@@ -196,6 +197,9 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--gallery_batch", type=int, default=64,
+                    help="Gallery images embedded per forward pass. Lower it "
+                         "on a card shared with other jobs.")
     ap.add_argument("--synthetic", type=int, default=0,
                     help="Smoke-test mode; produces no citable number.")
     ap.add_argument("--output", required=True)
@@ -237,9 +241,11 @@ def main() -> int:
     gallery_ids = sorted(gallery_by_id)
     gallery_images = torch.stack(
         [load_image(gallery_by_id[g]["path"], resize_hw) for g in gallery_ids])
-    with torch.no_grad():
-        gallery_emb = build_gallery_embeddings(
-            eval_cfg, eval_embedder, gallery_images.to(device)).cpu()
+    # Chunked, not one forward pass: the shared helper embeds the whole gallery
+    # at once, which at 2,000 images is several GB of activations and fails on
+    # a card shared with other tenants.
+    gallery_emb = embed_gallery_batched(
+        eval_cfg, eval_embedder, gallery_images.to(device), batch=args.gallery_batch)
     gallery_emb = gallery_emb / gallery_emb.norm(
         dim=-1, keepdim=True).clamp_min(1e-12)
     gallery_place = {g: gallery_by_id[g]["place_id"] for g in gallery_ids}
