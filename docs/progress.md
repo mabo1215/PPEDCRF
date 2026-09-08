@@ -2196,3 +2196,6 @@ paper's numbers can be checked.
      coverage/source、crosstime_old2new/new2old、analysis_reports),`copy_tree` 的过滤器
      放开 `*.txt` 以带上分析报告。重建后 **597 个文件**(原 524),校验全过,
      `verify_claims.py` 仍 **228 项 0 mismatch**。
+
+
+下一步建议按这个顺序：压回 13 页 + 摘要 250 词 → 补 supplementary 的完整表 → 剩余实验（A5 效用前沿、A6 自适应对手、A8 序列化发布）。
