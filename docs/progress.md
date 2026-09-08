@@ -1698,18 +1698,32 @@ Per-file listings are reproduced by running the same script without
 `--quiet`; they are not pasted here because 945 rows of hashes would bury the
 part of this record a reader actually uses.
 
+#### Export-tree digests added 8 September 2026 (evening, local recovery)
+
+The two trees below were hashed on the local checkout with the same script.
+They have no remote counterpart to compare against --- the machines that
+produced them are powered down --- so their integrity evidence is the artifact
+bundle instead: every file of both trees is covered by
+`src/artifact/MANIFEST.sha256`, which verifies clean at 498 files.
+
+| Export tree | Files | Bytes | Tree SHA-256 |
+|---|---|---|---|
+| `icme2027_placement_msls` (real place-labelled placement study) | 23 | 7,257,642 | `78fb4d1f5c2a5f364f9604d86440b5a35bc887f5e87b6ae52b9ebd09d346765c` |
+| `operator_study` (four operators at two budgets) | 32 | 7,017,834 | `5294ab2652e94cf6fc6a57751b73110ebca0fc010e74fa0685ad221c5297646e` |
+
 #### What these trees do not cover
 
-Two gaps are recorded rather than papered over, because both bear on how the
+One gap is recorded rather than papered over, because it bears on how the
 paper's numbers can be checked.
 
-1. **`icme2027_placement_msls` is not on this host at all.** That tree carries
-   the real place-labelled placement study --- the numbers behind the
-   manuscript's section on the null holding on real geographic data. It was
-   produced on a machine that has since been powered down. Until it is
-   recovered, `src/artifact/build_artifact.sh` cannot assemble a complete
-   bundle (it lists that tree as required) and `verify_claims.py` cannot be
-   run end to end here.
+1. ~~**`icme2027_placement_msls` is not on this host at all.**~~ **Corrected 8
+   September 2026 (evening): it is on this host**, at
+   `src/outputs/icme2027_placement_msls`, and always was. The earlier entry
+   was written from a session whose sandbox did not see the local `src/`
+   output tree, and the conclusion "not on any reachable machine" was reached
+   by searching the GPU hosts only. With it in hand,
+   `src/artifact/build_artifact.sh` assembles a complete bundle and
+   `verify_claims.py` runs end to end: 228 claims checked, 0 mismatches.
 
 2. **The direction exports on this host are a subset of what the published
    tables report.** `direction_free_d1` holds three seeds over 299 queries for
@@ -1865,3 +1879,56 @@ paper's numbers can be checked.
     - **B(贵):在 PRO 6000 重跑** → 数据已在共享卷待命(第 289 条),但**重跑产出的是新数字**,
       §"The Null Holds on Real Geographic Data" 与 operator 表都要跟着改写。
     在 A 被排除之前不走 B。
+
+## 本轮(2026-09-08 晚续,本机排查:导出树一直都在,R1 全部闭合)
+
+292. 【已完成】**更正第 286/288/291 条:`icme2027_placement_msls` 没丢,就在本机
+     `src/outputs/icme2027_placement_msls`**,23 个文件 7.25 MB,`final/per_query.csv`
+     9,600 行 = 400 query × 8 placement × 3 seed(resnet18),列齐(`placement`/`seed`/
+     `query_id`/`correct_rank`)。
+     - **为什么之前判成丢了**:那几轮只搜了四台 GPU 主机 + 一句"本机 G 盘未挂载",
+       没有搜本机 checkout 自己的 `src/outputs/`(它被 gitignore,所以不在 `git status` 里)。
+       第 96 条记录过另一个沙箱会话看不到本机 `src/` 产出,判断很可能是从那种环境里做出的。
+     - **教训**:结论说"任何可达机器上都没有"之前,先搜本机仓库的 git-ignored 输出目录,
+       它恰恰是最不会出现在 `git status`、也最容易被跳过的地方。同一轮里
+       `src/artifact/results/` 早已存在且含该树(build_artifact.sh 缺它会直接 exit 1),
+       这本身就是反证,当时没注意到。
+     - 同一次排查还确认 `operator_study`、`placement_mixvpr`、`margin_oracle` 也都在本机。
+     - **第 289 条的 8 城市 MSLS 中转 tar 因此不必再用于重跑**;留在共享卷上不影响,
+       要清理时直接删 `/root/autodl-fs/ppedcrf_relay_20260908/` 即可。
+
+293. 【已完成】**R1 在真实地理数据 placement 表上闭合,而且是在已发表的数字上闭合**。
+     用 `analyze_placement_query_level.py`(query 为推断单元:逐 query 按 seed 平均、
+     query-cluster bootstrap 95% CI、Wilcoxon)重算,论文那七格逐位复现:
+     oracle −0.0008、learned/random/saliency +0.0008、anti-oracle +0.0025、edge +0.0050、
+     centre +0.0092,**query 级下无一显著**(p 从 0.20 到 0.94)。
+     三个已发表分割模型的放置同样闭合:DeepLabV3 −0.0008 [−0.009,+0.008]、
+     FCN +0.0008 [−0.007,+0.008]、SegFormer/ADE20K 0.0000 [−0.008,+0.009],p≥0.77。
+     即 **A 路线成立,不用开卡,论文结论一个字不用翻案**——只把口径写准。
+
+294. 【已完成】**operator 表也转到 query 级,八格星号一个没变**。σ8 四格全不显著
+     (Wilcoxon 0.69/0.83/0.39/0.51),σ32 三格显著(gaussian 0.008、low-pass 0.003、
+     mosaic <0.001)、correlated 不显著(0.12)。论文表 II 的 p 列与表注已按 query 级改写。
+     结论"算子在大预算下重要、且 placement 效应随算子改号"不受影响。
+
+295. 【已完成】**一个边缘格因为换了推断单元而改判,已写进论文**。MSLS + MixVPR 那轮
+     attacker-gradient oracle:pair 级 McNemar p=0.039(论文原文),**query 级 p=0.057、
+     CI [−0.026,+0.002] 触零**。这正是 R1 预言"会改变哪些边缘格被报为显著"的那类格。
+     - 论文原句还有一处措辞问题:Δ=−0.0117 在"正=更差隐私"的约定下是**更好**的隐私,
+       原文却写成 "nominally worse"。已改成"seed 级下唯一 nominally 显著的一格,
+       query 级不显著",既准确又不再和正文"没有任何放置规则胜过 uniform"的主张打架。
+
+296. 【已完成】**228 项 `verify_claims.py` 第一次在本机端到端跑通**(此前因为缺这棵树只能跳过),
+     0 mismatch;`MANIFEST.sha256` 498 个文件全部校验通过。
+     溯源记录里"这棵树不在本机"的那条已就地更正,并补上两棵树的 tree digest
+     (placement_msls `78fb4d1f…`,operator_study `5294ab26…`)。**F3 的第一个缺口关闭**。
+
+297. 【已完成】**正文重编译回到 13 页**。改写一度把正文顶到 14 页(TIFS 初投 13 页是硬上限,
+     第 14 页买不到),溢出的只是两行参考文献;把新增文字逐句压回后回到 13 页,
+     末页文字底边 756/792。附录仍 4 页。
+     - **教训**:这份稿子正文已经贴着页边界,任何"只加一句话"的改动都要重编译数页数,
+       不能只看编译无 warning。
+
+298. 【待办,不阻塞】正文第 146 行附近写"23 further paired tests on the real place-labelled
+     benchmark",这个计数的构成没能从文字反推出来(我按几种口径数出的是 17/22/24)。
+     不属于 R1,本轮未动;下一轮应把它与实际跑过的真实数据配对检验列表对齐后改准或改成范围表述。

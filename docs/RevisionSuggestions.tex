@@ -99,9 +99,8 @@ re-earned once the test is computed with the right unit.
 
 \section*{Status After the 8 September GPU Session}
 
-R3 and R4 are closed, and R1 is closed for the tables the session
-regenerated. Briefly, so the findings below can be read against what has since
-happened:
+R1, R3 and R4 are closed. Briefly, so the findings below can be read against
+what has since happened:
 
 \begin{itemize}
   \item \textbf{R3 --- closed, and the answer is favourable.} Eight held-out
@@ -115,11 +114,19 @@ happened:
   ($p=1.4\times10^{-14}$), and global mIoU falls $0.601\to0.503$. Its
   per-image AP is not measured: the detection manifest was on the GPU host and
   is no longer reachable.
-  \item \textbf{R1 --- closed for the direction and preprocessing tables},
-  which the session regenerated at full scale and now reports with the query
-  as the unit. It remains open for the placement and operator tables, and is
-  blocked outright for the real-place placement table, whose export tree is on
-  no reachable machine.
+  \item \textbf{R1 --- now closed for every table.} The direction and
+  preprocessing tables were regenerated at full scale on 8 September and
+  report the query as the unit. The placement and operator tables were
+  recomputed the same evening from the existing exports, which turned out to
+  be on the local checkout rather than lost with the powered-down host: all
+  seven real-place placement comparisons, the three published-model
+  placements, the four operators at the operating point and the four at the
+  large budget reproduce their published point estimates exactly, and every
+  star in the operator table survives the change of unit. One marginal cell
+  changes verdict, which is what R1 predicted: the MixVPR attacker-gradient
+  oracle on real place data was reported at $p=0.039$ (pair level) and is
+  $p=0.057$ with a zero-crossing interval at query level. The manuscript now
+  reports the query-level value.
   \item One published claim is superseded. The manuscript said two MixVPR
   cells fail unhardened, JPEG-50 at $p=0.21$ and denoising at $p=0.53$. On the
   new three-seed run under query-level inference, denoising is significant
