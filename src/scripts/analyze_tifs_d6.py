@@ -34,14 +34,30 @@ HELD_OUT = ("jpeg60", "jpeg30", "median3", "resize_half", "blur2",
 
 
 def load(paths):
-    """rows keyed by (sanitizer, condition, query, seed) -> hit."""
+    """rows keyed by (sanitizer, condition, query, seed) -> hit.
+
+    A run still in progress has a final line that is half written, so rows
+    missing a field are skipped -- and counted, because losing more than the
+    last row of a file means a truncation worth looking into.
+    """
     hits, mses = {}, defaultdict(list)
+    skipped = 0
     for path in paths:
         with open(path, newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                key = (r["sanitizer"], r["condition"], r["query_id"], r["seed"])
-                hits[key] = int(r["correct_rank"]) == 1
-                mses[r["sanitizer"]].append(float(r["effective_mse"]))
+                try:
+                    key = (r["sanitizer"], r["condition"], r["query_id"],
+                           r["seed"])
+                    hit = int(r["correct_rank"]) == 1
+                    mse = float(r["effective_mse"])
+                except (TypeError, ValueError, KeyError):
+                    skipped += 1
+                    continue
+                hits[key] = hit
+                mses[r["sanitizer"]].append(mse)
+    if skipped:
+        print("[warn] skipped %d incomplete row(s) across %d file(s)"
+              % (skipped, len(paths)))
     return hits, mses
 
 
