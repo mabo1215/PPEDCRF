@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # One-command reproducibility check for the PPEDCRF submission.
 # CPU only; no GPU, no network, no dataset or checkpoint required.
+#
+# Set PYTHON=python if `python3` is not on PATH.
 set -euo pipefail
 cd "$(dirname "$0")"
+PYTHON="${PYTHON:-python3}"
 
 echo "== 1/3 dependencies =="
-python3 -c "import pandas" 2>/dev/null && echo "  pandas present" || {
+"$PYTHON" -c "import pandas" 2>/dev/null && echo "  pandas present" || {
   echo "  installing verification dependencies..."
-  python3 -m pip install --quiet "pandas==2.3.3" "numpy==2.2.6"
+  "$PYTHON" -m pip install --quiet "pandas==2.3.3" "numpy==2.2.6"
 }
 
 echo
@@ -25,4 +28,4 @@ fi
 
 echo
 echo "== 3/3 recomputing paper tables from raw exports =="
-python3 verify_claims.py --results_root results
+"$PYTHON" verify_claims.py --results_root results

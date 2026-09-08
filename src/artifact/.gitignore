@@ -1,3 +1,4 @@
 # build products (regenerate with build_artifact.sh)
 results/
 MANIFEST.sha256
+extended_evidence_report.pdf

@@ -2,8 +2,11 @@
 
 This bundle lets a reviewer confirm, without a GPU and without model weights,
 that every number in the paper's tables was derived from the released raw
-experiment outputs rather than transcribed by hand. It currently verifies 76
+experiment outputs rather than transcribed by hand. It currently verifies 228
 reported values.
+
+It also carries `extended_evidence_report.pdf`, the extended evidence report
+the manuscript cites wherever a result lives only there.
 
 ## One command
 
@@ -23,14 +26,41 @@ model checkpoint are required for this path.
 
 `verify_claims.py` recomputes, straight from the raw per-query exports:
 
+*The allocation axis*
+
 - **Placement-rule study**: pooled Top-1 for all eight energy-matched
   placements on both checkpoints, including the attacker-gradient oracle and
   its anti-oracle.
 - **High-budget reversal**: the three cluster-robust significant results in
   which edge placement beats uniform, with their bootstrap intervals.
-- **Attacker-sensitivity statistics**: the gradient coefficient of variation,
-  the top-decile energy captured by the oracle and by the learned map, and
-  their rank correlation --- the numbers behind the mechanistic account.
+- **Placement-rule concentration**: the top-decile weight share each rule
+  expresses, which is what makes them different placements at all.
+- **Real place-labelled MSLS placement null**: all eight placements plus the
+  three published-model ones, each against the uniform control in its own run.
+- **Placement by the margin gradient**: the strictly correct oracle, against
+  uniform and against its anti-oracle.
+- **Operators at matched delivered MSE**: four operators at two budgets on the
+  real benchmark, uniform Top-1 and the edge-minus-uniform difference.
+- **Operators in the controlled model**: the same comparison where the
+  Jacobian is known exactly.
+- **Attacker-sensitivity statistics**, on the proxy and replicated on real
+  MSLS: gradient coefficient of variation, top-decile energy captured by the
+  oracle and by the learned map, and their rank correlation.
+
+*The direction axis*
+
+- **Controlled study with a known Jacobian**: the displacement identity and
+  the oracle's advantage at a given clean-task difficulty.
+- **Direction transfer to a held-out attacker**, and the gallery-free variant
+  that the headline table reports.
+- **Non-adaptive preprocessing**, three seeds per cell, unhardened and under
+  the gallery-free objective, and **the same directions hardened over those
+  transforms (EOT)**.
+- **Downstream utility**: per-image AP@50 and IoU on the same sanitized
+  frames, clean / isotropic / direction.
+
+*Carried over from the earlier framing*
+
 - **Wider 8-city primary manifest** (`all8`, 400 queries / 2,000-image
   gallery): raw and sanitized Top-1 for all six attacker backbones.
 - **8-city cross-time subtasks** (`o2n8`, `n2o8`): the same six backbones on
@@ -52,7 +82,9 @@ definition used in the paper.
 run_verification.sh        one-command entry point
 verify_claims.py           raw-output-to-table verifier
 requirements-pinned.txt    pinned dependency versions (run environment)
-MANIFEST.sha256            checksums for every released export in results/
+MANIFEST.sha256            checksums for every file below
+extended_evidence_report.pdf   the report the manuscript cites for results
+                           that live only there
 results/
   session3/                8-city primary manifest, white-box, gallery sweep,
                            deterministic blur/mosaic sweep
@@ -62,7 +94,26 @@ results/
   placement_study_maskbacked/  the same, mask-supervised checkpoint
   placement_sigma_sweep/   placements across sigma_0 in {4,16,32,50}
   placement_highsigma_50pair/  high-budget runs at 50-pair scale
+  placement_msls/          the same placements on real place-labelled MSLS,
+                           plus the three published-model placements
+  margin_oracle/           placement by the margin gradient
+  operator_study/          four operators at two budgets, matched delivered MSE
+  known_jacobian/          controlled retrieval with an exactly known Jacobian
+  known_jacobian_operators/    the operator comparison in that model
+  direction_transfer/      direction transfer to a held-out attacker
+  direction_transfer_galleryfree/  the gallery-free variant, three seeds
+  sanitize_3seed/          preprocessing robustness, three seeds per cell
+  sanitize_galleryfree/    the same under the gallery-free objective
+  direction_eot/           EOT-hardened directions, thirteen transforms,
+                           three seeds concatenated per condition
+  direction_utility/       per-image detection and segmentation utility, with
+                           the detection box targets they are scored against
 ```
+
+`build_artifact.sh` regenerates `results/`, the report copy and the manifest
+from the local experiment exports. It is the only supported way to rebuild
+them: several trees are renamed or assembled from several per-seed runs, and
+the script encodes those rules.
 
 All paths inside the bundle are relative; nothing refers to an absolute
 location on the authors' machines.
