@@ -703,3 +703,141 @@ published transfer table is not overwritten by A3: A3's `direction` and
 published values beyond rounding, that disagreement is itself reported rather
 than quietly replacing the table. Negative outcomes from A3-A8 are written up
 in the same detail as positive ones.
+
+## Execution session 2026-09-09 (afternoon): A2 and A8 become runnable
+
+### What changed since the morning entry
+
+The morning entry recorded every GPU host as refusing the TCP connection and
+scheduled A2 and A8 against the local card. Two facts have since changed and
+they change the plan:
+
+1. **PRO 6000 (`connect.westc.seetacloud.com:48305`) is up**, answers a
+   public-key handshake, and `nvidia-smi` reports an `RTX PRO 6000 Blackwell
+   Server Edition` with 97,887 MiB free. This is the first host with a live
+   card in this cycle. It carries `/root/autodl-tmp/PPEDCRF` at commit
+   `9e104f2` and 356 MB of MSLS imagery under `data/msls`, plus the relay tars
+   (`msls8.tar`, `third_party.tar`, `vpr_cache.tar`) on `/autodl-fs/data`.
+2. **The twelve missing export trees are not on it.** A `find` over `/root`,
+   `/autodl-tmp` and `/autodl-fs` to depth 8 matches none of
+   `tifs_a3b`, `tifs_a4sweep`, `tifs_a4mask`, `tifs_a7_n2o8`,
+   `tifs5_analysis`, `icme2027_placement_msls`, `margin_oracle`,
+   `operator_study`, `known_jacobian*`, `d4_3seed`, `sanfree_3seed` or
+   `direction_utility_d3*`. Its only PPEDCRF output tree is
+   `direction_transfer_adaptive_g2b` (86 MB), which is not one of the twelve.
+   X1's recovery route is therefore exhausted on this host: the twelve are on
+   H800 or 2c, both of which still refuse the connection, so the remaining
+   route for them is regeneration, which needs the card that is now on.
+
+The local machine has **no MSLS imagery at all** (`data/` does not exist;
+`.gitignore` excludes it), so the morning entry's "A2 and A8 are runnable on
+the local card" is true only of the code path, not of the measurement. The
+local RTX 4050 Laptop (6 GB) is therefore used as a **smoke-test** host on
+synthetic frames, and the measured runs go to PRO 6000.
+
+### A2 -- `measure_jacobian_columns.py` (review E2, findings R2/R3)
+
+**The claim under test.** Section III-H identifies a measured top-decile
+concentration of 67.7% with Jacobian column norms $\lVert J_i \rVert_2$. The
+map that produced it is `attacker_gradient_map`, which is
+$\sum_c \lvert \partial \cos(f(x), g^+) / \partial x_{c,i} \rvert$: a scalar
+score's gradient, summed over the colour channels. These are different
+quantities. R3 asks for the difference to be measured rather than only
+disclaimed in words.
+
+**Estimator.** For the embedding map $f: \mathbb{R}^{3HW} \to \mathbb{R}^d$
+with Jacobian $J$, drawing $v_k \sim \mathcal{N}(0, I_d)$ gives
+
+$$\mathbb{E}\big[(J^\top v)_i^2\big] = \lVert J_i \rVert_2^2 ,$$
+
+so $\frac{1}{K}\sum_{k=1}^{K}(J^\top v_k)_i^2$ is an unbiased estimate of the
+squared column norm, and each term costs one vector-Jacobian product --- one
+backward pass, not $d$ of them. The per-pixel norm sums the three channel
+entries in quadrature. $K$ is swept (default 8/32/128) so the estimator's own
+noise is separated from the disagreement being measured: the report includes a
+**split-half correlation** of two independent $K/2$ estimates, which is the
+ceiling any comparison against it can reach.
+
+**Comparisons, per query.** Spearman $\rho$ and top-decile overlap (Jaccard)
+between the estimated column-norm map and each of the score-gradient and
+margin-gradient maps; the top-decile energy concentration of all three, which
+is the statistic the manuscript prints; and the same three against a uniform
+map as a floor.
+
+**The R2 half.** For the margin $m(x)$ between the positive similarity and the
+best competitor, with $a = \nabla_x m(x)$, the first-order predicted margin
+variance under weight map $w$ is $v(w) = \sigma^2 \sum_i a_i^2 w_i^2$. The
+script draws $N$ Gaussian realisations $\delta = D_w \varepsilon$ per query per
+map, records the **realised** margin change, and reports predicted versus
+realised standard deviation, the rank-flip rate, and pre-clamp versus
+post-clamp energy $\lVert D_w \varepsilon \rVert_2^2$ so the clamp's share is
+measured rather than assumed. R2's two-coordinate counterexample is included as
+a closed-form control row: it must show the predicted separation, or the
+estimator is wrong.
+
+**Gate.** Every sensitivity statistic in the paper names the quantity actually
+measured. If the maps agree beyond the split-half ceiling, the existing
+sentence stands with the corrected name; if they disagree, the mechanistic
+paragraph is rewritten around the measured disagreement. Either outcome is
+written up.
+
+**Cost.** Per query: $K$ backward passes for the column norms, 2 for the two
+gradient maps, $N$ forward passes for the realisations. At $K=128$, $N=64$,
+400 queries, ResNet18 at 192x320 this is well under an hour on PRO 6000, and
+a 4-query smoke fits the 6 GB local card.
+
+### A8 -- `validate_serialized_release.py` (review E8, finding R10)
+
+**The claim under test.** The optimiser projects to $\lVert \delta
+\rVert_\infty \le 16$ inside `directional_delta`, and `release_at_mse` then
+scales the whole perturbation by a bisection-found gain $g$ to hit the target
+MSE. Nothing constrains $g \le 1$: the scaling *follows* the projection, so
+the released frame's amplitude is $g \cdot 16$, not 16. The manuscript reports
+$\max|\delta| = 76.001$ against a projection of 16, which is this effect. R10
+asks additionally what survives serialisation, because the experiment releases
+a float tensor while a deployment transmits a file.
+
+**Design.** For each query, and for each of `direction`, `direction_eot` and
+`isotropic` at the operating point:
+
+| Stage | Recorded |
+|---|---|
+| post-projection, pre-scaling | $\max\lvert\delta\rvert$, MSE, $\lVert\delta\rVert_2$ |
+| post-scaling float (what the paper evaluates) | gain $g$, $\max\lvert\delta\rvert$, MSE, clipped-pixel fraction |
+| PNG round-trip (lossless, 8-bit) | decoded MSE, $\max\lvert\delta\rvert$, bytes |
+| JPEG round-trip, quality 95 / 75 | decoded MSE, $\max\lvert\delta\rvert$, bytes |
+
+and then re-runs retrieval against the held-out attacker on each **decoded**
+variant, reporting Top-1/5/10 so the privacy claim is stated for the object a
+deployment actually transmits. Quantisation to 8-bit integers is applied
+before the codec in every row, including the PNG one, so the float-to-integer
+step is separated from the codec's loss.
+
+**Gate.** The paper reports the release boundary as a measured pair --- the
+projection the optimiser enforces and the amplitude the released file carries
+--- and states retrieval on decoded files rather than on float tensors. If
+JPEG at a plausible quality erases the effect, that is a limitation on the
+deployment claim and is written as one.
+
+**Cost.** One optimisation per query (the expensive part, shared with A3's
+cache when present), then codec round-trips and one gallery pass per variant.
+400 queries is roughly two hours on PRO 6000.
+
+### Smoke-test protocol for both (local RTX 4050, no dataset)
+
+`--synthetic N` builds an N-query manifest of procedurally generated frames
+(deterministic per index) plus a small gallery in a temporary directory, and
+runs the identical code path end to end. This exercises manifest loading,
+gallery embedding, both gradient maps, the projection estimator, the codec
+round-trips and the CSV writer, and proves the script runs before it is
+shipped to a paid host. It measures nothing about MSLS and no synthetic number
+enters the paper.
+
+### Execution order for this session
+
+1. Write A2 and A8, smoke them locally, push. (No paid host in the loop.)
+2. Sync the repo to PRO 6000 and stage `msls8.tar` from the relay.
+3. Launch, in this order: A2 (cheap, closes R3's open half), A8 (closes
+   R10's open half), then the regeneration queue for the twelve trees that
+   gates R1/R5/R11, then A5, A6, A7b.
+4. Nothing from steps 2-3 enters `paper/` until its gate above is met.
