@@ -1,527 +1,434 @@
-\documentclass[11pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[11pt,a4paper]{article}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern}
-\usepackage{microtype}
+\usepackage[margin=23mm]{geometry}
+\usepackage{lmodern,microtype}
 \usepackage{amsmath,amssymb}
-\usepackage{enumitem}
-\usepackage{booktabs}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem,xurl}
 \usepackage[hidelinks]{hyperref}
-
-\setlist{nosep,leftmargin=*}
+\usepackage{fancyhdr}
+\setlength{\headheight}{14pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Independent academic review for IEEE TIFS}
+\rhead{8 September 2026}
+\cfoot{\thepage}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
-
-\title{Independent Academic Review and Revision Plan\\
-for IEEE Transactions on Information Forensics and Security (IEEE TIFS)\\
-\large Fourth Independent Review: Post-Consolidation Assessment}
-\author{}
+\setlength{\emergencystretch}{3em}
+\setlist[itemize]{leftmargin=*,itemsep=3pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=*,itemsep=4pt,topsep=3pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\finding}[3]{\subsection{#1: #3}\label{rev:#1}\textbf{Priority: #2.}}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\newcommand{\evidence}{\par\textbf{Evidence and assessment.} }
+\newcommand{\action}{\par\textbf{Required revision.} }
+\newcommand{\acceptance}{\par\textbf{Completion criterion.} }
+\title{Independent Academic Review and Revision Recommendations\\
+\large Target: IEEE Transactions on Information Forensics and Security}
+\author{Manuscript under review:\\
+\normalsize Direction, Not Allocation: What Actually Buys Privacy\\
+\normalsize Against Visual Location Retrieval}
 \date{8 September 2026}
-
 \begin{document}
 \maketitle
 
-\section*{Review Basis and Scope}
+\section{Review basis, scope, and overall recommendation}
 
-This review is independent of every previous round. It does not inherit the
-findings, the priorities or the closing recommendation of the 7 September 2026
-review, all of whose actionable items have since been implemented; it starts
-from the manuscript as it stands today and asks what a TIFS reviewer meeting it
-for the first time would require.
+This is a fresh, manuscript-based review of the current submission package against IEEE TIFS standards. It replaces the previous contents of this review file. The requested deliverable is the review itself; the recommendations below have \emph{not} been implemented in the manuscript, and proposed experiments have \emph{not} been represented as completed work.
 
-Everything below was checked directly against the current repository state:
+The reviewed main source is \file{paper/main.tex}, last modified at 15:31 on 8 September 2026 local time, with SHA-256 prefix \file{c5be6a76dd961ba1}. Its PDF has 13 pages. The reviewed \file{paper/supplementary.tex}, modified at 15:26, has SHA-256 prefix \file{1833bbda9add3c61}; its PDF has four pages. The bibliography is \file{paper/ref.bib}; the operative generated tables are \file{paper/generated/tab_transfer.tex} and \file{paper/generated/tab_sanitize.tex}. These are the repository's actual filenames; there is no need to invent missing \file{appendix.tex} or \file{references.bib} files. \file{USAGE_codex.md} was unavailable, so the user's explicit TIFS target governs this review.
 
+The assessment includes all pages of the main and supplementary PDFs, their sources, relevant experiment and analysis code, available D6 per-query exports, and official venue guidance accessed on the review date. Earlier manuscript snapshots and earlier completion judgments are not the basis for the verdict. In particular, the current abstract is approximately 245 whitespace-delimited source words, the supplement has the correct title, adversarial-privacy/EOT/BPDA references are present, the main transfer table uses query-level inference, and eight held-out preprocessing conditions have been added. It would be incorrect to report these improvements as still missing.
+
+\textbf{Overall recommendation: not ready for TIFS submission in its current form; major scientific revision is required.} If assessed as a submitted paper, I would recommend rejection with encouragement to submit a substantially revised study, rather than acceptance subject to presentation changes. This is an independent scholarly judgment, not an editorial decision or a prediction of acceptance probability.
+
+The subject fits TIFS: it concerns inference of private location information from released visual data. The potentially publishable contribution is a reproducible audit protocol that separates distortion, spatial weighting, and adversarial optimization under a clearly delimited retrieval threat. However, the central mechanistic explanation is mathematically overclaimed, directly relevant prior work is missing, negative results are repeatedly interpreted as equivalence, and the latest numerical tables disagree with the abstract and discussion. These issues affect the scientific argument, not merely its packaging.
+
+\subsection{Summary of the work}
+The paper studies a DCRF-inspired image sanitizer and controls that redistribute its perturbation weights while preserving nominal energy. It discovers that one learned support map is nearly constant, compares additional spatial rules and perturbation operators, and contrasts these with surrogate-optimized adversarial perturbations. On a custom MSLS subset, directional perturbations reduce retrieval accuracy more than the tested spatial reallocations at a low-distortion operating point. The study also examines downstream utility, preprocessing, EOT hardening, restricted attacker fine-tuning, and a synthetic model with a known Jacobian.
+
+\subsection{Strengths worth preserving}
 \begin{itemize}
-  \item \texttt{paper/main.tex} and \texttt{paper/main.pdf}, rebuilt today
-  with a freshly generated bibliography (47 entries, none missing): 13 pages,
-  0 undefined references, 0 undefined citations, 0 overfull boxes, and
-  \emph{zero figures}.
-  \item \texttt{paper/supplementary.tex} and \texttt{paper/supplementary.pdf},
-  the single appendix document since \texttt{appendix.tex} was retired today:
-  12 pages, same clean build status, 24 tables, zero figures.
-  \item The implementation behind the headline numbers, read line by line
-  rather than through the manuscript's description of it:
-  \texttt{run\_direction\_transfer\_study.py} (the direction optimiser, the
-  gallery-free objective, the EOT loop and the delivered-MSE release rule),
-  \texttt{analyze\_direction\_transfer.py} and
-  \texttt{analyze\_eot\_sweep.py} (the paired significance tests),
-  \texttt{evaluate\_direction\_utility.py} and \texttt{eval/sanitizers.py}.
-  \item The IEEE Signal Processing Society \emph{Information for Authors}
-  page, fetched today, for the venue rules quoted below.
+\item The constant-map diagnostic is concrete and valuable: a plausible privacy--quality curve does not establish that a learned spatial map contributes anything.
+\item Actual place-labeled MSLS experiments complement the explicitly labeled synthetic-identity proxy, and a dedicated VPR attacker, MixVPR, is included rather than relying solely on a weak classification backbone.
+\item Delivered-MSE matching in the directional/operator experiments is an important improvement over comparing nominal noise scales. Independent inspection of the D6 exports confirms a very tight delivered-MSE range.
+\item The paper reports unfavorable outcomes, including high-budget placement benefits, strong-attacker residual retrieval, utility losses, and failed attacker-training recipes.
+\item Query-level confidence intervals, gallery-free optimization with a random start, EOT, and held-out transforms strengthen the current version. Their presence must be acknowledged before requesting further robustness work.
+\item The manuscript explicitly disclaims formal differential privacy. A new DP proof is not a necessary revision unless the authors choose to change the claim.
 \end{itemize}
 
-Two of the findings (R1 and R7) come from the code and could not have been
-found from the manuscript alone. One (R2) comes from reading the paper as a
-TIFS reviewer would, against the adversarial-machine-learning literature that
-TIFS reviewers know well. The rest are presentation and compliance.
+\section{Official submission requirements and package audit}
 
-\paragraph{Venue rules applied (verified 8 September 2026).}
-SPS Transactions rules, which govern TIFS: the abstract must be
-\textbf{150--250 words} and \textbf{include index terms}; a Regular Paper may
-not exceed \textbf{13 double-column pages} at initial submission and 16 at
-revision, references included; Supplementary Material \textbf{should not
-exceed six double-column pages} at 10-point font, with additional pages
-requiring Editor-in-Chief approval; review is \textbf{single-anonymized};
-overlength charges are \$220 per published page beyond ten; authors are
-encouraged to submit everything needed to recreate the figures. The manuscript
-is in IEEEtran journal format with a disclosed author block, which is correct
-for this venue.
-
-\section*{What Does Not Need Work}
-
-Stating this first so the revision cycle does not churn on settled material.
-The scientific core is sound and, after the D1--D5 programme, well supported:
-the placement null on real place-labelled data against both a weak and a
-production-grade attacker; the operator study at matched delivered MSE; the
-direction result under the gallery-free objective, which needs nothing about
-the attacker or its gallery; the honest disclosure that preprocessing collapses
-the white-box bound, and the EOT repair of the two cells where the unhardened
-direction fails; the adaptive-adversary study on both exposures; the
-downstream-utility cost of the direction axis reported as a limit on the
-recommendation; and the controlled known-Jacobian account. The 15-to-13-page
-compression preserved all of it, and today's consolidation of the two appendix
-documents into one removed the last structural duplication. None of the
-findings below asks for any of that to change.
-
-\section*{Overall Recommendation}
-
-\textbf{Major revision}, with acceptance expected if R1 holds up. The verdict
-is driven by one methodological defect that touches every $p$-value in the
-paper (R1), one positioning gap that a TIFS reviewer would treat as a novelty
-question (R2), one evaluation gap in the paper's own headline defense (R3), and
-a set of submission-compliance failures that would be caught at desk check
-before any reviewer sees the science (R5, R6). None of these changes the
-conclusions; R1 could change which marginal cells are reported as significant,
-and the paper's own words --- ``a property of the objective rather than a
-shortage of data'' --- are exactly the kind of sentence that has to be
-re-earned once the test is computed with the right unit.
-
-\section*{Status After the 8 September GPU Session}
-
-R3 and R4 are closed, and R1 is closed for the tables the session
-regenerated. Briefly, so the findings below can be read against what has since
-happened:
-
+\subsection{Policy baseline}
+The following is a concise paraphrase of the official SPS author instructions, not a set of reviewer-invented requirements~\cite{spsauthors}:
 \begin{itemize}
-  \item \textbf{R3 --- closed, and the answer is favourable.} Eight held-out
-  attacker-side transforms were added and both perturbations evaluated under
-  all thirteen, 400 queries $\times$ 3 seeds per cell. Unhardened, the
-  direction fails on one of the eight against ResNet18 and three against
-  MixVPR; hardened, all sixteen held-out cells are significant. Hardening over
-  four cheap transforms generalises to eight it never saw.
-  \item \textbf{R4 --- closed.} The hardened direction costs a further
-  $0.070$ per-image IoU against the unhardened one
-  ($p=1.4\times10^{-14}$), and global mIoU falls $0.601\to0.503$. Its
-  per-image AP is not measured: the detection manifest was on the GPU host and
-  is no longer reachable.
-  \item \textbf{R1 --- closed for the direction and preprocessing tables},
-  which the session regenerated at full scale and now reports with the query
-  as the unit. It remains open for the placement and operator tables, and is
-  blocked outright for the real-place placement table, whose export tree is on
-  no reachable machine.
-  \item One published claim is superseded. The manuscript said two MixVPR
-  cells fail unhardened, JPEG-50 at $p=0.21$ and denoising at $p=0.53$. On the
-  new three-seed run under query-level inference, denoising is significant
-  ($\Delta=-0.0192$, $p=3\times10^{-3}$) and only JPEG-50 fails
-  ($\Delta=-0.0100$, CI $[-0.029,+0.009]$).
-  \item A caution about R1's own framing below: the query-level test is not
-  uniformly weaker than the pair-level one. It is a different test --- Wilcoxon
-  over per-query differences uses magnitude, where McNemar counts only
-  discordance --- so some cells come out stronger (MixVPR one surrogate,
-  $6\times10^{-4}\to3\times10^{-4}$). The argument for it is that it is the
-  right unit, not that it is more conservative.
+\item Initial regular papers: at most 13 double-column pages in 10-point type; revised regular papers: at most 16 pages under the stated counting rules.
+\item Abstract: 150--250 words and self-contained, without abbreviations, references, footnotes, or displayed equations.
+\item Review is single-anonymized; author identities remain visible. All authors need ORCIDs; submission metadata and manuscript authors must agree. Select appropriate EDICS.
+\item Supplementary text is recommended to stay within six double-column pages; extra pages require Editor-in-Chief approval. Submit reviewable supplements initially, with consecutive numbering across the manuscript and supplement.
+\item Standard-format PDF, originality, related-work disclosure, and any applicable prior-rejection/resubmission documentation are required. Pages beyond ten attract mandatory overlength charges.
 \end{itemize}
 
-\section*{Major Findings and Required Revisions}
+TIFS encourages reproducibility~\cite{tifsscope}. Its deep-learning guidance calls for clear architecture, preprocessing, training, model-selection, split, software, and hardware descriptions; code does not replace a written method. It specifically raises the reproducibility expectation for negative results challenging published research~\cite{tifsdl}.
 
-\subsection*{R1 --- Major (methodology): the paired tests treat seed replicates
-of the same query as independent observations}
+\subsection{Observed compliance and remaining administrative actions}
+\begin{longtable}{L{0.23\linewidth}L{0.69\linewidth}}
+\toprule
+Item & Current assessment and action \\
+\midrule
+\endhead
+Main length & The inspected PDF is 13 pages, including references. It meets the initial length ceiling, with no spare page. Shorten repetition before adding necessary scientific content. \\
+Supplement length & The inspected PDF is four pages. No excess-length approval is needed for this file as inspected. A separate extended report is repeatedly invoked; identify its review-time location and what evidence it contains. \\
+Abstract & Length is near the upper limit, rather than grossly overlength. Expand or remove DCRF, MSLS, and MSE, and recheck the word count after correcting the stale results. \\
+Author disclosure & Authors and affiliations appear in both PDFs, consistent with single-anonymized review. ORCID completion and submission-system metadata cannot be verified from these files. \\
+Numbering & Main and supplement both start tables at Table I. Correct the cross-document numbering or obtain confirmation of an accepted unambiguous scheme; ordinary independent restarts do not follow the cited instruction. \\
+Formatting & The main uses the journal IEEEtran class and 10-point body type. No unresolved citation keys were found in the active main source. Some scaled tables and figure annotations need legibility improvements. Verify the final package against the current venue-selected template. \\
+Cover letter & \file{docs/cover_letter.txt} still advertises the older PPEDCRF method, old title, and a selective-support advantage contradicted by this manuscript. Rewrite it around the actual audit contribution and verified results. \\
+Submission history & A response-letter filename is not proof of rejection or duplicate submission. Authors must verify the actual publication/submission history and make any required disclosures truthfully. \\
+Availability & A code/export URL is printed in the main paper. It did not resolve through the review's public web fetch; public reviewer access was therefore not established. This is not proof that the repository is absent. \\
+\bottomrule
+\end{longtable}
 
-\textbf{Finding.} \texttt{analyze\_direction\_transfer.py} sets
-\texttt{UNIT = ["query\_id", "seed"]} and runs an exact McNemar test over
-those units; \texttt{analyze\_eot\_sweep.py} pools by \texttt{(query, seed)}
-in the same way. That is where the paper's ``$n=1{,}200$ paired observations''
-comes from: 400 queries $\times$ 3 noise seeds. The three seeds of a query
-share the frame, the gallery, the place label and the query's intrinsic
-difficulty; they differ only in the noise draw (isotropic control) or the
-random start (gallery-free direction). A query whose clean margin is small
-contributes discordant pairs in the same direction under all three seeds, so
-the McNemar count of discordant pairs is inflated by up to a factor of three
-relative to the independent evidence, and every reported $p$-value --- $10^{-41}$,
-$10^{-26}$, $10^{-8}$ --- is computed on a sample whose effective size is
-somewhere between 400 and 1,200.
+\section{Major scientific findings and required revisions}
 
-The manuscript already knows the right unit: the proxy placement study uses
-``cluster-robust'' tests, and the E1 real-place analysis uses a
-\emph{place-cluster bootstrap} and, on that basis, reports only 5 of 18 cells
-as individually significant. The direction, preprocessing, EOT, operator and
-MSLS-placement tables do not follow that convention. The inconsistency is
-internal, and a referee who reads the code will find it in minutes.
+\finding{R1}{Critical}{The abstract, prose, generated tables, and exports describe different numerical versions}
+\evidence
+The current transfer table is generated from a newer run, while several headline passages still quote the previous run and its pair-pooled significance values. This is visible in the same rendered PDF. Relevant locations are the abstract, Contributions, Section III-E (approximately lines 878--984 of \file{paper/main.tex}), Table IV, Section III-F, and supplementary Table IX.
 
-\textbf{Consequences.} The substantive conclusions survive: the placement
-nulls become, if anything, more null; the ResNet18 direction effects
-($|\Delta|\ge0.09$) are far outside any plausible correction. What is at
-risk is the significance status of the marginal cells, all against MixVPR
-or at the high budget:
+\begin{longtable}{L{0.32\linewidth}L{0.29\linewidth}L{0.29\linewidth}}
+\toprule
+Quantity & Main prose or other claim & Current table/export \\
+\midrule
+\endhead
+ResNet18, three-surrogate Top-1 & 0.0358 (abstract rounds to 0.036) & Table IV and D6 export: 0.0317 \\
+MixVPR, four-surrogate Top-1 & 0.7342 (abstract rounds to 0.734) & Table IV and D6 export: 0.7317 \\
+ResNet18, one surrogate & 0.1508 implied by the reported $-0.046$ effect & Table IV: 0.1608, effect $-0.0358$ \\
+Matched-MSE ResNet18 white-box Top-1 & Optimizer paragraph says Table IV reads 0.0033 & Table IV: 0.0058 \\
+ResNet18 transfer significance & $p=2\times10^{-41}$ in the concluding III-E paragraph & Table IV: query-level $p\approx10^{-15}$ \\
+MixVPR transfer significance & $p=2\times10^{-8}$ in the same paragraph & Table IV: query-level $p\approx3\times10^{-6}$ \\
+Table IV columns & Prose describes a last column reporting percentage of white-box benefit & The current last column is $p$; that percentage column was removed \\
+Detection utility loss vs isotropic & Main: approximately $-0.058$ per-image AP & Supplementary IX: $0.6109-0.6743=-0.0634$ \\
+Segmentation utility loss & Main: clean loss 0.055; further loss 0.053 vs isotropic & Supplementary IX: clean loss 0.0600; isotropic-relative loss 0.0531 \\
+Noise seeds & General protocol: 1234--1236 & D6 CSVs: 1234, 5678, 9012 \\
+\bottomrule
+\end{longtable}
+
+These discrepancies cannot be explained solely by changing the statistical unit: point estimates also changed. The old reference-targeted comparison and claims that gallery-free optimization does no worse must be associated with a matched, identified run before being retained.
+
+\action
+Freeze a single publication export for each experiment family. Generate or validate all repeated numbers, sample counts, seed identifiers, confidence intervals, and table descriptions against it, including abstract and conclusion. Identify different runs explicitly when both are scientifically needed. Keep the $0.0000$ white-box result at MSE 19.19 separate from matched-MSE white-box results; these are different operating points.
+\acceptance
+A raw-export-to-claim audit covers every main and supplementary headline, and each number has one unambiguous experiment, condition, and inference method. No reader must guess which table version a sentence describes.
+
+\finding{R2}{Critical}{The theoretical allocation-versus-direction explanation is not valid as stated}
+\evidence
+Section III-H is titled ``Why Allocation Cannot Decide a Ranking.'' The introduction, contributions, and conclusion similarly say allocation determines displacement magnitude but cannot determine ranking. Equation (7), however, concerns only the \emph{expected squared embedding displacement}; it cannot establish this conclusion.
+
+Let $\delta=D_w\varepsilon$, where $D_w=\operatorname{diag}(w)$ and $\varepsilon\sim\mathcal N(0,\sigma^2I)$. Under local linearization,
+\begin{align}
+\Delta f &\approx JD_w\varepsilon,\\
+\operatorname{Cov}(\Delta f\mid x,w)&=\sigma^2JD_w^2J^\top,\label{eq:review_cov}\\
+\mathbb E\|\Delta f\|_2^2&\approx\sigma^2\sum_i w_i^2\|J_i\|_2^2.
+\end{align}
+Redistributing the weights generally changes the covariance orientation as well as its trace. Zero mean is not isotropy, and neither implies invariance of rank-crossing probability.
+
+For a locally differentiable positive-versus-negative margin $m(x)$, with the relevant competitors fixed locally and $a=\nabla_xm(x)$,
+\begin{equation}
+m(x+\delta)\approx m(x)+a^\top\delta,
+\qquad
+v(w)=\sigma^2\sum_i a_i^2w_i^2.
+\end{equation}
+For a clean positive margin and $v(w)>0$,
+\begin{equation}
+\Pr\{m(x+\delta)<0\}\approx
+\Phi\!\left(-\frac{m(x)}{\sqrt{v(w)}}\right).
+\end{equation}
+Thus spatial allocation can change a ranking probability even under the paper's own first-order assumptions. A two-coordinate counterexample suffices: for $a=(1,0)$ and $\sum_iw_i^2=E$, placing all energy on coordinate 1 gives variance $\sigma^2E$, while placing it on coordinate 2 gives zero margin variance. The empirical null does not contradict this calculation; it simply requires a more specific explanation.
+
+\action
+Retain the displacement identity but replace the claimed impossibility with a conditional analysis of margin distributions and covariance. State assumptions about local competitors, clipping, normalized embeddings, and higher-order errors. Treat the observed small placement effects as empirical observations on specified models and budgets. Change the subsection title and remove universal statements from the abstract, introduction, and conclusion.
+\acceptance
+The revised analysis predicts a quantity linked to retrieval, admits counterexamples, and is checked against measured margin changes. No conclusion follows from the trace identity alone that requires the full covariance or ranking distribution.
+
+\finding{R3}{Major}{The gradient ``oracles'' and synthetic validation do not establish an optimal bound or a causal explanation}
+\evidence
+Section III-H identifies the measured top-decile concentration of 67.7\% with Jacobian-column norms. In \file{src/scripts/run_placement_rule_study.py}, however, \file{attacker_gradient_map} computes the gradient of a scalar positive-gallery cosine score and sums absolute RGB gradients. This is not $\|J_i\|_2$ for the full embedding Jacobian. The margin-gradient map is closer to the ranking objective but is still a heuristic spatial weighting.
+
+Under the stated constraint $\sum_iw_i^2=E$, maximizing a linear form in $w_i^2$ allocates energy to the largest coefficient, unless support, smoothness, or amplitude restrictions are also imposed. Renormalizing a gradient-proportional map does not solve that optimum. The terms ``oracle,'' ``strictly correct,'' and ``bound'' therefore exceed what is shown.
+
+The synthetic study itself reports substantial placement benefits and acknowledges a prediction near $-0.15$ where the real-image observation is approximately $-0.0008$. That discrepancy is evidence that the proposed mechanism is incomplete, not evidence that estimation error explains it. A nonlinear synthetic example also cannot rule out linearization error for the real networks. A near-zero clean retrieval rate creates a floor that can suppress absolute improvements without revealing the underlying mechanism.
+
+\action
+Rename the existing rules as positive-score-gradient and margin-gradient placements. Either implement a clearly constrained allocation optimum or explicitly disclaim optimality. Estimate actual Jacobian-column norms on a tractable subset, or consistently analyze scalar margin gradients instead. Compare predicted and observed margin variance, rank flips, clipping, and local approximation error; report the unexplained synthetic-to-real gap as such.
+\acceptance
+Every sensitivity statistic names the quantity actually measured. Any optimality/bound claim has a defined feasible set and proof or optimization certificate. The controlled study is presented as a diagnostic model with limited external validity.
+
+\finding{R4}{Critical}{Directly relevant prior work challenges the novelty narrative}
+\evidence
+The revised related-work paragraph correctly credits adversarial privacy, surrogate transfer, EOT, and BPDA. Nevertheless, the abstract and several sections still assert that the location-privacy literature does not optimize perturbation direction and that additive isotropic Gaussian noise is almost universal.
+
+Le et al., \emph{Rethinking Adversarial Examples for Location Privacy Protection}, already combine spatial masks with multi-model projected-gradient perturbations and evaluate transfer to an unseen recognizer. Their CAM-based and human-vision-based masks directly connect allocation and adversarial direction~\cite{le2022}. Their task uses scene/landmark recognition rather than the present gallery-ranking protocol, so the results are not interchangeable; the conceptual overlap still requires explicit treatment.
+
+GeoShield additionally studies geolocation privacy through adversarial optimization with geographically revealing-region identification and global/local processing~\cite{geoshield}. Its vision-language threat differs from fixed-gallery retrieval. It is pertinent to broad field-level claims, not automatically a directly comparable baseline.
+
+Neither work appears in the current bibliography. Section III-C's reference to a ``2024 survey'' is unnamed and uncited. The lack of a verified reusable implementation does not justify stating that a design variable has not been studied.
+
+\action
+Reposition novelty around \emph{matched-distortion auditing and its bounded empirical findings}. Add a focused comparison with prior mask-guided adversarial protection, specifying release object, attacker access, learning objective, spatial weighting, norm/utility matching, and evaluation metric. Cite the actual survey and document any code-availability limitation without treating it as evidence of conceptual absence. Reimplement a faithful mask-guided adversarial baseline where feasible; disclose any task adaptation.
+\acceptance
+The contribution remains meaningful after the closest prior work is described accurately. No claim of first discovering directional privacy survives merely by excluding related work from an artificially narrow method family.
+
+\finding{R5}{Major}{Inference is only partly corrected, and nonsignificance is repeatedly treated as equivalence}
+\evidence
+Table IV now averages seeds within queries and uses query-level inference; this is a real improvement. Sections III-C and III-D still report exact McNemar tests over 1,200 query--seed observations, and Section III-E still prints their old extreme $p$-values. D6 contains 400 queries but only 277 place labels, with as many as 12 queries sharing one place. Query-only resampling therefore does not address all place-level dependence.
+
+The review independently checked the D6 plain exports: each attacker has 46,800 rows across 13 transforms, three conditions, 400 queries, and three seeds, with no duplicate condition/query/seed/transform keys. For the main transfer contrast, a diagnostic bootstrap resampling the 277 places, carrying all seed-averaged queries in each sampled place, gives:
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Attacker & Query-weighted mean $\Delta$ & Place-bootstrap 95\% interval \\
+\midrule
+ResNet18 & $-0.1650$ & approximately $[-0.2112,-0.1221]$ \\
+MixVPR & $-0.0483$ & approximately $[-0.0736,-0.0243]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+These are reviewer-side checks, using 10,000 resamples and RNG seed 20260908, conditional on the current gallery and cities. They are not a complete revised inferential analysis. They support preserving the main transfer finding rather than assuming it disappears after clustering.
+
+Statements such as ``inert,'' ``indistinguishable,'' ``only measurable privacy,'' and ``no effect'' require stronger evidence than a failure to reject equality. The isolated harmful VGG16 result is described as significant at $p=0.05$ among 98 comparisons; its multiplicity treatment is not established. Table I marks a pooled mean with a star arising from one subgroup, which can mislead readers about the estimand tested.
+
+\action
+Use a consistent inference unit appropriate to the question: average repeated seeds within query, cluster by place or sequence where observations are dependent, and explicitly condition on the fixed cities/gallery. Define primary comparisons and a multiple-testing policy. For a negligible-effect claim, specify a scientifically justified equivalence margin \emph{before} testing and show an appropriate interval lies within it; otherwise say ``no benefit detected.'' Report subgroup results separately from pooled descriptive averages. Explain why any signed-rank test addresses the intended estimand; it is not automatically a test of the mean difference.
+\acceptance
+All inferential tables identify their units, clustering, effect definitions, confidence procedures, and correction families. Negative conclusions reflect interval width and practical effect size rather than the number of tests conducted.
+
+\finding{R6}{Major}{The protocol does not yet isolate three independent design factors}
+\evidence
+The paper describes one-axis-at-a-time intervention, but spatial magnitudes and geometric direction are not inherently independent: changing a weight map changes the normalized perturbation vector. The iterative directional optimizer also produces nonuniform final magnitudes through repeated sign updates, projection, and clipping. Comparing that output with weighted Gaussian noise changes more than sign alignment.
+
+The main operator comparison uses edge and uniform placements against ResNet18. It is not the full cross-product of every placement, operator, and both attackers. Claims that the result holds ``under any operator'' against either attacker should not imply this missing factorial experiment was run.
+
+Moreover, matching $\sum_iw_i^2$ matches expected Gaussian energy before clipping, not each realized draw:
+\begin{equation}
+\|D_w\varepsilon\|_2^2=\sum_iw_i^2\varepsilon_i^2.
+\end{equation}
+Thus the statement in Section III-H that any delivered-MSE shortfall must be energy lost at the clamp is too strong without measuring pre-clamp realized energy. The delivered-MSE operator experiment resolves a confound for those tested pairs, but not retroactively for every nominal-energy placement comparison.
+
+\action
+Define operational factors precisely. Add matched-release controls retaining an optimized perturbation's magnitudes while randomizing its signs, retaining its signs while uniformizing magnitudes, and crossing representative placements with directional optimization. Hold model access, optimization effort, random starts, and delivered distortion fixed. Record both pre-clamp and post-clamp distortion. Repeat the essential factorial subset on a strong VPR attacker; label untested combinations explicitly.
+\acceptance
+The observed advantage can be attributed to the specified intervention, with uncertainty, rather than to a compound change in access, compute, sign, magnitude, and clipping.
+
+\finding{R7}{Major}{Matched distortion does not establish a superior privacy--utility frontier}
+\evidence
+The current supplement reports a useful utility assessment, including EOT. Table IX shows mIoU falling from 0.6709 for isotropic noise to 0.6010 for the surrogate direction and 0.5025 for the EOT-hardened direction at the same MSE. These are material downstream costs. The claim that direction ``wins outright'' per unit utility because allocation's numerator is zero is unsupported: an undetected effect is not exactly zero, and a single operating point does not establish a frontier.
+
+Retrieval is evaluated on MSLS, while utility is measured on separate VOC/COCO images. ``Same-image utility'' means each utility model evaluates its corresponding sanitized image; it does not establish joint retrieval privacy and task utility on the same MSLS releases. The selected MSE 15.68, about 36.18 dB on a 0--255 scale, is called quality-preserving without a task-level acceptance threshold. Conversely, 24 dB is called unusable without matching downstream evidence.
+
+\action
+Report privacy versus actual downstream utility over several measured budgets, for isotropic noise, representative spatial controls, gallery-free direction, and EOT direction. Define an application-motivated utility tolerance and compare at matched utility as well as matched distortion. Prefer a common annotated street-scene subset or explicitly restrict cross-dataset conclusions. Keep global mAP/mIoU and per-image paired summaries distinct; averaging per-image AP is not dataset-level AP.
+\acceptance
+Any deployment recommendation is supported by a frontier or explicitly restricted to a distortion-only observation. Claims about useful or destroyed image quality are tied to a prespecified criterion, with standard task metrics and uncertainty.
+
+\finding{R8}{Major}{Restricted attacker fine-tuning does not justify the general adaptation claim}
+\evidence
+Section III-G evaluates useful but resource-restricted fine-tuning: most layers are frozen, the gallery embeddings remain fixed, and validation Top-1 selects the checkpoint. The claim that real systems do not re-embed galleries is an unsupported universal constraint, particularly for the evaluated 2,000-image gallery. A gallery-rebuilding attacker belongs to the natural threat space unless excluded explicitly.
+
+Directional adaptation is selected on only 50 validation queries, starting at two correct for ResNet18. If all selected checkpoints equal the pretrained model, a held-out null follows by construction. Improved validation median rank indicates learning, but does not prove that a stronger attack cannot improve Top-1. The isotropic held-out improvements in supplementary Table X are descriptive: their reported $p$-values, 0.125 and 0.250, do not establish statistically significant improvements.
+
+The final sanitizer includes EOT, whereas the fine-tuning code's directional cache calls the optimizer without an EOT configuration. The adaptation evidence therefore does not cover the complete hardened release mechanism. A white-box perturbation regenerated against each adapted encoder is also a different released object; its continued effectiveness is not evidence that an attacker failed to recover location from a fixed release.
+
+\action
+Define attacker knowledge, training data, computation, gallery-update access, and fixed-release evaluation explicitly. Test at least one stronger adaptation using the final hardened outputs, fresh release randomness, and re-embedded gallery features. Use a sufficiently informative, independent validation criterion and evaluate selected models on a larger place-disjoint test set. Keep fixed-release recovery separate from sanitizer reoptimization against a known target.
+\acceptance
+The abstract says which adaptation failed under which constraints. Either demonstrate resistance to the declared adaptive adversary or retain a bounded statement about the tested recipe; do not elevate a failed training run to general security.
+
+\finding{R9}{Major}{The geographic benchmark and attacker generalization need sharper validation}
+\evidence
+The primary benchmark is a custom eight-city, 400-query, 2,000-gallery subset of the MSLS train/validation release, with correctness based on \file{unique_cluster}. This is stronger than the synthetic-identity proxy, but not automatically the official MSLS retrieval protocol. The original MSLS paper defines single-image positives using geographic distance and viewing-angle criteria~\cite{msls}. Matching a cluster label needs an empirical agreement check before being treated as equivalent to geographically accurate localization.
+
+The manuscript already acknowledges predominantly forward-facing daytime images and sparse condition metadata. The decisive direction/EOT experiments target only ResNet18 and MixVPR. Six-backbone results for other experiment families do not establish six-backbone directional robustness. Pretraining overlap, city-level separation, gallery sampling, and preprocessing resolution can affect the interpretation of an ``unseen attacker.''
+
+\action
+Publish the manifest construction and an audit of cluster-based positives against GPS/heading-based positives, handling multiple valid references and near-duplicate views. State dataset roles, city/sequence splits, query/gallery overlap, model pretraining sources, and input preprocessing. Validate the key contrasts on an independent geographic split or second dataset and another held-out strong VPR architecture; a full expansion of every old proxy table is unnecessary. Report per-city effects and uncertainty instead of pooling away heterogeneity.
+\acceptance
+The paper labels the benchmark accurately as a custom subset where appropriate, and its main conclusion survives a meaningful independent geographic/attacker check or is narrowed to the current subset.
+
+\finding{R10}{Major}{Top-1 failure is not equivalent to location privacy, and the final release boundary is incomplete}
+\evidence
+The threat model defines success at Top-$k$, but the central direction story relies on Top-1. The review's direct D6 calculation finds that under the unhardened full surrogate ensemble, MixVPR still has Top-5 0.8300 and Top-10 0.8600, despite Top-1 falling to 0.7317. ResNet18 Top-5/10 are 0.1025/0.1450. These values do not refute a Top-1 reduction; they show why it should not be presented as making location private.
+
+The pipeline releases floating-point tensors in the experiment and later applies selected transforms. A real stored or transmitted image may involve integer quantization, codec settings, resizing, and color conversion. The manuscript should distinguish the optimization constraint from the final serialized-release constraint: post-optimization scaling in \file{release_at_mse} can increase a perturbation's amplitude, so the intermediate $\ell_\infty$ projection alone does not certify the final bound. Actual violation has not been established by this review.
+
+The introduction motivates video, but the multi-frame experiment primarily evaluates the original PPEDCRF/noise mechanism, not the final gallery-free EOT defense. Its result cannot be transferred automatically to repeated or temporally aggregated directional releases.
+
+\action
+Report Top-1/5/10, reciprocal rank, geographic-error distributions, and residual attack success for the main directional conditions. Define positive-place sets consistently. Evaluate decoded saved releases and measure final MSE, maximum amplitude, clipping, and file format. Test the final mechanism under short multi-frame or repeated-release aggregation if retaining video-level language; otherwise clearly limit the claim to one frame. Describe the white-box result as an achieved diagnostic reference, not a certified privacy bound.
+\acceptance
+The security claim names the attacker success metric and released object, and distinguishes empirical ranking suppression from formal or universal privacy.
+
+\finding{R11}{Major}{The available artifacts do not yet constitute a complete, current reviewer package}
+\evidence
+Substantial current data are present locally: the review independently recomputed the D6 headline rows and checked their matching gates. This is positive evidence and rules out a blanket claim that current exports are absent. Nevertheless, \file{src/artifact/results} and \file{src/artifact/MANIFEST.sha256} are absent in the inspected checkout. The assembly script lists older experiment directories and does not package D6 or the current generated-table summaries. The verifier still embeds earlier directional and utility values; the README says it checks 76 values, which does not describe a complete audit of the present paper.
+
+The supplement repeatedly relies on an extended evidence report. A source exists under \file{paper/backup/supplementary_extended.tex}, but the submitted package does not clearly identify a versioned, reviewable artifact for it. Core calibration details, some manifests and diagnostic exports, and reproducibility notes cannot simply become inaccessible when the supplement is compressed.
+
+\action
+Create a versioned release manifest covering raw outputs, model/checkpoint identities, split manifests, analysis commands, generated tables/figures, and a claim-to-output map. Update the artifact builder and verifier to the final run rather than merely retaining historical checks. Include the extended evidence needed to assess the claims in an identifiable review-time document or accessible artifact. Test the package from a clean extraction and distinguish CPU-only table verification from GPU experiment reproduction. Repair stale artifact instructions and provide actual reviewer access without requiring personal credentials.
+\acceptance
+A reviewer can reproduce all main numerical claims and figures from the supplied release, and can determine which parts require licensed datasets or GPU reruns. Missing records are named explicitly; inaccessible evidence is not described as verified.
+
+\finding{R12}{Major}{The implemented method and optimization need a complete mathematical and procedural specification}
+\evidence
+The DCRF update is an averaging/temporal-relaxation recurrence called mean-field-style inference, without an explicit CRF energy or derivation. The distinction matters because a standard CRF model has specific probabilistic semantics. The support map is continuous and nearly 0.5 in the released checkpoint, so ``perturbs only the inferred background support'' is misleading unless a hard support restriction is actually applied. The paper commendably identifies the degeneracy, but its method description still reads like a working selective mechanism.
+
+The directional method is now described with 20 steps, step size, projection, and random start. Remaining details include exact objectives, surrogate normalizations, transform probabilities/sample counts, model versions, and whether the final scaling preserves the specified constraints. Low-pass, correlated-noise, and block-quantization operators are named in the main results but need explicit, reproducible definitions in the review package. A fixed number of arbitrary implementation choices should not be presented as a complete search over operator design.
+
+\action
+Provide concise equations or pseudocode for the release protocol, energy matching, each nontrivial operator, and the gallery-free EOT objective. For example, specify whether the optimized loss is
+\[
+\mathcal L(\delta;x)=\frac{1}{M}\sum_{j=1}^M
+\mathbb E_{T\sim\mathcal T}
+\left[\cos\!\left(f_j(T(x+\delta)),f_j(x)\right)\right],
+\]
+with minimization, a clean untransformed reference, specified constraints, and a documented gradient approximation. Distinguish this from a transformed-reference objective. Derive the claimed CRF inference or call it CRF-inspired smoothing. Give architecture, training supervision, stopping rules, and checkpoint provenance in the accessible supplement/artifact.
+\acceptance
+A knowledgeable reader can implement the evaluated release from the paper and its cited supplement without inferring missing semantics from filenames or obsolete code comments.
+
+\finding{R13}{Major}{Several internal interpretations and display choices overstate the evidence}
+\evidence
+The following errors are directly checkable in the current sources and rendered package:
+\begin{enumerate}
+\item Section III-C calls MixVPR's oracle $\Delta=-0.0117$ ``nominally worse,'' although negative $\Delta$ means \emph{better} privacy. The same value contradicts the later claim that no allocation difference exceeds 0.01 in magnitude.
+\item The headline comparison says allocation at $15.4\times$ distortion reaches ``only'' 0.159, although Table III also shows block quantization reaching 0.0525 at that same distortion. State the best tested allocation result or explicitly label the additive-noise comparison.
+\item Section III-D calls the larger budget ``eight times larger,'' whereas MSE 241.5 versus approximately 15.68 is about $15.4\times$. If a different nominal parameter is intended, name it and avoid calling it delivered distortion.
+\item The controlled-model narrative calls spatially structured operators interchangeable while reporting placement gains around $-0.42$ to $-0.48$. Similarity between operators does not imply that placement within them has no value.
+\item Supplementary Table XI's caption claims intervals are reported, but its columns show point estimates and significance markers, not intervals. The surrounding text says the table adds the isotropic control; there is no explicit isotropic column.
+\item The Table XI/Figure 3 generator marks nonsignificance from Wilcoxon $p$, whereas the caption describes a bootstrap interval spanning zero. The checked current summaries give the same classification, so this is a method-description inconsistency rather than a demonstrated wrong marker.
+\item The preprocessing caption refers to five transforms used for hardening, while the protocol trains on four transforms and also reports the identity/no-preprocessing condition. Label this distinction accurately.
+\item Main figures are now present and analytically useful; there is no missing-figure defect. Figure 3 nevertheless omits interval bars while using significance labels, and several annotations are around six points. Scaled supplementary tables are dense. Improve uncertainty display and legibility at normal reading size.
+\end{enumerate}
+
+\action
+Correct each sign, comparison scope, ratio, caption, and reference. Replace rhetorical language such as ``does everything,'' ``inert,'' ``repairs,'' ``nothing about the attacker,'' and ``production-grade'' with the precise tested claim where evidence does not justify the broader reading. Preserve absolute residual accuracy alongside improvements. Shorten repeated narrative so the saved space supports essential methods, uncertainty, and readable tables.
+\acceptance
+Every interpretive sentence follows the table's sign convention and comparison set. Every caption accurately names the displayed quantities and the procedure used to mark them.
+
+\section{Targeted experiment and analysis plan}
+
+These are recommended revisions, not experiments performed during this review. Start with reuse of existing exports; do not launch a large new benchmark until R1--R5 settle the claim and estimand. The core question should be whether specified spatial allocations add practically meaningful privacy at matched release quality and access, not whether one can prove spatial allocation universally irrelevant.
+
+\begin{longtable}{L{0.08\linewidth}L{0.27\linewidth}L{0.54\linewidth}}
+\toprule
+ID & Purpose and priority & Minimal design and required output \\
+\midrule
+\endhead
+E1 & Reconcile claims and inference; essential & Use existing D6 and placement exports. Freeze rows/seeds, average repeated releases appropriately, cluster by place/sequence, define multiplicity and equivalence margins, and regenerate all main/supplementary claims. Report effect intervals, units, and unresolved cells. \\
+E2 & Test the mechanistic explanation; essential & On a manageable subset, compare scalar score gradients, margin gradients, and estimated Jacobian-column norms. Measure pre/post-clamp energy, margin variance, rank flips, and prediction errors. Include an explicit counterexample/control where placement helps. \\
+E3 & Isolate allocation and direction; essential & Cross representative placements with Gaussian/random-sign and adversarial/EOT directions. Add fixed-magnitude sign shuffling and uniform-magnitude optimized-sign controls, matched after clipping and serialization, for both weak and strong attackers. \\
+E4 & Compare the closest prior approach; essential for broad novelty & Implement or adapt mask-guided multimodel PGD, plus full-frame PGD and isotropic controls. Keep surrogate access, restart budget, output distortion, and query/gallery protocol equal. Document deviations from the published task and implementation. \\
+E5 & Measure utility rather than infer it; essential for design recommendations & Sweep a small number of measured distortions covering the claimed operating regime. Compare privacy against detector/segmenter metrics and a declared utility threshold; include the final EOT mechanism. Provide joint-image evidence or explicitly label cross-dataset transfer. \\
+E6 & Adapt to the actual final sanitizer; essential for adaptation claims & Train on final EOT releases with fresh randomness; include a gallery-rebuilding configuration and a sufficiently informative validation criterion. Evaluate fixed releases on independent places, reporting Top-1/5/10 and rank statistics. \\
+E7 & Establish external validity; high priority & Replicate the decisive contrasts on a geographic holdout or second real benchmark and another strong held-out VPR model. Audit official geographic positives, gallery size, model pretraining, and per-city behavior. \\
+E8 & Validate the deployed release; conditional on deployment/video claims & Save, decode, and evaluate actual images; record codec, color, resolution, MSE, maximum perturbation and latency. For video claims, aggregate the final direction/EOT releases over short clips or repeated views and measure utility/flicker. \\
+\bottomrule
+\end{longtable}
+
+\textbf{Stopping rule for an experiment.} A revision is complete when its declared comparison has a valid manifest, executed output, appropriate analysis, and a bounded manuscript conclusion. A nonsignificant result is a legitimate outcome; it is not a reason to keep searching until the preferred claim becomes significant. If required data or compute cannot be obtained, narrow the corresponding claim and state the remaining limitation rather than reporting a planned result as evidence.
+
+\section{Suggested restructuring and wording}
+
+\subsection{Recommended narrative}
+Lead with the audit problem and the difference between nominal and delivered distortion. Define the matched-release protocol before devoting substantial space to the PPEDCRF implementation. Present the constant-map diagnostic as a case study, then the nondegenerate placement tests, the direction comparison, practical utility/attacker limitations, and a carefully qualified local analysis. The synthetic model should illustrate conditions under which allocation does or does not help, not assert an explanation it fails to quantitatively reproduce.
+
+A more defensible title is:
+\begin{quote}
+\emph{Matched-Distortion Auditing of Spatial Allocation and Adversarial Perturbations for Visual Location Privacy}
+\end{quote}
+This avoids committing the paper to a universal negative result before its scope and inferential support are established.
+
+\subsection{Example abstract direction}
+The following is an illustrative rewrite, not a replacement inserted into the manuscript. Numerical values refer to the currently verified D6 table and must be synchronized again after final analysis:
+\begin{quote}
+Releasing street-scene images can reveal location through visual retrieval, even after geographic metadata are removed. We study whether spatial allocation contributes to protection beyond the distortion it introduces. Our evaluation redistributes sanitizer weights and compares perturbation operators and adversarial perturbations at controlled delivered distortion. In a conditional-random-field-inspired testbed, one learned map is nearly constant, demonstrating that a plausible privacy--quality curve need not establish useful spatial selection. On a custom Mapillary Street-Level Sequences subset, the tested placements provide no consistently demonstrated advantage over uniform noise near the selected operating point. Gallery-free perturbations optimized on surrogate models reduce first-ranked retrieval accuracy from 0.1967 to 0.0317 for a held-out classification backbone and from 0.7800 to 0.7317 for a dedicated place-recognition model. Optimization over image transformations improves resistance to evaluated preprocessing, including held-out transformations, but incurs additional segmentation loss. These findings support matched-distortion controls for auditing selective sanitizers and motivate comparisons at matched downstream utility. They establish bounded empirical effects, rather than universal irrelevance of spatial allocation or a formal privacy guarantee.
+\end{quote}
+
+\subsection{Presentation and reference cleanup}
 \begin{itemize}
-  \item The transfer table: MixVPR 1, 2 and 3 surrogates
-  ($\Delta=-0.025$, $-0.028$, $-0.032$; $p\approx10^{-4}$).
-  \item The preprocessing/EOT table: MixVPR unhardened JPEG-75 ($-0.0242$)
-  and blur ($-0.0317$); the two cells already reported as non-significant
-  stay non-significant.
-  \item The operator table at MSE 241.5: correlated Gaussian ($+0.0167$,
-  $p=0.067$) --- close to the boundary in either direction.
-  \item The MixVPR placement paragraph: the oracle's $-0.0117$ at $p=0.039$,
-  already discounted for multiplicity.
+\item Define a single notation for the clean frame, released frame, placement amplitude, perturbation vector, distortion, positive gallery set, and attacker transformation; avoid reusing $\delta$ for both calibration and image perturbation without explanation.
+\item Use ``CRF-inspired'' if no CRF energy/mean-field derivation is supplied, and ``amplitude normalization'' instead of suggesting that NCP is an optimized penalty.
+\item Define ``background'' as a semantic-model output, not ground-truth privacy sensitivity. Buildings, signs, vehicles, and other categories may carry location information regardless of foreground/background taxonomy.
+\item Replace incomplete cross-document references to ``the supplementary material'' or ``the extended report'' with identifiable sections/tables and a stable artifact identifier.
+\item Remove visible process history: ``carried over from the earlier framing,'' ``superseded,'' and descriptions of previously caught implementation errors belong in provenance notes, not the scientific narrative unless essential to a reproducibility finding.
+\item Verify each cited paper's task and mechanism against its primary source. In particular, distinguish training-data privacy in generative modeling, recognition-time obfuscation, and poisoning-based protection; these should not be collapsed into input sanitization.
+\item Cite the MSLS dataset paper in addition to the repository URL, and complete publisher metadata, author names, capitalization, and final publication details for relevant entries. No unresolved active main-paper citation keys were found; this is an accuracy/positioning review, not a claim that BibTeX is broken.
+\item Keep model architecture counts separate from independently evaluated attacker counts. A surrogate is not evidence of held-out-target robustness, and multiple checkpoints of one architecture are not independent method families.
+\item Report effect sizes and intervals prominently; reserve significance stars for a clearly defined family and avoid attaching subgroup significance to pooled means.
 \end{itemize}
 
-\textbf{Required actions.}
+\section{File-level revision map and completion checklist}
+
+\begin{longtable}{L{0.23\linewidth}L{0.16\linewidth}L{0.51\linewidth}}
+\toprule
+Target & Review items & Completion evidence \\
+\midrule
+\endhead
+\file{paper/main.tex} & R1--R10, R12--R13 & Corrected claim scope, values and inference; valid theory; precise threat; adequate closest-work discussion; bounded abstract and conclusion. \\
+\file{paper/supplementary.tex} & R1, R5, R7--R13 & Consistent values and numbering; accessible essential methods; complete utility/robustness evidence; readable tables. \\
+\file{paper/ref.bib} & R4, R9, R13 & Verified directly related literature and dataset references; correct roles and metadata. \\
+\file{paper/generated/} & R1, R5, R13 & Tables regenerated from the frozen export; captions match columns and uncertainty method; prose checks cover repeated values. \\
+\file{paper/figs/} & R5--R7, R13 & Main figures show correct experimental scope, uncertainty, units, legends, and readable labels; every figure is cited and interpreted. \\
+\file{src/scripts/} & R2--R10, R12 & Reproducible analyses/experiments implementing E1--E8 as needed, with recorded assumptions and validated output. \\
+\file{src/artifact/} & R1, R11 & Clean-extraction verification, current checksums, manifests, claim coverage, and working reviewer access. \\
+\file{docs/cover_letter.txt} & Package audit, R4 & Current title, audit contribution, accurate scope and truthful submission-history statements. \\
+\file{docs/progress.md} & All & Actual completed work and unresolved items separated; this review generation is not recorded as manuscript revision completion. \\
+\bottomrule
+\end{longtable}
+
+Before submission, confirm all of the following:
 \begin{enumerate}
-  \item Recompute every paired test in the main text and supplement with the
-  \emph{query} as the unit of inference. Two acceptable forms, to be used
-  consistently: (a) a query-cluster bootstrap 95\% CI for $\Delta$ (resample
-  queries with replacement, carrying all three seeds of each), matching the E1
-  convention already in the paper; or (b) collapse each query to its
-  seed-averaged hit rate under each condition and apply a paired test on the
-  400 units (Wilcoxon signed-rank or a sign test), with exact McNemar
-  retained only where a single seed is reported. Report both $\Delta$ and the
-  CI; drop the raw $p$-values below $10^{-10}$, which communicate nothing.
-  \item Replace every ``$n=1{,}200$ paired observations'' with ``400 queries,
-  three seeds'' and state the unit once in the Experimental Protocol.
-  \item Re-mark the significance indicators in Tables~2--4 and the
-  preprocessing table, and re-read every sentence that leans on a marginal
-  cell --- in particular ``a property of the objective rather than a shortage
-  of data'', which is only defensible once the query-level test has been run.
-  \item Data dependency: the per-query exports under
-  \texttt{src/outputs/icme2027\_*} are not on the machine that produced this
-  review; the analysis needs them mounted or re-fetched. No GPU is required.
+\item R1 numerical/version inconsistencies are closed using the final executed exports.
+\item R2--R3 mathematical and oracle claims are corrected, and any remaining mechanistic explanation is supported by an appropriate diagnostic.
+\item R4 novelty remains defensible against direct mask-guided adversarial location-privacy work.
+\item R5 statistical units, dependence, multiplicity, and negative-result language are consistent throughout.
+\item R6--R10 are addressed experimentally or by explicit, scientifically honest claim narrowing.
+\item R11 provides a complete and accessible review package, including evidence moved out of the short supplement.
+\item The final PDFs use the required format, have clear cross-document numbering, fit the applicable limits, and agree with the sources and figures.
+\item Author metadata, cover letter, originality, funding/acknowledgments as applicable, licenses, and submission-history disclosures are checked by the authors.
 \end{enumerate}
 
-\subsection*{R2 --- Major (positioning): the direction axis is an adversarial
-perturbation used for privacy, and the paper does not cite that literature}
+\section{Final scholarly assessment}
 
-\textbf{Finding.} The ``direction'' result is a sign-gradient perturbation
-optimised against an embedding, transferred through a surrogate ensemble,
-hardened by expectation over transformations with a straight-through
-backward pass, and evaluated against preprocessing and fine-tuning defenses.
-Every one of those components has a named origin that a TIFS reviewer expects
-to see, and none appears in the 50-entry bibliography:
-\begin{itemize}
-  \item adversarial perturbation as a \emph{privacy} mechanism against
-  recognition: Oh, Fritz and Schiele (ICCV 2017), Fawkes (Shan et al., USENIX
-  Security 2020), LowKey (Cherepanova et al., ICLR 2021);
-  \item transferability through ensembles of surrogate models: Liu et al.
-  (ICLR 2017), Dong et al. (CVPR 2018);
-  \item expectation over transformation and the BPDA identity substitution:
-  Athalye, Engstrom, Ilyas and Kwok (ICML 2018); Athalye, Carlini and Wagner
-  (ICML 2018). The code docstring names BPDA; the paper does not;
-  \item input transformations as a defense --- the exact attacker-side
-  operation the preprocessing section tests: Guo et al. (ICLR 2018), Xu et
-  al. (NDSS 2018), Dziugaite et al. (2016) on JPEG;
-  \item the methodology standard for adaptive attacks that the
-  fine-tuning section is implicitly measured against: Tram\`er et al.
-  (NeurIPS 2020).
-\end{itemize}
-The paper cites Goodfellow et al. and Madry et al. once, in a sentence about
-DP, which is not where the reader needs them.
+The paper has the ingredients for a useful security-evaluation contribution: a diagnostic failure case, energy controls, real location labels, a strong attacker, transfer, preprocessing, and utility measurements. The strongest currently supportable result is that \emph{specified} gallery-free adversarial perturbations outperform the tested isotropic controls in this benchmark at a given delivered distortion, while the tested spatial rules show limited or uncertain incremental benefit there. The current exports support retaining that empirical observation.
 
-Without this framing, the contribution reads as though the paper discovered
-that adversarial perturbations transfer, and a reviewer will say so. With it,
-the contribution becomes sharper and more defensible: the novelty is not the
-perturbation but the \emph{controlled comparison} --- the same budget, the
-same frames, the same delivered distortion, spent on allocation versus on
-direction --- and the finding that the design variable this literature
-optimises is inert exactly where it operates. That is a claim the
-adversarial-ML literature does not make, and it is the claim the paper should
-be seen to be making.
+Publication readiness instead depends on removing the claimed theoretical separation of allocation from ranking, establishing novelty relative to directly related methods, synchronizing every reported result, and assessing privacy under an adequately specified utility and attacker model. Additional prose compression alone will not resolve those scientific issues. All R1--R13 items are open recommendations at the end of this review; none is claimed to have been fixed by writing this document.
 
-\textbf{Required actions.}
-\begin{enumerate}
-  \item Add a Related-Work paragraph, ``Adversarial perturbation as a privacy
-  mechanism'' (about 150 words), covering the five groups above and ending on
-  the sentence that distinguishes this paper: those works optimise a
-  perturbation against a recognizer; none asks whether the spatial allocation
-  the location-privacy literature learns is doing any work, which is the
-  question the protocol answers.
-  \item Cite at the point of use: FGSM/PGD where the sign-gradient
-  perturbation is introduced; Liu et al.\ where the surrogate ensemble is;
-  Athalye et al.\ (both) where EOT and the identity backward pass are
-  described; Guo et al.\ and Xu et al.\ at the head of the preprocessing
-  section; Tram\`er et al.\ at the head of the adaptive-attacker section.
-  \item One sentence in Contributions repositioning the third bullet
-  accordingly. Add the entries to \texttt{ref.bib}. Text only; budget about
-  0.3 column, to be recovered under R9.
-\end{enumerate}
+\begin{thebibliography}{9}
+\bibitem{spsauthors}
+IEEE Signal Processing Society, ``Information for Authors,'' official Transactions and Journals instructions. Accessed 8 September 2026.\\
+\url{https://signalprocessingsociety.org/publications-resources/information-authors}
 
-\subsection*{R3 --- Major (evaluation): the EOT-hardened direction is
-evaluated only against the transforms it was optimised over}
+\bibitem{tifsscope}
+IEEE Signal Processing Society, ``IEEE Transactions on Information Forensics and Security,'' official scope and reproducibility guidance. Accessed 8 September 2026.\\
+\url{https://signalprocessingsociety.org/publications-resources/ieee-transactions-information-forensics-and-security/ieee-transactions}
 
-\textbf{Finding.} \texttt{eval/sanitizers.py} defines exactly five
-attacker-side operators: \texttt{none}, \texttt{jpeg75}, \texttt{jpeg50},
-\texttt{blur} ($\sigma=1$) and \texttt{denoise}. The hardened direction is
-optimised in expectation over the last four and evaluated against the same
-four. The paper says an attacker ``is free to choose a fifth'' and then does
-not try one. This is the standard overfitting risk of EOT and the first thing
-an adversarial-ML reviewer will ask for. The paper's own honesty about the
-unhardened direction's failures makes the omission more visible, not less.
+\bibitem{tifsdl}
+IEEE TIFS Editorial Board, ``Guides for deep learning submissions,'' official two-page reproducibility guidance. Accessed 8 September 2026.\\
+\url{https://signalprocessingsociety.org/sites/default/files/uploads/publications_resources/docs/Guidelines__deep_learning_submissions.pdf}
 
-\textbf{Required action (D6).}
-\begin{enumerate}
-  \item Add held-out attacker-side transforms to \texttt{eval/sanitizers.py}:
-  JPEG at quality 30; a $3\times3$ median filter; bilinear downscale to half
-  resolution and back; Gaussian blur at $\sigma=2$; bit-depth reduction to 4
-  bits; and a randomised composition that applies one uniformly chosen
-  operator from the full set per query. Include one \emph{in-family}
-  parameter not trained on (JPEG-60) to show interpolation as well as
-  extrapolation.
-  \item Extend \texttt{run\_direction\_transfer\_study.py} so that one
-  optimised perturbation is released once at the target MSE and then embedded
-  under a \emph{list} of evaluation sanitizers, instead of re-optimising per
-  sanitizer. The hardened direction then costs one optimisation pass per
-  (backbone, seed), and every held-out transform is an evaluation-only
-  extension of the same run.
-  \item Run the hardened and unhardened gallery-free directions against the
-  held-out set on both backbones, three seeds, at delivered MSE $15.68$, with
-  the isotropic control under the same transform as the paired reference.
-  Report as a second block of the preprocessing table or a compact new one,
-  with query-level inference per R1.
-  \item Either outcome is publishable. If hardening generalises, the
-  ``design variable'' claim gains the evidence it currently lacks; if it does
-  not, the paper reports the boundary of the axis, which is consistent with
-  its framing throughout.
-\end{enumerate}
+\bibitem{le2022}
+T.-N. Le, T. Gu, H. H. Nguyen, and I. Echizen, ``Rethinking Adversarial Examples for Location Privacy Protection,'' 2022. Author manuscript, arXiv:2206.14020. The spatial-mask and multi-model gradient formulation is given in Section III-C.\\
+\url{https://arxiv.org/html/2206.14020}
 
-\subsection*{R4 --- Moderate (evaluation): the utility cost of the hardened
-direction is not measured}
+\bibitem{geoshield}
+X. Liu, X. Jia, Y. Xun, S. Qin, and X. Cao, ``GeoShield: Safeguarding Geolocation Privacy from Vision-Language Models via Adversarial Perturbations,'' \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, vol. 40, no. 42, pp. 35653--35661, 2026. DOI: 10.1609/aaai.v40i42.40877.\\
+\url{https://ojs.aaai.org/index.php/AAAI/article/view/40877}
 
-\textbf{Finding.} The downstream-utility audit (per-image AP@50 and IoU
-against the isotropic control at identical delivered MSE) was run on the
-\emph{unhardened} surrogate direction. The paper now leads with the hardened
-variant --- it is the bold column of the preprocessing table, and ``hardening
-also helps when the attacker does nothing'' --- yet its utility cost is
-unreported. Optimising over blur and JPEG typically pushes perturbation energy
-toward lower spatial frequencies, which a detector may pay for differently. As
-it stands, the recommendation ``compare directional designs at matched
-utility'' is made about a variant whose utility the paper has not measured.
-
-\textbf{Required action (D7).} Run \texttt{evaluate\_direction\_utility.py}
-with the EOT objective (same four transforms, same surrogates, same delivered
-MSE) on the same 200-image VOC and 200-image COCO manifests, three
-independent runs, and add a ``Hardened direction'' row to the supplementary
-utility table with the paired comparison against both the isotropic control
-and the unhardened direction. One sentence in \S\,The Other Axis. This is
-cheap --- 400 images, one perturbation each --- and fits a single consumer GPU.
-
-\subsection*{R5 --- Major (presentation): a 13-page TIFS paper with no figures}
-
-\textbf{Finding.} \texttt{main.tex} contains no active
-\texttt{\textbackslash includegraphics}; the two figure environments it
-carries are inside \texttt{comment} blocks, and the supplement has no figures
-either. Every result is a table or a paragraph of numbers. Four results are
-sweeps or grids that prose handles badly: the budget dependence across
-$\sigma_0\in\{4,8,16,32,50\}$ on two checkpoints (currently a dense paragraph
-with three numbers pulled out of a 56-comparison sweep); the surrogate-count
-ablation on two attackers; the ten-cell preprocessing grid in two hardening
-states; and the central ``what a budget buys'' comparison. A TIFS reader expects
-to see the protocol and to see the headline result; here both must be
-reconstructed from tables. This is also the single largest reason the paper
-reads as harder than it is.
-
-\textbf{Required actions.} All four figures below can be produced from
-numbers already in the two \texttt{.tex} files; no experiment is required.
-\begin{enumerate}
-  \item \textbf{F1, protocol schematic} (one column): the same frame and the
-  same delivered distortion spent four ways --- the mechanism's own placement,
-  an energy-matched redistribution, a different operator, and a direction ---
-  feeding the same attacker. This is the figure that makes the three axes
-  legible before any number appears.
-  \item \textbf{F2, budget dependence} (one column): $\Delta$ versus uniform
-  against $\sigma_0$ for each placement rule on both checkpoints, from the
-  supplement's Budget Dependence table, with the operating point marked and
-  the two significant edge-placement cells annotated. Replaces most of the
-  ``Where placement does begin to matter'' paragraph.
-  \item \textbf{F3, preprocessing and hardening} (one column, two panels):
-  grouped bars of $\Delta$ per transform, unhardened against hardened, one
-  panel per attacker, with the two non-significant cells marked. The table can
-  then shrink to the hardened block or move to the supplement.
-  \item \textbf{F4, what a budget buys} (optional, one column): Top-1 against
-  delivered distortion, allocation conditions as one cluster near $1\times$ and
-  $15.4\times$, direction at $1.22\times$.
-\end{enumerate}
-Page budget: the main text is at exactly 13 pages, so each figure must be paid
-for. The sources are identified under R9 and amount to roughly 1.5 columns,
-enough for F1--F3.
-
-\subsection*{R6 --- Blocking (submission compliance): the abstract is 538 words
-against a 150--250 word rule, and there are no index terms}
-
-\textbf{Finding.} The abstract runs to 538 words --- more than twice the SPS
-maximum --- and the manuscript has no \texttt{IEEEkeywords} block. Both are
-desk-check items: the submission system and the editorial office check them
-before a reviewer is assigned. The abstract is also where the paper's density
-problem is most concentrated; it currently attempts to carry every number in
-the paper.
-
-\textbf{Required actions.}
-\begin{enumerate}
-  \item Rewrite the abstract at 220--250 words. Keep: the question (allocation
-  versus direction at fixed distortion), the protocol in one sentence, the
-  placement null with its scope (eight rules, two checkpoints, real
-  place-labelled data, two attackers), the operator result in one clause, the
-  direction result with the two headline Top-1 pairs and the gallery-free
-  property, and the three qualifications in one sentence each (preprocessing
-  and its EOT repair, utility cost, adaptive attacker). Drop every $p$-value,
-  every ``$n=$'', the percentage-of-white-box discussion, and the
-  known-Jacobian sentence.
-  \item Add \texttt{\textbackslash begin\{IEEEkeywords\}} with five to seven
-  terms: location privacy, visual place recognition, image sanitization,
-  adversarial perturbation, privacy--utility trade-off, evaluation protocol,
-  differential privacy.
-\end{enumerate}
-
-\subsection*{R7 --- Moderate (reproducibility): the direction optimiser's
-hyperparameters are not stated, and two white-box numbers come from two
-different optimisers}
-
-\textbf{Finding.} The main text never states how the direction is computed
-beyond ``sign-gradient''. From the code and the recorded runs: 20 sign-gradient
-steps of size 1 pixel under an $\ell_\infty$ bound of 16, then \emph{rescaled
-by a scalar} through the pixel clamp by bisection until the released frame
-delivers exactly the target MSE ($15.68$); a uniform random start of $\pm1$
-pixel for the gallery-free objective, without which that objective sits at its
-own stationary point and leaves a third of MixVPR queries unperturbed (a bug
-the repository found and fixed, and which the paper should disclose in one
-sentence, because any re-implementer will hit it); and, under EOT, two
-transforms sampled per step with the identity substituted on the backward
-pass. Separately, the white-box figure in the Direction section ($0.0000$ at
-MSE $19.19$, $1.22\times$) comes from the benchmark script's attacker-aware
-variant at $\ell_\infty=8$ without MSE rescaling, while the white-box row of
-the transfer table ($0.0033$ at MSE $15.68$) comes from the transfer script;
-the two numbers are both correct and the reader is not told why they differ.
-
-\textbf{Required actions.} One paragraph in the Experimental Protocol or at
-the head of \S\,The Other Axis giving the optimiser, the bound, the rescaling
-rule, the random start and its reason, and the EOT sampling; one clause
-bridging the two white-box numbers. Restore the code URL in the abstract or
-the first footnote --- review is single-anonymized and SPS encourages it ---
-and name the commit or tag the numbers were produced from.
-
-\subsection*{R8 --- Moderate (submission compliance): the supplement is 12
-pages against a six-page rule that requires Editor-in-Chief approval to exceed}
-
-\textbf{Finding.} SPS rules put Supplementary Material at six double-column
-pages absent EiC approval. Today's consolidation left it at 12, half of which
-is pre-framing legacy material (sequence-length attacker, matched-PSNR sweep
-and its extensions, proxy50 scaling, energy-matched full data) that the main
-text summarises in one paragraph.
-
-\textbf{Required action.} A decision rather than a task, and it interacts with
-R5. Either (a) request approval in the cover letter, citing that the
-supplement is entirely tables of paired comparisons the reviewers will want;
-or (b) split it: keep within six pages the material a reviewer needs to check
-the paper's claims --- E1 real-place tables, direction utility, adaptive
-per-condition, reference-targeted preprocessing, known-Jacobian sweeps, held-out
-transforms once D6 exists --- and move the legacy proxy sections to a
-repository technical report cited from the paper. The reviewer's
-recommendation is (b), because (a) is a risk taken at desk check for material
-the paper itself calls secondary. The repository's standing decision is to
-keep the current length; that decision should be revisited with this rule in
-view.
-
-\subsection*{R9 --- Minor (clarity): the Scope-of-claims paragraph and three
-other passages are where the page budget for R5 lives}
-
-\textbf{Finding.} The ``Scope of the claims'' paragraph is a single 470-word
-block whose third sentence alone runs to about 230 words with nine
-qualifications chained by dashes. It is the most important paragraph in the
-paper for a reviewer deciding whether the claims are overreached, and it is
-unreadable. Three further passages carry more words than their content:
-``Why we do not simply re-run a published system'' (two paragraphs that could
-be four sentences, remainder to the supplement); the fraction-of-white-box
-discussion in the preprocessing section, which explains at length why a
-number the paper does not use is unstable; and the placement-selectivity
-paragraph in the mechanism section.
-
-\textbf{Required actions.} Rewrite Scope-of-claims as three enumerated claims
-of one sentence each plus one sentence of qualifications, at most 150 words.
-Compress the three passages named above. Together with the abstract cut, this
-frees roughly 1.5 columns, which is the budget for F1--F3.
-
-\subsection*{R10 --- Minor (consistency)}
-
-\begin{itemize}
-  \item The Contributions bullet and the Conclusion quote ``six attacker
-  backbones'' for the allocation null while the real-data placement study
-  used ResNet18 and MixVPR; the abstract now attributes the six to the
-  controlled benchmark correctly, and the other two passages should match.
-  \item ``1.22$\times$'' and ``15.4$\times$'' are ratios to MSE 15.7 while
-  every delivered-MSE match elsewhere is to 15.68; state one reference value.
-  \item The supplement's per-condition fine-tuning table reports $n=100$
-  held-out queries at one seed; the main text says the enlargement of that
-  split was part of D4. If it was not enlarged, say so where the table is
-  cited.
-\end{itemize}
-
-\section*{Carried-Over Items}
-
-\begin{itemize}
-  \item \textbf{F3 --- provenance checksums for paper-facing exports.}
-  Closed on 8 September 2026 for every reachable tree: eleven export trees
-  were pulled from the GPU host and hashed independently on both machines,
-  and all eleven tree digests match. The record is the experiment provenance
-  section of \texttt{docs/progress.md}. Two gaps are recorded there rather
-  than closed: \texttt{icme2027\_placement\_msls} is on no reachable
-  machine, and the direction exports that survive are a subset of what the
-  published transfer table reports.
-  \item \textbf{B3 --- neither checkpoint is a designed privacy map.}
-  Disclosed, which remains the correct disposition; no action.
-  \item \textbf{A1 --- appendix page budget.} Subsumed by R8.
-\end{itemize}
-
-\section*{Required Work, in Priority Order}
-
-\begin{enumerate}
-  \item \textbf{R1 --- query-level inference} for every paired test.
-  Analysis only; needs the export trees. Everything else that quotes a
-  $p$-value waits on it.
-  \item \textbf{R6 --- abstract to 250 words and index terms.} Text only;
-  desk-check blocker.
-  \item \textbf{R2 --- adversarial-ML related work and point-of-use
-  citations.} Text and \texttt{ref.bib} only.
-  \item \textbf{R9 --- compression} of the four named passages, to fund
-  \item \textbf{R5 --- figures F1--F3}, generated from published numbers.
-  \item \textbf{R7 --- optimiser hyperparameters, white-box bridge, code
-  URL.} Text only.
-  \item \textbf{R3 --- D6, held-out transforms.} Code change plus one GPU
-  session per backbone.
-  \item \textbf{R4 --- D7, hardened-direction utility.} One short GPU session.
-  \item \textbf{R8 --- supplement length decision}, taken once D6 results
-  know where they will live.
-  \item \textbf{R10} while passing through the affected sentences.
-\end{enumerate}
-
-\section*{Minimum Revision Package}
-
-A submission-ready manuscript requires, at minimum: R1 recomputed and every
-significance indicator re-marked; R6 satisfied; R2's paragraph and citations
-in place; at least F1 and F3 from R5; and R7's protocol paragraph. R3 and R4
-materially strengthen the paper's own headline recommendation and should be
-run if a GPU session is available before submission; R8 is a cover-letter
-decision.
-
-\section*{Final Assessment}
-
-The paper's argument is now complete: it locates the leverage, shows what the
-defender must hold to reach it (nothing beyond the frame), what an adversary
-who preprocesses or adapts can do about it, and what it costs the task. What
-stands between it and a TIFS acceptance is not another experiment on the
-science but the standard of evidence around it: tests computed on the right
-unit, the adversarial-ML lineage acknowledged so the novelty is the
-comparison rather than the perturbation, one held-out check on the defense
-the paper recommends, and a presentation --- abstract, index terms, figures ---
-that lets a reviewer see the result before reconstructing it from tables.
-Sequencing matters in one respect: the figures cost pages, the compression
-funds them, and both should be done together against the rendered PDF.
+\bibitem{msls}
+F. Warburg et al., ``Mapillary Street-Level Sequences: A Dataset for Lifelong Place Recognition,'' \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, 2020. See the dataset evaluation protocol.\\
+\url{https://openaccess.thecvf.com/content_CVPR_2020/papers/Warburg_Mapillary_Street-Level_Sequences_A_Dataset_for_Lifelong_Place_Recognition_CVPR_2020_paper.pdf}
+\end{thebibliography}
 
 \end{document}
