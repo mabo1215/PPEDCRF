@@ -399,7 +399,7 @@ def _transfer_control(backbone: str, metric: str = "top1"):
 
 
 for bb, tag, ctrl in [("r18", "ResNet18", 0.1967), ("mix", "MixVPR", 0.7800)]:
-    claim(f"T4/{tag}/control", "Table IV", f"{ctrl:.4f}", ctrl, 5e-5,
+    claim(f"T4/{tag}/control", "Table tab:transfer", f"{ctrl:.4f}", ctrl, 5e-5,
           "tifs_d6", _transfer_control(bb), source=TAB_TRANSFER)
 
 for bb, tag, cond, top1, delta, pv in [
@@ -413,11 +413,11 @@ for bb, tag, cond, top1, delta, pv in [
         ("mix", "MixVPR", "transfer_4", 0.7317, -0.0483, 3e-6),
         ("mix", "MixVPR", "white_box", 0.0008, -0.7792, 2e-68)]:
     stem = f"T4/{tag}/{cond}"
-    claim(f"{stem}/top1", "Table IV", f"{top1:.4f}", top1, 5e-5, "tifs_d6",
+    claim(f"{stem}/top1", "Table tab:transfer", f"{top1:.4f}", top1, 5e-5, "tifs_d6",
           _transfer(bb, cond, "top1"), source=TAB_TRANSFER)
-    claim(f"{stem}/delta", "Table IV", f"${delta:.4f}$", delta, 5e-5,
+    claim(f"{stem}/delta", "Table tab:transfer", f"${delta:.4f}$", delta, 5e-5,
           "tifs_d6", _transfer(bb, cond, "delta"), source=TAB_TRANSFER)
-    claim(f"{stem}/p", "Table IV", f"{pv}", pv, rel(pv), "tifs_d6",
+    claim(f"{stem}/p", "Table tab:transfer", f"{pv}", pv, rel(pv), "tifs_d6",
           _transfer(bb, cond, "p"), source=TAB_TRANSFER, locator=None)
 
 
@@ -781,7 +781,7 @@ for cid, printed, value, fn in [
         ("T4/ViT/delta", "$-0.0233$", -0.0233, _vit("plain", "transfer_3", "delta")),
         ("T4/ViT/white_box", "0.0000", 0.0000, _vit("plain", "white_box", "top1"))]:
     tree = "tifs_a7b" if "PatchNetVLAD" in cid else "tifs6_vit"
-    claim(cid, "Table IV", printed, value, 5e-4, tree, fn,
+    claim(cid, "Table tab:transfer", printed, value, 5e-4, tree, fn,
           source=TAB_TRANSFER)
 
 # --------------------------------------------------------------------------
