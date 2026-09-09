@@ -24,8 +24,9 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{9 September 2026, 13:30 NZST --- IEEE TIFS, fifth independent review
-cycle, after the export-recovery and claim-audit pass. This file carries
+\date{9 September 2026, 12:20 NZST --- IEEE TIFS, fifth independent review
+cycle, after the two-host session that recovered four export trees, closed the
+claim audit, and put A2, A5 and A8 on real cards. This file carries
 \emph{only} open, running and not-yet-started work; completed items are removed
 once recorded in \texttt{docs/progress.md}.}
 
@@ -42,53 +43,62 @@ findings split into text-and-analysis items and items that need experiments
 experiments E1--E8 are planned in \texttt{docs/Design.md} as A1--A8; the
 renaming avoids a collision with the older TOMM E1--E7 in the same file.
 
-\paragraph{Document state, rebuilt and verified 9 September 2026, 13:20 NZST.}
-\texttt{main.pdf} \textbf{13 pages} (the TIFS initial-submission ceiling),
-abstract 244 words (limit 250), two figures;
-\texttt{supplementary.pdf} 5 pages with S-prefixed table, figure and equation
-numbering, now carrying equations S1--S6; \texttt{backup/supplementary\_extended.pdf}
-not submitted. Both submitted documents: 0 undefined references, 0 undefined
-citations, 0 overfull boxes. \textbf{32} unit tests pass (was 30; two were
-added this cycle, see R1). The supplement gained a definitions section without
-gaining a page, and the manuscript absorbed its pointer inside the operator
-table's caption after three attempts at body-text placement each cost a
-fourteenth page.
+\paragraph{Document state.} Unchanged this session: \texttt{main.pdf}
+\textbf{13 pages} (the TIFS initial-submission ceiling), abstract 244 words,
+two figures; \texttt{supplementary.pdf} 5 pages; both with 0 undefined
+references, 0 undefined citations, 0 overfull boxes. \textbf{47} unit tests
+pass (was 32; fifteen were added for A2 and A8). No manuscript text changed
+this session --- the session bought the evidence that the next text pass needs,
+and the writeback rule forbids editing \texttt{paper/} ahead of a gate.
+
+\paragraph{Compute state, checked 9 September 2026, 12:20 NZST.} Two hosts have
+live cards, and both are working.
+\begin{itemize}
+\item \textbf{PRO 6000} (\texttt{connect.westc.seetacloud.com:48305}) came back
+on its own: \texttt{RTX PRO 6000 Blackwell}, 97{,}887\,MiB. It is
+\emph{shared} --- seven other tenant processes held 90 of its 95\,GB at the
+start of the session, and the first A8 launch died of it. It has 208 cores, and
+capping OMP/MKL threads at 8 was what turned three jobs stuck in
+\texttt{futex\_wait} at 600\% CPU into three jobs that write rows.
+\item \textbf{2c} (\texttt{connect.weste.seetacloud.com:42044}), powered on by
+the user: \textbf{two RTX 4080 SUPER, 32\,GB each, both idle and not shared}.
+Public-key access is now installed. This is the better host of the two.
+\item \textbf{vGPU 3090} (\texttt{westd:22766}): no-card mode, and more
+definitively than previously recorded --- \texttt{/dev/nvidia*} does not exist
+in the container at all, so this is not a permissions problem. A full
+\texttt{find /} clears it of all twelve missing trees.
+\item \textbf{H800} (\texttt{westc:44708}): still refuses the connection.
+\end{itemize}
 
 \paragraph{Three corrections to the previous record.}
 \begin{enumerate}
-\item \textbf{The vGPU 3090 is reachable, and it holds four of the nine
-missing trees.} The previous entry recorded \texttt{westd:22766} as accepting
-TCP but timing out during the SSH banner exchange. It now completes a
-public-key handshake and runs commands. \texttt{tifs\_a3}, \texttt{tifs\_a3hi},
-\texttt{tifs\_a4} and \texttt{tifs\_a7\_o2n8} were recovered from
-\texttt{/root/autodl-tmp/ppedcrf\_tomm\_20260830/PPEDCRF/src/outputs/} and are
-now on this machine (7.2\,MB, 48 files). Every manuscript number they back has
-been re-derived from the raw rows this cycle.
-\item \textbf{The card is off on that host, not merely idle.}
-\texttt{nvidia-smi} returns \texttt{Permission denied}, which is the no-card
-mode signature, so the 3090 is usable for file recovery and CPU work and not
-for A5, A6 or A7b.
-\item \textbf{The local card is an RTX 4050 Laptop, not a 3070.} A2 and A8
-were scheduled against a 3070 that is not in this machine. Both are still
-small enough for the card that is, and both are still unstarted.
+\item \textbf{Four of the twelve missing trees are back, from 2c.} They were
+not in 2c's main checkout but in a \emph{second} one,
+\texttt{/root/autodl-tmp/ppedcrf\_tifs5/PPEDCRF/src/outputs/}:
+\texttt{tifs\_a3b}, \texttt{tifs\_a4sweep}, \texttt{tifs\_a4mask} and
+\texttt{tifs\_a7\_n2o8}, 60 files. \texttt{direction\_utility\_d3\_2c} came
+back from the main checkout. \textbf{Eight remain missing.}
+\item \textbf{\texttt{progress.md} entry 292 is wrong and is corrected here.}
+It records \texttt{icme2027\_placement\_msls} as present in the local checkout.
+It is not: neither that tree nor \texttt{src/artifact/results/} exists here, and
+a search of every mounted drive finds neither. The G: drive is not mounted,
+which is the likely explanation. The previous \texttt{ExperimentProgress.tex}
+was the accurate record and this one keeps its account.
+\item \textbf{The 8-city benchmark is fully recovered and provably the
+published one.} \texttt{manifest\_all8.jsonl} was inside the relay tar all
+along: \textbf{400 queries, 277 unique places, 2{,}000 gallery}, 50 queries per
+city --- matching the review's own description. Its 400 query ids are
+\emph{identical}, sorted and compared one by one, to those in the published
+\texttt{tifs\_d6} export. The eight still-missing trees can therefore be
+regenerated on exactly the benchmark that produced the paper's numbers, which
+demotes X1 from a blocker to a compute cost.
 \end{enumerate}
-
-\paragraph{Compute state, checked 9 September 2026, 13:00 NZST.}
-PRO 6000 (\texttt{connect.westc.seetacloud.com:48305}), H800
-(\texttt{westc:44708}) and 2c (\texttt{weste:42044}) all still refuse the TCP
-connection, which is a power state rather than a credential problem. vGPU 3090
-(\texttt{westd:22766}) accepts SSH and runs commands but has no GPU attached.
-The shared \texttt{/autodl-fs/data} volume carries no \texttt{tifs} export
-trees at all; \texttt{ppedcrf\_relay\_20260908/} on it holds only the input
-tars (MSLS imagery, third-party code, VPR cache, a repo snapshot). Nothing is
-queued or running anywhere. Every GPU row in Table~2 is therefore unscheduled,
-and the twelve trees that remain missing are on a host that is off.
 
 \section*{Table 1: Open and Partial Items}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.12\linewidth}p{0.49\linewidth}@{}}
 \caption{Everything still open against the fifth TIFS review, as of
-9 September 2026, 13:30 NZST.}
+9 September 2026, 12:20 NZST.}
 \label{tab:tifs5-open}\\
 \toprule
 ID & Item & Status & Completion gate / next step \\
@@ -105,114 +115,80 @@ ID & Item & Status & Completion gate / next step \\
 \endlastfoot
 
 R1 & Prose, generated tables and exports described different numerical
-versions. & \partialstatus & Advanced from ``the A3/A4/A7 numbers cannot be
-re-derived here''. \texttt{src/scripts/audit\_claim\_consistency.py} is now
-written: it encodes 110 published numbers, each with the literal string that
-must still occur in the file that prints it and a recipe for recomputing it
-from raw per-query rows. \textbf{106 verify, 0 mismatch}; the 4 that do not
-are the new-to-old cross-time cells, whose tree is still missing, and the
-script reports them as \emph{no data} rather than skipping them. Every cell of
-Table~VI, the A4 gradient/0.25 rows and the A7 old-to-new cells reproduce
-exactly. The audit also found a real disagreement and closed it: see the row
-below. \textbf{Still open}: the allocation family's exports are still gone, so
-the 12 numbers that rest on them stay unaudited. \\
-
-R1(b) & The factorial analysis script and Table~VI disagreed on three
-$p$-values. & \done & \texttt{analyze\_direction\_factorial.py} discarded the
-zero differences itself and then handed scipy a short, apparently untied
-sample, which made scipy switch to the \emph{exact} Wilcoxon test; Table~VI
-reports the tie-corrected normal approximation. Per-query Top-1 differences
-averaged over three seeds take five values and are heavily tied, so the exact
-test does not apply and the published values are the correct ones. The script
-now requests the approximation explicitly and reproduces $0.33$, $0.66$,
-$0.23$ and $0.09$; two regression tests pin the behaviour. No conclusion
-changed --- all four cells were far from the decision boundary either way. \\
+versions. & \partialstatus & \textbf{Advanced from 106/110 to 110/110.}
+\texttt{audit\_claim\_consistency.py} now reports \textbf{110 claims, 110
+verified, 0 mismatched, 0 unverifiable}. The four that could not be checked
+this morning were the A7 new-to-old cross-time cells, and
+\texttt{tifs\_a7\_n2o8} is one of the trees recovered from 2c, so the
+\emph{direction family is now audited end to end against raw per-query rows}
+rather than against a report of them. \textbf{Still open}: the allocation
+family's twelve numbers, which rest on \texttt{icme2027\_placement\_msls} and
+\texttt{operator\_study}, both still missing. \\
 
 R2 & The allocation-cannot-decide-ranking claim was asserted from an identity
 about expected squared displacement. & \done & Margin-variance analysis with an
-explicit two-coordinate counterexample. \\
+explicit two-coordinate counterexample. A2 (running) adds the measured
+counterpart: predicted first-order margin variance against realised margin
+change, with rank flips and pre/post-clamp energy. \\
 
 R3 & ``Oracle'', ``strictly correct'' and ``bound'' exceed what is measured.
-& \partialstatus & Closed on naming (score-gradient and anti-score-gradient
-placements throughout; the $67.7\%$ statistic labelled as the positive-pair
-score gradient's energy and explicitly not Jacobian column norms).
-\textbf{Still open}: A2 measures the column norms so the two quantities can be
-compared rather than only distinguished in words. Now runnable on the local
-card. \\
-
-R4 & Directly relevant prior work was missing. & \done & Le et al.\ and
-GeoShield cited; A4's mask-guided baseline is in the manuscript with its own
-table; the novelty claim is the matched-distortion comparison. \\
+& \partialstatus & Naming now closed in \emph{both} places. The manuscript was
+fixed last cycle; this session fixed the reviewable code, where
+\texttt{margin\_gradient\_map} still called itself ``the strictly correct
+oracle''. The condition keys \texttt{oracle\_grad} and \texttt{margin\_oracle}
+are deliberately \emph{not} renamed (published CSVs are keyed on them); the
+module docstring now maps each key to the quantity it computes and states that
+neither is an optimum nor a Jacobian column norm. \textbf{Still open}: A2's
+measurement of how far apart those quantities actually are --- running, 58\%. \\
 
 R5 & Inference unit, clustering, multiplicity, equivalence margins. &
 \partialstatus & Closed for the direction family: place-clustered bootstrap
 over 277 \texttt{unique\_cluster} places, a named primary family of four
 contrasts under Holm, and a $\pm0.01$ Top-1 equivalence margin fixed before
 testing. \textbf{Still open}: the same treatment for the allocation family,
-which needs \texttt{icme2027\_placement\_msls} (still missing). \\
+which needs \texttt{icme2027\_placement\_msls}. \\
 
-R6 & The protocol does not isolate magnitude, sign and placement. & \done &
-A3's decomposition is in the manuscript with its table, and as of this cycle
-every cell of that table is verified against the raw rows rather than against
-a report of them. \\
-
-R7 & Matched distortion is not a utility frontier. & \pending & Experiment A5:
-sweep four measured budgets and report privacy against detector/segmenter
-metrics with a declared utility tolerance. Not started; needs a GPU host, and
-no host with a card is on. The manuscript states the gap explicitly rather
-than implying a frontier. \\
+R7 & Matched distortion is not a utility frontier. & \running & Experiment A5
+is \textbf{running on 2c}, four measured budgets (MSE 5.0, 15.68, 60.0, 241.5)
+$\times$ four conditions (clean, isotropic, direction, hardened direction),
+EOT over the published \texttt{jpeg75 jpeg50 blur denoise}. Gate: report
+privacy against segmenter metrics with a declared utility tolerance, or state
+the cross-dataset limitation explicitly. \\
 
 R8 & The adaptation claim rests on a restricted attacker. & \partialstatus &
 The unsupported claim was replaced by a stipulated constraint plus an explicit
 statement that a gallery-rebuilding attacker is inside the threat space and
-outside what was tested. \textbf{Still open}: A6. \\
+outside what was tested. \textbf{Still open}: A6, now unblocked by 2c. \\
 
 R9 & Benchmark and attacker generalisation. & \partialstatus & A7's old-to-new
-cells are now verified against raw rows ($-0.118$, $p=2.8\times10^{-12}$;
-$-0.056$, $p=6.7\times10^{-7}$). The new-to-old cells are asserted from the
-analysis report only until \texttt{tifs\_a7\_n2o8} is recovered.
-\textbf{Still open}: a second dataset, one more held-out VPR architecture, and
-the GPS/heading audit of cluster positives. \\
+\emph{and} new-to-old cells are now both verified against raw rows, the latter
+newly so. \textbf{Still open}: a second dataset, one more held-out strong VPR
+architecture, and the GPS/heading audit of cluster positives. The recovered
+manifest carries \texttt{latitude}/\texttt{longitude} and \texttt{viewpoint}
+fields, so the audit half is now runnable on CPU. \\
 
 R10 & Top-1 is not location privacy; the release boundary is incomplete. &
-\partialstatus & Top-1/5/10 for the transfer contrast recomputed from the D6
-export and verified this cycle. The release boundary is stated where the
-optimiser is described, and the supplement now derives why it exceeds the
-projection (the rescaling follows it). \textbf{Still open}: A8 on the decoded
-file. \\
+\running & Top-1/5/10 for the transfer contrast were verified last cycle. A8 is
+\textbf{running on PRO 6000} at both budgets and has already produced the
+result the manuscript needs (see Table~4): the $\ell_\infty$ projection is
+\emph{not} breached at the operating point and \emph{is} breached at the high
+budget --- a distinction the paper currently does not draw. \\
 
 R11 & The artifact is not a complete, current reviewer package. & \blocked &
-Was ``sixteen trees missing''. Four are back, so \textbf{twelve} remain:
-\texttt{tifs\_a3b}, \texttt{tifs\_a4sweep}, \texttt{tifs\_a4mask},
-\texttt{tifs\_a7\_n2o8}, \texttt{tifs5\_analysis},
-\texttt{icme2027\_placement\_msls}, \texttt{margin\_oracle},
-\texttt{operator\_study}, \texttt{known\_jacobian},
-\texttt{known\_jacobian\_operators}, \texttt{d4\_3seed},
-\texttt{sanfree\_3seed}, plus the \texttt{direction\_transfer} and
-\texttt{direction\_utility\_d3} files. \texttt{build\_artifact.sh} exits 1 on
-the first absent tree, so the bundle still cannot be built. Gate: X1. \\
+Was twelve trees missing; now \textbf{eight}: \texttt{icme2027\_placement\_msls},
+\texttt{tifs5\_analysis}, \texttt{margin\_oracle}, \texttt{operator\_study},
+\texttt{known\_jacobian}, \texttt{known\_jacobian\_operators},
+\texttt{d4\_3seed}, \texttt{sanfree\_3seed}. \texttt{build\_artifact.sh} exits 1
+on the first absent tree, so the bundle still cannot be built. Gate: X1. \\
 
-R12 & Method and optimiser need a complete specification. & \done & The
-supplement's new section \emph{Operator and EOT Definitions} defines the four
-operators as equations S1--S4 (box-filter and block-average forms, with the
-kernel widths the code uses), the matched-delivered-MSE bisection as S5 with
-the clamp inside the objective, and the gallery-free EOT objective as S6 with
-its constraint set, step schedule, two-sample-per-step estimator, BPDA
-substitution and the reason the random start is mandatory. The manuscript
-points at it from the operator table's caption. \\
-
-R13 & Interpretation and display errors. & \done & The last residual was found
-this cycle and is now fixed: the Conclusion still said the literature ``does
-not treat the third as a variable at all'', which the Le et al.\ and GeoShield
-citations contradict; it now says the literature has not compared direction
-against the other two axes at matched distortion, which is what the paper
-shows. Two revision-history artefacts visible to a reviewer (``sharper than
-the claim it replaces'', ``we say so rather than claim the pairing is
-unexplored'') were also removed. \\
-
-Pkg & \texttt{docs/cover\_letter.txt} still advertises the old method and
-title. & \pending & Unchanged; rewrite around the audit contribution before
-submission. \\
+Pkg & \texttt{docs/cover\_letter.txt} advertised the old method and title. &
+\done & \textbf{Rewritten this session.} The old letter sold PPEDCRF and
+claimed the DCRF's inferred spatial support was itself a contribution --- which
+this manuscript refutes, its learned map being numerically constant. The new
+letter leads with the matched-distortion audit, states the three qualifications
+the review asks not to bury (no DP claim; Top-5/10 fall far less than Top-1;
+direction costs more downstream utility than isotropic noise), and credits the
+prior mask-guided work rather than claiming the perturbation is novel. \\
 
 V1 & \texttt{USAGE.md} is gitignored, so its venue line is unprotected. &
 \pending & Unchanged; awaiting the user's choice. \\
@@ -221,15 +197,13 @@ V1 & \texttt{USAGE.md} is gitignored, so its venue line is unprotected. &
 
 \section*{Table 2: Next-Step Plan}
 
-Only running and unfinished work appears below. Estimated completion times are
-New Zealand Standard Time. No host with a card is on, so every GPU row is
-dated relative to card-on rather than to the clock, and says so; the two local
-rows are not.
+Only running and unfinished work appears below; A2, A5 and A8 are on real cards
+and their estimates are wall-clock, not card-on-relative. Estimated completion
+times are New Zealand Standard Time on 9 September 2026 unless stated.
 
 \begin{longtable}{@{}p{0.20\linewidth}p{0.08\linewidth}p{0.05\linewidth}p{0.20\linewidth}p{0.39\linewidth}@{}}
-\caption{Scheduled and unscheduled work as of 9 September 2026, 13:30 NZST.
-Nothing is running. PRO 6000, H800 and 2c refuse the connection; vGPU 3090
-answers but has no GPU attached.}
+\caption{Scheduled and running work as of 9 September 2026, 12:20 NZST.
+Three jobs are running on PRO 6000 and two on 2c.}
 \label{tab:tifs5-schedule}\\
 \toprule
 Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
@@ -245,81 +219,80 @@ Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-\textbf{X1 --- recover the twelve remaining export trees} (R1, R11) &
-\partialstatus & 25\% & Card-on $+$ 1\,h if they survive; otherwise card-on
-$+$ 6\,h to regenerate & \textbf{Still the top blocker, but no longer total.}
-Four trees are back from vGPU 3090 and verified. The remaining twelve are not
-on that host and not on the shared volume, so they are on PRO 6000, H800 or
-2c, all of which refuse the connection. First action when any of the three
-comes up: \texttt{ls src/outputs/} on it, and copy before launching anything.
-The recovery path that worked is
-\texttt{ssh -p 22766 -o PreferredAuthentications=publickey
-root@connect.westd.seetacloud.com "cd .../src/outputs \&\& tar cf - <trees>"
-| tar xvf -}; public-key auth now succeeds, so the password-and-plink note in
-\texttt{progress.md} entry 983 is no longer the only way in. \\
+\textbf{A8-hi --- released amplitude at the high budget} (R10) & \running &
+75\% & \textbf{$\approx$12:25} & PRO 6000, 1{,}201 of 1{,}600 rows. 200 queries
+$\times$ \{direction, isotropic\} $\times$ \{float, PNG, JPEG95, JPEG75\} at
+MSE 241.5. Already answers its question: gain $\approx3.1$, max$|\delta|
+\approx 49$, \emph{outside} the projection of 16. \\
 
-A1 --- freeze one export per family, reconcile every number (R1, R5, R10) &
-\partialstatus & 85\% & Allocation family: after X1 & Advanced from 65\%.
-\texttt{audit\_claim\_consistency.py} is written and green (106/110, 0
-mismatch), the place-clustered bootstrap and Holm family are implemented, and
-the direction family is fully reconciled against raw rows. Remaining: extend
-the claim registry over the allocation family and the utility numbers once
-their trees are back, and add the auditor to
-\texttt{src/artifact/run\_verification.sh}. \\
+\textbf{A8 --- released amplitude and serialisation at the operating point}
+(R10) & \running & 20\% & \textbf{$\approx$12:55} & PRO 6000, 473 of 2{,}400
+rows. Adds the hardened condition, so three conditions rather than two, at
+MSE 15.68. Gain $\approx0.6$--$0.7$, max$|\delta| \approx 9$--$12$,
+\emph{inside} the projection. Re-run of an earlier complete pass that used the
+wrong surrogate ensemble (see Table~3, C6). \\
 
-A2 --- what the sensitivity maps measure (R2, R3) & \pending & 10\% (design
-only) & Local card, 2\,h; runnable now & Random-projection estimate of
-Jacobian column norms against the score-gradient and margin-gradient maps. The
-manuscript says the two quantities are different; A2 measures how different.
-Needs no host. Note the card is an RTX 4050 Laptop, not the 3070 this row
-previously named. \\
+\textbf{A5 --- privacy against measured utility over budgets} (R7) & \running &
+24\% & \textbf{$\approx$14:05} & 2c, both cards. GPU0 carries MSE 5.0
+(125/200 images) then 15.68; GPU1 carries 60.0 (64/200) then 241.5. Four
+conditions including the hardened direction. The retrieval half rides on A3,
+already published; this supplies the utility axis the frontier claim needs. \\
 
-A8 --- what is actually released (R10) & \pending & 10\% (design only) &
-Local card, 2\,h; runnable now & Save, decode and re-measure released frames
-as PNG and JPEG; confirm whether the post-optimisation rescaling exceeds the
-$\ell_\infty$ projection that preceded it. The manuscript reports
-max $|\delta| = 76$ against a projection of 16 --- now re-derived from the
-recovered A3 rows ($76.001$) rather than quoted --- so A8 closes the
-serialisation half of R10. \\
-
-A5 --- privacy against measured utility over budgets (R7) & \pending & 5\%
-& Card-on $+$ 5\,h & Four measured budgets, four conditions including the
-hardened direction, with a declared utility tolerance. Needs a GPU session. \\
+\textbf{A2 --- what the sensitivity maps measure} (R2, R3) & \running & 58\% &
+\textbf{$\approx$13:55} & PRO 6000, 351 of 600 rows (150 queries $\times$ 4
+maps). Random-projection Jacobian column norms against the score-gradient and
+margin-gradient maps, with a split-half ceiling so disagreement can be told
+from estimator noise. Slowed badly by tenant contention before the thread cap;
+resumes correctly now that finished queries are skipped before the estimate is
+paid for. \\
 
 A6 --- adaptation against the hardened release (R8) & \pending & 5\% &
-Card-on $+$ 6\,h & Fine-tune on hardened releases with fresh release
-randomness, \emph{rebuild the gallery}, evaluate on a place-disjoint split. \\
+2c free $\approx$14:05, then $+6$\,h $\Rightarrow$ \textbf{$\approx$20:00} &
+Fine-tune on hardened releases with fresh release randomness, \emph{rebuild the
+gallery}, evaluate on a place-disjoint split, report Top-1/5/10 and rank
+statistics. Queued behind A5 on 2c. \\
 
 A7b --- second dataset and a third attacker (R9) & \pending & 5\% &
-Card-on $+$ 8\,h; audit part local & City-disjoint holdout of the existing
-8-city manifest, one more held-out strong VPR backbone, and the GPS/heading
-audit of cluster positives against the official criterion. The audit is
-CPU-only and could run before card-on if the manifest metadata is local. \\
+Audit half \textbf{today}; GPU half 2c free $+8$\,h $\Rightarrow$
+\textbf{10 Sep $\approx$04:00} & Two separable halves. The GPS/heading audit of
+cluster positives is CPU-only and runnable now, because the recovered manifest
+carries the latitude, longitude and viewpoint fields it needs. The city-disjoint
+holdout and the extra held-out VPR backbone need a card. \\
 
-Cover letter --- rewrite around the audit contribution & \pending & 0\% &
-Before submission & \texttt{docs/cover\_letter.txt} still describes the older
-PPEDCRF method, the old title and a selective-support advantage this
-manuscript contradicts. \\
+X1 --- the eight remaining export trees (R1, R5, R11) & \partialstatus & 33\%
+& Regeneration: 2c free $+6$\,h, so \textbf{10 Sep} at the earliest &
+\textbf{Recovery is now exhausted}: all four hosts and every mounted local
+drive have been searched, and the four that were findable are back. The
+remaining eight are either on the user's home machine or gone. Because the
+benchmark manifest is provably the published one, regeneration produces
+comparable numbers --- but \emph{new} ones, so \S``The Null Holds on Real
+Geographic Data'' and the operator table would have to be rewritten. Confirm
+with the user before starting. \\
 
 R11 --- artifact rebuild and verification & \blocked & 0\% & X1 $+$ 2\,h &
-Rebuild from a clean extraction; confirm the published code URL resolves
-publicly. Cannot start before X1 delivers the remaining twelve trees. \\
+Rebuild from a clean extraction; add the claim auditor to
+\texttt{run\_verification.sh}; confirm the published code URL resolves
+publicly. Cannot start before X1 delivers the remaining eight trees. \\
+
+Text pass --- R10 rewrite from A8 & \pending & 0\% & A8 lands
+$\approx$12:55, then \textbf{$\approx$14:00} & Split the release-boundary claim
+by budget, and state Top-1/5/10 on \emph{decoded} files rather than float
+tensors. Blocked only on A8 finishing. \\
 
 \end{longtable}
 
-\section*{Table 3: Manuscript and Code Edits This Cycle}
+\section*{Table 3: Code and Recovery Work This Session}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.30\linewidth}p{0.10\linewidth}p{0.47\linewidth}@{}}
-\caption{Edits made on 9 September 2026 after 10:00, kept visible for one
-cycle so the next review does not rediscover them. T21--T30 are recorded in
-\texttt{docs/progress.md} and have been removed here.}
-\label{tab:tifs5-text}\\
+\caption{Work done on 9 September 2026 between 10:00 and 12:20 NZST. No
+manuscript file changed; the writeback rule forbids it ahead of a gate.}
+\label{tab:tifs5-code}\\
 \toprule
-ID & Edit & Status & Location \\
+ID & Item & Status & Location \\
 \midrule
 \endfirsthead
 \toprule
-ID & Edit & Status & Location \\
+ID & Item & Status & Location \\
 \midrule
 \endhead
 \midrule
@@ -328,59 +301,110 @@ ID & Edit & Status & Location \\
 \bottomrule
 \endlastfoot
 
-T31 (R12) & New supplement section \emph{Operator and EOT Definitions}:
-equations S1--S4 define the isotropic, spatially correlated, selective
-low-pass and block-quantisation operators with the kernel widths the code
-uses; S5 is the matched-delivered-MSE bisection with the pixel clamp inside
-the objective, and the paragraph explains why the clamp's position is what
-makes an across-operator comparison a comparison of structure; S6 is the
-gallery-free EOT objective with its constraint set, $20$ sign-gradient steps
-at step size $1$, the two-transforms-per-step estimator, the BPDA
-substitution written out, and the derivation of why the random start is
-mandatory for the self objective. & \done &
-\texttt{supplementary.tex}; pointer in \texttt{main.tex}
-Table~VIII caption. \\
+C4 (A2) & \texttt{measure\_jacobian\_columns.py}: random-projection estimate of
+per-pixel $\lVert J_i\rVert_2$ ($\mathbb{E}[(J^\top v)_i^2]=\lVert
+J_i\rVert_2^2$, one backward pass per probe), compared against the
+score-gradient and margin-gradient maps by Spearman, top-decile Jaccard and
+concentration, with a \textbf{split-half correlation} reported as the ceiling
+any cross-map agreement can reach. Second half measures predicted against
+realised margin variance, rank flips, and pre/post-clamp energy. & \done &
+\texttt{src/scripts/measure\_jacobian\_columns.py}. \\
 
-T32 (R13, R4) & The Conclusion's ``the literature\dots does not treat the
-third as a variable at all'' replaced with ``has not compared the third
-against them at matched distortion''. The old form contradicted the Le et al.\
-and GeoShield citations the same revision added. & \done &
-\texttt{main.tex} Conclusion. \\
+C5 (A8) & \texttt{validate\_serialized\_release.py}: records amplitude after
+the projection \emph{and} after the release rescaling, quantises to 8-bit,
+round-trips through PNG and JPEG, and re-runs retrieval on the \emph{decoded}
+pixels. & \done & \texttt{src/scripts/validate\_serialized\_release.py}. \\
 
-T33 (R13) & Two revision-history artefacts removed --- ``and it is sharper
-than the claim it replaces'' and ``and we say so rather than claim the pairing
-is unexplored'' --- neither of which a reader of the submitted version can
-parse. & \done & \texttt{main.tex} \S\,Which Part of the Perturbation,
-\S\,The Closest Published Approach. \\
+C6 & \textbf{First A8 pass discarded and re-run.} It used surrogates
+\texttt{resnet50 vgg16 vit\_b\_16} and \texttt{random\_start} 8.0; the
+published runs use \texttt{resnet50 vgg16 cosplace}
+(\texttt{launch\_tifs\_d6d7.sh}) and, for the \texttt{self} objective,
+\texttt{random\_start} 1.0. The gap showed: direction Top-1 came out 0.160
+against a published 0.0317. Both defaults now match the published
+configuration. & \done & Same file; old exports kept as
+\texttt{tifs\_a8\_vitstart8}. \\
 
-C1 (R1) & \texttt{audit\_claim\_consistency.py} added: 110 claims, each
-carrying the printed value, the literal string that must still occur in the
-file that prints it, and a recomputation from raw per-query rows. Exits 1 on
-a mismatch or a vanished string, 2 when a tree is absent, 0 when clean.
-Currently 106 verified, 0 mismatched, 4 no-data. & \done &
-\texttt{src/scripts/audit\_claim\_consistency.py}. \\
+C7 & \texttt{analyze\_serialized\_release.py}: per-condition, per-format
+summary with place-clustered bootstrap intervals, and an explicit note naming
+any condition whose released amplitude passes its own bound. The isotropic
+control is excluded from that check rather than counted as a breach --- it is
+drawn, not projected, so it has no bound to exceed. & \done &
+\texttt{src/scripts/analyze\_serialized\_release.py}. \\
 
-C2 (R1) & Wilcoxon zero handling fixed in
-\texttt{analyze\_direction\_factorial.py} so the script reproduces the
-published $p$-values instead of the exact test's; two regression tests pin it
-(32 tests pass, was 30). & \done &
-\texttt{src/scripts/analyze\_direction\_factorial.py},
-\texttt{src/tests/test\_direction\_factorial.py}. \\
+C8 & 15 new tests (47 total, was 32). The estimator is checked against a
+\emph{linear embedding whose column norms are known in closed form}, not only
+against itself; the uniform map's correlation is asserted NaN rather than 0.0,
+because ``undefined'' and ``unrelated'' are different claims; PNG is asserted
+lossless after quantisation, so any residual in the audit is attributable to
+the float-to-integer step. & \done &
+\texttt{src/tests/test\_sensitivity\_and\_release.py}. \\
 
-C3 (X1) & \texttt{tifs\_a3}, \texttt{tifs\_a3hi}, \texttt{tifs\_a4} and
-\texttt{tifs\_a7\_o2n8} recovered from vGPU 3090 (48 files, 7.2\,MB) and
-verified: Table~VI reproduces cell for cell, the A4 gradient/0.25 rows to four
-decimals, the A7 old-to-new cells to their printed precision. & \done &
-\texttt{src/outputs/}. \\
+C9 & Three defects of my own, found by running: both new scripts embedded the
+2{,}000-image gallery in one forward pass and OOM'd on the shared card
+(\texttt{embed\_gallery\_batched} already existed for exactly this);
+208 cores $\times$ default torch threading put three jobs into
+\texttt{futex\_wait} at 600\% CPU with zero rows for 25 minutes; and A2's
+resume recomputed the expensive column-norm estimate for every query it then
+declined to write. All three fixed. & \done &
+\texttt{--gallery\_batch}, thread caps in the launchers, early per-query skip. \\
+
+C10 (R3) & Code-side naming residual closed:
+\texttt{run\_placement\_rule\_study.py}'s module and function docstrings no
+longer claim an oracle or a strictly correct placement, and now map each
+historical condition key to the quantity it actually computes. & \done &
+\texttt{src/scripts/run\_placement\_rule\_study.py}. \\
+
+C11 & Host rules recorded at the user's request: AutoDL academic acceleration
+(\texttt{source /etc/network\_turbo}) applies to all seetacloud hosts, must be
+sourced \emph{inside} the job, speeds up GitHub/HuggingFace while slowing pip,
+and fixes reachability rather than authentication. Also recorded: credentials
+do not travel to compute hosts (use \texttt{tar | ssh}), check \emph{free}
+memory on a shared card, and detach with \texttt{setsid}. & \done &
+\texttt{.claude/rules/src.md}. \\
+
+C12 & Cover letter rewritten around the audit contribution. & \done &
+\texttt{docs/cover\_letter.txt}. \\
 
 \end{longtable}
 
+\section*{Table 4: A8 First Findings (superseded numbers, kept for the argument)}
+
+These come from the discarded first A8 pass (C6), so the \emph{values} will be
+restated from the re-run before anything enters the manuscript. The
+\emph{release-boundary} half does not depend on the surrogate ensemble, because
+the gain is set by MSE matching, and the re-run is so far reproducing it.
+
+\begin{longtable}{@{}p{0.20\linewidth}p{0.11\linewidth}p{0.12\linewidth}p{0.14\linewidth}p{0.37\linewidth}@{}}
+\toprule
+Condition / budget & Release gain & max$|\delta|$ & vs projection 16 &
+Reading \\
+\midrule
+\endhead
+direction @ MSE 15.68 & 0.58 & 9.3 & \textbf{inside} & The headline operating
+point does \emph{not} breach the bound. \\
+direction @ MSE 241.5 & 2.31 & 37.0 & \textbf{outside} & The breach is a
+property of the high budget, not of the mechanism. \\
+isotropic @ either & --- & 18.7 / 74.1 & n/a & Drawn, never projected; it has
+no bound to exceed and is not counted as a breach. \\
+\bottomrule
+\end{longtable}
+
+Serialisation, same pass: PNG leaves Top-1 unchanged to four decimals, and
+JPEG75 changes it by at most 0.005 --- so the codec does \emph{not} rescue
+retrieval, which supports stating the privacy claim for a transmitted file. But
+JPEG inflates delivered distortion well past the matched budget
+(max$|\delta|$ $9.3\rightarrow37.4$, MSE $15.68\rightarrow21.67$), so
+\emph{matching distortion on float tensors does not match it on decoded files}.
+That is a limit on the matched-distortion protocol itself and belongs in the
+manuscript.
+
 \section*{Closed in Previous Cycles}
 
-The page-budget and inference pass (T21--T30) and the overnight A3/A4/A7
-session are recorded in \texttt{docs/progress.md}. The fourth review's items
-(R1--R10 of 8 September, D6/D7) are entries 274--298. D1--D5, the third
-review, ICME 2027 (M1--M9), TOMM (E1--E7) and the 3 September items remain
-closed.
+The page-budget and inference pass (T21--T30), the overnight A3/A4/A7 session,
+and this cycle's earlier text items (T31--T33, C1--C3) are recorded in
+\texttt{docs/progress.md}. The fourth review's items (R1--R10 of 8 September,
+D6/D7) are entries 274--298. D1--D5, the third review, ICME 2027 (M1--M9),
+TOMM (E1--E7) and the 3 September items remain closed. R4, R6, R12 and R13 of
+the fifth review are closed and are no longer listed above.
 
 \end{document}
