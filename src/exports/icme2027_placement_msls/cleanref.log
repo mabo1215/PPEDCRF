@@ -1,0 +1,5 @@
+[placement] sigma override -> 0.001
+[placement] device=cuda
+[placement] geotagged mode: 400 queries, 2000 gallery, 277 place ids
+[placement] resnet18 g0 seed1234 uniform: 400 rows
+[placement] done -> src/outputs/icme2027_placement_msls/cleanref/per_query.csv

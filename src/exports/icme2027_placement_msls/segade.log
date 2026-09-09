@@ -1,0 +1,11 @@
+[placement] device=cuda
+[placement] geotagged mode: 400 queries, 2000 gallery, 277 place ids
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/208 [00:00<?, ?it/s]Loading weights:  74%|███████▎  | 153/208 [00:00<00:00, 1406.29it/s]Loading weights: 100%|██████████| 208/208 [00:00<00:00, 1701.12it/s]
+[placement] resnet18 g0 seed1234 uniform: 400 rows
+[placement] resnet18 g0 seed1234 segmentation_ade: 400 rows
+[placement] resnet18 g0 seed1235 uniform: 400 rows
+[placement] resnet18 g0 seed1235 segmentation_ade: 400 rows
+[placement] resnet18 g0 seed1236 uniform: 400 rows
+[placement] resnet18 g0 seed1236 segmentation_ade: 400 rows
+[placement] done -> src/outputs/icme2027_placement_msls/segade/per_query.csv

@@ -1,0 +1,3 @@
+# The trees here are frozen evidence, not build products, so the global
+# "*.log" rule must not apply to them: the run logs are the provenance.
+!*.log

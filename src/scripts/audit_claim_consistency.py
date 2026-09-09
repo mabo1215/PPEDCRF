@@ -42,6 +42,12 @@ from scipy.stats import wilcoxon
 
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "src" / "outputs"
+# src/outputs/ is gitignored, so an export tree lives there only on the machine
+# that produced it. Trees small enough to travel are committed under
+# src/exports/ instead, and are searched second: a fresh clone can verify the
+# claims they back without anyone remembering to copy anything first.
+EXPORTS = REPO / "src" / "exports"
+ROOTS = (OUT, EXPORTS)
 MAIN = REPO / "paper" / "main.tex"
 TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
 
@@ -51,12 +57,22 @@ TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
 # --------------------------------------------------------------------------
 
 def load(pattern: str) -> List[dict]:
-    """Every row under a glob relative to src/outputs/, or [] if none match."""
-    rows: List[dict] = []
-    for path in sorted(globmod.glob(str(OUT / pattern))):
-        with open(path, newline="", encoding="utf-8") as fh:
-            rows.extend(csv.DictReader(fh))
-    return rows
+    """Every row under a glob relative to an export root, or [] if none match.
+
+    The roots are tried in order and the first one that matches anything wins,
+    so a tree present in both places is read from src/outputs/ and never
+    silently concatenated with its committed copy.
+    """
+    for root in ROOTS:
+        paths = sorted(globmod.glob(str(root / pattern)))
+        if not paths:
+            continue
+        rows: List[dict] = []
+        for path in paths:
+            with open(path, newline="", encoding="utf-8") as fh:
+                rows.extend(csv.DictReader(fh))
+        return rows
+    return []
 
 
 def per_query(rows: Sequence[dict], select: Callable[[dict], bool],
@@ -493,7 +509,7 @@ for budget, cond, value in [
 # --------------------------------------------------------------------------
 
 def tree_present(tree: str) -> bool:
-    return not tree or (OUT / tree).is_dir()
+    return not tree or any((root / tree).is_dir() for root in ROOTS)
 
 
 def main() -> int:

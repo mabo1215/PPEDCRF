@@ -1,0 +1,2 @@
+run_id,backbone,placement,n_pairs,top1_reference,top1_placement,top1_diff,n_discordant,mcnemar_b_minus_c,mcnemar_exact_p,bootstrap_ci_low,bootstrap_ci_high,mcnemar_significant,cluster_robust_significant
+.,resnet18,edge,1200,0.2,0.1925,-0.007500000000000007,63,-9,0.31350305329645284,-0.03,0.015,False,False

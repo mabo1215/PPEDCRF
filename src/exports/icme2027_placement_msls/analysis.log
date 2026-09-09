@@ -1,0 +1,29 @@
+loaded 3600 rows, 3 placements, 1 backbones
+energy-conservation gate: max relative error = 4.75e-07
+
+=== Top-1 by placement (pooled over backbones/seeds) ===
+  segmentation         0.1942
+  uniform              0.1950
+  segmentation_fcn     0.1958
+
+=== paired vs 'uniform' ===
+  comparisons: 2
+  zero-discordant: 0
+  exact-McNemar significant:   0
+  cluster-robust significant:  0
+
+wrote src/outputs/icme2027_placement_msls/segfcn_analysis.csv
+loaded 2400 rows, 2 placements, 1 backbones
+energy-conservation gate: max relative error = 3.57e-07
+
+=== Top-1 by placement (pooled over backbones/seeds) ===
+  segmentation_ade     0.1950
+  uniform              0.1950
+
+=== paired vs 'uniform' ===
+  comparisons: 1
+  zero-discordant: 0
+  exact-McNemar significant:   0
+  cluster-robust significant:  0
+
+wrote src/outputs/icme2027_placement_msls/segade_analysis.csv

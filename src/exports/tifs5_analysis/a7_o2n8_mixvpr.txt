@@ -1,0 +1,26 @@
+﻿pooling 3 file(s)
+conditions: ['direction', 'isotropic']
+placements: ['uniform']
+queries: 400, seeds: ['1234', '5678', '9012'], rows: 2400
+
+== Top-1 by condition and placement ==
+condition            placement     Top-1    Top-5   Top-10
+direction            uniform      0.7292   0.8517   0.8925
+isotropic            uniform      0.7850   0.8942   0.9175
+
+== Paired against the isotropic uniform control ==
+condition            placement      delta                 95% CI          p
+direction            uniform      -0.0558 [ -0.0800, -0.0317]   6.67e-07
+
+== What survives when the direction is broken ==
+
+== Delivered versus realised energy (the clamp's share) ==
+placement   pre-clip MSE  delivered   lost %   clipped   max |d|
+uniform          15.8472    15.6800     1.06    0.6394    15.277
+
+== Reproduction check against the published table ==
+  resnet18/isotropic  published=0.1967 this run=0.7850 diff=+0.5883
+  resnet18/direction  published=0.0317 this run=0.7292 diff=+0.6975
+  mixvpr/isotropic  published=0.7800 this run=0.7850 diff=+0.0050
+  mixvpr/direction  published=0.7317 this run=0.7292 diff=-0.0025
+  (only the row matching this run's attacker is meaningful)

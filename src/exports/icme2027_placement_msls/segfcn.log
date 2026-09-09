@@ -1,0 +1,12 @@
+[placement] device=cuda
+[placement] geotagged mode: 400 queries, 2000 gallery, 277 place ids
+[placement] resnet18 g0 seed1234 uniform: 400 rows
+[placement] resnet18 g0 seed1234 segmentation: 400 rows
+[placement] resnet18 g0 seed1234 segmentation_fcn: 400 rows
+[placement] resnet18 g0 seed1235 uniform: 400 rows
+[placement] resnet18 g0 seed1235 segmentation: 400 rows
+[placement] resnet18 g0 seed1235 segmentation_fcn: 400 rows
+[placement] resnet18 g0 seed1236 uniform: 400 rows
+[placement] resnet18 g0 seed1236 segmentation: 400 rows
+[placement] resnet18 g0 seed1236 segmentation_fcn: 400 rows
+[placement] done -> src/outputs/icme2027_placement_msls/segfcn/per_query.csv

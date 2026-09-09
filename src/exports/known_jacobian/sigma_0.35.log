@@ -1,0 +1,39 @@
+seed=0 align=0.00 clip=none      uniform: top1=0.2567 (clean 0.2850) E||df||^2=259.3 (1st-order 262.6) delivered=125.0
+seed=0 align=0.00 clip=none       oracle: top1=0.0967 (clean 0.2650) E||df||^2=5696.9 (1st-order 5918.6) delivered=124.2
+seed=0 align=0.00 clip=none  anti_oracle: top1=0.2983 (clean 0.3017) E||df||^2=23.3 (1st-order 23.4) delivered=125.5
+seed=0 align=0.00 clip=none       random: top1=0.3217 (clean 0.3283) E||df||^2=257.9 (1st-order 257.5) delivered=125.5
+seed=0 align=0.00 clip=2      uniform: top1=0.2583 (clean 0.3067) E||df||^2=1021.4 (1st-order 262.6) delivered=484.9
+seed=0 align=0.00 clip=2       oracle: top1=0.1517 (clean 0.2667) E||df||^2=2952.5 (1st-order 5918.6) delivered=465.0
+seed=0 align=0.00 clip=2  anti_oracle: top1=0.2067 (clean 0.2600) E||df||^2=829.2 (1st-order 23.4) delivered=473.8
+seed=0 align=0.00 clip=2       random: top1=0.2800 (clean 0.3333) E||df||^2=1037.9 (1st-order 260.6) delivered=481.0
+seed=1 align=0.00 clip=none      uniform: top1=0.3450 (clean 0.3433) E||df||^2=272.6 (1st-order 270.3) delivered=125.6
+seed=1 align=0.00 clip=none       oracle: top1=0.2033 (clean 0.3933) E||df||^2=3545.9 (1st-order 3541.6) delivered=125.3
+seed=1 align=0.00 clip=none  anti_oracle: top1=0.3583 (clean 0.3600) E||df||^2=10.4 (1st-order 10.5) delivered=126.4
+seed=1 align=0.00 clip=none       random: top1=0.3617 (clean 0.3700) E||df||^2=267.6 (1st-order 264.6) delivered=125.6
+seed=1 align=0.00 clip=2      uniform: top1=0.3067 (clean 0.3400) E||df||^2=1045.4 (1st-order 270.3) delivered=484.1
+seed=1 align=0.00 clip=2       oracle: top1=0.1850 (clean 0.3417) E||df||^2=2517.2 (1st-order 3541.6) delivered=466.5
+seed=1 align=0.00 clip=2  anti_oracle: top1=0.3500 (clean 0.3850) E||df||^2=859.9 (1st-order 10.5) delivered=462.4
+seed=1 align=0.00 clip=2       random: top1=0.3267 (clean 0.4133) E||df||^2=1023.6 (1st-order 267.2) delivered=482.1
+seed=2 align=0.00 clip=none      uniform: top1=0.3667 (clean 0.3850) E||df||^2=269.3 (1st-order 269.7) delivered=125.6
+seed=2 align=0.00 clip=none       oracle: top1=0.2217 (clean 0.3917) E||df||^2=3017.7 (1st-order 2982.3) delivered=125.4
+seed=2 align=0.00 clip=none  anti_oracle: top1=0.3583 (clean 0.3583) E||df||^2=11.6 (1st-order 11.6) delivered=125.1
+seed=2 align=0.00 clip=none       random: top1=0.3733 (clean 0.3817) E||df||^2=241.5 (1st-order 242.6) delivered=125.7
+seed=2 align=0.00 clip=2      uniform: top1=0.3600 (clean 0.4133) E||df||^2=1044.7 (1st-order 269.7) delivered=476.3
+seed=2 align=0.00 clip=2       oracle: top1=0.1850 (clean 0.3700) E||df||^2=2452.2 (1st-order 2982.3) delivered=472.1
+seed=2 align=0.00 clip=2  anti_oracle: top1=0.3867 (clean 0.4200) E||df||^2=820.4 (1st-order 11.6) delivered=465.6
+seed=2 align=0.00 clip=2       random: top1=0.2933 (clean 0.3533) E||df||^2=1039.8 (1st-order 260.9) delivered=481.5
+
+--- first-order identity, unbounded case (measured / predicted) ---
+  ratio over 12 cells: min=0.9625 max=1.0119
+
+--- Top-1 by alignment, unbounded (lower = better privacy) ---
+   align       uniform       oracle  anti_oracle       random   oracle-unif
+    0.00        0.3228       0.1739       0.3383       0.3522       -0.1489
+  delivered input energy (nominal budget 125): uniform=125  oracle=125  anti_oracle=126  random=126
+
+--- Top-1 by alignment, clipped at +/-2 (lower = better privacy) ---
+   align       uniform       oracle  anti_oracle       random   oracle-unif
+    0.00        0.3083       0.1739       0.3144       0.3000       -0.1344
+  delivered input energy (nominal budget 125): uniform=482  oracle=468  anti_oracle=467  random=482
+
+wrote src/outputs/known_jacobian/sigma_0.35.jsonl

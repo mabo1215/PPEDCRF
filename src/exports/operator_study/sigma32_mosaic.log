@@ -1,0 +1,10 @@
+[placement] sigma override -> 32.0
+[placement] device=cuda
+[placement] geotagged mode: 400 queries, 2000 gallery, 277 place ids
+[placement] resnet18 g0 seed1234 uniform: 400 rows
+[placement] resnet18 g0 seed1234 edge: 400 rows
+[placement] resnet18 g0 seed1235 uniform: 400 rows
+[placement] resnet18 g0 seed1235 edge: 400 rows
+[placement] resnet18 g0 seed1236 uniform: 400 rows
+[placement] resnet18 g0 seed1236 edge: 400 rows
+[placement] done -> src/outputs/operator_study/sigma32_mosaic/per_query.csv

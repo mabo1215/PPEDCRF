@@ -2,8 +2,8 @@
 # Assemble the anonymous reviewer artifact from the local experiment exports.
 #
 # results/, extended_evidence_report.pdf and MANIFEST.sha256 are build products
-# (derived from src/outputs/ and paper/, both gitignored here), so they are not
-# tracked in git. Run this to regenerate them before packaging the bundle.
+# (derived from src/outputs/, src/exports/ and paper/), so they are not tracked
+# in git. Run this to regenerate them before packaging the bundle.
 #
 # Set PYTHON=python if `python3` is not on PATH (Git Bash on Windows resolves
 # python3 to the Microsoft Store stub, which is not an interpreter).
@@ -12,13 +12,25 @@ cd "$(dirname "$0")"
 # This script lives at src/artifact/, so the repository root is two levels up.
 REPO_ROOT="$(cd ../.. && pwd)"
 OUT="$REPO_ROOT/src/outputs"
+# src/outputs/ is gitignored and therefore machine-local. Trees small enough to
+# travel are committed under src/exports/, which is searched second so a fresh
+# clone can build most of the bundle without hunting for the originals.
+EXPORTS="$REPO_ROOT/src/exports"
 PYTHON="${PYTHON:-python3}"
+
+# Resolve a tree name against the export roots, preferring the local originals.
+resolve_tree() {  # $1 = tree name; echoes the directory, or nothing
+  if [ -d "$OUT/$1" ]; then echo "$OUT/$1"
+  elif [ -d "$EXPORTS/$1" ]; then echo "$EXPORTS/$1"
+  fi
+}
 
 # Only these extensions travel: raw per-query outcomes, summaries, run metadata
 # and status files. No imagery, no weights, no logs.
-copy_tree() {  # $1 = tree under src/outputs, $2 = name inside results/
-  local src="$OUT/$1" dst="results/$2" rel
-  [ -d "$src" ] || { echo "missing export tree: $src" >&2; exit 1; }
+copy_tree() {  # $1 = tree name, $2 = name inside results/
+  local src dst="results/$2" rel
+  src="$(resolve_tree "$1")"
+  [ -n "$src" ] || { echo "missing export tree: $1 (looked in $OUT and $EXPORTS)" >&2; exit 1; }
   find "$src" -type f \( -name '*.csv' -o -name '*.json' -o -name '*.jsonl' \
        -o -name '*.txt' -o -name '*.sha256' \) -print0 |
     while IFS= read -r -d '' f; do
@@ -28,9 +40,10 @@ copy_tree() {  # $1 = tree under src/outputs, $2 = name inside results/
     done
 }
 
-copy_file() {  # $1 = path under src/outputs, $2 = path inside results/
+copy_file() {  # $1 = relative path under an export root, $2 = path inside results/
   local src="$OUT/$1" dst="results/$2"
-  [ -f "$src" ] || { echo "missing export file: $src" >&2; exit 1; }
+  [ -f "$src" ] || src="$EXPORTS/$1"
+  [ -f "$src" ] || { echo "missing export file: $1 (looked in $OUT and $EXPORTS)" >&2; exit 1; }
   mkdir -p "$(dirname "$dst")"
   cp "$src" "$dst"
 }

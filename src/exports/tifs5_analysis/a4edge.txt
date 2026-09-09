@@ -1,0 +1,18 @@
+﻿pooling 3 file(s)
+arms: ['fullframe_pgd', 'isotropic', 'maskguided_pgd']  mask coverage: ['0.25']
+queries: 400, seeds: ['1234', '5678', '9012'], rows: 3600
+
+== Top-1 by arm ==
+  fullframe_pgd    Top-1=0.0450 Top-5=0.1058
+  isotropic        Top-1=0.2008 Top-5=0.3550
+  maskguided_pgd   Top-1=0.1017 Top-5=0.2133
+
+== Paired comparisons ==
+  maskguided_pgd   minus isotropic         -0.0992 [ -0.1342, -0.0650] p=2.06e-09 (n=400)
+  fullframe_pgd    minus isotropic         -0.1558 [ -0.1933, -0.1183] p=1.81e-14 (n=400)
+  maskguided_pgd   minus fullframe_pgd     +0.0567 [ +0.0358, +0.0792] p=3.09e-06 (n=400)
+
+== Delivered distortion by arm ==
+  fullframe_pgd    delivered= 15.6800 pre-clip= 15.6800
+  isotropic        delivered= 15.6800 pre-clip= 16.0424
+  maskguided_pgd   delivered= 15.6800 pre-clip= 15.6863

@@ -1,0 +1,41 @@
+﻿pooling 3 file(s)
+conditions: ['direction', 'isotropic', 'magnitude_uniform', 'sign_shuffle']
+placements: ['edge', 'uniform']
+queries: 400, seeds: ['1234', '5678', '9012'], rows: 9600
+
+== Top-1 by condition and placement ==
+condition            placement     Top-1    Top-5   Top-10
+direction            edge         0.7783   0.8742   0.8925
+direction            uniform      0.7342   0.8300   0.8583
+isotropic            edge         0.7900   0.8808   0.8983
+isotropic            uniform      0.7850   0.8700   0.8933
+magnitude_uniform    edge         0.7850   0.8742   0.8958
+magnitude_uniform    uniform      0.7600   0.8433   0.8850
+sign_shuffle         edge         0.7825   0.8700   0.8967
+sign_shuffle         uniform      0.7875   0.8667   0.8925
+
+== Paired against the isotropic uniform control ==
+condition            placement      delta                 95% CI          p
+direction            edge         -0.0067 [ -0.0250, +0.0117]   3.05e-01
+direction            uniform      -0.0508 [ -0.0750, -0.0283]   1.48e-06
+isotropic            edge         +0.0050 [ -0.0125, +0.0225]   5.39e-01
+magnitude_uniform    edge         -0.0000 [ -0.0200, +0.0192]   6.30e-01
+magnitude_uniform    uniform      -0.0250 [ -0.0442, -0.0067]   2.98e-03
+sign_shuffle         edge         -0.0025 [ -0.0208, +0.0158]   7.79e-01
+sign_shuffle         uniform      +0.0025 [ -0.0058, +0.0108]   6.64e-01
+
+== What survives when the direction is broken ==
+sign_shuffle         vs direction   +0.0533 [ +0.0308, +0.0775] p=5.74e-07
+magnitude_uniform    vs direction   +0.0258 [ +0.0108, +0.0425] p=3.83e-04
+
+== Delivered versus realised energy (the clamp's share) ==
+placement   pre-clip MSE  delivered   lost %   clipped   max |d|
+edge             16.4323    15.6800     4.58    0.6176    74.858
+uniform          15.8540    15.6800     1.10    0.6145    11.691
+
+== Reproduction check against the published table ==
+  resnet18/isotropic  published=0.1967 this run=0.7850 diff=+0.5883
+  resnet18/direction  published=0.0317 this run=0.7342 diff=+0.7025
+  mixvpr/isotropic  published=0.7800 this run=0.7850 diff=+0.0050
+  mixvpr/direction  published=0.7317 this run=0.7342 diff=+0.0025
+  (only the row matching this run's attacker is meaningful)

@@ -1,0 +1,117 @@
+seed=0 nuis=2.5 clip=none     isotropic      uniform: top1=0.0563 (clean 0.0512) delivered=125.4
+seed=0 nuis=2.5 clip=none     isotropic       oracle: top1=0.0275 (clean 0.0450) delivered=125.4
+seed=0 nuis=2.5 clip=none     isotropic  anti_oracle: top1=0.0362 (clean 0.0387) delivered=125.4
+seed=0 nuis=2.5 clip=none     isotropic       random: top1=0.0400 (clean 0.0488) delivered=125.4
+seed=0 nuis=2.5 clip=none    correlated      uniform: top1=0.0587 (clean 0.0612) delivered=125.4
+seed=0 nuis=2.5 clip=none    correlated       oracle: top1=0.0288 (clean 0.0512) delivered=125.4
+seed=0 nuis=2.5 clip=none    correlated  anti_oracle: top1=0.0600 (clean 0.0600) delivered=125.4
+seed=0 nuis=2.5 clip=none    correlated       random: top1=0.0500 (clean 0.0537) delivered=125.4
+seed=0 nuis=2.5 clip=none   sign_random      uniform: top1=0.0587 (clean 0.0575) delivered=125.4
+seed=0 nuis=2.5 clip=none   sign_random       oracle: top1=0.0238 (clean 0.0350) delivered=125.4
+seed=0 nuis=2.5 clip=none   sign_random  anti_oracle: top1=0.0563 (clean 0.0537) delivered=125.4
+seed=0 nuis=2.5 clip=none   sign_random       random: top1=0.0425 (clean 0.0413) delivered=125.4
+seed=0 nuis=2.5 clip=none  sign_aligned      uniform: top1=0.0000 (clean 0.0475) delivered=125.4
+seed=0 nuis=2.5 clip=none  sign_aligned       oracle: top1=0.0000 (clean 0.0612) delivered=125.4
+seed=0 nuis=2.5 clip=none  sign_aligned  anti_oracle: top1=0.0037 (clean 0.0462) delivered=125.4
+seed=0 nuis=2.5 clip=none  sign_aligned       random: top1=0.0013 (clean 0.0537) delivered=125.4
+seed=0 nuis=2.5 clip=2     isotropic      uniform: top1=0.0362 (clean 0.0488) delivered=2006.6
+seed=0 nuis=2.5 clip=2     isotropic       oracle: top1=0.0375 (clean 0.0462) delivered=1992.3
+seed=0 nuis=2.5 clip=2     isotropic  anti_oracle: top1=0.0437 (clean 0.0488) delivered=1996.8
+seed=0 nuis=2.5 clip=2     isotropic       random: top1=0.0350 (clean 0.0462) delivered=1996.2
+seed=0 nuis=2.5 clip=2    correlated      uniform: top1=0.0288 (clean 0.0450) delivered=1995.3
+seed=0 nuis=2.5 clip=2    correlated       oracle: top1=0.0213 (clean 0.0462) delivered=1984.4
+seed=0 nuis=2.5 clip=2    correlated  anti_oracle: top1=0.0450 (clean 0.0525) delivered=1992.7
+seed=0 nuis=2.5 clip=2    correlated       random: top1=0.0213 (clean 0.0400) delivered=1992.6
+seed=0 nuis=2.5 clip=2   sign_random      uniform: top1=0.0475 (clean 0.0563) delivered=2002.2
+seed=0 nuis=2.5 clip=2   sign_random       oracle: top1=0.0175 (clean 0.0437) delivered=1988.1
+seed=0 nuis=2.5 clip=2   sign_random  anti_oracle: top1=0.0362 (clean 0.0475) delivered=2008.7
+seed=0 nuis=2.5 clip=2   sign_random       random: top1=0.0338 (clean 0.0475) delivered=2002.0
+seed=0 nuis=2.5 clip=2  sign_aligned      uniform: top1=0.0000 (clean 0.0537) delivered=2000.3
+seed=0 nuis=2.5 clip=2  sign_aligned       oracle: top1=0.0000 (clean 0.0575) delivered=1995.0
+seed=0 nuis=2.5 clip=2  sign_aligned  anti_oracle: top1=0.0063 (clean 0.0413) delivered=1996.5
+seed=0 nuis=2.5 clip=2  sign_aligned       random: top1=0.0013 (clean 0.0462) delivered=2000.3
+seed=1 nuis=2.5 clip=none     isotropic      uniform: top1=0.0575 (clean 0.0600) delivered=125.4
+seed=1 nuis=2.5 clip=none     isotropic       oracle: top1=0.0362 (clean 0.0587) delivered=125.4
+seed=1 nuis=2.5 clip=none     isotropic  anti_oracle: top1=0.0575 (clean 0.0587) delivered=125.4
+seed=1 nuis=2.5 clip=none     isotropic       random: top1=0.0537 (clean 0.0550) delivered=125.4
+seed=1 nuis=2.5 clip=none    correlated      uniform: top1=0.0650 (clean 0.0650) delivered=125.4
+seed=1 nuis=2.5 clip=none    correlated       oracle: top1=0.0563 (clean 0.0563) delivered=125.4
+seed=1 nuis=2.5 clip=none    correlated  anti_oracle: top1=0.0500 (clean 0.0500) delivered=125.4
+seed=1 nuis=2.5 clip=none    correlated       random: top1=0.0488 (clean 0.0437) delivered=125.4
+seed=1 nuis=2.5 clip=none   sign_random      uniform: top1=0.0762 (clean 0.0725) delivered=125.4
+seed=1 nuis=2.5 clip=none   sign_random       oracle: top1=0.0312 (clean 0.0587) delivered=125.4
+seed=1 nuis=2.5 clip=none   sign_random  anti_oracle: top1=0.0825 (clean 0.0825) delivered=125.4
+seed=1 nuis=2.5 clip=none   sign_random       random: top1=0.0700 (clean 0.0725) delivered=125.4
+seed=1 nuis=2.5 clip=none  sign_aligned      uniform: top1=0.0000 (clean 0.0587) delivered=125.4
+seed=1 nuis=2.5 clip=none  sign_aligned       oracle: top1=0.0000 (clean 0.0612) delivered=125.4
+seed=1 nuis=2.5 clip=none  sign_aligned  anti_oracle: top1=0.0163 (clean 0.0663) delivered=125.4
+seed=1 nuis=2.5 clip=none  sign_aligned       random: top1=0.0000 (clean 0.0712) delivered=125.4
+seed=1 nuis=2.5 clip=2     isotropic      uniform: top1=0.0362 (clean 0.0575) delivered=1998.5
+seed=1 nuis=2.5 clip=2     isotropic       oracle: top1=0.0400 (clean 0.0650) delivered=1981.9
+seed=1 nuis=2.5 clip=2     isotropic  anti_oracle: top1=0.0400 (clean 0.0525) delivered=1997.0
+seed=1 nuis=2.5 clip=2     isotropic       random: top1=0.0425 (clean 0.0362) delivered=2003.5
+seed=1 nuis=2.5 clip=2    correlated      uniform: top1=0.0488 (clean 0.0512) delivered=2003.9
+seed=1 nuis=2.5 clip=2    correlated       oracle: top1=0.0387 (clean 0.0563) delivered=1992.4
+seed=1 nuis=2.5 clip=2    correlated  anti_oracle: top1=0.0413 (clean 0.0537) delivered=1990.5
+seed=1 nuis=2.5 clip=2    correlated       random: top1=0.0462 (clean 0.0500) delivered=1994.4
+seed=1 nuis=2.5 clip=2   sign_random      uniform: top1=0.0437 (clean 0.0700) delivered=2001.0
+seed=1 nuis=2.5 clip=2   sign_random       oracle: top1=0.0462 (clean 0.0612) delivered=1991.5
+seed=1 nuis=2.5 clip=2   sign_random  anti_oracle: top1=0.0587 (clean 0.0600) delivered=1998.6
+seed=1 nuis=2.5 clip=2   sign_random       random: top1=0.0450 (clean 0.0712) delivered=1999.7
+seed=1 nuis=2.5 clip=2  sign_aligned      uniform: top1=0.0000 (clean 0.0512) delivered=2005.7
+seed=1 nuis=2.5 clip=2  sign_aligned       oracle: top1=0.0000 (clean 0.0563) delivered=1987.6
+seed=1 nuis=2.5 clip=2  sign_aligned  anti_oracle: top1=0.0138 (clean 0.0575) delivered=1997.3
+seed=1 nuis=2.5 clip=2  sign_aligned       random: top1=0.0025 (clean 0.0625) delivered=1995.1
+seed=2 nuis=2.5 clip=none     isotropic      uniform: top1=0.0563 (clean 0.0512) delivered=125.4
+seed=2 nuis=2.5 clip=none     isotropic       oracle: top1=0.0488 (clean 0.0550) delivered=125.4
+seed=2 nuis=2.5 clip=none     isotropic  anti_oracle: top1=0.0500 (clean 0.0488) delivered=125.4
+seed=2 nuis=2.5 clip=none     isotropic       random: top1=0.0625 (clean 0.0612) delivered=125.4
+seed=2 nuis=2.5 clip=none    correlated      uniform: top1=0.0750 (clean 0.0650) delivered=125.4
+seed=2 nuis=2.5 clip=none    correlated       oracle: top1=0.0475 (clean 0.0813) delivered=125.4
+seed=2 nuis=2.5 clip=none    correlated  anti_oracle: top1=0.0638 (clean 0.0638) delivered=125.4
+seed=2 nuis=2.5 clip=none    correlated       random: top1=0.0587 (clean 0.0612) delivered=125.4
+seed=2 nuis=2.5 clip=none   sign_random      uniform: top1=0.0612 (clean 0.0537) delivered=125.4
+seed=2 nuis=2.5 clip=none   sign_random       oracle: top1=0.0500 (clean 0.0663) delivered=125.4
+seed=2 nuis=2.5 clip=none   sign_random  anti_oracle: top1=0.0600 (clean 0.0587) delivered=125.4
+seed=2 nuis=2.5 clip=none   sign_random       random: top1=0.0600 (clean 0.0663) delivered=125.4
+seed=2 nuis=2.5 clip=none  sign_aligned      uniform: top1=0.0000 (clean 0.0712) delivered=125.4
+seed=2 nuis=2.5 clip=none  sign_aligned       oracle: top1=0.0000 (clean 0.0625) delivered=125.4
+seed=2 nuis=2.5 clip=none  sign_aligned  anti_oracle: top1=0.0138 (clean 0.0575) delivered=125.4
+seed=2 nuis=2.5 clip=none  sign_aligned       random: top1=0.0000 (clean 0.0638) delivered=125.4
+seed=2 nuis=2.5 clip=2     isotropic      uniform: top1=0.0563 (clean 0.0612) delivered=1997.7
+seed=2 nuis=2.5 clip=2     isotropic       oracle: top1=0.0413 (clean 0.0488) delivered=1988.9
+seed=2 nuis=2.5 clip=2     isotropic  anti_oracle: top1=0.0475 (clean 0.0512) delivered=1998.7
+seed=2 nuis=2.5 clip=2     isotropic       random: top1=0.0587 (clean 0.0712) delivered=2000.2
+seed=2 nuis=2.5 clip=2    correlated      uniform: top1=0.0462 (clean 0.0563) delivered=2000.2
+seed=2 nuis=2.5 clip=2    correlated       oracle: top1=0.0425 (clean 0.0612) delivered=1989.9
+seed=2 nuis=2.5 clip=2    correlated  anti_oracle: top1=0.0663 (clean 0.0700) delivered=1994.2
+seed=2 nuis=2.5 clip=2    correlated       random: top1=0.0512 (clean 0.0537) delivered=1992.3
+seed=2 nuis=2.5 clip=2   sign_random      uniform: top1=0.0450 (clean 0.0512) delivered=1999.3
+seed=2 nuis=2.5 clip=2   sign_random       oracle: top1=0.0462 (clean 0.0688) delivered=1990.9
+seed=2 nuis=2.5 clip=2   sign_random  anti_oracle: top1=0.0525 (clean 0.0550) delivered=1990.7
+seed=2 nuis=2.5 clip=2   sign_random       random: top1=0.0450 (clean 0.0712) delivered=1997.7
+seed=2 nuis=2.5 clip=2  sign_aligned      uniform: top1=0.0000 (clean 0.0575) delivered=1995.2
+seed=2 nuis=2.5 clip=2  sign_aligned       oracle: top1=0.0000 (clean 0.0600) delivered=2000.2
+seed=2 nuis=2.5 clip=2  sign_aligned  anti_oracle: top1=0.0187 (clean 0.0450) delivered=1999.6
+seed=2 nuis=2.5 clip=2  sign_aligned       random: top1=0.0013 (clean 0.0537) delivered=2006.8
+
+--- first-order identity, unbounded case (measured / predicted) ---
+  ratio over 12 cells: min=0.8999 max=1.0488
+
+--- Top-1 by operator, unbounded (lower = better privacy) ---
+       operator   clean     uniform     oracleanti_oracle     random  oracle-unif
+      isotropic  0.0527      0.0567     0.0375     0.0479     0.0521      -0.0192
+     correlated  0.0594      0.0662     0.0442     0.0579     0.0525      -0.0221
+    sign_random  0.0599      0.0654     0.0350     0.0663     0.0575      -0.0304
+   sign_aligned  0.0601      0.0000     0.0000     0.0113     0.0004      +0.0000
+  delivered input energy (nominal budget 125): isotropic=125  correlated=125  sign_random=125  sign_aligned=125
+
+--- Top-1 by operator, clipped at +/-2 (lower = better privacy) ---
+       operator   clean     uniform     oracleanti_oracle     random  oracle-unif
+      isotropic  0.0528      0.0429     0.0396     0.0438     0.0454      -0.0033
+     correlated  0.0530      0.0413     0.0342     0.0508     0.0396      -0.0071
+    sign_random  0.0586      0.0454     0.0367     0.0492     0.0413      -0.0087
+   sign_aligned  0.0535      0.0000     0.0000     0.0129     0.0017      +0.0000
+  delivered input energy (nominal budget 125): isotropic=1997  correlated=1994  sign_random=1998  sign_aligned=1998
+
+wrote src/outputs/known_jacobian_operators/op_nu2.5.jsonl

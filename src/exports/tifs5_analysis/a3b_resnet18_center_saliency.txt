@@ -1,0 +1,23 @@
+﻿pooling 3 file(s)
+conditions: ['direction', 'isotropic', 'magnitude_uniform', 'sign_shuffle']
+placements: ['center', 'saliency']
+queries: 400, seeds: ['1234', '5678', '9012'], rows: 9600
+
+== Top-1 by condition and placement ==
+condition            placement     Top-1    Top-5   Top-10
+direction            center       0.1100   0.2342   0.3075
+direction            saliency     0.0808   0.1933   0.2550
+isotropic            center       0.2017   0.3392   0.4125
+isotropic            saliency     0.2000   0.3333   0.4183
+magnitude_uniform    center       0.1383   0.2650   0.3325
+magnitude_uniform    saliency     0.1317   0.2492   0.3258
+sign_shuffle         center       0.2025   0.3433   0.4117
+sign_shuffle         saliency     0.1983   0.3400   0.4250
+
+== Delivered versus realised energy (the clamp's share) ==
+placement   pre-clip MSE  delivered   lost %   clipped   max |d|
+center           15.8710    15.6800     1.20    0.6253    34.201
+saliency         16.3519    15.6800     4.11    0.6225    23.684
+
+== Reproduction check against the published table ==
+  (only the row matching this run's attacker is meaningful)
