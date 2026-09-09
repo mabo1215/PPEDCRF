@@ -1,0 +1,82 @@
+{
+  "n_images": 200,
+  "n_classes": 21,
+  "n_bootstrap": 2000,
+  "seed": 20260910,
+  "gate": {
+    "model": "DeepLabV3-ResNet50",
+    "expected": 0.697352,
+    "observed": 0.697351,
+    "passed": true
+  },
+  "miou": {
+    "DeepLabV3-ResNet101": 0.713032,
+    "DeepLabV3-ResNet50": 0.697351,
+    "DeepLabV3-MobileNetV3": 0.645422,
+    "LR-ASPP-MobileNetV3": 0.630105,
+    "FCN-ResNet101": 0.629019,
+    "FCN-ResNet50": 0.591392
+  },
+  "adjacent_gaps": [
+    {
+      "better": "DeepLabV3-ResNet101",
+      "worse": "DeepLabV3-ResNet50",
+      "miou_better": 0.713032,
+      "miou_worse": 0.697351,
+      "gap": 0.01568,
+      "ci95": [
+        -0.014903,
+        0.04789
+      ]
+    },
+    {
+      "better": "DeepLabV3-ResNet50",
+      "worse": "DeepLabV3-MobileNetV3",
+      "miou_better": 0.697351,
+      "miou_worse": 0.645422,
+      "gap": 0.05193,
+      "ci95": [
+        0.014148,
+        0.088288
+      ]
+    },
+    {
+      "better": "DeepLabV3-MobileNetV3",
+      "worse": "LR-ASPP-MobileNetV3",
+      "miou_better": 0.645422,
+      "miou_worse": 0.630105,
+      "gap": 0.015317,
+      "ci95": [
+        -0.016102,
+        0.060178
+      ]
+    },
+    {
+      "better": "LR-ASPP-MobileNetV3",
+      "worse": "FCN-ResNet101",
+      "miou_better": 0.630105,
+      "miou_worse": 0.629019,
+      "gap": 0.001086,
+      "ci95": [
+        -0.05307,
+        0.044179
+      ]
+    },
+    {
+      "better": "FCN-ResNet101",
+      "worse": "FCN-ResNet50",
+      "miou_better": 0.629019,
+      "miou_worse": 0.591392,
+      "gap": 0.037627,
+      "ci95": [
+        0.016473,
+        0.063493
+      ]
+    }
+  ],
+  "median_adjacent_gap": 0.01568,
+  "max_adjacent_gap": 0.05193,
+  "full_span": 0.121639,
+  "declared_tolerance": 0.05,
+  "note": "mIoU is dataset-level over the ground-truth class set, ignore pixels excluded, pooled before the ratio -- the definition the utility pipeline uses. Intervals are paired image bootstraps on the gap, not marginal intervals on either mIoU."
+}

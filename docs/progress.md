@@ -3263,14 +3263,106 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
      正文 **13 页**、补充 6 页、摘要 243 词、0 undefined reference、
      无代码标识符。R9 从"部分"变为**已闭合**。
 
-# 遗留问题（更新）
+## R8/R9/R10 收官（2026-09-10，本机：排版、容差依据、参考文献）
 
-- **R8 仍未做完**（表格排版）：补充材料 9 张 + 生成表 4 张仍用 `\resizebox`
-  缩到 10pt 以下，需要拆列改 `\footnotesize`；Fig. 1 仍是 `\scriptsize`
-  （试过 footnotesize，13 页顶不住）；Table IV 仍只有 caption 指向 Patch-NetVLAD，
-  没有数据行。补充材料正好 6 页，没有余量。
-- **R9 剩一半**：0.05 这个容差仍然**没有给出理由**（评审要求给个依据，
-  例如"相邻两个已发表分割器之间的 mIoU 差距"这类），或者给两个容差看结论是否都成立。
-- **R10**：63 条参考文献只有 2 条有 DOI。
-  （注：我那轮评审说的"4 篇 arXiv 预印本应换成正式版"**是我说错了**——
-  DeepLabv3、McPherson、Dziugaite 确实只有 arXiv 版，按预印本引是对的。）
+420. 【已完成】**R8 全部落地：整个投稿包里再没有一处 `\resizebox`。**
+     补充材料 9 张 + 4 张生成表全部改成**不缩放的 `\footnotesize`**，
+     并按需要**拆列/改表头**才塞进栏宽（不是靠调小字号）：
+     - `placement_budget` 9 列拆成"常量图/选择图"两个**上下排的面板**（5 列）；
+     - `supp_direction_utility` 表头用 `\makecell` 折行；
+     - `supp_factorial` 去掉两个 `$\downarrow$`、缩进从 `\quad` 改 `0.4em`、
+       `tabcolsep` 1.2pt；
+     - `tab_adaptive` 表头 "Release evaluated"→"Release"、
+       行标签 "hardened direction"→"hardened"（caption 里补了定义）；
+     - `tab_frontier` 把 MSE 列换成**面板标题行**、"direction (EOT)"→"hardened"。
+     **验证方式不是看源码而是量 PDF**：两份文档里 8pt 以下的字符只剩
+     **数学上下标和页码**，正文/表体没有一处低于 `\footnotesize`。
+421. 【已完成】**Fig. 1 从 `\scriptsize` 提到 `\footnotesize`，而且没多花页数。**
+     上一轮"试过 footnotesize，13 页顶不住"的原因是只改字号没改盒宽：
+     字大一号每个盒子里的文字就多折一行。这次**同步把 text width 放宽**
+     （3.55→3.95cm / 1.45→1.6cm / 6.2→6.9cm，栏宽本来就有余量），
+     行数不变，所以高度基本不变。
+422. 【已完成】**Table IV 现在有四个攻击者的数据行**，不再是"caption 指路"。
+     新增 Patch-NetVLAD 与 ViT-B/16 两块。**关键是统计口径统一**：
+     这两棵树是单独跑的，正文引的是 place-clustered 区间，
+     而 Table IV 其余行是 query bootstrap + Wilcoxon，
+     所以生成器**直接 import `analyze_tifs_d6` 的 `load`/`compare`**
+     用同一个统计量重算，而不是把两种区间混进一张表。
+     重算结果与正文的 place-clustered 区间几乎重合
+     （PNV `[-0.231,-0.153]` vs `[-0.2320,-0.1507]`）。
+423. 【已完成】**R9 的容差终于有了依据，而且是量出来的，不是引来的。**
+     新脚本 `measure_segmenter_spread.py`：把 **6 个已发表分割器**
+     （torchvision 的 COCO-with-VOC-labels 权重）放到**同一批 200 张 VOC 图、
+     同一个工作分辨率**下打分，mIoU 从 0.5914 到 0.7130，
+     **相邻档中位差 0.0157、最大 0.0519、全幅 0.1216**。
+     于是：**声明的 0.05 ≈ 六个已发表选择之间最大的一次降级**（是宽松的一条线），
+     **严格档取相邻中位差 0.016**。Table V 现在**两个容差各一列**。
+     - **结论有实质变化**：0.05 下操作点是"未决"，**0.016 下就是被否**
+       （没有一格整段达标，只剩 3 格跨线，其中只有 MSE 5.0 的 direction
+       真的压低了检索 0.210→0.141）。正文明说"判决取决于画哪条线，所以两条都报"。
+424. 【教训：这个测量第一版就被自己的闸门抓住了】脚本要求
+     **DeepLabV3-ResNet50 必须复现效用导出里已有的 0.697352**。
+     第一版按**原始分辨率**评，读出 **0.7824 → 闸门 FAIL**。
+     原因是效用流水线把图缩到 **192×320**（标签用最近邻），
+     容差是在那个尺度上读的。改成**直接 import 流水线自己的
+     `_read_image`/`_resize_if_needed`** 之后读到 **0.697351（差 1e-6）→ PASS**。
+     如果没有这个闸门，我会拿一个**尺度不同的 spread** 去校准容差，
+     数字看着都很合理，但校准的根本不是同一个量。
+425. 【已完成】**R10：DOI 从 2 条补到 46 条**，全部经 Crossref 核对 + doi.org 实测可解析。
+     顺带查出并修掉三处**真错**，这些比"补全"更要紧：
+     - `liao2022kitti360` 原有的 DOI **在 doi.org 上 404**（不是注册过的 DOI），
+       换成正确的 `10.1109/TPAMI.2022.3179507`；
+     - `arandjelovic2016netvlad` 的标题**根本不是真实论文名**，
+       改回 "NetVLAD: CNN Architecture for Weakly Supervised Place Recognition"；
+     - `ribaric2016deidentification` 标题被截断，补全。
+     `le2022rethinking` **确实有正式版**（IEEE WIFS 2022, pp. 1--6），已从 arXiv 升级；
+     `wang2005dynamic` 年份 2005→**2006**、`zhou2020personal` 2020→**2021**
+     （都按新加的 DOI 指向的版本核对过，原来的年份与 DOI 自相矛盾）。
+426. 【已完成】**参考文献改成 IEEE 缩写体例**：34 个 venue 名按官方缩写替换
+     （"Proceedings of the IEEE Conference on Computer Vision and Pattern
+     Recognition" → "Proc. IEEE Conf. Comput. Vis. Pattern Recognit."），
+     并按 IEEE 会议论文体例**删掉 @inproceedings 的 publisher/address/series**
+     （58 个字段）。这既是体例修正，也是**这轮压页的主力**：
+     正文一度到 14 页，光这一项就把参考文献缩短了约 12 行。
+427. 【已完成】**查出并修掉一个"印出来是错的"缺陷**：参考文献里 Mapillary 的
+     网址 `mapillary_sls` 在 PDF 里**下划线被吞掉**，印成 `mapillary sls`
+     ——点进去打不开。原因是默认 OT1 编码的罗马字体没有下划线字形。
+     三个文档都加 `\usepackage[T1]{fontenc}`，现在 PDF 里下划线**确实在**。
+428. 【已完成】**补充材料的两张 E1 表合成一张**（`multibackbone` + `bootstrap`）：
+     同样 18 格，区间直接排在 Δ 旁边，读者不用再左右对照两张表。
+     这是把补充材料从 7 页压回 6 页的主要一步。
+     另外修了两处**文字缺陷**：补充材料里
+     "This is what the margin analysis of the margin analysis of the main text says"
+     （整句重复），以及三处补充材料**自称"the Supplementary Material"**的自指。
+429. 【已完成】**审计器补上两族 claim，并修掉审计器自身一个漏洞**：
+     新增 6 个分割器 spread + 闸门 + Table IV 四攻击者的 7 条，共 **186 条 / 186 verified**。
+     漏洞：`load()` 是 CSV 读取器，直接喂 `.jsonl` 不会报错，
+     只会把整行 JSON 当成一个字段名**静默返回垃圾**；
+     另加了 `load_jsonl()`，没有把新数据塞进旧读取器。
+430. 【已完成】**摘要补上第四条 qualification（自适应攻击者）**，
+     评审的 presentation note 要求；靠压掉 12 个词腾出预算，**249 词**（限 250）。
+     Contributions 里已知 Jacobian 那条**注明结果在补充材料**（同一 note）。
+     cover letter 同步：三条→四条 qualification、加一段容差依据、
+     并把"代码可向审稿人提供"改成**公开仓库 + 扩展报告，无需凭据、表格核验不需要 GPU**。
+431. 【状态】**主文 13 页 / 补充材料 6 页 / 扩展报告 12 页，四个文档 0 个 overfull box、
+     0 个 undefined reference/citation**；19 个浮动体全部被正文引用；
+     两个文档 0 个代码标识符（新写的
+     `\texttt{extended\_evidence\_report.pdf}` 当场按规则删掉了）；
+     摘要 249 词；审计器 186/186。
+
+# 遗留问题（更新：R8/R9/R10 已闭合，只剩这些）
+
+- **【R10，需要你决定】DOI 补齐了，但投稿 PDF 里印不出来。**
+  venue 指定的 `IEEEtran.bst`（v1.14，最新官方版）**完全不支持 `doi` 字段**
+  ——我已确认该文件里没有任何 doi 相关代码。所以 46 条 DOI 现在只在 `ref.bib` 里，
+  对读者、对最终排版、对 artifact 都有用，但审稿人翻 PDF 仍然看不到 DOI。
+  **建议：就这样交**（偏离 venue 指定的 bst 风险更大，而且 R10 的实质部分
+  ——正式版替换、错 DOI 修正、错标题修正——已经做完）。
+  如果你想让 DOI 出现在 PDF 里，需要换 bst 或把 DOI 塞进 note 字段，
+  代价是**参考文献会长约 50--90 行，13 页一定超**。
+- **【请你过目】责任使用（responsible use）与数据条款那两段措辞是我替你写的**，
+  投稿前请自己读一遍，尤其是"我们把审计协议而不是扰动本身当作贡献"这句定性。
+- **【我发现的一个既有缺口，不急】补充材料 E1 那张表（18 格 raw/PPEDCRF/Δ/CI）
+  的数字不在审计器覆盖范围里**，186 条 claim 一条都没指向它。
+  它不是正文主张的支撑表（正文只引"18 格里 5 格区间不含零"这一句），
+  所以这轮没动;要补的话是给 E1 的导出树写一族 claim。

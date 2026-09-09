@@ -49,6 +49,32 @@ def fmt_p(p):
     return "$%.0f{\\times}10^{-%d}$" % (p, exp)
 
 
+def held_out_summary(csv_paths):
+    """Transfer statistics for an attacker that has its own export tree.
+
+    The two held-out attackers (a VGG16/NetVLAD retriever and a ViT-B/16 one)
+    were run separately from the D6 sweep, so their rows cannot come from the
+    D6 summaries. They must still be the *same* statistic as the rest of the
+    table, or the table mixes units of inference: the query-level bootstrap and
+    Wilcoxon signed-rank of ``analyze_tifs_d6`` are therefore imported and
+    applied to those exports rather than reimplemented here. The place-clustered
+    intervals the text quotes for these attackers are a different unit and stay
+    in the text.
+    """
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from analyze_tifs_d6 import compare, load
+
+    hits, _ = load(csv_paths)
+    out = {}
+    for cond in ("transfer_3", "white_box"):
+        st = compare(hits, "none", cond)
+        if st is not None:
+            out[cond] = st
+    return out
+
+
 def figure(summaries, out):
     plt.rcParams.update({
         "font.family": "serif", "font.size": 7, "axes.labelsize": 7.5,
@@ -104,18 +130,21 @@ def figure(summaries, out):
     print("figure -> %s" % out)
 
 
-def transfer_table(summaries, out):
+def transfer_table(summaries, held_out, out):
     lines = [
         r"\begin{table}[t]", r"\centering",
         r"\caption{Direction transfers with no attacker access of any kind, and",
         r"how much of the benefit is reachable shrinks as the attacker gets",
         r"stronger. $\Delta$ is paired against the isotropic control, with a",
         r"query-level bootstrap interval and a Wilcoxon signed-rank test over the",
-        r"400 per-query differences, seeds averaged within a query. Place-clustered",
-        r"intervals for the headline rows are given in \S\ref{sec:direction}. Patch-NetVLAD, the third held-out attacker, is reported in
-the text of \S\ref{sec:direction}.}",
+        r"per-query differences, seeds averaged within a query. All four",
+        r"attackers are held out from the optimiser; the lower two are held out",
+        r"from the surrogate ensemble's trunks as well, and the trunk of the last",
+        r"appears in no surrogate at all. Place-clustered",
+        r"intervals for the headline rows are given in \S\ref{sec:direction}.}",
         r"\label{tab:transfer}",
-        r"\resizebox{\columnwidth}{!}{%",
+        r"\footnotesize",
+        r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{lccc}", r"\hline",
         r"Direction from & Top-1 $\downarrow$ & $\Delta$ (95\% CI) & $p$ \\",
         r"\hline",
@@ -125,24 +154,38 @@ the text of \S\ref{sec:direction}.}",
     names = {"transfer_1": "1 surrogate", "transfer_2": "2 surrogates",
              "transfer_3": "3 surrogates", "transfer_4": "4 surrogates",
              "white_box": "white box"}
+
+    def row(label, cell):
+        return (r"%s & %.4f & $%+.4f$ [%+.3f, %+.3f] & %s \\"
+                % (label, cell["top1"], cell["delta"], cell["ci_low"],
+                   cell["ci_high"], fmt_p(cell["wilcoxon_p"])))
+
     for key, s in summaries:
         tag = "resnet18" if "ResNet18" in key else "mixvpr"
         lines.append(r"\multicolumn{4}{l}{%s} \\" % titles[tag])
         ctrl = list(s["transfer"].values())[0]["control"]
         lines.append(r"none (isotropic control) & %.4f & --- & --- \\" % ctrl)
-        for cond in ("transfer_1", "transfer_2", "transfer_3", "transfer_4"):
-            if cond not in s["transfer"]:
-                continue
-            c = s["transfer"][cond]
-            lines.append(r"%s & %.4f & $%+.4f$ [%+.3f, %+.3f] & %s \\"
-                         % (names[cond], c["top1"], c["delta"], c["ci_low"],
-                            c["ci_high"], fmt_p(c["wilcoxon_p"])))
-        c = s["transfer"]["white_box"]
-        lines.append(r"white box & %.4f & $%+.4f$ [%+.3f, %+.3f] & %s \\"
-                     % (c["top1"], c["delta"], c["ci_low"], c["ci_high"],
-                        fmt_p(c["wilcoxon_p"])))
+        for cond in ("transfer_1", "transfer_2", "transfer_3", "transfer_4",
+                     "white_box"):
+            if cond in s["transfer"]:
+                lines.append(row(names[cond], s["transfer"][cond]))
         lines.append(r"\hline")
-    lines += [r"\end{tabular}%", r"}", r"\end{table}"]
+
+    # The two attackers whose trunks the surrogate ensemble does not share, on
+    # the same manifest, budget and seeds. Reported here rather than only in
+    # prose so that every attacker the section discusses is in the table.
+    for title, stats in held_out:
+        if not stats:
+            continue
+        lines.append(r"\multicolumn{4}{l}{%s} \\" % title)
+        ctrl = list(stats.values())[0]["control"]
+        lines.append(r"none (isotropic control) & %.4f & --- & --- \\" % ctrl)
+        for cond in ("transfer_3", "white_box"):
+            if cond in stats:
+                lines.append(row(names[cond], stats[cond]))
+        lines.append(r"\hline")
+
+    lines += [r"\end{tabular}", r"\end{table}"]
     open(out, "w", encoding="utf-8").write("\n".join(lines) + "\n")
     print("transfer table -> %s" % out)
 
@@ -158,7 +201,8 @@ def sanitize_table(summaries, out):
         r"interval spans zero. ``W.b.'' is the white-box bound under the same",
         r"transform.}",
         r"\label{tab:sanitize}",
-        r"\resizebox{\columnwidth}{!}{%",
+        r"\footnotesize",
+        r"\setlength{\tabcolsep}{2pt}",
         r"\begin{tabular}{llccccc}", r"\hline",
         r" & & \multicolumn{2}{c}{Unhardened} & \multicolumn{2}{c}{EOT-hardened} & \\",
         r"Attacker & Transform & Top-1 $\downarrow$ & $\Delta$ & Top-1 $\downarrow$ & $\Delta$ & W.b. \\",
@@ -179,7 +223,7 @@ def sanitize_table(summaries, out):
                             h["delta"], "%.4f" % wb if wb is not None else "--",
                             sep))
         lines.append(r"\hline")
-    lines += [r"\end{tabular}%", r"}", r"\end{table}"]
+    lines += [r"\end{tabular}", r"\end{table}"]
     open(out, "w", encoding="utf-8").write("\n".join(lines) + "\n")
     print("sanitize table -> %s" % out)
 
@@ -188,6 +232,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--summary_dir", default="src/outputs/tifs_d6/summary")
     ap.add_argument("--paper", default="paper")
+    ap.add_argument("--exports", default="src/exports",
+                    help="Where the held-out attackers' own export trees live.")
     args = ap.parse_args()
 
     summaries = []
@@ -196,12 +242,27 @@ def main() -> None:
                   encoding="utf-8") as fh:
             summaries.append((label, json.load(fh)))
 
+    # Two attackers with no surrogate trunk in common with the ensemble. Absent
+    # exports leave their blocks out rather than failing the whole build, so the
+    # tables can still be regenerated on a checkout without them.
+    held_out = []
+    for title, tree, stem in (
+            (r"\textit{Third attacker: Patch-NetVLAD, a VGG16 trunk under "
+             r"NetVLAD}", "tifs_a7b", "a7b_pnv_plain"),
+            (r"\textit{Fourth attacker: ViT-B/16, a trunk no surrogate has}",
+             "tifs6_vit", "vit_plain")):
+        path = os.path.join(args.exports, tree, stem + ".csv")
+        held_out.append((title, held_out_summary([path])
+                         if os.path.exists(path) else {}))
+        if not os.path.exists(path):
+            print("[warn] %s missing; its block is omitted" % path)
+
     gen = os.path.join(args.paper, "generated")
     os.makedirs(gen, exist_ok=True)
     os.makedirs(os.path.join(args.paper, "figs"), exist_ok=True)
     figure(summaries, os.path.join(args.paper, "figs",
                                    "fig_preprocessing_eot.pdf"))
-    transfer_table(summaries, os.path.join(gen, "tab_transfer.tex"))
+    transfer_table(summaries, held_out, os.path.join(gen, "tab_transfer.tex"))
     sanitize_table(summaries, os.path.join(gen, "tab_sanitize.tex"))
 
     # A one-line summary of the finding the held-out block exists to test.

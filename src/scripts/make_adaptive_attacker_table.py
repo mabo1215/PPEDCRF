@@ -22,9 +22,11 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
-EXPOSURES = [("isotropic", "isotropic noise"),
+# Printed labels are kept short: at six columns the long forms push the table
+# past the text column, and the caption already names each exposure in full.
+EXPOSURES = [("isotropic", "isotropic"),
              ("direction", "direction"),
-             ("hardened_direction", "hardened direction")]
+             ("hardened_direction", "hardened")]
 GALLERIES = [("stock", "fixed index"), ("rebuilt", "re-indexed")]
 EVALS = [("isotropic", "isotropic"), ("transfer_3", "direction")]
 
@@ -75,15 +77,17 @@ def main() -> int:
         r"block of the ResNet18 attacker on one training exposure and evaluates it,",
         r"either with the gallery still indexed by the original model (fixed index)",
         r"or with the gallery re-embedded by the adapted encoder (re-indexed), on",
-        r"the 200 held-out queries under two releases. $\Delta$ is Top-1 minus the",
+        r"the 200 held-out queries under two releases; the hardened exposure is the",
+        r"direction optimised over attacker-side transforms. $\Delta$ is Top-1 minus the",
         r"unadapted attacker on the same queries, with a 95\% bootstrap interval",
         r"clustered on the 134 places those queries occupy; \emph{positive means",
         r"adaptation helped the attacker}.}",
         r"\label{tab:supp_adaptive}",
-        r"\resizebox{\columnwidth}{!}{%",
+        r"\footnotesize",
+        r"\setlength{\tabcolsep}{1.5pt}",
         r"\begin{tabular}{llcccc}",
         r"\hline",
-        r"Trained on & Gallery & Release evaluated & Top-1 & $\Delta$ & 95\% CI \\",
+        r"Trained on & Gallery & Release & Top-1 & $\Delta$ & 95\% CI \\",
         r"\hline",
     ]
     for c, label in EVALS:
@@ -101,7 +105,7 @@ def main() -> int:
                 star = r"$^{\ast}$" if (lo > 0 or hi < 0) else ""
                 lines.append(rf"{first} & {c_label} & {top1:.4f} & ${point:+.4f}${star} & $[{lo:+.3f},{hi:+.3f}]$ \\")
         lines.append(r"\hline")
-    lines += [r"\end{tabular}}", r"\end{table}", ""]
+    lines += [r"\end{tabular}", r"\end{table}", ""]
     Path(args.output).write_text("\n".join(lines), encoding="utf-8")
     print(f"[done] wrote {args.output}")
     return 0

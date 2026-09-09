@@ -78,6 +78,27 @@ def load(pattern: str) -> List[dict]:
     return []
 
 
+def load_jsonl(pattern: str) -> List[dict]:
+    """Every JSON object under a glob relative to an export root.
+
+    Separate from load() because that one is a CSV reader: handing it a .jsonl
+    file returns one row per line whose single key is the whole JSON text, which
+    fails silently rather than loudly.
+    """
+    import json
+
+    for root in ROOTS:
+        paths = sorted(globmod.glob(str(root / pattern)))
+        if not paths:
+            continue
+        rows: List[dict] = []
+        for path in paths:
+            with open(path, encoding="utf-8") as fh:
+                rows.extend(json.loads(line) for line in fh if line.strip())
+        return rows
+    return []
+
+
 def per_query(rows: Sequence[dict], select: Callable[[dict], bool],
               metric: str = "top1") -> Dict[str, float]:
     """query -> metric averaged over the seeds of the rows that pass select."""
@@ -699,6 +720,69 @@ for round_, iso, direction, delta in [
           f"${delta:.4f}$", delta, 5e-4, "tifs_a7b",
           _a7b(round_, "transfer_3", "delta"), locator=None)
 
+
+# --- the segmenter spread that calibrates the mIoU tolerance ----------------
+# The declared tolerance is only meaningful against a reference scale, so it is
+# calibrated against six published segmenters scored on the same 200 images at
+# the same working resolution. Recomputed here from the same pooled definition
+# the utility pipeline uses: per-class intersections and unions summed over
+# images before the ratio, over the ground-truth class set.
+def _spread(model: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load_jsonl("segmenter_spread/per_image.jsonl")
+        if not rows:
+            return None
+        classes, mine = set(), []
+        for r in rows:
+            classes.update(int(c) for c in r["gt_classes"])
+            if r["model"] == model:
+                mine.append(r)
+        if not mine:
+            return None
+        inter: Dict[int, int] = defaultdict(int)
+        union: Dict[int, int] = defaultdict(int)
+        for r in mine:
+            for key, (i_val, u_val) in r["seg_iu"].items():
+                inter[int(key)] += int(i_val)
+                union[int(key)] += int(u_val)
+        vals = [inter[c] / union[c] for c in sorted(classes) if union[c]]
+        return float(np.mean(vals)) if vals else None
+    return go
+
+
+for model, value in [
+        ("DeepLabV3-ResNet101", 0.7130), ("DeepLabV3-ResNet50", 0.6974),
+        ("DeepLabV3-MobileNetV3", 0.6454), ("LR-ASPP-MobileNetV3", 0.6301),
+        ("FCN-ResNet101", 0.6290), ("FCN-ResNet50", 0.5914)]:
+    claim(f"Spread/{model}", "\\S Downstream Utility (tolerance calibration)",
+          f"${value:.4f}$", value, 5e-5, "segmenter_spread", _spread(model),
+          source=SUPP)
+
+# The gate: the segmenter the frontier itself uses must land on the value the
+# utility runs already exported, or the calibration is measured on a different
+# scale from the tolerance it calibrates.
+claim("Spread/gate", "\\S Downstream Utility (tolerance calibration)",
+      "DeepLabV3--ResNet50 $0.6974$", 0.697352, 5e-4, "segmenter_spread",
+      _spread("DeepLabV3-ResNet50"), locator=None, source=SUPP)
+
+
+# --- the held-out attackers' rows in Table IV -------------------------------
+# The same cells the text quotes, checked where the table prints them, so the
+# two documents cannot drift apart on the four-attacker table.
+for cid, printed, value, fn in [
+        ("T4/PatchNetVLAD/isotropic", "0.4983", 0.4983,
+         _a7b("plain", "isotropic", "top1")),
+        ("T4/PatchNetVLAD/transfer_3", "0.3067", 0.3067,
+         _a7b("plain", "transfer_3", "top1")),
+        ("T4/PatchNetVLAD/delta", "$-0.1917$", -0.1917,
+         _a7b("plain", "transfer_3", "delta")),
+        ("T4/ViT/isotropic", "0.1808", 0.1808, _vit("plain", "isotropic", "top1")),
+        ("T4/ViT/transfer_3", "0.1575", 0.1575, _vit("plain", "transfer_3", "top1")),
+        ("T4/ViT/delta", "$-0.0233$", -0.0233, _vit("plain", "transfer_3", "delta")),
+        ("T4/ViT/white_box", "0.0000", 0.0000, _vit("plain", "white_box", "top1"))]:
+    tree = "tifs_a7b" if "PatchNetVLAD" in cid else "tifs6_vit"
+    claim(cid, "Table IV", printed, value, 5e-4, tree, fn,
+          source=TAB_TRANSFER)
 
 # --------------------------------------------------------------------------
 # reporting

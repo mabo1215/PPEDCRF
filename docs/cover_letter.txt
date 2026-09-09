@@ -46,15 +46,23 @@ dedicated place-recognition model, are:
   retains 49-99% of it.
 
 We have taken care to state these results at the strength the evidence
-supports, and we draw the Editor's attention to three deliberate
+supports, and we draw the Editor's attention to four deliberate
 qualifications. First, we claim no formal differential-privacy guarantee, and
 say so explicitly. Second, against the strong retriever, Top-5 and Top-10 fall
 far less than Top-1, so we describe the effect as ranking suppression rather
 than as location privacy. Third, the directional perturbation spends more
 downstream segmentation utility than isotropic noise at equal distortion, and
 attacker-side preprocessing recovers much of the effect unless the direction
-is optimised over those transforms. We report these costs rather than
-confining them to a limitations paragraph.
+is optimised over those transforms. Fourth, an attacker that fine-tunes on the
+release moves the correct place up its ranking without changing what comes
+first, under the adaptation budget we could afford. We report these costs
+rather than confining them to a limitations paragraph.
+
+On the utility side we also give the tolerance a reference scale rather than
+asserting one: the mIoU tolerance against which we judge admissibility is
+calibrated against the spread between six published segmenters scored on the
+same images, and we report both a generous and a strict tolerance so the Editor
+can see which verdicts depend on that choice.
 
 We also wish to be explicit about positioning. Mask-guided adversarial
 perturbation has been proposed for location privacy before, and we cite and
@@ -73,9 +81,11 @@ publishing it is preferable to leaving the field's central design assumption
 untested.
 
 This manuscript has not been published previously and is not under
-consideration elsewhere. All authors have approved the submission. Code and
-the benchmark manifests needed to reproduce the reported tables are available
-to reviewers.
+consideration elsewhere. All authors have approved the submission. The code,
+the benchmark manifests and the per-query exports behind every reported table
+are in a public repository named in the manuscript, together with the extended
+evidence report the manuscript cites; no credentials are required, and the
+table verification runs without a GPU.
 
 Thank you for your time and consideration.
 
