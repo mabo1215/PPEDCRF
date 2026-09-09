@@ -1,0 +1,444 @@
+{
+  "cells": {
+    "two_city/new_to_old/cosplace": {
+      "gallery_size": "1000",
+      "places": 54,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/n2o/cosplace/geotagged_vpr_per_query.csv"
+    },
+    "two_city/new_to_old/mixvpr": {
+      "gallery_size": "1000",
+      "places": 54,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/n2o/mixvpr/geotagged_vpr_per_query.csv"
+    },
+    "two_city/new_to_old/patchnetvlad": {
+      "gallery_size": "1000",
+      "places": 54,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/n2o/patchnetvlad/geotagged_vpr_per_query.csv"
+    },
+    "two_city/new_to_old/resnet18": {
+      "gallery_size": "1000",
+      "places": 54,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/n2o/resnet18/geotagged_vpr_per_query.csv"
+    },
+    "two_city/new_to_old/resnet50": {
+      "gallery_size": "1000",
+      "places": 54,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/n2o/resnet50/geotagged_vpr_per_query.csv"
+    },
+    "two_city/new_to_old/vgg16": {
+      "gallery_size": "1000",
+      "places": 54,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/n2o/vgg16/geotagged_vpr_per_query.csv"
+    },
+    "two_city/old_to_new/cosplace": {
+      "gallery_size": "1000",
+      "places": 81,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/o2n/cosplace/geotagged_vpr_per_query.csv"
+    },
+    "two_city/old_to_new/mixvpr": {
+      "gallery_size": "1000",
+      "places": 81,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/o2n/mixvpr/geotagged_vpr_per_query.csv"
+    },
+    "two_city/old_to_new/patchnetvlad": {
+      "gallery_size": "1000",
+      "places": 81,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/o2n/patchnetvlad/geotagged_vpr_per_query.csv"
+    },
+    "two_city/old_to_new/resnet18": {
+      "gallery_size": "1000",
+      "places": 81,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/o2n/resnet18/geotagged_vpr_per_query.csv"
+    },
+    "two_city/old_to_new/resnet50": {
+      "gallery_size": "1000",
+      "places": 81,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/o2n/resnet50/geotagged_vpr_per_query.csv"
+    },
+    "two_city/old_to_new/vgg16": {
+      "gallery_size": "1000",
+      "places": 81,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/o2n/vgg16/geotagged_vpr_per_query.csv"
+    },
+    "two_city/primary/cosplace": {
+      "gallery_size": "1000",
+      "places": 155,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/all/cosplace/geotagged_vpr_per_query.csv"
+    },
+    "two_city/primary/mixvpr": {
+      "gallery_size": "1000",
+      "places": 155,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/all/mixvpr/geotagged_vpr_per_query.csv"
+    },
+    "two_city/primary/patchnetvlad": {
+      "gallery_size": "1000",
+      "places": 155,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/all/patchnetvlad/geotagged_vpr_per_query.csv"
+    },
+    "two_city/primary/resnet18": {
+      "gallery_size": "1000",
+      "places": 155,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/all/resnet18/geotagged_vpr_per_query.csv"
+    },
+    "two_city/primary/resnet50": {
+      "gallery_size": "1000",
+      "places": 155,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/all/resnet50/geotagged_vpr_per_query.csv"
+    },
+    "two_city/primary/vgg16": {
+      "gallery_size": "1000",
+      "places": 155,
+      "queries": 200,
+      "rows": 800,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904/geotagged_vpr/all/vgg16/geotagged_vpr_per_query.csv"
+    },
+    "wide8/new_to_old/cosplace": {
+      "gallery_size": "2000",
+      "places": 119,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/n2o8/cosplace/geotagged_vpr_per_query.csv"
+    },
+    "wide8/new_to_old/mixvpr": {
+      "gallery_size": "2000",
+      "places": 119,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/n2o8/mixvpr/geotagged_vpr_per_query.csv"
+    },
+    "wide8/new_to_old/patchnetvlad": {
+      "gallery_size": "2000",
+      "places": 119,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/n2o8/patchnetvlad/geotagged_vpr_per_query.csv"
+    },
+    "wide8/new_to_old/resnet18": {
+      "gallery_size": "2000",
+      "places": 119,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/n2o8/resnet18/geotagged_vpr_per_query.csv"
+    },
+    "wide8/new_to_old/resnet50": {
+      "gallery_size": "2000",
+      "places": 119,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/n2o8/resnet50/geotagged_vpr_per_query.csv"
+    },
+    "wide8/new_to_old/vgg16": {
+      "gallery_size": "2000",
+      "places": 119,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/n2o8/vgg16/geotagged_vpr_per_query.csv"
+    },
+    "wide8/old_to_new/cosplace": {
+      "gallery_size": "2000",
+      "places": 160,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/o2n8/cosplace/geotagged_vpr_per_query.csv"
+    },
+    "wide8/old_to_new/mixvpr": {
+      "gallery_size": "2000",
+      "places": 160,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/o2n8/mixvpr/geotagged_vpr_per_query.csv"
+    },
+    "wide8/old_to_new/patchnetvlad": {
+      "gallery_size": "2000",
+      "places": 160,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/o2n8/patchnetvlad/geotagged_vpr_per_query.csv"
+    },
+    "wide8/old_to_new/resnet18": {
+      "gallery_size": "2000",
+      "places": 160,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/o2n8/resnet18/geotagged_vpr_per_query.csv"
+    },
+    "wide8/old_to_new/resnet50": {
+      "gallery_size": "2000",
+      "places": 160,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/o2n8/resnet50/geotagged_vpr_per_query.csv"
+    },
+    "wide8/old_to_new/vgg16": {
+      "gallery_size": "2000",
+      "places": 160,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session4/n6_crosstime8/o2n8/vgg16/geotagged_vpr_per_query.csv"
+    },
+    "wide8/primary/cosplace": {
+      "gallery_size": "2000",
+      "places": 277,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session3/n1_expanded_msls/cosplace/geotagged_vpr_per_query.csv"
+    },
+    "wide8/primary/mixvpr": {
+      "gallery_size": "2000",
+      "places": 277,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session3/n1_expanded_msls/mixvpr/geotagged_vpr_per_query.csv"
+    },
+    "wide8/primary/patchnetvlad": {
+      "gallery_size": "2000",
+      "places": 277,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session3/n1_expanded_msls/patchnetvlad/geotagged_vpr_per_query.csv"
+    },
+    "wide8/primary/resnet18": {
+      "gallery_size": "2000",
+      "places": 277,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session3/n1_expanded_msls/resnet18/geotagged_vpr_per_query.csv"
+    },
+    "wide8/primary/resnet50": {
+      "gallery_size": "2000",
+      "places": 277,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session3/n1_expanded_msls/resnet50/geotagged_vpr_per_query.csv"
+    },
+    "wide8/primary/vgg16": {
+      "gallery_size": "2000",
+      "places": 277,
+      "queries": 400,
+      "rows": 1600,
+      "seeds": [
+        "1234",
+        "1235",
+        "1236"
+      ],
+      "source": "src/outputs/icme2027_revision_20260904_session3/n1_expanded_msls/vgg16/geotagged_vpr_per_query.csv"
+    }
+  },
+  "columns": [
+    "query_id",
+    "place_id",
+    "variant",
+    "seed",
+    "correct_rank"
+  ],
+  "note": "Top-1/5/10 are recovered from correct_rank; the place label is the dataset's own cluster id and is the unit the supplement's intervals resample."
+}

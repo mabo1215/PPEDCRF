@@ -53,6 +53,12 @@ MAIN = REPO / "paper" / "main.tex"
 # limit, so the numbers it prints are located there rather than in MAIN.
 SUPP = REPO / "paper" / "supplementary.tex"
 TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
+# The two E1 tables are generated from the exports as well, so their numbers are
+# located in the generated files rather than in the supplement's own source.
+E1_SOURCE = {
+    "wide8": REPO / "paper" / "generated" / "tab_e1_wide8.tex",
+    "two_city": REPO / "paper" / "generated" / "tab_e1_multibackbone.tex",
+}
 
 
 # --------------------------------------------------------------------------
@@ -783,6 +789,230 @@ for cid, printed, value, fn in [
     tree = "tifs_a7b" if "PatchNetVLAD" in cid else "tifs6_vit"
     claim(cid, "Table tab:transfer", printed, value, 5e-4, tree, fn,
           source=TAB_TRANSFER)
+
+
+# --- E1, the real-place retrieval tables in the supplement ------------------
+# These 36 cells and their intervals were the last printed numbers in either
+# document with no claim behind them. The runs that produced them are not
+# committed, so the columns needed to recompute them were exported to
+# e1_msls_rows (see export_e1_claim_rows.py) and are read from there.
+#
+# A cell is one manifest and one attacker backbone. "raw" is the unperturbed
+# query, "full" the mechanism's release; each query is collapsed to its
+# seed-averaged hit rate before averaging over queries, so a seed that happened
+# to run twice cannot outvote one that ran once.
+_E1_CACHE: Dict[str, Optional[tuple]] = {}
+
+
+def _e1_cell(scale: str, manifest: str, backbone: str) -> Optional[tuple]:
+    key = f"{scale}/{manifest}/{backbone}"
+    if key not in _E1_CACHE:
+        rows = load(f"e1_msls_rows/{key}.csv")
+        if not rows:
+            _E1_CACHE[key] = None
+        else:
+            raw: Dict[str, float] = {}
+            full: Dict[str, List[float]] = defaultdict(list)
+            place: Dict[str, str] = {}
+            for r in rows:
+                hit = float(int(r["correct_rank"]) == 1)
+                place[r["query_id"]] = r["place_id"]
+                if r["variant"] == "raw":
+                    raw[r["query_id"]] = hit
+                else:
+                    full[r["query_id"]].append(hit)
+            shared = sorted(set(raw) & set(full))
+            _E1_CACHE[key] = (raw, {q: float(np.mean(full[q])) for q in shared},
+                              place, shared) if shared else None
+    return _E1_CACHE[key]
+
+
+def _e1(scale: str, manifest: str, backbone: str, stat: str):
+    def go() -> Optional[float]:
+        cell = _e1_cell(scale, manifest, backbone)
+        if cell is None:
+            return None
+        raw, full, _place, shared = cell
+        if stat == "raw":
+            return float(np.mean([raw[q] for q in shared]))
+        if stat == "full":
+            return float(np.mean([full[q] for q in shared]))
+        return float(np.mean([full[q] - raw[q] for q in shared]))
+    return go
+
+
+# The interval resamples place clusters, not queries: the 200 queries of a
+# two-city manifest fall into 155, 81 or 54 places, and queries of one place are
+# not independent. These constants are the ones make_e1_tables.py prints with,
+# so the endpoints reproduce to the printed precision rather than only to
+# Monte-Carlo noise. That is worth having: when the table was maintained by hand
+# two of its eighteen endpoints sat about 0.005 outside anything this bootstrap
+# produces under any seed, and nothing caught it.
+E1_CI_TOL = 5e-4
+E1_CI_SEED = 20260910
+E1_CI_DRAWS = 10000
+_E1_CI_CACHE: Dict[str, Optional[Tuple[float, float]]] = {}
+
+
+def _e1_endpoints(manifest: str, backbone: str) -> Optional[Tuple[float, float]]:
+    """Both endpoints at once: the bootstrap is the expensive part, not the
+    percentile, so computing it twice per cell would double the audit's cost."""
+    key = f"{manifest}/{backbone}"
+    if key not in _E1_CI_CACHE:
+        cell = _e1_cell("two_city", manifest, backbone)
+        if cell is None:
+            _E1_CI_CACHE[key] = None
+        else:
+            raw, full, place, shared = cell
+            diff = np.array([full[q] - raw[q] for q in shared])
+            groups: Dict[str, List[int]] = defaultdict(list)
+            for i, q in enumerate(shared):
+                groups[place[q]].append(i)
+            clusters = [np.array(v) for v in groups.values()]
+            rng = np.random.default_rng(E1_CI_SEED)
+            draws = np.empty(E1_CI_DRAWS)
+            for k in range(E1_CI_DRAWS):
+                pick = rng.integers(0, len(clusters), len(clusters))
+                draws[k] = diff[np.concatenate([clusters[j] for j in pick])].mean()
+            lo, hi = np.percentile(draws, [2.5, 97.5])
+            _E1_CI_CACHE[key] = (float(lo), float(hi))
+    return _E1_CI_CACHE[key]
+
+
+def _e1_interval(manifest: str, backbone: str, side: int):
+    def go() -> Optional[float]:
+        ends = _e1_endpoints(manifest, backbone)
+        return None if ends is None else ends[side]
+    return go
+
+
+POINTS = [
+    ("wide8", "primary", "resnet18", 0.2100, 0.1958, '$-0.0142$'),
+    ("wide8", "primary", "resnet50", 0.2675, 0.2283, '$-0.0392$'),
+    ("wide8", "primary", "vgg16", 0.1775, 0.1600, '$-0.0175$'),
+    ("wide8", "primary", "cosplace", 0.4725, 0.4683, '$-0.0042$'),
+    ("wide8", "primary", "mixvpr", 0.7925, 0.7800, '$-0.0125$'),
+    ("wide8", "primary", "patchnetvlad", 0.5125, 0.4883, '$-0.0242$'),
+    ("wide8", "old_to_new", "resnet18", 0.1550, 0.1608, '$+0.0058$'),
+    ("wide8", "old_to_new", "resnet50", 0.2375, 0.1792, '$-0.0583$'),
+    ("wide8", "old_to_new", "vgg16", 0.1450, 0.1233, '$-0.0217$'),
+    ("wide8", "old_to_new", "cosplace", 0.4950, 0.4950, '$\\pm0.0000$'),
+    ("wide8", "old_to_new", "mixvpr", 0.8200, 0.7925, '$-0.0275$'),
+    ("wide8", "old_to_new", "patchnetvlad", 0.4950, 0.4383, '$-0.0567$'),
+    ("wide8", "new_to_old", "resnet18", 0.2550, 0.2658, '$+0.0108$'),
+    ("wide8", "new_to_old", "resnet50", 0.3400, 0.2800, '$-0.0600$'),
+    ("wide8", "new_to_old", "vgg16", 0.2300, 0.2183, '$-0.0117$'),
+    ("wide8", "new_to_old", "cosplace", 0.5750, 0.5733, '$-0.0017$'),
+    ("wide8", "new_to_old", "mixvpr", 0.8450, 0.8233, '$-0.0217$'),
+    ("wide8", "new_to_old", "patchnetvlad", 0.6125, 0.5867, '$-0.0258$'),
+    ("two_city", "primary", "resnet18", 0.1700, 0.1517, '$-0.0183$'),
+    ("two_city", "primary", "resnet50", 0.2150, 0.1650, '$-0.0500$'),
+    ("two_city", "primary", "vgg16", 0.1400, 0.1200, '$-0.0200$'),
+    ("two_city", "primary", "cosplace", 0.4050, 0.3933, '$-0.0117$'),
+    ("two_city", "primary", "mixvpr", 0.7750, 0.7650, '$-0.0100$'),
+    ("two_city", "primary", "patchnetvlad", 0.4600, 0.4417, '$-0.0183$'),
+    ("two_city", "old_to_new", "resnet18", 0.1400, 0.1683, '$+0.0283$'),
+    ("two_city", "old_to_new", "resnet50", 0.2050, 0.1967, '$-0.0083$'),
+    ("two_city", "old_to_new", "vgg16", 0.1500, 0.1033, '$-0.0467$'),
+    ("two_city", "old_to_new", "cosplace", 0.5000, 0.4817, '$-0.0183$'),
+    ("two_city", "old_to_new", "mixvpr", 0.8150, 0.8000, '$-0.0150$'),
+    ("two_city", "old_to_new", "patchnetvlad", 0.5150, 0.4383, '$-0.0767$'),
+    ("two_city", "new_to_old", "resnet18", 0.1550, 0.1367, '$-0.0183$'),
+    ("two_city", "new_to_old", "resnet50", 0.2150, 0.2467, '$+0.0317$'),
+    ("two_city", "new_to_old", "vgg16", 0.1450, 0.1817, '$+0.0367$'),
+    ("two_city", "new_to_old", "cosplace", 0.5050, 0.4950, '$-0.0100$'),
+    ("two_city", "new_to_old", "mixvpr", 0.8150, 0.7800, '$-0.0350$'),
+    ("two_city", "new_to_old", "patchnetvlad", 0.5150, 0.5183, '$+0.0033$'),
+]
+
+INTERVALS = [
+    ("primary", "resnet18", -0.045, +0.007),
+    ("primary", "resnet50", -0.087, -0.014),
+    ("primary", "vgg16", -0.054, +0.014),
+    ("primary", "cosplace", -0.038, +0.014),
+    ("primary", "mixvpr", -0.035, +0.014),
+    ("primary", "patchnetvlad", -0.061, +0.023),
+    ("old_to_new", "resnet18", +0.004, +0.055),
+    ("old_to_new", "resnet50", -0.078, +0.066),
+    ("old_to_new", "vgg16", -0.093, -0.007),
+    ("old_to_new", "cosplace", -0.057, +0.021),
+    ("old_to_new", "mixvpr", -0.049, +0.016),
+    ("old_to_new", "patchnetvlad", -0.134, -0.020),
+    ("new_to_old", "resnet18", -0.057, +0.011),
+    ("new_to_old", "resnet50", -0.040, +0.095),
+    ("new_to_old", "vgg16", -0.026, +0.099),
+    ("new_to_old", "cosplace", -0.053, +0.029),
+    ("new_to_old", "mixvpr", -0.067, -0.011),
+    ("new_to_old", "patchnetvlad", -0.037, +0.039),
+]
+
+
+for scale, manifest, backbone, raw_v, full_v, delta_printed in POINTS:
+    stem = f"E1/{scale}/{manifest}/{backbone}"
+    claim(f"{stem}/raw", "Table tab:e1_" + scale, f"{raw_v:.4f}", raw_v, 5e-5,
+          "e1_msls_rows", _e1(scale, manifest, backbone, "raw"),
+          source=E1_SOURCE[scale])
+    claim(f"{stem}/released", "Table tab:e1_" + scale, f"{full_v:.4f}", full_v,
+          5e-5, "e1_msls_rows", _e1(scale, manifest, backbone, "full"),
+          source=E1_SOURCE[scale])
+    claim(f"{stem}/delta", "Table tab:e1_" + scale, delta_printed,
+          round(full_v - raw_v, 6), 5e-5, "e1_msls_rows",
+          _e1(scale, manifest, backbone, "delta"), source=E1_SOURCE[scale])
+
+for manifest, backbone, lo, hi in INTERVALS:
+    printed = f"[{lo:+.3f},{hi:+.3f}]"
+    for side, value in ((0, lo), (1, hi)):
+        claim(f"E1/two_city/{manifest}/{backbone}/ci{side}",
+              "Table tab:e1_multibackbone", printed, value, E1_CI_TOL,
+              "e1_msls_rows", _e1_interval(manifest, backbone, side),
+              source=E1_SOURCE["two_city"])
+
+
+# The sentence the manuscript actually leans on: the supplement says the cell
+# counts are directional rather than eighteen independent findings, because only
+# five of the eighteen intervals exclude zero. Recomputed as a count, which is
+# stable where an endpoint is not.
+def _e1_significant() -> Optional[float]:
+    n = 0
+    for manifest, backbone, _lo, _hi in INTERVALS:
+        low = _e1_interval(manifest, backbone, 0)()
+        high = _e1_interval(manifest, backbone, 1)()
+        if low is None or high is None:
+            return None
+        n += int(low > 0 or high < 0)
+    return float(n)
+
+
+# The caption counts are derived numbers too, and the kind that drifts quietly:
+# one wide-8 difference is -2.2e-18, so counting raw floats rather than the
+# column as printed once made a caption disagree with its own table.
+def _e1_negative(scale: str):
+    def go() -> Optional[float]:
+        n = 0
+        for s_, m_, b_, *_ in POINTS:
+            if s_ != scale:
+                continue
+            value = _e1(s_, m_, b_, "delta")()
+            if value is None:
+                return None
+            n += int(round(value, 4) < 0)
+        return float(n)
+    return go
+
+
+for scale, negative in (("wide8", 15.0), ("two_city", 14.0)):
+    # Located on the short phrase, not the whole sentence: the caption is
+    # generated with its own line breaks and the long form is not contiguous.
+    claim(f"E1/{scale}/n_negative", "Table tab:e1_" + scale,
+          f"{negative:.0f} of 18 cells are negative", negative, 0.5,
+          "e1_msls_rows", _e1_negative(scale), locator=f"{negative:.0f} of 18",
+          source=E1_SOURCE[scale])
+
+
+claim("E1/two_city/n_significant", "\\S Real-Place Retrieval Benchmark (E1)",
+      "5 of those 18 cells", 5.0, 0.5, "e1_msls_rows", _e1_significant,
+      source=SUPP)
+
 
 # --------------------------------------------------------------------------
 # reporting
