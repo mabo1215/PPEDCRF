@@ -220,6 +220,11 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--gallery_batch", type=int, default=128,
+                    help="gallery images per forward pass. The default "
+                         "reproduces every published run; lower it for a "
+                         "high-resolution backbone such as Patch-NetVLAD at "
+                         "480px, where 128 images exhaust a 32 GB card.")
     ap.add_argument("--sanitizer", default="none", choices=sorted(SANITIZERS),
                     help="G2 tier-1 adaptive adversary: preprocessing the "
                          "attacker applies to the received frame before "
@@ -331,7 +336,8 @@ def main() -> int:
             # trained against (fixed pretrained-model targets). Only the
             # query-side encoder -- used below for every condition's ranking
             # and as the white_box gradient target -- is replaced.
-            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor)
+            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor,
+                                               batch=args.gallery_batch)
             adapted = make_default_embedder(cfg).eval().to(device)
             state = torch.load(args.eval_checkpoint, map_location=device)
             adapted.load_state_dict(state, strict=True)
@@ -341,7 +347,8 @@ def main() -> int:
                   f"{args.eval_checkpoint} (gallery stays stock-indexed)",
                   flush=True)
         else:
-            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor)
+            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor,
+                                               batch=args.gallery_batch)
         embedders[b] = e
         sizes[b] = cfg.input_size
         torch.cuda.empty_cache()
