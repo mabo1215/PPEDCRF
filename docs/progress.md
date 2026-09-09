@@ -2893,3 +2893,33 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
 - **还缺三棵导出树**：`tifs_a8`、`tifs_a8_hi`、`tifs_d6`（工作机或 PRO 6000）。
   拿到后 `cp -r` 进 `src/exports/` 提交即可到 140/140，命令在
   `src/exports/README.md`。
+
+## 本轮追加（2026-09-09 夜，重连 2c：WSL vs PowerShell 实测 + 又找回两棵树）
+
+380. 【已完成】**WSL 与 PowerShell 都实测了，结论支持现有规则**。
+     - **WSL：通，而且字符不丢。** 用一个带 `" ' \ $ { } | ` ` 的探针串做端到端 md5
+       比对，本机与远端 **完全一致**（`e66b323b...`）。
+     - **PowerShell + plink 内联命令：确实吃字符。** 同一个探针串发过去，
+       远端 bash 直接报 ``unexpected EOF while looking for matching ` ``——
+       **这就是规则里写的那个故障，这次有了复现证据**，不再只是经验之谈。
+     - PowerShell 本身可达（`Test-NetConnection` → `TcpTestSucceeded: True`），
+       且 `ssh.exe` / `plink.exe` / `pscp.exe` 都在。问题不在连通性，在引号解析。
+     - 试过 `plink -m 脚本文件` 绕开 PowerShell 解析，但 `echo y |` 喂主机密钥
+       会把 stdin 占掉导致挂起，没跑通。**结论不变：SSH 走 WSL。**
+
+381. 【已完成】**又找回两棵树，其中一棵是 R9 的关键证据，差一点就没了**。
+     - **上一轮我搜漏了**：2c 上有**两个 checkout**（`/root/autodl-tmp/PPEDCRF`
+       和 `/root/autodl-tmp/ppedcrf_tifs5/PPEDCRF`），我第一遍只搜了主 checkout。
+       这次做了全盘 `find /`。
+     - 找到 **`tifs_a7b`**（488 KB，Patch-NetVLAD 那一轮）和
+       **`tifs_a8_mse5.0`**（544 KB）。**两棵在别处都不存在**——
+       `tifs_a7b` 正是 R9 外部效度的第三个骨干，再重启一次机器就没了。
+     - **照例复算而不是假定**：四个数全中——plain 的 isotropic **0.4983** /
+       direction **0.3067**（Δ **−0.1917**），EOT 的 **0.4983** / **0.2858**
+       （Δ **−0.2125**），与正文分毫不差。
+     - **顺手把 A7b 的六条 claim 注册进审计器**（P3 里挂着的一项）：
+       **claim 数 140 → 146，verified 89 → 95，仍然 0 mismatched。**
+
+382. 【已确认】**`tifs_a8`、`tifs_a8_hi`、`tifs_d6` 确实不在 2c 上**——
+     全盘 find 搜过，两个 checkout 都没有，文件系统任何角落都没有。
+     **只剩工作机一个地方可找。**
