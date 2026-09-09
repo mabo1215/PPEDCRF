@@ -2826,3 +2826,28 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
 - **还缺三棵导出树**：`tifs_a8`、`tifs_a8_hi`、`tifs_d6`，在工作机或 PRO 6000 上。
   拿到后 `cp -r` 进 `src/exports/` 再提交，审计器就能到 140/140。命令写在
   `src/exports/README.md` 里。
+
+## 本轮再续（2026-09-09 傍晚，P1 第二批：换了正确的度量口径）
+
+376. 【已完成】用户批的两项都做了：**§Controlled Check 搬进补充材料**
+     （发现它和补充材料里那节几乎逐字重复，正文只留指路；两条只在正文里的
+     诚实性说明——"重尾列范数是建模选择不是实测"和"它给的是完美信息在该模型里
+     能赢多少，不是真实网络的上界"——一并搬进补充材料，没丢），
+     **§Experimental Protocol 压紧**（数字和结论一个没删，删的是叙述，
+     外加一个挂了一轮的注释掉的数据集表）。
+
+377. 【教训】**用源码行数估页数是错的，两次估算都因此偏离。**
+     旧 §Experimental Protocol 里有一个超长单行（"Unless otherwise stated..."
+     整段是一行），重排它看着像大改动，其实一个字没少。
+     **正确口径是排版字符数**：去掉注释和 `comment` 块之后，
+     全文 91,598 字符排 15 页 → **6,107 字符/页**。
+     - 本轮两批一共删掉 **3,032 字符 ≈ 0.5 页**，PDF 仍是 15 页
+       （半页跨不过页边界）。**还需要约 9,181 字符 ≈ 1.5 页。**
+     - 各节实际体量（字符 / 页当量）：The Other Axis 12,974 / 2.12；
+       The Null Holds 8,132 / 1.33；What Allocation Moves 6,930 / 1.13；
+       Experimental Protocol 6,833 / 1.12；Allocation II 5,725 / 0.94；
+       Which Part Does the Work 4,800 / 0.79；An Attacker That Adapts 4,678 / 0.77；
+       Introduction 4,512 / 0.74；Allocation I 4,468 / 0.73；Related Work 4,247 / 0.70；
+       Robustness to Preprocessing 3,981 / 0.65；Conclusion 3,385 / 0.55；
+       Contributions 3,214 / 0.53；What Is Actually Released 2,415 / 0.40。
+     - **补充材料 5 → 6 页**（搬进去的内容），TIFS 对补充材料无页数限制。
