@@ -2764,3 +2764,65 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
 **P3 第二轮写回**（把 A6/A7b 的数注册进审计器，把刚复算通过的 allocation 家族
 也注册进去，并像核 Figure 3 那样把其余每张图的 caption 与生成器逐一核对）。
 **X1 已闭合**（第 369 条），取而代之的新任务是**把两台机器的导出合到一处**（第 371 条）。
+
+## 本轮续（2026-09-09 傍晚，2c 复活：A6 溯源找回，审计器 75→89；P1 压页发现估算严重偏低）
+
+373. 【已完成】**按用户要求，导出树改成提交进 git，不再只躺在被 ignore 的目录里**。
+     新建 `src/exports/`（tracked），八棵老树 + 本轮从 2c 拿回的四棵，共 **29 MB / 168 个文件**。
+     - **为什么不打 tar 而是放散文件**：tar 要记得解压，散文件 clone 下来直接能读；
+       git 自己会压（27 MB 的 CSV 打包后约 7 MB）。
+     - **`*.log` 特殊处理**：仓库全局 ignore `*.log`，但对冻结的证据来说**日志就是溯源**，
+       所以 `src/exports/.gitignore` 里写了 `!*.log` 把它们收回来。
+     - **两个消费方都加了回退**：`audit_claim_consistency.py` 的 `ROOTS` 和
+       `build_artifact.sh` 的 `resolve_tree`，都是**先找 `src/outputs/` 再找 `src/exports/`**，
+       第一个命中的根赢，所以两边都有的树读的是原件，不会把副本拼进去。
+     - **补丁漏了一处，是跑出来才发现的**：dataset-level mIoU 那个读取函数直接用
+       `OUT / ...` 拼路径，没走 ROOTS，导致 `tifs_a5` 放进去了审计器还是看不见。
+       改完之后 `grep "OUT /"` 已无残留。**教训：加回退路径要 grep 全部直接拼路径的地方，
+       不能只改看起来是"入口"的那两个函数。**
+
+374. 【已完成】**2c 起来了（用户开的），A6 溯源拿回来，第 364/368 条的 P2 闭合**。
+     - `logs/a6.log` 里写得很清楚：hardened 曝光 epoch 0 的 `val_mrr=0.04718`，
+       unhardened 是 `0.05776`，两个都 `selecting checkpoints on 'mrr'` 并最终选中 epoch 8。
+       **正文写的 0.047 和 0.058 就是这两个数**，一字不差。原来担心的"没有溯源"解除。
+     - **只搬该搬的**：2c 上 `tifs_a6` 有 **901 MB**，几乎全是可重生成的扰动帧缓存（`.pt`），
+       不进 git。搬回来的是日志、run metadata 和留出 query id，共 24 KB。
+     - **意外收获**：2c 上还留着 `tifs_a5`（740 KB）和 `tifs_a8_mse60.0`（552 KB），
+       以及 `tifs_a6_eval`——原以为这三个只有工作机才有。
+     - **审计器从 75 verified 涨到 89，0 mismatched**。还缺三棵：
+       `tifs_a8`、`tifs_a8_hi`、`tifs_d6`。
+     - PRO 6000、H800、vGPU 3090 **三台都拒绝连接**（只探到 TCP 无 banner），
+       所以那三棵还得等工作机。
+
+375. 【进行中→需要用户决定】**P1 压页：用户批的四处全砍完了，只买到约 0.2 页，
+     不是计划里估的 1.6 页。这个估算错得很离谱，必须说清楚。**
+     - 已落地：§Secondary Benchmarks 整节删除（换成协议那节的一句指路，证据本身
+       在 Supplementary 里一点没少）；释放那节删掉重述预处理那节的开头；
+       自适应攻击者那节的学习率叙述压成三行；两处复述表格已有数值的散文压掉。
+     - **结果：main.tex 1565 → 1544 行，PDF 还是 15 页。** 上限 13。
+     - **量了一下真实的换算**：正文约 1450 行排成 15 页，**约 97 行/页**，
+       所以 2 页 ≈ **194 行**。四处加起来才 21 行。**四个候选从一开始就不可能够。**
+     - 各节实际行数（供选择）：The Other Axis 202、The Null Holds 139、
+       Experimental Protocol 124、What Allocation Moves 109、Allocation II 101、
+       Which Part Does the Work 80、An Attacker That Adapts 76、Related Work 71、
+       Robustness to Preprocessing 68、Conclusion 53、Controlled Check 36。
+     - **需要用户决定：哪些内容真的离开正文。** 这已经不是排版能解决的了，
+       候选和代价见下一条。
+
+# 遗留问题（本轮新增/更新）
+
+- **P1 压页还差约 1.8 页，需要点头。** 候选（括号里是它在回应哪条评审意见，
+  这决定了搬走的代价）：
+  1. §What Allocation Moves, and What Decides a Ranking，109 行 ≈ 1.1 页
+     （承载 R2 的反例实测和 R3 的列范数 vs score-gradient，搬走会削弱对 R2/R3 的正面回应）
+  2. §Which Part of the Perturbation Does the Work，80 行 ≈ 0.8 页（承载 R6 的三因子分离）
+  3. §A Controlled Check with an Exactly Known Jacobian，36 行 ≈ 0.37 页（承载 R3 的合成验证）
+  4. 压 §Experimental Protocol（124 行）约四成 ≈ 0.5 页（不删结论，只压叙述）
+  5. 压 §Related Work（71 行）约四成 ≈ 0.3 页（**但 R4 要求的恰恰是加强相关工作讨论，
+     压它是逆着评审意见走**）
+  推荐组合：**3 + 4 + 2**（约 1.7 页）再加全文行级紧缩补齐，
+  因为它保住了 R2/R3 正面回应所在的那一节。
+
+- **还缺三棵导出树**：`tifs_a8`、`tifs_a8_hi`、`tifs_d6`，在工作机或 PRO 6000 上。
+  拿到后 `cp -r` 进 `src/exports/` 再提交，审计器就能到 140/140。命令写在
+  `src/exports/README.md` 里。
