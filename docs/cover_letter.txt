@@ -1,27 +1,84 @@
-﻿Cover Letter
+Cover Letter
 
 Dear Editor,
 
-We are pleased to submit our manuscript entitled "PPEDCRF: Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences" for your consideration.
+We submit our manuscript entitled "Direction, Not Allocation: What Actually
+Buys Privacy Against Visual Location Retrieval" for consideration as a Regular
+Paper in IEEE Transactions on Information Forensics and Security.
 
-Mobile-recorded videos -- from dashcams, visual-based ADAS platforms, bodycams, drones, and wearable cameras -- are increasingly shared for safety auditing, incident investigation, and data-driven model improvement. Even after explicit GPS metadata are stripped, an attacker can still infer the recording location by matching background visual cues -- buildings, road layouts, signage, skylines -- against geo-tagged reference imagery. Existing visual anonymization techniques focus on removing foreground identities (faces, license plates) and do not directly address this background-based location leakage.
+Street-level imagery is routinely released after geographic metadata are
+stripped, yet the pixels themselves remain matchable against geo-tagged
+reference databases. Visual location-privacy mechanisms answer this by
+spending a bounded distortion budget, and the field designs them almost
+entirely by choosing how that budget is *allocated* across the image -- which
+regions to protect, and how strongly. Our manuscript asks whether that design
+choice is what actually buys privacy against a retrieval attacker.
 
-Our manuscript proposes PPEDCRF, a selective perturbation framework that addresses this gap through three tightly integrated components: (1) a dynamic conditional random field (DCRF) that estimates location-sensitive background regions with temporal smoothing across frames, (2) a normalized control penalty (NCP) that rescales perturbation strength per pixel according to the inferred sensitivity, and (3) a calibrated Gaussian noise injection mechanism that perturbs only the inferred regions while preserving the visual quality needed for downstream perception tasks.
+The contribution is an evaluation result and the protocol that produces it,
+not a new sanitizer. Our protocol holds *delivered* distortion fixed, solved
+per frame through the pixel clamp, and varies one design axis at a time. This
+matters because matching nominal noise scale rather than delivered distortion
+leaves a clipping confound in place, and because a mechanism can produce a
+plausible privacy-quality curve without performing any spatial selection at
+all. We demonstrate the latter concretely: the learned support map of the
+CRF-inspired mechanism we implement as a testbed is numerically constant.
 
-The key contributions of this work are:
+Our principal findings on a real place-labelled Mapillary Street-Level
+Sequences benchmark, against both a weak classification backbone and a
+dedicated place-recognition model, are:
 
-- A unified computational pipeline for location-sensitive background sanitization with implementation-consistent notation and clearly defined inputs and outputs.
-- A DP-style calibration mechanism that maps a user-chosen privacy budget to a base noise scale, with an explicit scope clarification distinguishing it from formal end-to-end differential privacy guarantees.
-- A reproducible controlled paired-scene retrieval benchmark with eight attacker backbones and three noise seeds, together with ablation studies, privacy-utility frontier analysis, matched-operating-point comparisons, and attacker-sensitivity experiments.
+- Allocation shows no detected benefit at the operating point. None of eight
+  placement rules, three published-segmentation-model placements, two
+  gradient-guided placements or four perturbation operators beats spreading
+  the budget uniformly; every difference lies within +/-0.012 Top-1 against a
+  pre-registered equivalence margin.
 
-On the paired-scene benchmark, PPEDCRF reduces ResNet18 Top-1 retrieval accuracy from 0.667 to 0.361 +/- 0.127 while preserving 36.14 dB PSNR -- an approximately 6 dB quality advantage over global Gaussian noise at comparable privacy. Support-aware baselines operating on the same inferred spatial masks push privacy further (mask-guided blur: 0.500 Top-1 at 30.47 dB; mask-guided mosaic: 0.167 Top-1 at 25.03 dB), demonstrating that the spatial support inferred by the DCRF module is itself a valuable contribution to privacy-preserving video release. Seed-averaged transfer across all eight attacker backbones shows consistent privacy improvement in 23 of 24 backbone-gallery cells.
+- Direction behaves differently. A perturbation steered away from the released
+  frame's own clean embedding under a surrogate ensemble -- requiring neither
+  white-box access nor the attacker's gallery -- transfers to held-out
+  attackers, moving Top-1 from 0.1967 to 0.0317 on the weak attacker and from
+  0.7800 to 0.7317 on the strong one, with place-clustered intervals excluding
+  zero.
 
-This manuscript has not been published previously, is not under consideration elsewhere, and all authors have approved the submission. The source code and benchmark scripts are publicly available to support reproducibility.
+- A decomposition identifies which part of the perturbation carries the
+  effect. Shuffling its signs while preserving per-pixel magnitudes removes
+  the effect entirely; flattening the magnitudes while preserving the signs
+  retains 49-99% of it.
 
-We believe this work is well suited for your readership given its focus on privacy-preserving multimedia processing, visual content protection, and the intersection of computer vision with security.
+We have taken care to state these results at the strength the evidence
+supports, and we draw the Editor's attention to three deliberate
+qualifications. First, we claim no formal differential-privacy guarantee, and
+say so explicitly. Second, against the strong retriever, Top-5 and Top-10 fall
+far less than Top-1, so we describe the effect as ranking suppression rather
+than as location privacy. Third, the directional perturbation spends more
+downstream segmentation utility than isotropic noise at equal distortion, and
+attacker-side preprocessing recovers much of the effect unless the direction
+is optimised over those transforms. We report these costs rather than
+confining them to a limitations paragraph.
 
-Thank you for your time and consideration. We look forward to hearing from you.
+We also wish to be explicit about positioning. Mask-guided adversarial
+perturbation has been proposed for location privacy before, and we cite and
+discuss that work directly. Our novelty claim is not the perturbation but the
+matched-distortion comparison between allocation and direction, and we
+implement a mask-guided multi-model baseline under our own protocol: it never
+beats the unmasked direction and degrades monotonically as the mask tightens,
+across three mask sources.
+
+The work fits the scope of TIFS as an evaluation and measurement contribution
+to information forensics: it concerns the inference of private location
+information from released visual data, and its practical recommendation is
+that learned sanitization maps be reported against allocation-matched
+controls. We believe the negative result is the useful part, and that
+publishing it is preferable to leaving the field's central design assumption
+untested.
+
+This manuscript has not been published previously and is not under
+consideration elsewhere. All authors have approved the submission. Code and
+the benchmark manifests needed to reproduce the reported tables are available
+to reviewers.
+
+Thank you for your time and consideration.
 
 Sincerely,
 
-Author
+The Authors

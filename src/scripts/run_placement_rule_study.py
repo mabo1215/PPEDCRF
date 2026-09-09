@@ -1,9 +1,17 @@
 """Placement-rule study: does *where* a fixed perturbation budget lands matter?
 
 This extends the energy-matched intervention benchmark from a single learned
-support map to a family of placement rules, and adds an attacker-gradient
-"oracle" placement that deliberately targets the pixels the attacker embedding
-is most sensitive to.
+support map to a family of placement rules, and adds gradient-guided
+placements that deliberately target the pixels the attacker's score is most
+sensitive to.
+
+A note on the condition keys, which are fixed by the published exports and so
+are not renamed here. `oracle_grad` and `margin_oracle` were named before it
+was clear what they measure; they are the *positive-score gradient* and the
+*margin gradient* respectively, each summed over colour channels. Neither is
+an oracle in the sense of a known optimum, and neither is the Jacobian column
+norm ||J_i||_2. The manuscript uses the accurate names; the keys keep the
+historical spelling so that previously written CSVs still parse.
 
 Every placement is renormalised to carry exactly the same sum of squared
 weights as the learned map, so any difference in retrieval outcome is
@@ -11,10 +19,12 @@ attributable to location rather than magnitude. Two questions follow:
 
   1. Does any unsupervised placement rule (saliency, edge, centre bias, fixed
      random) beat the learned map or the uniform control at matched energy?
-  2. Does an *oracle* placement, built from the attacker's own input gradients,
-     beat them? This separates "placement cannot matter at this budget" from
-     "placement matters but no practical map finds the right pixels", which are
-     very different scientific conclusions.
+  2. Does a gradient-guided placement, built from the attacker's own input
+     gradients, beat them? This separates "placement cannot matter at this
+     budget" from "placement matters but no practical map finds the right
+     pixels", which are very different scientific conclusions. It does not
+     establish that no allocation could do better, since these maps are
+     heuristics rather than a constrained optimum.
 
 The script also exports the per-pixel embedding-sensitivity statistics needed
 to explain the result: how spatially homogeneous the attacker's sensitivity is,
@@ -274,12 +284,21 @@ def margin_gradient_map(
 ) -> torch.Tensor:
     """Per-pixel sensitivity of the quantity that actually decides Top-1.
 
-    The existing oracle targets the similarity to the correct gallery item.
+    The score-gradient map targets the similarity to the correct gallery item.
     Retrieval, however, is decided by the *margin* between that similarity and
     the best competitor: a perturbation that lowers both equally changes no
-    ranking. Placing the budget by the margin gradient is therefore the
-    strictly correct oracle, and if even that fails to beat uniform, the
-    remaining objection that we simply built the wrong oracle is closed.
+    ranking. Placing the budget by the margin gradient is therefore closer to
+    the quantity that decides Top-1, and if even that fails to beat uniform,
+    the objection that we simply weighted the wrong signal is weakened.
+
+    This remains a heuristic spatial weighting, not an optimal allocation.
+    Under the constraint sum_i w_i^2 = E, maximising a linear form in w_i^2
+    puts all energy on the largest coefficient unless support, smoothness or
+    amplitude restrictions are also imposed; renormalising a gradient-
+    proportional map does not solve that optimum. Nor is this map the Jacobian
+    column norm ||J_i||_2 -- it is a scalar margin's gradient, summed over
+    colour channels. See `measure_jacobian_columns.py`, which measures how far
+    apart those two quantities actually are.
     """
     probe = frame.clone().detach().requires_grad_(True)
     resized = F.interpolate(probe / 255.0, size=input_size, mode="bilinear",
