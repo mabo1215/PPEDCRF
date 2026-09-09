@@ -599,6 +599,51 @@ for cid, printed, value, tol, fn in [
           locator=None)
 
 
+# --- the joint measurement on the MSLS query frames -------------------------
+# Every pixel falls in one class in each map, so a match contributes 1 to the
+# intersection and 1 to the union and a mismatch 0 and 2. Pixels are therefore
+# (I+U)/2 and the per-pixel agreement is 2I/(I+U), which needs no knowledge of
+# the segmenter's internal resolution and puts the clean row at exactly 1.
+def _joint(budget: str, condition: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        import json
+        inter = union = 0
+        for root in ROOTS:
+            base = root / "tifs6_joint"
+            if not base.is_dir():
+                continue
+            for d in sorted(base.glob(f"mse{budget}_s*")):
+                f = d / "per_image.jsonl"
+                if not f.is_file():
+                    continue
+                with f.open(encoding="utf-8") as fh:
+                    for line in fh:
+                        if not line.strip():
+                            continue
+                        r = json.loads(line)
+                        if r["condition"] != condition:
+                            continue
+                        for i_val, u_val in r["seg_iu"].values():
+                            inter += int(i_val)
+                            union += int(u_val)
+            break
+        if not union:
+            return None
+        return 100.0 * (1.0 - 2.0 * inter / (inter + union))
+    return go
+
+
+for cond, printed, value in [
+        ("isotropic", "$1.7", 1.74), ("direction", "$3.3", 3.31),
+        ("hardened_direction", "$5.4", 5.44)]:
+    claim(f"Joint/15.68/{cond}", "\\S The Other Axis (joint on MSLS frames)",
+          printed, value, 0.05, "tifs6_joint", _joint("15.68", cond),
+          locator=None)
+claim("Joint/15.68/clean-gate", "\\S The Other Axis (joint on MSLS frames)",
+      "clean agreement is exactly 1", 0.0, 1e-9, "tifs6_joint",
+      _joint("15.68", "clean"), locator=None)
+
+
 # --- the ViT attacker, whose trunk appears in no surrogate ------------------
 def _vit(tag: str, cond: str, stat: str) -> Callable[[], Optional[float]]:
     def go() -> Optional[float]:

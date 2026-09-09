@@ -1,0 +1,24 @@
+{
+  "manifest": "/root/autodl-tmp/PPEDCRF/data/msls/manifest_all8.jsonl",
+  "n_frames": 400,
+  "target_mse": 241.5,
+  "surrogates": [
+    "resnet50",
+    "vgg16",
+    "cosplace"
+  ],
+  "seeds": [
+    1234
+  ],
+  "steps": 20,
+  "linf": 16.0,
+  "random_start": 1.0,
+  "eot_sanitizers": [
+    "jpeg75",
+    "jpeg50",
+    "blur",
+    "denoise"
+  ],
+  "reference": "segmenter prediction on the clean frame",
+  "metric": "dataset-level mIoU of the released prediction against the clean prediction; agreement, not accuracy"
+}

@@ -1,0 +1,23 @@
+[joint] device=cuda
+[joint] 400 query frames
+[joint] surrogate ready: resnet50
+[joint] surrogate ready: vgg16
+[joint] surrogate ready: cosplace
+[joint] 25/400 frames
+[joint] 50/400 frames
+[joint] 75/400 frames
+[joint] 100/400 frames
+[joint] 125/400 frames
+[joint] 150/400 frames
+[joint] 175/400 frames
+[joint] 200/400 frames
+[joint] 225/400 frames
+[joint] 250/400 frames
+[joint] 275/400 frames
+[joint] 300/400 frames
+[joint] 325/400 frames
+[joint] 350/400 frames
+[joint] 375/400 frames
+[joint] 400/400 frames
+[done] wrote /root/autodl-tmp/PPEDCRF/src/outputs/tifs6_joint/mse5.0_s5678/per_image.jsonl
+EXIT=0

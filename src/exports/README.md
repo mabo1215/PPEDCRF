@@ -38,6 +38,7 @@ a fresh clone on any host carries the evidence with it.
 | `tifs6_a8_mse*_s2` | 2 each | 12 MB | Release boundary, seeds 5678/9012, 400 queries, one configuration at all four budgets |
 | `tifs6_a5_s2` | 8 | 4.4 MB | Utility frontier, seeds 5678/9012, 200 images |
 | `tifs6_vit` | 4 | 1.6 MB | ViT-B/16 attacker: a trunk that appears in no surrogate |
+| `tifs6_joint` | 24 | 4.2 MB | Downstream agreement on the 400 MSLS query frames, four budgets, three seeds |
 
 Every printed number these trees back was recomputed from them on
 9 September 2026 and matched the manuscript exactly: the seven placement deltas
