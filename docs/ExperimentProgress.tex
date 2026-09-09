@@ -162,10 +162,14 @@ outside what was tested. \textbf{Still open}: A6, now unblocked by 2c. \\
 
 R9 & Benchmark and attacker generalisation. & \partialstatus & A7's old-to-new
 \emph{and} new-to-old cells are now both verified against raw rows, the latter
-newly so. \textbf{Still open}: a second dataset, one more held-out strong VPR
-architecture, and the GPS/heading audit of cluster positives. The recovered
-manifest carries \texttt{latitude}/\texttt{longitude} and \texttt{viewpoint}
-fields, so the audit half is now runnable on CPU. \\
+newly so. \textbf{The distance half of the positives audit is done} (Table~5):
+at MSLS's 25\,m criterion \textbf{99.3\%} of queries have their cluster
+positive within 25\,m, no query has a geographic positive without a cluster
+positive, and the median query-to-positive distance is 5.6\,m. The benchmark
+survives this check rather than needing to be relabelled a custom subset on
+this count. \textbf{Still open}: the \emph{angular} half (the manifest has no
+numeric heading), a second dataset, and one more held-out strong VPR
+architecture. \\
 
 R10 & Top-1 is not location privacy; the release boundary is incomplete. &
 \running & Top-1/5/10 for the transfer contrast were verified last cycle. A8 is
@@ -252,12 +256,13 @@ Fine-tune on hardened releases with fresh release randomness, \emph{rebuild the
 gallery}, evaluate on a place-disjoint split, report Top-1/5/10 and rank
 statistics. Queued behind A5 on 2c. \\
 
-A7b --- second dataset and a third attacker (R9) & \pending & 5\% &
-Audit half \textbf{today}; GPU half 2c free $+8$\,h $\Rightarrow$
-\textbf{10 Sep $\approx$04:00} & Two separable halves. The GPS/heading audit of
-cluster positives is CPU-only and runnable now, because the recovered manifest
-carries the latitude, longitude and viewpoint fields it needs. The city-disjoint
-holdout and the extra held-out VPR backbone need a card. \\
+A7b --- second dataset and a third attacker (R9) & \partialstatus & 35\% &
+GPU half: 2c free $+8$\,h $\Rightarrow$ \textbf{10 Sep $\approx$04:00} &
+\textbf{Distance audit done today} (Table~5), CPU-only, from the recovered
+manifest's coordinates. \textbf{Remaining}: the angular criterion needs the raw
+MSLS \texttt{postprocessed.csv} heading column, which is not in the staged
+subset --- either stage it or state the limitation. The city-disjoint holdout
+and the extra held-out VPR backbone need a card and are queued behind A6. \\
 
 X1 --- the eight remaining export trees (R1, R5, R11) & \partialstatus & 33\%
 & Regeneration: 2c free $+6$\,h, so \textbf{10 Sep} at the earliest &
@@ -354,6 +359,17 @@ longer claim an oracle or a strictly correct placement, and now map each
 historical condition key to the quantity it actually computes. & \done &
 \texttt{src/scripts/run\_placement\_rule\_study.py}. \\
 
+C13 (A7b) & \texttt{audit\_cluster\_vs\_geographic\_positives.py}: reproduces
+the MSLS distance criterion exactly from the manifest's coordinates, sweeps the
+threshold, and reports the categories on the \emph{intersection} of the two
+positive sets. The first version counted a query as agreeing when \emph{any}
+gallery entry was inside the threshold, which passes a query whose cluster
+positive is 200\,m away because an unrelated image is next door; a regression
+test now pins exactly that case. The output states in words that the angular
+criterion is \textbf{not} audited. & \done &
+\texttt{src/scripts/audit\_cluster\_vs\_geographic\_positives.py};
+5 further tests, 52 total. \
+
 C11 & Host rules recorded at the user's request: AutoDL academic acceleration
 (\texttt{source /etc/network\_turbo}) applies to all seetacloud hosts, must be
 sourced \emph{inside} the job, speeds up GitHub/HuggingFace while slowing pip,
@@ -397,6 +413,31 @@ JPEG inflates delivered distortion well past the matched budget
 \emph{matching distortion on float tensors does not match it on decoded files}.
 That is a limit on the matched-distortion protocol itself and belongs in the
 manuscript.
+
+\section*{Table 5: Cluster Positives Against Geographic Positives (A7b, R9)}
+
+400 queries, 2{,}000 gallery entries, no missing coordinates. Distance is
+haversine; the manifest carries no numeric heading, so the angular half of the
+MSLS criterion is not reproduced here and is listed as open in Table~1.
+
+\begin{longtable}{@{}p{0.12\linewidth}p{0.16\linewidth}p{0.18\linewidth}p{0.14\linewidth}p{0.16\linewidth}p{0.12\linewidth}@{}}
+\toprule
+Threshold & Cluster supported & Cluster unsupported & Geo only &
+Unlabelled neighbour & Jaccard \
+\midrule
+\endhead
+10\,m & 0.775 & 0.225 & 0.000 & 0.005 & 0.178 \
+\textbf{25\,m} \emph{(MSLS)} & \textbf{0.993} & \textbf{0.007} & 0.000 & 0.013 & 0.343 \
+50\,m & 0.995 & 0.005 & 0.000 & 0.030 & 0.477 \
+100\,m & 0.998 & 0.003 & 0.000 & 0.100 & 0.649 \
+\bottomrule
+\end{longtable}
+
+Distance from a query to its nearest cluster-labelled positive: p05 1.5\,m,
+median 5.6\,m, p95 14.9\,m, max 193.9\,m. Reading: the cluster label is coarser
+than 10\,m but sits comfortably inside the 25\,m criterion, and geography never
+supports a hit the benchmark scores wrong. Three queries of 400 are the
+exception and should be named as such rather than smoothed over.
 
 \section*{Closed in Previous Cycles}
 
