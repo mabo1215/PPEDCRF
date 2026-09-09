@@ -7,9 +7,17 @@ its 95% interval is a paired bootstrap that resamples images and recomputes
 both terms on the same resample -- the marginal interval of each mIoU is far
 wider and is not the estimand a tolerance is judged against.
 
-Privacy comes from the serialized-release exports (tifs_a8_mse5.0, tifs_a8,
-tifs_a8_mse60.0, tifs_a8_hi): Top-1 on the float release over 200 queries,
-one seed, with a query bootstrap.
+Privacy comes from the tifs6_a8_mse*_s2 exports: seeds 5678 and 9012 over all
+400 queries, at every budget, with a query bootstrap after averaging the seeds
+within a query.
+
+The earlier seed-1234 runs are deliberately not pooled in. Their run_config
+files show that two of the four budgets, MSE 5.0 and MSE 60, were produced with
+a random start of 8.0 while the operating point and MSE 241.5 used 1.0, so that
+sweep was not one configuration across budgets. The runs read here are 1.0
+throughout. Where the earlier run does share the configuration -- MSE 15.68 and
+MSE 241.5 -- it agrees closely, which is the check that the two sets are
+otherwise comparable.
 
 Admissibility against the declared tolerance is reported in three states, not
 two: a cell whose interval lies within the tolerance, one whose interval
@@ -23,10 +31,13 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from typing import Sequence
+
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
-BUDGETS = [(5.0, "tifs_a8_mse5.0"), (15.68, "tifs_a8"), (60.0, "tifs_a8_mse60.0"), (241.5, "tifs_a8_hi")]
+BUDGETS = [(5.0, "tifs6_a8_mse5.0_s2"), (15.68, "tifs6_a8_mse15.68_s2"),
+           (60.0, "tifs6_a8_mse60.0_s2"), (241.5, "tifs6_a8_mse241.5_s2")]
 CONDS = [("isotropic", "isotropic"), ("direction", "direction"), ("direction (EOT)", "direction (EOT)")]
 CANON = {"hardened": "direction (EOT)", "hardened_direction": "direction (EOT)", "direction_eot": "direction (EOT)"}
 
@@ -49,17 +60,35 @@ def miou(rows) -> float:
 
 
 def utility(budget: float, rng, n=2000):
-    base = root_for("tifs_a5")
-    d = next(x for x in base.glob("segmentation_mse*")
-             if abs(float(x.name.rsplit("mse", 1)[1]) - budget) < 1e-6)
     seen = {}
-    for line in (d / "per_image.jsonl").open(encoding="utf-8"):
-        if line.strip():
-            r = json.loads(line)
-            seen[(r["image_id"], r["condition"], r.get("seed"))] = r
-    by = defaultdict(dict)
+    for tree in ("tifs_a5", "tifs6_a5_s2"):
+        try:
+            base = root_for(tree)
+        except FileNotFoundError:
+            continue
+        match = [x for x in base.glob("segmentation_mse*")
+                 if abs(float(x.name.rsplit("mse", 1)[1]) - budget) < 1e-6]
+        if not match:
+            continue
+        for line in (match[0] / "per_image.jsonl").open(encoding="utf-8"):
+            if line.strip():
+                r = json.loads(line)
+                seen[(r["image_id"], r["condition"], r.get("seed"))] = r
+    grouped = defaultdict(lambda: defaultdict(list))
     for r in seen.values():
-        by[CANON.get(r["condition"], r["condition"])][r["image_id"]] = r
+        grouped[CANON.get(r["condition"], r["condition"])][r["image_id"]].append(r)
+    by = defaultdict(dict)
+    for cond, per_image in grouped.items():
+        for image_id, rows in per_image.items():
+            # One entry per image: intersections and unions summed over the
+            # seeds, which averages the seeds inside the ratio taken later.
+            merged = {"seg_iu": defaultdict(lambda: [0, 0])}
+            for r in rows:
+                for cls, (i_val, u_val) in (r.get("seg_iu") or {}).items():
+                    merged["seg_iu"][cls][0] += int(i_val)
+                    merged["seg_iu"][cls][1] += int(u_val)
+            merged["seg_iu"] = {k: tuple(v) for k, v in merged["seg_iu"].items()}
+            by[cond][image_id] = merged
     clean = by["clean"]
     out = {"clean": (miou(list(clean.values())), None, None)}
     for cond, _ in CONDS:
@@ -76,14 +105,41 @@ def utility(budget: float, rng, n=2000):
     return out
 
 
-def privacy(tree: str, rng, n=5000):
-    rows = [r for r in csv.DictReader((root_for(tree) / "serialized_release.csv").open(newline="", encoding="utf-8"))
-            if r["serialisation"] == "float"]
+def privacy(trees: Sequence[str], rng, n=5000):
+    """Top-1 on the float release, averaged over seeds within each query.
+
+    Only the queries every tree shares are used, so each seed contributes the
+    same sample; the published run covers 200 of the 400 the later seeds cover.
+    """
+    per_tree = []
+    for tree in trees:
+        try:
+            path = root_for(tree) / "serialized_release.csv"
+        except FileNotFoundError:
+            continue
+        rows = [r for r in csv.DictReader(path.open(newline="", encoding="utf-8"))
+                if r["serialisation"] == "float"]
+        if rows:
+            per_tree.append(rows)
+    shared = set.intersection(*[{r["query_id"] for r in rows} for rows in per_tree])
     out = {}
-    for raw in sorted(set(r["condition"] for r in rows)):
-        v = np.array([float(r["top1"]) for r in rows if r["condition"] == raw])
+    conds = sorted({CANON.get(r["condition"], r["condition"])
+                    for rows in per_tree for r in rows})
+    for cond in conds:
+        by_query = defaultdict(list)
+        for rows in per_tree:
+            for r in rows:
+                if CANON.get(r["condition"], r["condition"]) != cond:
+                    continue
+                if r["query_id"] in shared:
+                    by_query[r["query_id"]].append(float(r["top1"]))
+        if not by_query:
+            continue
+        v = np.array([float(np.mean(x)) for x in by_query.values()])
         boots = [v[rng.integers(0, len(v), len(v))].mean() for _ in range(n)]
-        out[CANON.get(raw, raw)] = (float(v.mean()), float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5)))
+        out[cond] = (float(v.mean()), float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5)))
+    out["_n_queries"] = len(shared)
+    out["_n_seeds"] = len(per_tree)
     return out
 
 
@@ -97,8 +153,11 @@ def main() -> int:
     tol = args.tolerance
 
     blocks, clean_vals = [], []
+    n_q = 0
     for budget, tree in BUDGETS:
-        u, p = utility(budget, rng), privacy(tree, rng)
+        u, p = utility(budget, rng), privacy([tree], rng)
+        n_q = p.pop("_n_queries", n_q)
+        p.pop("_n_seeds", None)
         clean_vals.append(u["clean"][0])
         rows = []
         for cond, label in CONDS:
@@ -118,13 +177,16 @@ def main() -> int:
         r"\begin{table}[t]",
         r"\centering",
         r"\caption{Privacy against measured downstream utility over four delivered-MSE",
-        rf"budgets, one seed per cell; clean mIoU ${clean:.4f}$ throughout. Drop is",
-        r"mIoU lost on the same 200 images, with a paired image-bootstrap 95\%",
-        r"interval; Top-1 carries a query-bootstrap interval. Against the",
+        rf"budgets. Clean mIoU is ${clean:.4f}$ throughout. Utility averages three",
+        rf"seeds over 200 images; privacy averages two over {n_q} queries, from the",
+        r"runs that share one optimiser configuration at every budget. Drop is",
+        r"mIoU lost on those images, with a",
+        r"paired image-bootstrap 95\% interval; Top-1 carries a query-bootstrap",
+        r"interval. Against the",
         rf"${tol:.2f}$ tolerance declared in advance a drop interval lies within it",
         r"($\checkmark$), straddles it ($\sim$), or lies beyond it (---). Clean Top-1",
-        r"is $0.197$; no $\checkmark$ or $\sim$ cell moves it. Retrieval is on MSLS",
-        r"and utility on VOC, paired by budget, not by image.}",
+        r"for this attacker is $0.197$. Retrieval is on MSLS and utility on VOC,",
+        r"paired by budget, not by image.}",
         r"\label{tab:frontier}",
         r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{llcccc}",

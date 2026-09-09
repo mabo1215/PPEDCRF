@@ -35,6 +35,9 @@ a fresh clone on any host carries the evidence with it.
 | `tifs_a2` | 4 | 180 KB | Jacobian column norms and margin flip rates (R2, R3) |
 | `tifs_a8_vitstart8` | 2 | 552 KB | Superseded: the misconfigured operating-point run (see below) |
 | `tifs_a8_hi_vitstart8` | 2 | 368 KB | Superseded: the misconfigured high-budget run (see below) |
+| `tifs6_a8_mse*_s2` | 2 each | 12 MB | Release boundary, seeds 5678/9012, 400 queries, one configuration at all four budgets |
+| `tifs6_a5_s2` | 8 | 4.4 MB | Utility frontier, seeds 5678/9012, 200 images |
+| `tifs6_vit` | 4 | 1.6 MB | ViT-B/16 attacker: a trunk that appears in no surrogate |
 
 Every printed number these trees back was recomputed from them on
 9 September 2026 and matched the manuscript exactly: the seven placement deltas
@@ -77,6 +80,21 @@ mistake: the high-budget release gain and amplitude read `2.312` and `36.99`,
 which are this run's numbers, where the published configuration gives `3.078`
 and `49.25`. Keeping both makes that correction checkable against
 `run_config.json` instead of asking a reader to take it on trust.
+
+## A second configuration trap, in the published release-boundary sweep
+
+The four seed-1234 trees behind the original frontier are not one sweep. Their
+`run_config.json` files record a random start of **8.0** at MSE 5.0 and MSE 60
+and **1.0** at the operating point and MSE 241.5. The manuscript presented all
+four as one budget sweep, and at MSE 60 that mattered: the gain reads 1.146
+under the 8.0 start and 1.516 under 1.0.
+
+The `tifs6_a8_mse*_s2` runs are 1.0 at every budget, and the manuscript's
+amplitude figures now come from them. Where the earlier run shares the
+configuration -- MSE 15.68 and MSE 241.5 -- the two agree to three decimals
+(0.7727 against 0.7727; 3.078 against 3.081), which is the check that nothing
+else differs between the two sets. Compare `run_config.json` before pooling any
+of these trees.
 
 ## A trap in `tifs_a2`
 

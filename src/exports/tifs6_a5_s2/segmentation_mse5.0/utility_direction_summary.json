@@ -1,0 +1,70 @@
+{
+  "rows": [
+    {
+      "condition": "clean",
+      "seed": 5678,
+      "mean_effective_mse": 0.0,
+      "mean_psnr": 138.1308,
+      "miou": 0.697324
+    },
+    {
+      "condition": "clean",
+      "seed": 9012,
+      "mean_effective_mse": 0.0,
+      "mean_psnr": 138.1308,
+      "miou": 0.697324
+    },
+    {
+      "condition": "isotropic",
+      "seed": 5678,
+      "mean_effective_mse": 5.0,
+      "mean_psnr": 41.1411,
+      "miou": 0.683544
+    },
+    {
+      "condition": "isotropic",
+      "seed": 9012,
+      "mean_effective_mse": 5.0,
+      "mean_psnr": 41.1411,
+      "miou": 0.680177
+    },
+    {
+      "condition": "direction",
+      "seed": 5678,
+      "mean_effective_mse": 5.0,
+      "mean_psnr": 41.1411,
+      "miou": 0.667076
+    },
+    {
+      "condition": "direction",
+      "seed": 9012,
+      "mean_effective_mse": 5.0,
+      "mean_psnr": 41.1411,
+      "miou": 0.660894
+    },
+    {
+      "condition": "hardened_direction",
+      "seed": 5678,
+      "mean_effective_mse": 5.0,
+      "mean_psnr": 41.1411,
+      "miou": 0.625646
+    },
+    {
+      "condition": "hardened_direction",
+      "seed": 9012,
+      "mean_effective_mse": 5.0,
+      "mean_psnr": 41.1411,
+      "miou": 0.622297
+    }
+  ],
+  "manifest": "/root/autodl-tmp/PPEDCRF/utility_subset/utility_manifest_segmentation.jsonl",
+  "surrogates": [
+    "resnet50",
+    "vgg16",
+    "cosplace"
+  ],
+  "target_mse": 5.0,
+  "steps": 20,
+  "device": "cuda",
+  "n_images": 200
+}

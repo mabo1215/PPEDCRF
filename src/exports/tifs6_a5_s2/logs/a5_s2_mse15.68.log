@@ -1,0 +1,24 @@
+[utility-direction] device=cuda
+[utility-direction] 200 images, detection=False, segmentation=True
+[utility-direction] surrogate ready: resnet50
+[utility-direction] surrogate ready: vgg16
+[utility-direction] surrogate ready: cosplace
+[utility-direction] conditions=['clean', 'isotropic', 'direction', 'hardened_direction'] eot=['jpeg75', 'jpeg50', 'blur', 'denoise']
+[utility-direction] 25/200 images
+[utility-direction] 50/200 images
+[utility-direction] 75/200 images
+[utility-direction] 100/200 images
+[utility-direction] 125/200 images
+[utility-direction] 150/200 images
+[utility-direction] 175/200 images
+[utility-direction] 200/200 images
+[utility-direction] {'condition': 'clean', 'seed': 5678, 'mean_effective_mse': 0.0, 'mean_psnr': 138.1308, 'miou': 0.697324}
+[utility-direction] {'condition': 'clean', 'seed': 9012, 'mean_effective_mse': 0.0, 'mean_psnr': 138.1308, 'miou': 0.697324}
+[utility-direction] {'condition': 'isotropic', 'seed': 5678, 'mean_effective_mse': 15.679999, 'mean_psnr': 36.1773, 'miou': 0.676318}
+[utility-direction] {'condition': 'isotropic', 'seed': 9012, 'mean_effective_mse': 15.679999, 'mean_psnr': 36.1773, 'miou': 0.667615}
+[utility-direction] {'condition': 'direction', 'seed': 5678, 'mean_effective_mse': 15.679999, 'mean_psnr': 36.1773, 'miou': 0.599227}
+[utility-direction] {'condition': 'direction', 'seed': 9012, 'mean_effective_mse': 15.679999, 'mean_psnr': 36.1773, 'miou': 0.612927}
+[utility-direction] {'condition': 'hardened_direction', 'seed': 5678, 'mean_effective_mse': 15.679999, 'mean_psnr': 36.1773, 'miou': 0.51018}
+[utility-direction] {'condition': 'hardened_direction', 'seed': 9012, 'mean_effective_mse': 15.679999, 'mean_psnr': 36.1773, 'miou': 0.507166}
+[utility-direction] wrote /root/autodl-tmp/PPEDCRF/src/outputs/tifs6_a5_s2/segmentation_mse15.68/utility_direction_summary.json
+EXIT=0

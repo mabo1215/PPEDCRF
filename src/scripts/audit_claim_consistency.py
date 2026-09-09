@@ -434,11 +434,15 @@ def _a8(tree: str, condition: str, serialisation: str, field: str
     return go
 
 
+# The manuscript's amplitude figures come from the seed-5678/9012 runs, which
+# share one optimiser configuration at every budget; the earlier seed-1234
+# sweep used a random start of 8.0 at MSE 5.0 and 60 and 1.0 elsewhere, so it
+# is not one sweep and is not the source for these numbers.
 for tree, mse, cond, gain, amp in [
-        ("tifs_a8", "15.68", "direction", 0.773, 12.36),
-        ("tifs_a8", "15.68", "direction_eot", 0.618, 9.90),
-        ("tifs_a8_mse60.0", "60", "direction", 1.146, 18.34),
-        ("tifs_a8_hi", "241.5", "direction", 3.078, 49.25)]:
+        ("tifs6_a8_mse15.68_s2", "15.68", "direction", 0.773, 12.36),
+        ("tifs6_a8_mse15.68_s2", "15.68", "direction_eot", 0.619, 9.91),
+        ("tifs6_a8_mse60.0_s2", "60", "direction", 1.516, 24.26),
+        ("tifs6_a8_mse241.5_s2", "241.5", "direction", 3.081, 49.30)]:
     claim(f"A8/{mse}/{cond}/gain", "\\S What Is Actually Released",
           f"$g={gain}$", gain, 5e-4, tree,
           _a8(tree, cond, "float", "release_gain"),
@@ -469,23 +473,29 @@ FRONTIER = REPO / "paper" / "generated" / "tab_frontier.tex"
 
 
 def _miou(budget: str, condition: str) -> Callable[[], Optional[float]]:
-    """Dataset-level mIoU: pool intersections and unions per class first.
+    """Dataset-level mIoU over every seed of this budget.
 
-    Averaging per-image IoU would be a different statistic, which is the
-    confusion finding R7 raises about detection AP.
+    Pools intersections and unions per class before the ratio, which averages
+    the seeds inside the ratio exactly as make_frontier_table.py does.
+    Averaging per-image IoU instead would be a different statistic -- the
+    confusion R7 raises about detection AP.
     """
     def go() -> Optional[float]:
-        import json
-        rel = f"tifs_a5/segmentation_mse{budget}/per_image.jsonl"
-        path = next((root / rel for root in ROOTS if (root / rel).is_file()), None)
-        if path is None:
-            return None
         seen: Dict[tuple, dict] = {}
-        with path.open(encoding="utf-8") as fh:
-            for line in fh:
-                if line.strip():
-                    r = json.loads(line)
-                    seen[(r["image_id"], r["condition"], r.get("seed"))] = r
+        for tree in ("tifs_a5", "tifs6_a5_s2"):
+            rel = f"{tree}/segmentation_mse{budget}/per_image.jsonl"
+            path = next((root / rel for root in ROOTS if (root / rel).is_file()),
+                        None)
+            if path is None:
+                continue
+            import json
+            with path.open(encoding="utf-8") as fh:
+                for line in fh:
+                    if line.strip():
+                        r = json.loads(line)
+                        seen[(r["image_id"], r["condition"], r.get("seed"))] = r
+        if not seen:
+            return None
         inter: Dict[str, int] = defaultdict(int)
         union: Dict[str, int] = defaultdict(int)
         for r in seen.values():
@@ -500,14 +510,15 @@ def _miou(budget: str, condition: str) -> Callable[[], Optional[float]]:
 
 
 for budget, cond, value in [
-        ("5.0", "clean", 0.6974),
-        ("5.0", "isotropic", 0.6828), ("5.0", "direction", 0.6479),
-        ("5.0", "hardened_direction", 0.6196),
-        ("15.68", "isotropic", 0.6692), ("15.68", "direction", 0.5877),
-        ("15.68", "hardened_direction", 0.5038),
-        ("60.0", "isotropic", 0.6295), ("60.0", "direction", 0.4203),
-        ("60.0", "hardened_direction", 0.2754),
-        ("241.5", "isotropic", 0.5784), ("241.5", "direction", 0.2118)]:
+        ("5.0", "clean", 0.6973),
+        ("5.0", "isotropic", 0.6821), ("5.0", "direction", 0.6580),
+        ("5.0", "hardened_direction", 0.6223),
+        ("15.68", "isotropic", 0.6708), ("15.68", "direction", 0.5993),
+        ("15.68", "hardened_direction", 0.5067),
+        ("60.0", "isotropic", 0.6336), ("60.0", "direction", 0.4461),
+        ("60.0", "hardened_direction", 0.2775),
+        ("241.5", "isotropic", 0.5642), ("241.5", "direction", 0.2131),
+        ("241.5", "hardened_direction", 0.0863)]:
     claim(f"A5/{budget}/{cond}/miou", "Table tab:frontier",
           f"{value:.4f}", value, 5e-5, "tifs_a5", _miou(budget, cond),
           source=FRONTIER)
@@ -588,6 +599,32 @@ for cid, printed, value, tol, fn in [
           locator=None)
 
 
+# --- the ViT attacker, whose trunk appears in no surrogate ------------------
+def _vit(tag: str, cond: str, stat: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load(f"tifs6_vit/vit_{tag}.csv")
+        if not rows:
+            return None
+        if stat == "top1":
+            v = per_query(rows, lambda r: r["condition"] == cond)
+            return float(np.mean(list(v.values()))) if v else None
+        d = per_query(rows, lambda r: r["condition"] == cond)
+        i = per_query(rows, lambda r: r["condition"] == "isotropic")
+        return paired(d, i)["delta"]
+    return go
+
+
+for cid, printed, value, tol, fn in [
+        ("ViT/isotropic", "$0.1808$", 0.1808, 5e-5, _vit("plain", "isotropic", "top1")),
+        ("ViT/plain/direction", "$0.1575$", 0.1575, 5e-5, _vit("plain", "transfer_3", "top1")),
+        ("ViT/plain/delta", "$-0.0233$", -0.0233, 5e-4, _vit("plain", "transfer_3", "delta")),
+        ("ViT/eot/direction", "$0.1450$", 0.1450, 5e-5, _vit("eot", "transfer_3", "top1")),
+        ("ViT/eot/delta", "$-0.0358$", -0.0358, 5e-4, _vit("eot", "transfer_3", "delta")),
+        ("ViT/white_box", "$0.0000$", 0.0000, 5e-5, _vit("plain", "white_box", "top1"))]:
+    claim(cid, "\\S The Other Axis (ViT-B/16)", printed, value, tol,
+          "tifs6_vit", fn, locator=None)
+
+
 # --- A7b, the third held-out backbone (\S The Other Axis) -------------------
 # Patch-NetVLAD shares no architecture with the surrogate ensemble, so this is
 # the external-validity arm rather than another checkpoint of a seen family.
@@ -632,7 +669,12 @@ def main() -> int:
                     help="print every claim, not only the failing ones")
     args = ap.parse_args()
 
-    sources = {p: p.read_text(encoding="utf-8") for p in {MAIN, TAB_TRANSFER}
+    # Every distinct source a claim names, not a hand-listed pair: claims
+    # sourced to the supplement or a generated table used to skip the
+    # locator check silently, because sources.get() returned None and a
+    # missing text counted as "located".
+    sources = {p: p.read_text(encoding="utf-8")
+               for p in {c.source for c in CLAIMS}
                if p.is_file()}
 
     rows, mismatch, nodata, missing_text = [], 0, 0, 0

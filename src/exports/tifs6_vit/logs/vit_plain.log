@@ -1,0 +1,26 @@
+[transfer] objective=self random_start=1.0 eot=off eval_sanitizers=['none']
+[transfer] device=cuda
+[transfer] 400 queries, 2000 gallery
+[transfer] gallery embedded with vit_b_16
+[transfer] gallery embedded with resnet50
+[transfer] gallery embedded with vgg16
+[transfer] gallery embedded with cosplace
+[transfer] conditions=['isotropic', 'white_box', 'transfer_3']
+[transfer] 25/400 queries
+[transfer] 50/400 queries
+[transfer] 75/400 queries
+[transfer] 100/400 queries
+[transfer] 125/400 queries
+[transfer] 150/400 queries
+[transfer] 175/400 queries
+[transfer] 200/400 queries
+[transfer] 225/400 queries
+[transfer] 250/400 queries
+[transfer] 275/400 queries
+[transfer] 300/400 queries
+[transfer] 325/400 queries
+[transfer] 350/400 queries
+[transfer] 375/400 queries
+[transfer] 400/400 queries
+[transfer] done -> /root/autodl-tmp/PPEDCRF/src/outputs/tifs6_vit/vit_plain.csv
+EXIT=0
