@@ -3159,3 +3159,40 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
   给 frontier 一行"同图"的联合测量。约 1 GPU 小时。
 - **补充材料正好 6 页**，再加东西要 EiC 批准或再挪。
 - **责任声明的措辞**是替你写的，投稿前请过目。
+
+## 第六轮修订续（2026-09-09 深夜，用户四项指示 + PRO 6000 开卡跑实验）
+
+406. 【已完成】**R1 闭合（访问侧）**：`https://github.com/mabo1215/PPEDCRF` 现在
+     未登录返回 **200**，API 显示 `private: false`。评审里最重的那条不再成立。
+407. 【已完成】**标题按建议改**：`Allocation or Direction? A Matched-Distortion
+     Audit of Visual Location-Privacy Mechanisms`，正文、补充材料、独立标题页、
+     cover letter 四处同步。
+408. 【已完成】**A6 学习率 $10^{-4}$ 写进补充材料的配方**。
+     **溯源要说清楚**：这是脚本默认值，那次运行**没有任何记录**（当时脚本只存
+     state_dict，2c 当时也连不上），所以它靠的是"默认值 + 你确认"，不是日志。
+     脚本现在开跑就打印全部参数并在 checkpoint 旁写 `.args.json`。
+409. 【已完成】**论文里不再出现代码风格的标识符**（你的第 4 点）。
+     `\texttt{unique\_cluster}` → "the dataset's own place-cluster label" /
+     "277 official place identities"；`\texttt{direction}` / `\texttt{isotropic}`
+     两个条件名改成普通词。全文扫过：**两个文档里没有任何变量名、路径、参数名、文件名**。
+     （`--utility` 那些命中是 `privacy--utility` 的连字符，误报。）
+     仍是 **13 页 / 6 页**，摘要 243 词，0 undefined reference。
+
+410. 【进行中】**PRO 6000 开卡，10 个实验并行**（96 GB 卡，208 核，独占，0 其他租户）。
+     - **数据是走共享卷过去的，没有经过本机**：2c 和 PRO 6000 挂的是**同一个**
+       `/autodl-fs`（卷号 `fswestbfourth985735`，在 2c 上 touch 的探针文件在
+       PRO 6000 上直接可见）。所以 1.5 GB 的 MSLS 和 cosplace 权重是
+       `2c → /autodl-fs → PRO 6000`，**没有建立任何跨主机信任，也没有把密码下发到计算主机**。
+     - **踩到两个坑**：① 第一次 `cp` 被我的 ssh 超时打断，残留文件让带 `set -e` 的
+       staging 脚本在第二次 `cp -ru` 上直接退出（报 File exists）——改成 `set +e` 重跑；
+       ② 4 个 a5 任务起手即挂，因为 utility manifest 里的路径是相对
+       `utility_subset/` 的，我漏了 `--root`。已修正重启。
+     - **队列（都会增量写、可断点续跑）**：
+       * `a8_s2_mse{5.0,15.68,60.0,241.5}` —— 释放边界补种子 5678/9012（**R5 隐私轴**）
+       * `a5_s2_mse{5.0,15.68,60.0,241.5}` —— 分割效用补种子 5678/9012（**R5 效用轴**）
+       * `vit_plain` / `vit_eot` —— **vit_b_16 作为留出攻击者**（**R3**）：
+         它的 trunk 在代理集里不存在，所以这是**真正跨架构**的迁移，
+         不是现在论文里的跨权重/跨任务。权重 PRO 6000 本地已缓存，不用下载。
+     - 现状：**10 个 screen，GPU 利用率 100%，显存 26 GB / 96 GB**。
+     - **巡检每 10 分钟一次**（本机后台 poller），队列清空后自动唤醒我
+       → 拉回结果 → **关机 PRO 6000**。
