@@ -132,3 +132,17 @@ location on the authors' machines.
   on the same footing as the favourable numbers.
 - `results/` contains only CSV/JSON exports and status files. Image data and
   model weights are excluded for size and licensing reasons.
+- **What the one-command check does and does not cover.** `verify_claims.py`
+  recomputes 228 claims, covering the allocation families, the operator study,
+  the mask-guided comparison, the cross-time replication and the earlier
+  transfer runs. It does **not** yet script the families added in the most
+  recent round: `transfer_table4` (Table IV), `frontier_segmentation`,
+  `release_boundary_mse*`, `transfer_patchnetvlad`, `jacobian_columns` and
+  `adaptive_attacker_*`. Their raw per-query rows are included here in full, so
+  every number the manuscript draws from them can be recomputed by hand, but
+  the automated pass does not assert them and this artifact does not claim it
+  does. In the source repository those families are asserted by
+  `src/scripts/audit_claim_consistency.py`, which checks all 153 manuscript
+  claims against the same rows; it is not run here because it resolves trees by
+  their repository names rather than the reader-facing names used in
+  `results/`.

@@ -101,6 +101,21 @@ copy_tree tifs_a7_o2n8   crosstime_old2new
 copy_tree tifs_a7_n2o8   crosstime_new2old
 copy_tree tifs5_analysis analysis_reports
 
+# --- the TIFS round: the families behind Table IV, the frontier, the release
+# --- boundary, the third held-out backbone and the column-norm measurement.
+# Without these the bundle cannot support the manuscript's current headlines.
+copy_tree tifs_d6            transfer_table4
+copy_tree tifs_d7            utility_released_frames
+copy_tree tifs_a5            frontier_segmentation
+copy_tree tifs_a2            jacobian_columns
+copy_tree tifs_a7b           transfer_patchnetvlad
+copy_tree tifs_a8            release_boundary_mse15.68
+copy_tree tifs_a8_hi         release_boundary_mse241.5
+copy_tree tifs_a8_mse60.0    release_boundary_mse60
+copy_tree tifs_a8_mse5.0     release_boundary_mse5
+copy_tree tifs_a6            adaptive_attacker_training
+copy_tree tifs_a6_eval       adaptive_attacker_eval
+
 # --- EOT hardening: one file per condition, three seeds concatenated --------
 # The seeds were run as separate jobs, and one of them (ResNet18 seed 5678)
 # ran on a second machine whose output file also carries stray rows from an
