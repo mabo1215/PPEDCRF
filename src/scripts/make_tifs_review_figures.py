@@ -123,15 +123,68 @@ def fig_budget(out: Path) -> None:
 
 # ----------------------------------------------------------------------- F3
 TRANSFORMS = ["none", "JPEG-75", "JPEG-50", "blur", "denoise"]
-SANITIZE = {  # attacker: (unhardened delta, hardened delta), per transform
-    "ResNet18": ([-0.1608, -0.0883, -0.0492, -0.0292, -0.0350],
-                 [-0.1800, -0.1792, -0.1525, -0.1175, -0.0925]),
-    "MixVPR":   ([-0.0458, -0.0242, -0.0108, -0.0317, -0.0050],
-                 [-0.0842, -0.0833, -0.0592, -0.1058, -0.1042]),
-}
-NOT_SIGNIFICANT = {("MixVPR", "JPEG-50"), ("MixVPR", "denoise")}
+TAB_SANITIZE = (Path(__file__).resolve().parents[2] / "paper" / "generated"
+                / "tab_sanitize.tex")
 
-assert SANITIZE["ResNet18"][1][1] == -0.1792 and SANITIZE["MixVPR"][0][4] == -0.0050
+
+def _parse_sanitize(path: Path = TAB_SANITIZE):
+    """Read the deltas and the significance markers out of the table itself.
+
+    These were previously transcribed by hand into literals here, and they
+    drifted: the figure carried an earlier run's numbers while the table and
+    the prose carried the current one, disagreeing by as much as 0.014 and
+    marking one cell non-significant that the table does not. Parsing the
+    generated table is the only way the docstring's promise -- that the figure
+    and the table cannot disagree -- is actually kept, so a regenerated table
+    now moves the figure with it.
+
+    Returns {attacker: ([unhardened deltas], [hardened deltas])} over
+    TRANSFORMS, and the set of (attacker, transform) pairs the table daggers as
+    having an interval spanning zero.
+    """
+    import re
+
+    text = path.read_text(encoding="utf-8")
+    deltas: dict = {}
+    not_sig: set = set()
+    attacker = None
+    for line in text.splitlines():
+        if "multirow" in line:
+            m = re.search(r"\{(ResNet18|MixVPR)\}", line)
+            if m:
+                attacker = m.group(1)
+            continue
+        if attacker is None or "&" not in line:
+            continue
+        cells = [c.strip() for c in line.split("&")]
+        if len(cells) < 6:
+            continue
+        transform = cells[1].replace("$\\sigma$", " sigma").strip()
+        if transform not in TRANSFORMS:
+            continue
+
+        def number(cell: str) -> float:
+            body = cell.replace("\\mathbf", "").replace("\\textbf", "")
+            body = body.replace("$^\\dagger$", "").replace("{", "").replace("}", "")
+            body = body.replace("$", "").replace("−", "-").strip()
+            return float(body)
+
+        unh, hard = number(cells[3]), number(cells[5])
+        d = deltas.setdefault(attacker, ([None] * len(TRANSFORMS),
+                                         [None] * len(TRANSFORMS)))
+        i = TRANSFORMS.index(transform)
+        d[0][i], d[1][i] = unh, hard
+        if "dagger" in cells[3]:
+            not_sig.add((attacker, transform))
+    missing = [(a, TRANSFORMS[i]) for a, (u, _) in deltas.items()
+               for i, v in enumerate(u) if v is None]
+    if missing or set(deltas) != {"ResNet18", "MixVPR"}:
+        raise RuntimeError(f"tab_sanitize.tex did not yield every cell: "
+                           f"{missing or sorted(deltas)}")
+    return deltas, not_sig
+
+
+SANITIZE, NOT_SIGNIFICANT = _parse_sanitize()
 
 
 def fig_sanitize(out: Path) -> None:
