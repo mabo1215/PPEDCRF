@@ -49,6 +49,9 @@ OUT = REPO / "src" / "outputs"
 EXPORTS = REPO / "src" / "exports"
 ROOTS = (OUT, EXPORTS)
 MAIN = REPO / "paper" / "main.tex"
+# The factorial decomposition moved to the supplement to meet the page
+# limit, so the numbers it prints are located there rather than in MAIN.
+SUPP = REPO / "paper" / "supplementary.tex"
 TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
 
 
@@ -187,14 +190,16 @@ for bb, tag, cells in [
     for cond, place, top1, delta, pv in cells:
         stem = f"T6/{tag}/{cond}/{place}"
         claim(f"{stem}/top1", "Table VI (operating point)", f"{top1:.4f}",
-              top1, 5e-5, "tifs_a3", _f("tifs_a3", bb, cond, place, "top1"))
+              top1, 5e-5, "tifs_a3", _f("tifs_a3", bb, cond, place, "top1"),
+              source=SUPP)
         if delta is not None:
             claim(f"{stem}/delta", "Table VI (operating point)",
                   f"{delta:+.3f}".replace("+", ""), delta, 5e-4, "tifs_a3",
-                  _f("tifs_a3", bb, cond, place, "delta"), locator=None)
+                  _f("tifs_a3", bb, cond, place, "delta"), locator=None,
+                  source=SUPP)
             claim(f"{stem}/p", "Table VI (operating point)", f"{pv}", pv,
                   rel(pv), "tifs_a3", _f("tifs_a3", bb, cond, place, "p"),
-                  locator=None)
+                  locator=None, source=SUPP)
 
 # --- Table VI, large budget (delivered MSE 241.5), from tifs_a3hi ---------
 for bb, tag, cells in [
@@ -214,14 +219,16 @@ for bb, tag, cells in [
     for cond, place, top1, delta, pv in cells:
         stem = f"T6hi/{tag}/{cond}/{place}"
         claim(f"{stem}/top1", "Table VI (large budget)", f"{top1:.4f}", top1,
-              5e-5, "tifs_a3hi", _f("tifs_a3hi", bb, cond, place, "top1"))
+              5e-5, "tifs_a3hi", _f("tifs_a3hi", bb, cond, place, "top1"),
+              source=SUPP)
         if delta is not None:
             claim(f"{stem}/delta", "Table VI (large budget)",
                   f"{delta:+.3f}".replace("+", ""), delta, 5e-4, "tifs_a3hi",
-                  _f("tifs_a3hi", bb, cond, place, "delta"), locator=None)
+                  _f("tifs_a3hi", bb, cond, place, "delta"), locator=None,
+                  source=SUPP)
             claim(f"{stem}/p", "Table VI (large budget)", f"{pv}", pv, rel(pv),
                   "tifs_a3hi", _f("tifs_a3hi", bb, cond, place, "p"),
-                  locator=None)
+                  locator=None, source=SUPP)
 
 
 # --- the reproduction gate the factorial section quotes --------------------
@@ -240,16 +247,16 @@ def _reproduction_gap(backbone: str, cond: str) -> Callable[[], float]:
 
 claim("Repro/mix/isotropic", "\\S Which Part of the Perturbation",
       "$0.7850$ against $0.7800$", 0.0050, 5e-4, "tifs_a3",
-      _reproduction_gap("mix", "isotropic"))
+      _reproduction_gap("mix", "isotropic"), source=SUPP)
 claim("Repro/mix/direction", "\\S Which Part of the Perturbation",
       "$0.7342$ against $0.7317$", 0.0025, 5e-4, "tifs_a3",
-      _reproduction_gap("mix", "direction"))
+      _reproduction_gap("mix", "direction"), source=SUPP)
 claim("Repro/r18/gate", "\\S Which Part of the Perturbation",
       "$0.008$ on", 0.008, 0.0, "tifs_a3",
       lambda: (max(_reproduction_gap("r18", "isotropic")() or 0,
                    _reproduction_gap("r18", "direction")() or 0)
                if _factorial("tifs_a3", "r18") else None),
-      kind=BOUND)
+      kind=BOUND, source=SUPP)
 
 
 # --- the clamp measurement, same rows --------------------------------------
@@ -266,14 +273,14 @@ def _clamp_loss(place: str) -> Callable[[], float]:
 
 
 claim("Clamp/edge", "\\S Which Part of the Perturbation", "$4.7\\%$", 4.7,
-      0.05, "tifs_a3", _clamp_loss("edge"))
+      0.05, "tifs_a3", _clamp_loss("edge"), source=SUPP)
 claim("Clamp/uniform", "\\S Which Part of the Perturbation", "$1.1\\%$", 1.1,
-      0.05, "tifs_a3", _clamp_loss("uniform"))
+      0.05, "tifs_a3", _clamp_loss("uniform"), source=SUPP)
 claim("Clamp/maxdelta", "\\S Which Part of the Perturbation", "$76$", 76.0,
       0.5, "tifs_a3",
       lambda: (mean_of(load("tifs_a3/*_r18_*.csv"),
                        lambda r: r["placement"] == "edge", "max_abs_delta")
-               if load("tifs_a3/*_r18_*.csv") else None))
+               if load("tifs_a3/*_r18_*.csv") else None), source=SUPP)
 
 
 # --- Table VII, mask-guided PGD, from tifs_a4 (gradient mask, cover 0.25) --
@@ -297,14 +304,15 @@ for bb, tag, masked, full, delta, pv in [
         ("r18", "ResNet18", 0.0558, 0.0408, +0.015, 0.12),
         ("mix", "MixVPR", 0.7650, 0.7292, +0.036, 2e-4)]:
     claim(f"T7/{tag}/masked", "Table VII (gradient, cover 0.25)",
-          f"{masked:.4f}", masked, 5e-5, "tifs_a4", _mask(bb, "masked"))
+          f"{masked:.4f}", masked, 5e-5, "tifs_a4", _mask(bb, "masked"),
+          source=SUPP)
     claim(f"T7/{tag}/full", "Table VII (gradient, cover 0.25)", f"{full:.4f}",
-          full, 5e-5, "tifs_a4", _mask(bb, "full"))
+          full, 5e-5, "tifs_a4", _mask(bb, "full"), source=SUPP)
     claim(f"T7/{tag}/delta", "Table VII (gradient, cover 0.25)",
           f"${delta:+.3f}$", delta, 5e-4, "tifs_a4", _mask(bb, "delta"),
-          locator=None)
+          locator=None, source=SUPP)
     claim(f"T7/{tag}/p", "Table VII (gradient, cover 0.25)", f"{pv}", pv,
-          rel(pv), "tifs_a4", _mask(bb, "p"), locator=None)
+          rel(pv), "tifs_a4", _mask(bb, "p"), locator=None, source=SUPP)
 
 
 # --- the cross-time replication, from tifs_a7_o2n8 ------------------------
