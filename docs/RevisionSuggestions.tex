@@ -11,8 +11,8 @@
 \setlength{\headheight}{14pt}
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{Independent academic review for IEEE TIFS --- sixth cycle}
-\rhead{9 September 2026}
+\lhead{Independent academic review for IEEE TIFS --- seventh cycle}
+\rhead{10 September 2026}
 \cfoot{\thepage}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -28,202 +28,572 @@
 \title{Independent Academic Review and Revision Recommendations\\
 \large Target: IEEE Transactions on Information Forensics and Security}
 \author{Manuscript under review:\\
-\normalsize Direction, Not Allocation: What Actually Buys Privacy\\
-\normalsize Against Visual Location Retrieval}
-\date{9 September 2026}
+\normalsize Allocation or Direction? A Matched-Distortion Audit\\
+\normalsize of Visual Location-Privacy Mechanisms}
+\date{10 September 2026}
 \begin{document}
 \maketitle
 
 \section{Review basis, scope, and overall recommendation}
 
-This is a fresh review of the current submission package against the IEEE TIFS author requirements and the standards a TIFS referee would apply. It does not use the previous review file, the project's progress notes, or any earlier completion judgment as input; every statement below was checked against the sources and rendered PDFs named here. The recommendations have \emph{not} been implemented in the manuscript by writing this document.
+This is a fresh review of the current submission package against the IEEE TIFS
+author requirements and the standards a TIFS referee would apply. It does not
+use any previous review file, the project's progress notes, or any earlier
+completion judgment as input. Every statement below was checked against the
+sources and the rendered PDFs named here; where a claim about the
+implementation was needed, the code under \file{src/} was read directly.
 
-The reviewed main source is \file{paper/main.tex}, last modified 22:06 on 9 September 2026, SHA-256 prefix \file{1daed6593e75095b}; its PDF has 13 pages. The reviewed \file{paper/supplementary.tex}, modified 21:53, has prefix \file{e797834b680c2a96}; its PDF has six pages. The bibliography \file{paper/ref.bib} (prefix \file{1e4c47193699f3e5}) holds 63 entries, of which 47 are cited. The generated tables are \file{paper/generated/tab_transfer.tex}, \file{tab_frontier.tex}, and \file{tab_sanitize.tex}. Where a claim about the code was needed, the implementation under \file{src/} was read directly.
+The reviewed main source is \file{paper/main.tex}, SHA-256 prefix
+\file{1df4fd3d1895d09b}; its PDF has 13 pages. The reviewed
+\file{paper/supplementary.tex}, prefix \file{2074fabb40dfb5c9}, has six pages.
+The bibliography \file{paper/ref.bib} (prefix \file{cca4491876ea1723}) holds 63
+entries, of which 47 are cited. Six tables are generated from exports
+(\file{paper/generated/}); the two real-place tables are among them.
 
-\textbf{Overall recommendation: major revision.} The scientific argument is now sound and substantially better supported than a reader of the title would expect: the central negative result is bounded to specified placements, budgets, and models; the mechanistic explanation is stated as conditional and checked against measured margin flips; the closest prior work is cited and run under the same protocol; the direction result carries place-clustered intervals, a named primary family with a Holm correction, and a prespecified equivalence margin; a factorial decomposition, a four-budget utility frontier, a serialized-release audit, and two adaptive-attacker models are all present. I would not recommend rejection. I cannot recommend acceptance in this form for four reasons that are independent of the science: the printed code and export URL does not resolve for an unauthenticated reader, so none of the paper's reproducibility claims can be exercised by a referee; the supplement's adaptive-attacker section describes a superseded experiment whose conclusion the main text has withdrawn; the manuscript's claims of architectural independence between attackers and surrogates are inaccurate on inspection of the code; and the utility frontier and the released-object audit rest on a single seed without saying so or reporting uncertainty. Each is fixable without new GPU work except, optionally, additional seeds.
+\textbf{Overall recommendation: minor revision.} The previous cycle's
+obstacles are gone. The reproducibility package is reachable without
+credentials, the two documents no longer disagree about which experiment the
+adaptive-attacker section reports, the statements about attacker--surrogate
+relatedness now name trunks and match the checkpoints the code loads, the
+utility frontier carries seeds and intervals, and the declared utility
+tolerance has a measured reference scale rather than an assertion. Formatting,
+length, abstract, numbering, responsible use and data terms are all compliant.
+What remains falls into two groups. The first is a set of \emph{cross-document
+and cross-table integrity defects} --- one pointer that promises material the
+supplement does not contain, one hardcoded table number that now resolves to
+the wrong table, one significance marker attached to a pooled cell that was
+never tested, and one calibration sentence whose two numbers appear in no table
+in either document. None of these changes a conclusion, but each is the kind of
+thing a referee finds by following a reference, and finding three of them in
+one reading will cost the paper credibility it has otherwise earned. The second
+group is genuine scientific scope: the real-world evidence rests on a single
+retrieval dataset, and the allocation null is established against
+hand-specified placements and the authors' own two checkpoints rather than
+against any independently trained selective sanitizer. Those two are honest
+limitations rather than errors, and the paper should either address or state
+them.
 
 \subsection{Summary of the work}
-The paper asks whether visual location-privacy mechanisms buy their protection through \emph{where} a bounded distortion budget is spent or through \emph{where the perturbation points}. It proposes a protocol that holds delivered distortion fixed and varies one design axis at a time --- spatial placement, perturbation operator, and direction --- and applies it to a CRF-inspired selective sanitizer implemented as a testbed. The testbed's released support map turns out to be numerically constant. Across eight energy-matched placements, three published-model placements, two gradient-guided placements, and four operators, no allocation beats uniform spreading at the low-distortion operating point on a place-labelled MSLS subset, against a weak and a strong retriever. A surrogate-optimised direction transfers to three held-out attackers at the same delivered distortion, with the largest effect on Patch-NetVLAD. The paper then decomposes the direction effect, measures its downstream cost over four budgets, audits the serialized release, evaluates two adaptive attackers, and offers a conditional first-order account checked against measured margin flips.
+The paper asks whether visual location-privacy mechanisms buy protection
+through \emph{where} a bounded distortion budget is spent or through \emph{where
+the perturbation points}. It proposes a protocol that holds delivered
+distortion fixed and varies one design axis at a time --- spatial placement,
+perturbation operator, direction --- and applies it to a CRF-inspired selective
+sanitizer built as a testbed, whose released support map turns out to be
+numerically constant. Across eight placement rules, three published-model
+placements, two gradient-guided placements and four operators, no allocation
+beats uniform spreading at the low-distortion operating point on a
+place-labelled MSLS subset, against a weak and a strong retriever; on that
+benchmark every difference from uniform is within $\pm0.012$ Top-1. A
+surrogate-optimised direction transfers to four held-out attackers at the same
+delivered distortion, shrinking by an order of magnitude against the one whose
+trunk no surrogate shares. The paper then decomposes the direction effect,
+measures its downstream cost over four budgets against two motivated
+tolerances, repeats the utility measurement on the frames retrieval is scored
+on, audits the serialized release, evaluates two adaptive attackers, and offers
+a conditional first-order account checked against a controlled model with an
+exactly known Jacobian.
 
 \subsection{Strengths worth preserving}
 \begin{itemize}
-\item The delivered-MSE matching, the energy-conservation gate, and the constant-map diagnostic are concrete methodological contributions that other authors can reuse.
-\item The manuscript reports results against itself: high-budget placement gains, a controlled model in which placement is live, a strong attacker on which most of the benefit is unreachable without white-box access, a utility tolerance within which no tested mechanism helps, and a serialized release that carries more distortion than the tensor it was matched at.
-\item Inference is now defensible: the unit is the query with seeds averaged within it, place-clustered bootstrap intervals are given for the headline contrasts, a primary family of four contrasts is Holm-corrected with all other tests labelled exploratory, and a $\pm0.01$ Top-1 equivalence margin is fixed before testing.
-\item The factorial decomposition (sign shuffle, magnitude flattening, placement cross, all from one optimised perturbation at matched delivered MSE) isolates what the earlier version attributed by interpretation.
-\item The adaptive-attacker section evaluates both a fixed-index and a re-indexing attacker, shows the fixed-index constraint damages the attacker, and withdraws the earlier ``fine-tuning failed'' reading rather than defending it.
-\item The closest prior methods (mask-guided multi-model PGD; GeoShield) are cited, distinguished by task, and one is adapted and run under the paper's own protocol.
-\item The mechanistic section measures Jacobian column norms separately from the score gradient it previously stood in for, reports the split-half ceiling that makes the comparison meaningful, and states plainly that the first-order account is optimistic by $1.5$--$3.5\times$.
+\item The delivered-MSE matching solved per frame through the pixel clamp, the
+energy-conservation gate, and the constant-map diagnostic are reusable
+methodological contributions, independent of this paper's conclusions.
+\item The paper repeatedly reports against itself: high-budget placement gains
+that qualify its own thesis, a controlled model in which placement is live, a
+strong attacker on which most of the benefit is unreachable, a cross-dataset
+pairing it names as such, and a tolerance at which its own operating point is
+not affordable.
+\item Inference is defensible and stated: the query is the unit with seeds
+averaged within it, place-clustered intervals accompany the headline contrasts,
+a primary family of four contrasts is Holm-corrected, everything else is
+labelled exploratory, and a $\pm0.01$ Top-1 equivalence margin is fixed before
+testing with ``no benefit detected'' distinguished from ``negligible''.
+\item The tolerance calibration is the right kind of answer to a question about
+an arbitrary threshold: it measures the spread between segmenters the community
+treats as interchangeable, on the same images at the same working resolution,
+and reports both a generous and a strict line with the verdicts that differ
+between them.
+\item The cluster-versus-geographic audit of the MSLS place labels
+($99.3\%$ agreement at 25\,m, $77.5\%$ at 10\,m, and the frank statement that
+the angular half of the original criterion cannot be reproduced) is more
+diligence than this benchmark usually receives.
+\item The adaptive-attacker section identifies that selecting on a floored
+metric manufactures a null, and fixes it by selecting on mean reciprocal rank.
+That observation generalises beyond this paper.
 \end{itemize}
 
 \section{Official submission requirements and package audit}
 
 \subsection{Policy baseline}
-A concise paraphrase of the official SPS instructions~\cite{spsauthors}; these are the venue's requirements, not the reviewer's:
+A concise paraphrase of the official SPS instructions~\cite{spsauthors}; these
+are the venue's requirements, not the reviewer's:
 \begin{itemize}
-\item Initial regular papers: at most 13 double-column pages in 10-point type, references included; revised papers up to 16.
-\item Abstract 150--250 words, self-contained, without abbreviations, references, footnotes, or displayed equations.
-\item Single-anonymized review; authors visible; ORCIDs for all authors; submission metadata must match the manuscript; EDICS selected.
-\item Supplementary material recommended to stay within six double-column pages; more requires Editor-in-Chief approval. Numbering must be unambiguous across manuscript and supplement.
-\item Originality, related-work disclosure, and any prior-submission disclosure are required.
+\item Initial regular papers: at most 13 double-column pages in 10-point type,
+references included; revised papers up to 16.
+\item Abstract 150--250 words, self-contained, without abbreviations,
+references, footnotes, or displayed equations.
+\item Single-anonymized review; authors visible; ORCIDs for all authors;
+submission metadata must match the manuscript; EDICS selected.
+\item Supplementary material recommended to stay within six double-column
+pages; more requires Editor-in-Chief approval. Numbering must be unambiguous
+across manuscript and supplement.
+\item Originality, related-work disclosure, and any prior-submission disclosure
+are required.
 \end{itemize}
-TIFS additionally publishes reproducibility guidance for deep-learning submissions~\cite{tifsdl}: the paper itself, not only its code, must describe architecture, preprocessing, training, model selection, data splits, software, and hardware; and it raises that expectation for negative results that challenge published work~\cite{tifsscope}.
+TIFS additionally publishes reproducibility guidance for deep-learning
+submissions~\cite{tifsdl}: the paper itself, not only its code, must describe
+architecture, preprocessing, training, model selection, data splits, software,
+and hardware; and it raises that expectation for negative results that
+challenge published work~\cite{tifsscope}.
 
-\subsection{Observed compliance and remaining administrative actions}
+\subsection{Observed compliance}
 \begin{longtable}{L{0.21\linewidth}L{0.71\linewidth}}
 \toprule
 Item & Current assessment and action \\
 \midrule
 \endhead
-Main length & 13 pages including references. Compliant, with no spare page. Any addition must be paid for by removal. \\
-Supplement length & Six pages. At the recommended ceiling; any further material moved out of the main text will require Editor-in-Chief approval or must displace something. \\
-Abstract & 243 words; no abbreviations, citations, footnotes, or equations. Compliant. \\
-Numbering & Main tables I--IV and Fig.~1; supplement tables S1--S16 and Figs.~S1--S2. Unambiguous. Compliant. \\
-Formatting & Journal IEEEtran class, 10-point body. Eleven supplementary tables and all three generated main tables are set through \file{\textbackslash resizebox}, so their type is below 10 point; see R8. \\
-Author disclosure & Authors, affiliations, and a corresponding e-mail are present, consistent with single-anonymized review. ORCIDs, EDICS, and submission-system metadata cannot be verified from the files and remain the authors' task. \\
-Cover letter & \file{docs/cover_letter.txt} now describes the current title and the audit contribution. Compliant as inspected. \\
-Submission history & The repository holds a response letter to an earlier venue. Whether disclosure is required depends on facts outside these files; the authors must make any required statement truthfully. \\
-Availability & \textbf{Not compliant.} The URL printed in the author footnote, \url{https://github.com/mabo1215/PPEDCRF}, returns HTTP 404 to an unauthenticated request and ``Not Found'' from the public API on the review date, i.e.\ the repository is private. See R1. \\
-Reproducibility statement & \textbf{Not compliant} with the TIFS deep-learning guidance: neither document names any hardware, software version, or compute budget. See R6. \\
-Ethics / responsible use & No statement. For a forensics venue whose readers include the investigators this perturbation would defeat, one is expected. See R7. \\
+Main length & 13 pages including references. Compliant, at the ceiling with no
+spare page; any addition must be paid for by a removal. \\
+Supplement length & Six pages. At the recommended ceiling without
+Editor-in-Chief approval. The revisions below are net-neutral or negative in
+length by design. \\
+Abstract & 249 words; no abbreviations, citations, footnotes or displayed
+equations. Compliant. \\
+Numbering & Main Tables I--IV and Fig.~1; supplement Tables S1--S12 and
+Figs.~S1--S2. Internally unambiguous. One \emph{cross}-document number is
+wrong; see R2. \\
+Formatting & Journal IEEEtran class, 10-point body. No \file{\textbackslash
+resizebox} survives in either document, and measured on the rendered PDFs the
+only glyphs below 8\,pt are mathematical scripts and page numbers. Compliant. \\
+Availability & \textbf{Compliant.} \url{https://github.com/mabo1215/PPEDCRF}
+returns \texttt{private: false} from the unauthenticated public API on the
+review date, and the supplement prints the identifier alongside the material it
+invokes. \\
+Reproducibility statement & \textbf{Compliant} with the deep-learning
+guidance: hardware per experiment family, framework and library versions,
+approximate compute, the adaptive-attacker recipe with optimiser, learning
+rate, epochs, batch size and the $102/80/200$ place-disjoint split sizes, and
+attacker and surrogate trunks with their training sources are all in the
+supplement. One scoping sentence should be narrowed; see R10. \\
+Ethics / responsible use & \textbf{Compliant.} A responsible-use paragraph
+names the forensic capability the perturbation degrades and states what is and
+is not released; the MSLS terms and non-redistribution statement is present. \\
+Bibliography & 47 cited entries with 46 DOIs recorded in the source. Note that
+the venue-mandated \file{IEEEtran.bst} v1.14 has no \texttt{doi} field support,
+so none is typeset; this is a property of the mandated style, not a defect in
+the manuscript, and no action is required. Sixteen uncited entries remain in
+the file; see R9. \\
+Author disclosure & Authors, affiliations and a corresponding e-mail are
+present, consistent with single-anonymized review. ORCIDs, EDICS and
+submission-system metadata cannot be verified from the files and remain the
+authors' task. \\
+Submission history & The repository holds a response letter to an earlier
+venue. Whether disclosure is required depends on facts outside these files; the
+authors must make any required statement truthfully. \\
 \bottomrule
 \end{longtable}
 
 \section{Major findings and required revisions}
 
-\finding{R1}{Critical}{The reproducibility package is unreachable, so every reproducibility claim is currently unverifiable}
+\finding{R1}{Major}{A cross-document pointer promises material the supplement
+does not contain}
 \evidence
-The manuscript's only pointer to code, exports, and the ``extended evidence report'' it cites six times across the two documents is the GitHub URL in the author footnote. On the review date an unauthenticated \texttt{GET} on that URL returned 404 and the public GitHub API returned ``Not Found'', which is the response for a private repository. A referee therefore cannot open the code, cannot open the extended report, and cannot exercise the claim auditor the paper implicitly relies on when it states that its numbers are checked against raw exports. TIFS specifically raises the reproducibility expectation for negative results challenging published designs~\cite{tifsdl}, which is this paper's genre. Inspection of the local repository shows that the package itself is in good shape --- a builder assembles 37 export directories and a self-test recomputes 228 values from them --- so the defect is access, not content.
+The adaptive-attacker section states: ``The Supplementary Material gives the
+learning-rate sweep, the per-condition table, and the same analysis for
+MixVPR.'' The supplement's corresponding section contains the per-condition
+table and nothing else: a search of \file{supplementary.tex} for
+``learning-rate sweep'' returns no match, and its adaptive-attacker section
+does not mention MixVPR at all. Two of the three items a referee is sent to
+find are absent. Both exist in the extended evidence report, so the material is
+not lost --- the pointer is aimed at the wrong document.
+
+A second pointer has the same problem. The strong-attacker paragraph states
+that for the eight-placement comparison against MixVPR, ``Per-placement values
+are in the Supplementary Material.'' No supplementary table carries MixVPR
+against the eight placements on MSLS: Table~S4 is the three redistribution
+controls per backbone, and Table~S5 is the placement-rule study pooled over six
+backbones on the proxy corpus. The per-placement MixVPR breakdown the sentence
+promises is not there.
+
+This is the same defect class the previous cycle's supplement mismatch
+belonged to, reintroduced by its fix: when the superseded adaptive-attacker
+table was replaced, the sentence pointing at its contents was not.
 
 \action
-Make the repository public, or deposit a versioned archive (Zenodo or equivalent, with a DOI) containing the code, the export trees, the extended evidence report, and the artifact bundle, and print that identifier in the paper. Replace the six prose references to ``the extended evidence report released with the code'' with a citation to the deposited object. State in the supplement which parts are CPU-only table verification and which require the MSLS imagery and a GPU.
+Repoint both sentences at the document that actually holds the material, or
+move the material. For the first, either state that the learning-rate sweep and
+the MixVPR analysis are in the extended evidence report and keep the
+per-condition table reference on the supplement, or add both to the supplement
+--- which the six-page ceiling makes the harder option. For the second, either
+add a per-placement MixVPR table to the supplement, or say that the pooled
+values are in Table~S5 and the per-placement values in the extended report,
+whichever is true.
+
 \acceptance
-An anonymous reader can open the printed identifier, obtain the raw per-query exports and the extended report, and run the table verification without credentials.
+Every ``Supplementary Material'' pointer in the manuscript names material a
+reader can find in the supplement, and every pointer to the extended report
+names material that is in the extended report. A grep of the manuscript for
+such pointers, checked one by one, resolves in every case.
 
-\finding{R2}{Critical}{The supplement's adaptive-attacker section is a superseded experiment whose conclusion the main text has withdrawn}
+\finding{R2}{Major}{A hardcoded cross-document table number now resolves to the
+wrong table}
 \evidence
-Main-text Section ``An Attacker That Adapts to the Defense'' reports an experiment with $n=200$ held-out queries from three place-disjoint splits, two attacker models (fixed-index and re-indexing), checkpoint selection on mean reciprocal rank, and query-level intervals; its headline numbers are that the fixed-index attacker \emph{loses} $0.135$--$0.180$ Top-1 with intervals excluding zero, that re-indexing collapses every difference to within noise, and that against the re-indexing attacker no adaptation beats the unadapted baseline of $0.0350$ (largest effect $+0.0200$ $[-0.0103,+0.0517]$). It explicitly retires the earlier ``fine-tuning failed'' reading.
+The budget-sweep paragraph directs the reader to ``Supplementary Material,
+Fig.~S1 and Table~S7.'' In the current supplement the budget sweep is
+\textbf{Table~S6} (``Placement $\Delta$ versus uniform across budgets'');
+\textbf{Table~S7} is ``Same-image utility on 200 indexed VOC segmentation
+images and 200 COCO detection images'' --- an unrelated table in a different
+section. Fig.~S1 is correct. The numbering shifted when two supplementary
+tables were merged into one, and the hardcoded reference did not move with it.
 
-Supplementary Section ``Adaptive-Attacker Fine-Tuning, Per Condition'' and its Table~S10 describe a different experiment: $n=100$ held-out queries, exact McNemar tests, a learning-rate sweep, and the caption ``the genuinely-improved fine-tuned attacker gains nothing on the white-box bound, on two architecturally unrelated backbones.'' That is the conclusion the main text has withdrawn, stated as the supplement's headline. No supplementary table exists for the two-attacker-model results the main text's claims rest on; the reader is sent to the supplement for ``the per-condition table'' and finds the wrong experiment. This is a version mismatch between the two documents of exactly the kind the manuscript elsewhere goes to lengths to avoid.
+The manuscript's own source carries a comment forbidding cross-document
+\file{\textbackslash ref} into the supplement, precisely because LaTeX cannot
+resolve one. The consequence is that this class of reference is invisible to
+every automatic check the project runs: the build reports zero undefined
+references, and the claim auditor verifies values rather than pointers, so
+nothing in the toolchain can see that S7 is wrong.
 
 \action
-Replace Table~S10 and its section with the per-condition table of the current experiment: for each of the three training exposures and both attacker models, Top-1, median rank, and mean reciprocal rank on the $n=200$ held-out split against the unadapted baseline, with the query-level intervals the main text quotes, plus the selected epoch and validation MRR for each run. If the learning-rate sweep on the older $n=100$ split is retained as background, label it as such, give it its own table, and remove the withdrawn conclusion from its caption. State the training and validation split sizes, which neither document currently gives.
-\acceptance
-Every number the main text's adaptive-attacker section quotes appears in a supplementary table produced by the same run, and no caption in either document asserts the withdrawn conclusion.
+Correct the number to Table~S6. Then remove the class of defect rather than
+this instance of it: either replace the hardcoded numbers with a description
+that cannot go stale (``the budget-sweep table and figure in the Supplementary
+Material''), or add a build-time check that extracts every \texttt{S$n$}
+reference from the manuscript and confirms that the supplement's $n$th table or
+figure carries the caption the manuscript expects.
 
-\finding{R3}{Major}{The architectural-independence claims are inaccurate on inspection of the code}
+\acceptance
+Every numbered cross-document reference resolves to the intended float, and a
+mechanical check exists that would catch the next renumbering.
+
+\finding{R3}{Major}{A significance marker sits on a pooled cell that was never
+tested}
 \evidence
-The manuscript states that Patch-NetVLAD ``shares no architecture with the surrogate ensemble'', that the surrogate set is ``never the attacker being evaluated'', and (supplement, twice) that ResNet18 and MixVPR are ``two architecturally unrelated backbones.'' The implementation shows otherwise:
-\begin{itemize}
-\item The CosPlace surrogate is loaded from \file{ResNet18\_512\_cosplace.pth} --- a ResNet18 trunk. The weak attacker is ResNet18. The surrogate ensemble that transfers to it therefore contains the target's own architecture under different weights.
-\item MixVPR is loaded from \file{resnet50\_MixVPR\_4096\_channels(1024)\_rows(4).ckpt} --- a ResNet50 trunk. ResNet18 and ResNet50 are one family, not ``architecturally unrelated.''
-\item Patch-NetVLAD's released models are VGG16-NetVLAD~\cite{patchnetvlad}. The surrogate ensemble that transfers to it contains an ImageNet VGG16. ``Shares no architecture'' is false at the trunk level; what is true is that the weights, pooling, and training task differ.
-\end{itemize}
-Transfer between two networks with the same trunk is a materially easier problem than transfer across families, and the paper's external-validity argument in Section ``A third attacker, held out from a different family'' leans on the harder reading. The results themselves are not in doubt --- the exports reproduce them --- but the sentence that says what they show is wrong.
+Table~I marks the \emph{learned support} row on the selective-map checkpoint as
+$+0.039^{\ast}$, and its caption defines $\ast$ as ``the one cell significant
+with the query as the unit of inference.'' The value $+0.039$ is the mean
+paired difference pooled over six backbones, three seeds and both benchmark
+scales. The test that produced the star is not a test of that pooled value: the
+body states it is the VGG16 sub-cell, $+0.194$, 95\% CI $[0.028,0.361]$,
+$p=0.05$, over 12 queries --- one cell among 98 comparisons in a family the
+paper itself declares exploratory and uncorrected, at a $p$ equal to the
+threshold, on the smallest query count anywhere in the paper.
+
+A reader of Table~I alone --- which is how tables are read --- will conclude
+that a pooled difference of $+0.039$ is statistically significant. It is not,
+and the paper does not claim it is anywhere in the prose. The supplement's
+Table~S5, reporting the same $+0.039$, carries no star, so the two tables
+disagree about the same number.
+
+This matters more than a typographical quibble because this is the paper's only
+positive finding against the mechanism it audits, and the previous cycle
+already softened the Contributions and Conclusion wording for exactly this
+cell. The table is where the softening did not reach.
 
 \action
-Rewrite the three statements to say what is the case: surrogates and targets share trunks but differ in weights, aggregation, and training data; the transfer demonstrated is cross-weights and cross-task, not cross-architecture. Add a table row or short list giving each attacker's and each surrogate's trunk and training source. If a cross-architecture claim is wanted, run one target whose trunk appears in no surrogate (for the current ensemble, a transformer-based VPR model would do) and report it with the same intervals; otherwise narrow the claim.
-\acceptance
-Every statement about attacker--surrogate relatedness names the trunk and is consistent with the checkpoints loaded by the released code.
+Move the marker to where the test lives. Either drop the star from the pooled
+cell and report the VGG16 result only in the body where its $n$, its interval
+and its exploratory status are visible; or split the row so the marked quantity
+is the tested quantity; or redefine $\ast$ in the caption as ``contains a
+backbone sub-cell significant at $\alpha=0.05$ uncorrected, $n=12$'' and say
+which backbone. The first is preferable and costs nothing.
 
-\finding{R4}{Major}{The title and the universal framing overstate what the body establishes}
+\acceptance
+No marker in either document asserts significance for a quantity that was not
+the object of the test, and Table~I and Table~S5 agree about the status of the
+$+0.039$ cell.
+
+\finding{R4}{Major}{The proxy-versus-real calibration sentence quotes two
+numbers that appear in no table, and attaches one to the wrong table}
 \evidence
-The body is careful: placement gains appear at the two largest budgets and are reported ($-0.087$ to $-0.140$); the controlled model shows placement gains of $-0.42$ to $-0.48$; the mechanism section states that the null ``is an empirical statement about the placements, budgets and models tested, not an impossibility''; and the utility frontier concludes that within a declared tolerance no tested mechanism, direction included, meaningfully degrades the attacker. The title, ``Direction, Not Allocation: What Actually Buys Privacy,'' commits to a universal reading the body declines to make. Two further instances:
-\begin{itemize}
-\item The introduction asserts the field inherits its operator ``almost universally additive isotropic Gaussian noise'' and Section ``Allocation II'' repeats ``the operator this literature almost universally uses.'' Neither is cited. A universal claim about a literature needs either a survey citation or a softer word.
-\item The Contributions and Conclusion state that ``the genuinely selective map is significantly worse.'' The evidence is one cell ($+0.194$, $p=0.05$, 12 queries, VGG16) among 98 comparisons in a family the paper itself declares exploratory and uncorrected. Reporting it is right; promoting it to a headline ``significantly'' is not consistent with the paper's own multiplicity policy.
-\end{itemize}
+Both documents carry the sentence that calibrates the paper's most important
+scope limitation --- that the effect on real place data is far smaller than on
+the mined proxy. The manuscript: ``On real place data the protective effect is
+far smaller than on the proxy (Top-1 drop $0.018$ versus $0.111$).'' The
+supplement, introducing the wide 8-city table: ``The protective effect is
+directionally consistent with the mined proxy and far smaller, a Top-1 drop of
+$0.018$ against $0.111$.''
+
+Neither number appears in any table in either document. Recomputed from the
+released exports, the wide 8-city table the supplement's sentence introduces
+has a primary-manifest mean drop of $0.0186$ (which prints as $0.019$) and a
+ResNet18 cell of $0.0142$; the value $0.018$ matches the \emph{two-city}
+ResNet18 cell ($0.0183$) exactly. The sentence therefore attaches a two-city
+number to the eight-city table, or else quotes a mean without saying it is one.
+The comparator $0.111$ is not derivable from any table in either document at
+all; the proxy tables report Top-1 levels, not this drop.
+
+Because the sentence is the paper's own statement of how much weaker the real
+result is, a referee who tries to check it --- and this is precisely the
+sentence a sceptical referee checks --- cannot.
 
 \action
-Retitle to reflect the bounded finding; for example, \emph{Allocation or Direction? A Matched-Distortion Audit of Visual Location-Privacy Mechanisms}. Cite or soften the two ``almost universally'' statements. In the Contributions and Conclusion, describe the VGG16 cell as ``worse than uniform in one exploratory cell'' or drop ``significantly''; keep the full result where it is reported.
-\acceptance
-Title, abstract, contributions, and conclusion make no claim the body qualifies away, and no exploratory test is described as significant outside its own section.
+State what the two numbers are and where they come from. Give each one a unit
+and a scope: which manifest, which backbone or which mean over which cells, and
+which benchmark for the proxy figure. If $0.018$ is a mean over the primary
+manifest's six backbones, say so and print $0.019$; if it is the ResNet18 cell,
+say which table it is in. Add the proxy drop to a table, or cite the extended
+report for it by name. Register both in the released verification tool so the
+next edit cannot silently break them.
 
-\finding{R5}{Major}{The utility frontier and the released-object audit rest on a single seed, undisclosed and without uncertainty}
+\acceptance
+Every number in the proxy-versus-real comparison names its manifest, its
+backbone or its aggregation, and can be located in a table in one of the
+released documents.
+
+\finding{R5}{Major}{The real-world evidence rests on a single retrieval dataset}
 \evidence
-The exports behind Table~V (\file{tifs\_a5}, \file{tifs\_a8}, \file{tifs\_a8\_hi}, \file{tifs\_a8\_mse60.0}) record \texttt{seeds:\,[1234]} and 200 queries. The manuscript says ``over 200 queries'' for the release audit and reports the frontier with no interval in any cell. Every other headline experiment in the paper uses three seeds and quotes intervals. Yet the frontier supports two of the paper's most consequential sentences --- that direction is $4.4\times$ better than isotropic noise at slightly lower utility cost, and that within a $0.05$ mIoU tolerance no mechanism meaningfully degrades the attacker --- and the release audit supports the sentence that the amplitude bound is a property of the budget. The admissibility verdicts in Table~V turn on differences of $0.001$--$0.006$ mIoU from the $0.05$ line (e.g.\ $0.0494$ admissible, $0.0679$ not) with no uncertainty attached.
+Every real-place result in the paper --- the allocation null, the
+published-model placements, the operator study, the direction transfer to four
+attackers, the preprocessing robustness, the adaptive attacker, the serialized
+release audit and the joint utility measurement --- is measured on subsets of
+one dataset, the Mapillary Street-Level Sequences release. The paper is candid
+about the resulting narrowness within that dataset: queries are ``almost
+entirely forward-view and daytime with empty season and weather fields'', so
+nothing here is a cross-condition robustness claim.
+
+For a negative result whose thesis is that a design axis does not work, single-
+dataset evidence is the most natural attack surface a referee has. The claim is
+not that placement fails on MSLS; it is that placement fails in the
+low-distortion regime these mechanisms target. One dataset, one capture
+modality, and one place-label convention cannot separate those.
+
+The bibliography already contains two standard alternatives that are cited
+nowhere in either document: Tokyo 24/7~\cite{torii201524}, which is the
+canonical day--night and viewpoint-variation benchmark and would directly test
+the condition narrowness the paper concedes, and Oxford
+RobotCar~\cite{maddern2017robotcar}, which supplies season and weather
+variation. Their presence in the file suggests the authors considered them.
 
 \action
-State the seed count and query count for these two families wherever their numbers are quoted. Add uncertainty: a bootstrap over images for mIoU and over queries for Top-1 is available from the existing per-image and per-query rows without any GPU work. Preferably add two further seeds for the operating-point rows, which is the only cell the paper's design recommendation depends on. Re-state the admissibility column with its interval, and if a cell's interval crosses the tolerance, say so rather than assigning it a side.
-\acceptance
-Table~V and the release-boundary paragraph report seed counts and intervals, and no admissibility or multiplicative claim is stated more precisely than its interval allows.
+Run the two comparisons the thesis rests on --- the eight-placement
+energy-matched study and the direction-versus-isotropic contrast at the
+operating point --- on one further place-labelled dataset, under the existing
+protocol and gates, and report them with the same intervals. One backbone and
+one budget is enough; the claim being tested is whether the null and the
+direction effect survive a change of dataset, not a full replication. If that
+cannot be done, state in the scope paragraph and the conclusion that every
+real-place result is from one dataset under one capture condition, and confine
+the regime claim accordingly.
 
-\finding{R6}{Major}{The manuscript does not meet the TIFS deep-learning reproducibility guidance}
+\acceptance
+Either a second place-labelled dataset carries the allocation null and the
+direction contrast with intervals, or every statement about the regime rather
+than the benchmark is explicitly restricted to MSLS under daytime forward-view
+capture.
+
+\finding{R6}{Moderate}{The allocation null is established only against
+hand-specified placements and the authors' own two checkpoints}
 \evidence
-Neither document names any hardware, framework, library version, or compute budget; a search of both sources for GPU, CUDA, PyTorch, or wall-clock finds nothing. For the adaptive-attacker experiment the main text gives the objective, the frozen trunk, the hard-negative count, and the selected epoch, but not the learning rate of the current run, the optimiser, the number of epochs trained, the batch size, or the sizes of the training and validation splits; the only learning-rate values in the package belong to the superseded run (R2). The direction optimiser is fully specified; the operators are defined in the supplement; the DCRF recurrence and calibration index are given with their constants. The gap is confined to compute, software, and the adaptive-attacker training recipe.
+The placements tested are: the testbed's own learned map on two checkpoints,
+uniform, spectral-residual saliency, Sobel edge magnitude, a centre-bias prior,
+a fixed random field, a score-gradient map and its inverse, and three
+off-the-shelf segmentation models used as background/foreground priors. Of
+these, exactly one family is a \emph{learned sensitivity map produced by a
+sanitizer}, and both of its checkpoints are the authors' own --- one of which
+is degenerate, which the paper reports and correctly treats as a diagnostic
+rather than a result.
+
+The three published-model placements are the strongest external evidence in the
+section, and the paper is right to add them, but they are segmentation models
+repurposed as placement priors. They were not trained to place a privacy
+budget, and no independently trained selective sanitizer is evaluated. The
+conclusion that ``no placement rule beats uniform'' is therefore established
+over a set of priors the authors specified plus their own mechanism, which is a
+weaker statement than the framing implies.
 
 \action
-Add a short reproducibility paragraph to the supplement: hardware used for each experiment family (the artifact README names an RTX~3090; confirm and complete), framework and versions, and approximate compute per family. Complete the adaptive-attacker recipe: optimiser, learning rate, epochs, batch size, split sizes, and the validation criterion. These fit in a quarter page of the supplement.
-\acceptance
-A reader can list, from the two documents alone, every component the TIFS guidance enumerates: architecture, preprocessing, training, model selection, splits, software, and hardware.
+Either evaluate one third-party selective sanitizer with a released checkpoint
+under the protocol --- the mask-guided baseline is already implemented and run,
+so extending the same treatment to one more released mechanism is incremental
+--- or state the limitation where the null is asserted: that the tested
+placement set comprises hand-specified priors, gradient maps, published
+segmentation priors, and this paper's own two checkpoints, and that no
+independently trained sanitizer map was available to test.
 
-\finding{R7}{Major}{No responsible-use statement, and no data-terms statement, for a perturbation that defeats forensic retrieval}
+\acceptance
+The null's scope sentence names the class of placements it covers, and does not
+generalise beyond it without evidence.
+
+\finding{R7}{Moderate}{The conclusion's ``attainable'' is not reconciled with
+the frontier's own verdict on the same operating point}
 \evidence
-The paper's deliverable is a perturbation that, without any access to the attacker, reduces a held-out retriever's Top-1 by four fifths and survives ordinary preprocessing once hardened. TIFS readers include investigators who use exactly such retrieval to localise evidence. The manuscript contains no statement on dual use, on the legitimate forensic uses the mechanism would impair, or on why the authors judge publication appropriate. Separately, the MSLS subset is described in construction but the paper does not say under what terms the imagery was obtained or that it is not redistributed; the artifact README does, but the paper is the document of record.
+The conclusion states: ``The practical reading is not that visual location
+privacy is unattainable at low-distortion budgets. It is attainable, on an axis
+this mechanism family does not optimise \dots\ a direction optimised against
+three surrogate embedders from the released frame alone cuts a held-out
+attacker's Top-1 from $0.197$ to $0.032$ at the same delivered distortion.''
+
+The frontier section, on the same operating point, states that this paper's
+operating point costs $0.110$ mIoU, ``more than twice even the generous
+tolerance,'' and that at the strict tolerance the operating point's direction
+arm is settled against. The conclusion's third qualification does say direction
+is not free and costs more utility than isotropic noise at matched distortion,
+so the information is present --- but it arrives after the claim, in weaker
+language, and never states that the cited operating point is one the paper's own
+utility analysis rejects at both tolerances it reports.
+
+``Attainable'' is true at a fixed \emph{distortion} budget and false at either
+\emph{utility} budget the paper motivates. A referee reading the conclusion
+first, as many do, will take away the stronger reading.
 
 \action
-Add a brief responsible-use paragraph (three to five sentences) placing the work in the defensive literature it cites, naming the forensic capability it degrades, and stating what is and is not released (no perturbed imagery; code and exports). Add one sentence on MSLS terms and non-redistribution to the protocol section or supplement.
-\acceptance
-Both statements are present and accurate.
+Qualify the claim in the sentence that makes it. For example: attainable at
+matched distortion, at a utility cost that exceeds both tolerances this paper
+motivates --- which is why the recommendation is to compare directional designs
+at matched utility rather than matched distortion. This is a one-clause change
+and it strengthens the paper's own argument for its recommendation.
 
-\finding{R8}{Moderate}{Presentation: process history in the supplement, scaled type, a figure at script size, and a table that omits its strongest row}
+\acceptance
+No sentence asserting attainability is separated from the utility verdict on
+the same operating point.
+
+\finding{R8}{Moderate}{The tolerance calibration's reference class is narrow
+and measured off-design}
 \evidence
-\begin{enumerate}
-\item The supplement retains a section titled ``Benchmarks Carried Over From the Earlier Framing'' and refers to ``the superseded reference-targeted objective, with the retraction of a single-seed denoising claim.'' Revision history belongs in the response letter, not in the document of record.
-\item Eleven supplementary tables and all three generated main tables are scaled with \file{\textbackslash resizebox\{\textbackslash columnwidth\}}, so their type is below the 10-point body; several are dense. Table~S16 in particular has seven columns at reduced size.
-\item Fig.~1 (the protocol diagram) is set at \file{\textbackslash scriptsize}; its box labels are near the limit of legibility at print size.
-\item Table~IV reports two attackers; the third, Patch-NetVLAD, on which the effect is largest, appears only in prose. The table should carry it, or its caption should say where it is.
-\item The supplement is at six pages, the recommended ceiling. Items R2, R5, and R6 add material; something must give way (the multi-frame and matched-PSNR benchmarks of the earlier framing are candidates for the extended report).
-\end{enumerate}
+The declared tolerance now has a measured scale, which is the right answer to
+the previous cycle's objection, and the two-tolerance presentation is
+well-judged. The reference class deserves one paragraph of scrutiny it does not
+yet receive. The six segmenters are all torchvision releases with
+COCO-with-VOC-labels weights: two DeepLabV3 ResNet variants, two MobileNetV3
+variants and two FCN ResNet variants. Three of the six pairs share a trunk with
+another member, so the spread is measured over a more homogeneous family than
+``published segmenters'' suggests --- one library, one training recipe, one
+label convention.
+
+They are also scored at the utility pipeline's $192\times320$ working
+resolution, far below the resolution these models were trained and released
+for. That is the correct choice for comparability with the tolerance, and the
+paper is right to gate on reproducing the exported value; but it means the
+measured spread is a spread between off-design operating points, which may
+compress or inflate the gaps relative to the spread a practitioner would see.
 
 \action
-Rename and reword the two process-history passages. Reset the widest tables in \file{\textbackslash footnotesize} without scaling, splitting or dropping a column where needed. Raise Fig.~1 to \file{\textbackslash footnotesize} or simplify its labels. Add Patch-NetVLAD to Table~IV or point to it from the caption. Move the earlier-framing benchmarks to the extended report to recover supplement space.
-\acceptance
-No supplementary section describes revision history; no table is set below \file{\textbackslash footnotesize}; every attacker the text discusses appears in the transfer table or is pointed to from its caption.
+Add two sentences to the supplement's calibration paragraph: name the reference
+class as one library's released weights rather than the segmentation literature,
+note the trunk sharing, and state that the spread is measured at the pipeline's
+working resolution rather than at each model's native one. If it is cheap, also
+report the same six models' spread at native resolution as a sensitivity check
+--- the earlier measurement in this project put DeepLabV3-ResNet50 at $0.782$
+there against $0.697$ at working resolution, so the two scales are materially
+different and a reader will want to know which one anchors the tolerance.
 
-\finding{R9}{Moderate}{The deployability conclusion pairs privacy on one dataset with utility on another, under a tolerance the paper declares but does not motivate}
+\acceptance
+The calibration paragraph states the reference class, its homogeneity, and the
+resolution at which the spread was measured.
+
+\finding{R9}{Minor}{Abstract and conclusion enumerate different qualification
+sets, and sixteen bibliography entries are uncited}
 \evidence
-The manuscript is explicit that retrieval is measured on MSLS and utility on VOC and that the two are paired by budget rather than by image, and that $0.05$ mIoU is the authors' declared tolerance rather than a fact about deployments. Both disclosures are correct and should stay. The residual problem is that the paper's practical recommendation --- ``compare directional designs at matched utility'' --- and its strongest self-qualification --- ``within that budget none of these mechanisms meaningfully degrades this attacker'' --- are both read off this cross-dataset pairing at a tolerance no application supplied.
+The abstract announces ``Four qualifications follow'' and lists Top-5/10
+against a strong retriever, attacker-side preprocessing, an adapting attacker,
+and downstream utility cost. The conclusion announces ``Three qualifications
+travel with it'' and lists preprocessing, the adapting attacker, and utility
+cost, omitting Top-5/10. Each count is correct for its own list, but a reader
+comparing the two sees a discrepancy and has to work out that the lists differ
+rather than the count being wrong.
+
+Separately, 16 of the 63 bibliography entries are cited nowhere in either
+document. Uncited entries do not print and are not a compliance defect, but two
+of them are the datasets R5 asks for, and one is a visual place recognition
+survey~\cite{lowry2016visual} that would source the paper's uncited
+characterisation of what the field does --- ``the field learns and ablates the
+first while inheriting the second, in practice additive isotropic Gaussian
+noise'' --- which is the premise the whole paper rests on and currently carries
+no citation. A cited survey~\cite{masone2021survey} appears once, for
+descriptors, not for this claim.
 
 \action
-Either (a) measure a task on the released MSLS frames themselves --- a frozen detector on the 400 query frames is enough --- so that at least one row of the frontier is a joint measurement, or (b) confine the deployability sentences to the cross-dataset observation they rest on and remove the recommendation's generality. Give one sentence of motivation for $0.05$ (for example, the typical mIoU spread between adjacent published segmenters), or present two tolerances and show which conclusions survive both.
-\acceptance
-Every deployment-facing sentence is supported by a joint measurement or is explicitly restricted to the cross-dataset pairing, and the tolerance has a stated rationale.
+Make the two qualification lists identical, or say in the conclusion that it
+repeats three of the four. Cite a survey for the characterisation of the
+field's default operator, or soften it to what the paper's own related-work
+section demonstrates. Prune the uncited entries or put them to use.
 
-\finding{R10}{Minor}{Bibliography completeness}
-\evidence
-Metadata are largely complete; years, venues, and pages are present for the entries checked. Four works are cited as arXiv preprints (\file{le2022rethinking}, \file{chen2017rethinking}, \file{mcpherson2016defeating}, \file{dziugaite2016study}); where a peer-reviewed version exists it should be cited instead. DOIs are absent throughout.
-\action
-Add DOIs where available and replace preprint citations with published versions where they exist.
 \acceptance
-Each entry cites the version of record when one exists.
+The abstract's and conclusion's qualification lists agree; the premise about
+the field's inherited operator carries a citation or is narrowed to the cited
+works.
+
+\finding{R10}{Minor}{One reproducibility sentence is broader than what the
+released check covers}
+\evidence
+The supplement states that ``Recomputing every table in this document from the
+released per-query exports needs no GPU and no imagery.'' That is accurate for
+tables. It sits, however, immediately after the paragraph that points at the
+released code, and a reader may take it as a guarantee over the paper's
+numbers generally. Numbers quoted only in prose are outside it --- the
+proxy-versus-real figures of R4, the KITTI-360 attribution values (Spearman
+$-0.00024$, top-10 overlap $0.0497$, $0.0947$ of occlusion-reference energy),
+and the interval endpoints quoted in the text for the third and fourth
+attackers, among others.
+
+\action
+Narrow the sentence to what it covers and say what it does not: every table in
+this document recomputes from the released exports without a GPU; figures
+quoted only in the text are covered where the table they summarise is
+reproduced, and the extended report identifies the rest.
+
+\acceptance
+The scope sentence distinguishes tabulated numbers from prose-only numbers.
 
 \section{Targeted analysis and experiment plan}
 
-Most of what this review asks for is analysis of exports the authors already hold. The order below is by dependency, not by importance.
+All but one item is document work on evidence the authors already hold. The
+order is by dependency, not by importance.
 
 \begin{longtable}{L{0.07\linewidth}L{0.27\linewidth}L{0.56\linewidth}}
 \toprule
 ID & Purpose & Minimal design and output \\
 \midrule
 \endhead
-E1 & Access (R1) & Publish or deposit the repository, exports, artifact bundle, and extended report under a stable identifier; print it. No experiment. \\
-E2 & Supplement synchrony (R2) & From the existing $n=200$ evaluation export, generate the per-condition table for both attacker models with query-level intervals; add split sizes and the training recipe (R6). No GPU. \\
-E3 & Relatedness (R3) & Tabulate trunks and training sources for every attacker and surrogate from the loaded checkpoints; rewrite the three statements. Optional GPU: one transformer-trunk VPR target under the existing transfer protocol. \\
-E4 & Uncertainty for the frontier and release audit (R5) & Bootstrap over images (mIoU) and queries (Top-1) from the existing per-image and per-query rows; add intervals to Table~V and the release paragraph. Optional GPU: two further seeds at MSE $15.68$ only. \\
-E5 & Joint utility (R9, option a) & Run the frozen detector or segmenter on the 400 released MSLS query frames at the operating point for isotropic, direction, and hardened direction; report one joint row. One GPU-hour. \\
-E6 & Statements (R4, R6, R7) & Retitle; cite or soften the universal claims; add the reproducibility and responsible-use paragraphs. No experiment. \\
+E1 & Pointer integrity (R1, R2) & Enumerate every cross-document pointer in the
+manuscript and confirm each resolves; correct Table~S7 to S6; repoint the
+adaptive-attacker and MixVPR per-placement sentences. Add a build-time check
+over numbered cross-document references. No experiment. \\
+E2 & Table markers (R3) & Remove the star from the pooled learned-support cell
+in Table~I, or redefine it to name the tested sub-cell; reconcile with
+Table~S5. No experiment. \\
+E3 & Calibration provenance (R4) & Identify the manifest and aggregation behind
+$0.018$ and $0.111$ from the existing exports, print them with their scope, and
+register both in the released verification tool. No GPU. \\
+E4 & Second dataset (R5) & Eight-placement energy-matched study and the
+direction-versus-isotropic contrast at the operating point, one backbone, on
+Tokyo 24/7 or Oxford RobotCar under the existing protocol and gates. Report
+with place-clustered intervals. A few GPU-hours; the only item here that needs
+one. \\
+E5 & Calibration scope (R8) & Re-score the six segmenters at native resolution
+as a sensitivity check and add the reference-class sentences. Under one
+GPU-hour, or omit the re-score and add the sentences alone. \\
+E6 & Statements (R6, R7, R9, R10) & Scope the null to the placement class
+tested; qualify ``attainable'' in the sentence that makes it; reconcile the two
+qualification lists; cite or soften the inherited-operator premise; narrow the
+reproducibility scope sentence. No experiment. \\
 \bottomrule
 \end{longtable}
 
-\textbf{Stopping rule.} A revision is complete when the stated comparison has an identified export, an analysis that names its unit and uncertainty, and a manuscript sentence no stronger than that analysis. If a further seed or a joint measurement cannot be run, narrow the sentence rather than leave the stronger one standing.
+\textbf{Stopping rule.} A revision is complete when every printed number names
+its scope and can be located in a released document, every pointer resolves,
+and no marker or adjective asserts more than the test behind it. Where a
+measurement cannot be added, narrow the sentence rather than leave the stronger
+one standing.
 
 \section{Presentation notes not tied to a finding}
 \begin{itemize}
-\item The abstract's three qualifications omit the adaptive attacker. Nothing is over-claimed by the omission, but a reader of the abstract alone does not learn that adaptation was tested. Seven words of abstract budget remain; one clause would do, if the page allows it.
-\item The supplement's opening paragraph lists what lives ``only in the extended evidence report''; once R1 is resolved, cite that report by identifier there and wherever it is invoked.
-\item The Contributions bullet on the mechanistic account still says the known-Jacobian check ``verifies the displacement identity to within 4\%''; that check now lives in the supplement, so the bullet should say so.
-\item ``Quality-preserving'' has been removed from the text; ``low-distortion'' is used consistently. Keep it that way in the response letter.
+\item The operator table reports $+0.0100$ at the operating point while the
+text says no difference ``exceeds $0.01$ in magnitude''. True as written, but a
+reader checking it against the table sees equality; ``none exceeds $0.010$''
+or ``none is larger than $0.010$'' avoids the second look.
+\item The abstract counts ``eight placement rules'' where the MSLS section
+reports seven comparisons against the uniform reference, the eighth being
+uniform itself. Consistent on inspection, but the two counts invite a
+reconciliation the reader has to do.
+\item Table~I's caption defines $\ast$ before the body explains what was
+tested; if R3 is resolved by redefining rather than removing the marker, the
+caption should be self-contained.
+\item The threat-model paragraph is a single unwrapped source line of roughly
+900 characters. This does not affect the PDF, but it makes diffs of that
+paragraph unreadable, and this manuscript's history shows that hand edits to
+long lines are where its transcription defects have come from.
 \end{itemize}
 
 \section{File-level revision map}
@@ -233,35 +603,89 @@ E6 & Statements (R4, R6, R7) & Retitle; cite or soften the universal claims; add
 Target & Items & Completion evidence \\
 \midrule
 \endhead
-\file{paper/main.tex} & R1, R3--R7, R9 & Deposited identifier printed; relatedness statements corrected; title and universals bounded; seed counts and intervals for the frontier and release audit; reproducibility and responsible-use statements; deployability sentences restricted or jointly measured. \\
-\file{paper/supplementary.tex} & R2, R5, R6, R8, R9 & Current adaptive-attacker table with intervals and recipe; frontier intervals; scaled tables reset; process-history wording removed; space recovered. \\
-\file{paper/generated/tab_transfer.tex} & R8 & Patch-NetVLAD row or caption pointer. \\
-\file{paper/generated/tab_frontier.tex} & R5 & Interval column; admissibility stated with its interval. \\
-\file{paper/ref.bib} & R10 & DOIs; versions of record. \\
-\file{src/artifact/} & R1 & Reachable from the printed identifier; README states CPU-only versus GPU scope. \\
-\file{docs/progress.md} & all & Actual work recorded; this review's generation is not recorded as revision completion. \\
+\file{paper/main.tex} & R1--R4, R5--R7, R9, R10 & Pointers repointed;
+Table~S7 corrected to S6; Table~I marker resolved; proxy-versus-real numbers
+scoped; null scoped to its placement class; attainability qualified in place;
+qualification lists reconciled; inherited-operator premise cited or softened. \\
+\file{paper/supplementary.tex} & R1, R8, R10 & Adaptive-attacker and
+per-placement material present or correctly repointed; calibration reference
+class and resolution stated; reproducibility scope sentence narrowed. \\
+\file{paper/generated/tab\_e1\_wide8.tex} & R4 & Whichever of the two figures
+belongs to this table is printed in it or in its caption. \\
+\file{src/scripts/} & R2, R3, R4 & Cross-document reference check added;
+proxy-versus-real numbers registered as claims. \\
+\file{docs/progress.md} & all & Actual work recorded; this review's generation
+is not recorded as revision completion. \\
 \bottomrule
 \end{longtable}
 
 \section{Final assessment}
 
-This is a substantially stronger paper than its title suggests, and the science it reports would, on the evidence in the package, be a useful contribution to TIFS: a reusable matched-distortion audit, a bounded and well-measured negative result about spatial allocation in the regime these mechanisms target, and a direction result whose limits --- residual Top-5/10, utility cost, preprocessing fragility, and adaptive attackers --- are reported rather than hidden. The revisions required are about access, synchrony between the two documents, accuracy of three sentences about architectures, and disclosure of single-seed evidence. None changes a conclusion; all of them determine whether a referee can check one. All findings above are open at the end of this review; none is claimed to have been addressed by writing this document.
+The science is in good order and the package is, with the exceptions below, one
+of the more carefully instrumented submissions a referee is likely to see at
+this venue: a reusable matched-distortion audit, a bounded negative result about
+spatial allocation in the regime these mechanisms target, a direction result
+whose limits are reported rather than hidden, and a utility analysis honest
+enough to reject the paper's own operating point at the tolerance it motivates.
+The previous cycle's four obstacles --- access, document synchrony,
+architectural accuracy, and single-seed evidence --- are genuinely resolved,
+and the fixes are visible in the sources rather than asserted.
+
+What holds it at minor revision is that three of the defects found in this
+reading were found by following a reference and discovering it did not resolve:
+a pointer to a learning-rate sweep and a MixVPR analysis that are not in the
+supplement, a table number that now names the wrong table, and a significance
+marker on a quantity that was not tested. A fourth, the proxy-versus-real
+calibration, quotes two numbers that appear in no table. Individually each is
+small. Together they say something a referee will act on: that this manuscript's
+automatic checks verify values but not references, and that the places where a
+human must check by hand are where its errors now live. The two scientific
+items --- one retrieval dataset, and a placement set that contains no
+independently trained sanitizer --- are limitations rather than errors, and can
+be resolved by evidence or by a sentence.
+
+All findings above are open at the end of this review; none is claimed to have
+been addressed by writing this document.
 
 \begin{thebibliography}{9}
 \bibitem{spsauthors}
-IEEE Signal Processing Society, ``Information for Authors,'' official instructions for Transactions and Journals. Accessed 9 September 2026.\\
+IEEE Signal Processing Society, ``Information for Authors,'' official
+instructions for Transactions and Journals. Accessed 10 September 2026.\\
 \url{https://signalprocessingsociety.org/publications-resources/information-authors}
 
 \bibitem{tifsscope}
-IEEE Signal Processing Society, ``IEEE Transactions on Information Forensics and Security,'' scope and reproducibility guidance. Accessed 9 September 2026.\\
+IEEE Signal Processing Society, ``IEEE Transactions on Information Forensics
+and Security,'' scope and reproducibility guidance. Accessed 10 September
+2026.\\
 \url{https://signalprocessingsociety.org/publications-resources/ieee-transactions-information-forensics-and-security/ieee-transactions}
 
 \bibitem{tifsdl}
-IEEE TIFS Editorial Board, ``Guides for deep learning submissions,'' reproducibility guidance. Accessed 9 September 2026.\\
+IEEE TIFS Editorial Board, ``Guides for deep learning submissions,''
+reproducibility guidance. Accessed 10 September 2026.\\
 \url{https://signalprocessingsociety.org/sites/default/files/uploads/publications_resources/docs/Guidelines__deep_learning_submissions.pdf}
 
-\bibitem{patchnetvlad}
-S. Hausler, S. Garg, M. Xu, M. Milford, and T. Fischer, ``Patch-NetVLAD: Multi-scale fusion of locally-global descriptors for place recognition,'' in \emph{Proc.\ IEEE/CVF Conf.\ Computer Vision and Pattern Recognition (CVPR)}, 2021, pp.\ 14141--14152. The released models use a VGG16 backbone with NetVLAD aggregation.
+\bibitem{torii201524}
+A. Torii, R. Arandjelovi\'c, J. Sivic, M. Okutomi, and T. Pajdla, ``24/7 place
+recognition by view synthesis,'' in \emph{Proc.\ IEEE Conf.\ Comput.\ Vis.\
+Pattern Recognit.\ (CVPR)}, 2015, pp.\ 1808--1817. Present in the manuscript's
+bibliography file and cited nowhere in either document.
+
+\bibitem{maddern2017robotcar}
+W. Maddern, G. Pascoe, C. Linegar, and P. Newman, ``1 year, 1000 km: The Oxford
+RobotCar dataset,'' \emph{Int.\ J. Robot.\ Res.}, vol.\ 36, no.\ 1, pp.\ 3--15,
+2017. Present in the manuscript's bibliography file and cited nowhere in either
+document.
+
+\bibitem{lowry2016visual}
+S. Lowry, N. S\"underhauf, P. Newman, J. J. Leonard, D. Cox, P. Corke, and
+M. J. Milford, ``Visual place recognition: A survey,'' \emph{IEEE Trans.\
+Robot.}, vol.\ 32, no.\ 1, pp.\ 1--19, 2016. Present in the manuscript's
+bibliography file and cited nowhere in either document.
+
+\bibitem{masone2021survey}
+C. Masone and B. Caputo, ``A survey on deep visual place recognition,''
+\emph{IEEE Access}, vol.\ 9, pp.\ 19516--19547, 2021. Cited once in the
+manuscript, for descriptor architectures.
 \end{thebibliography}
 
 \end{document}
