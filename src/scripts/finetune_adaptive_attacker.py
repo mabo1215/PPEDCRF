@@ -13,12 +13,21 @@ scratch.
 
 The gallery side of the objective -- both the fixed positive/negative
 targets used to compute the loss, and the reference index used to rank
-against -- is deliberately kept at the pretrained model's embeddings
-throughout and after fine-tuning: re-embedding a whole reference gallery
-every time a query encoder is adapted is not something a real deployed
-system does. run_direction_transfer_study.py --eval_checkpoint mirrors this:
-it embeds the gallery with the stock model and only the query side (and the
-white_box perturbation's gradient target) with the fine-tuned one.
+against -- is by default kept at the pretrained model's embeddings
+throughout and after fine-tuning, matching a deployment that does not
+re-index its whole reference set every time a query encoder is adapted.
+run_direction_transfer_study.py --eval_checkpoint mirrors this: it embeds the
+gallery with the stock model and only the query side (and the white_box
+perturbation's gradient target) with the fine-tuned one.
+
+That default is a *stipulated* constraint on the attacker, not a fact about
+deployments, and finding R8 is right that a gallery-rebuilding adversary sits
+inside the threat space. --rebuild_gallery therefore re-embeds the reference
+set with the adapted model at each validation. The re-embedding happens once
+per validation rather than once per training step, because 2,000 images per
+step is not affordable; the training objective consequently still ranks
+against the epoch's starting gallery. That is an approximation of a fully
+re-indexing attacker and is reported as one.
 
 Queries are split by place into a training set, a validation set, and a
 held-out test set before any training happens. Negatives are hard-mined each
@@ -40,16 +49,22 @@ queries the fine-tuned model never saw during training or model selection.
 
 --train_perturbation selects what the attacker is assumed to have collected.
 `isotropic` is the original behaviour and reproduces the published sweep.
-`direction` instead trains on frames carrying the *direction* perturbation
-this paper actually proposes, which is the exposure an adversary who
-anticipates this defense would have. The distinction matters: an attacker
-adapted to isotropic noise has adapted to the operating-point control, not to
-the defense, so the two experiments answer different questions and both are
-reported. Direction-perturbed training frames are deterministic given the
-frame and the surrogate ensemble, so they are computed once into a cache
-directory and reused across epochs and across configurations; that also means
-this mode trains without the fresh-noise augmentation the isotropic mode gets
-for free, which is a real difference rather than an implementation detail.
+`direction` trains on frames carrying the *direction* perturbation this paper
+proposes. `hardened_direction` trains on the EOT-hardened release, which is
+the mechanism actually shipped -- R8 observes that the published adaptation
+evidence used the unhardened cache and therefore does not cover the final
+sanitizer. The distinction matters: an attacker adapted to isotropic noise has
+adapted to the operating-point control, not to the defense, so these
+experiments answer different questions and all are reported.
+
+Perturbed training frames are deterministic given the frame, the surrogate
+ensemble and a seed, so they are cached and reused across epochs and
+configurations. With --release_variants N the cache holds N realisations per
+query, each with its own random start, and training draws among them, so the
+attacker adapts to the release *distribution* rather than to one frozen
+perturbation per frame. At N=1 this mode trains without the fresh-noise
+augmentation the isotropic mode gets for free, which is a real difference
+rather than an implementation detail.
 """
 from __future__ import annotations
 
@@ -75,6 +90,7 @@ from eval.retrieval_attack import (  # noqa: E402
     make_default_embedder,
     preprocess_for_embed,
 )
+from eval.sanitizers import SANITIZERS  # noqa: E402
 from scripts.run_direction_transfer_study import (  # noqa: E402
     directional_delta,
     embed_gallery_batched,
@@ -138,6 +154,17 @@ def isotropic_perturb(frame: torch.Tensor, target_mse: float, seed: int) -> torc
     return release_at_mse(frame.unsqueeze(0), delta.unsqueeze(0), target_mse).squeeze(0)
 
 
+def variant_path(cache_dir: Path, query_id: str, variant: int) -> Path:
+    """Where one released realisation of a query lives.
+
+    Variant 0 keeps the historical filename so caches built before release
+    variants existed are still found and not silently rebuilt.
+    """
+    if variant == 0:
+        return cache_dir / f"{query_id}.pt"
+    return cache_dir / f"{query_id}.v{variant}.pt"
+
+
 def build_direction_cache(records, cache_dir: Path, args, gallery, gallery_ids,
                           place_of, gallery_tensor, resize_hw, device) -> None:
     """Cache the direction-perturbed version of every training/validation frame.
@@ -153,14 +180,36 @@ def build_direction_cache(records, cache_dir: Path, args, gallery, gallery_ids,
     the whole run is what turns a comfortable job into an OOM.
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
-    todo = [r for r in records
-            if not (cache_dir / f"{r['query_id']}.pt").is_file()]
+    variants = max(1, int(getattr(args, "release_variants", 1)))
+
+    def missing(rec) -> bool:
+        return any(not variant_path(cache_dir, rec["query_id"], v).is_file()
+                   for v in range(variants))
+
+    todo = [r for r in records if missing(r)]
     if not todo:
-        print(f"[finetune] direction cache complete ({len(records)} frames)",
-              flush=True)
+        print(f"[finetune] direction cache complete ({len(records)} frames "
+              f"x {variants} variant(s))", flush=True)
         return
     print(f"[finetune] building direction cache: {len(todo)} of "
-          f"{len(records)} frames missing", flush=True)
+          f"{len(records)} frames missing, {variants} variant(s) each",
+          flush=True)
+
+    # The hardened condition optimises in expectation over attacker-side
+    # transforms; the plain one sees an untouched frame. Naming a transform
+    # that eval/sanitizers.py does not define is a configuration error, not a
+    # condition to silently skip, so it raises here rather than quietly
+    # producing an unhardened cache under a hardened name.
+    eot_ops = ()
+    if args.train_perturbation == "hardened_direction":
+        unknown = [n for n in args.eot_sanitizers if n not in SANITIZERS]
+        if unknown:
+            raise SystemExit(
+                f"Unknown EOT sanitizer(s) {unknown}; available: "
+                f"{sorted(SANITIZERS)}")
+        eot_ops = tuple(SANITIZERS[n] for n in args.eot_sanitizers)
+        print(f"[finetune] hardened cache: EOT over {list(args.eot_sanitizers)}",
+              flush=True)
 
     embedders, sizes, surr_gal = {}, {}, {}
     for b in args.direction_surrogates:
@@ -188,23 +237,32 @@ def build_direction_cache(records, cache_dir: Path, args, gallery, gallery_ids,
                 tgts = [normalised_embedding(embedders[b], frame,
                                              sizes[b]).detach()
                         for b in args.direction_surrogates]
-        gstart = torch.Generator(device="cpu").manual_seed(
-            zlib.crc32(f"{rec['query_id']}|{args.seed}".encode()) & 0x7FFFFFFF)
-        with torch.enable_grad():
-            delta = directional_delta(
-                frame, tgts, [embedders[b] for b in args.direction_surrogates],
-                [sizes[b] for b in args.direction_surrogates],
-                args.direction_steps, args.direction_step_size,
-                args.direction_linf,
-                random_start=args.direction_random_start,
-                generator=gstart)
-        if float(delta.abs().max()) == 0.0:
-            raise RuntimeError(
-                f"Zero perturbation for {rec['query_id']}: the random start "
-                f"is not doing its job.")
-        released = release_at_mse(frame, delta, args.target_mse)
-        torch.save(released.squeeze(0).cpu(),
-                   cache_dir / f"{rec['query_id']}.pt")
+        for v in range(variants):
+            out_path = variant_path(cache_dir, rec["query_id"], v)
+            if out_path.is_file():
+                continue
+            # The variant index enters the seed, so each realisation gets its
+            # own random start and the attacker sees fresh release randomness
+            # rather than one frozen perturbation per frame (R8).
+            gstart = torch.Generator(device="cpu").manual_seed(
+                zlib.crc32(f"{rec['query_id']}|{args.seed}|{v}".encode())
+                & 0x7FFFFFFF)
+            with torch.enable_grad():
+                delta = directional_delta(
+                    frame, tgts,
+                    [embedders[b] for b in args.direction_surrogates],
+                    [sizes[b] for b in args.direction_surrogates],
+                    args.direction_steps, args.direction_step_size,
+                    args.direction_linf,
+                    random_start=args.direction_random_start,
+                    generator=gstart,
+                    eot_ops=eot_ops, eot_samples=args.eot_samples)
+            if float(delta.abs().max()) == 0.0:
+                raise RuntimeError(
+                    f"Zero perturbation for {rec['query_id']} variant {v}: "
+                    f"the random start is not doing its job.")
+            released = release_at_mse(frame, delta, args.target_mse)
+            torch.save(released.squeeze(0).cpu(), out_path)
         if i % 25 == 0:
             print(f"[finetune] direction cache {i}/{len(todo)}", flush=True)
 
@@ -215,12 +273,13 @@ def build_direction_cache(records, cache_dir: Path, args, gallery, gallery_ids,
     print("[finetune] direction cache complete", flush=True)
 
 
-def cached_direction_perturb(rec, cache_dir: Path) -> torch.Tensor:
-    path = cache_dir / f"{rec['query_id']}.pt"
+def cached_direction_perturb(rec, cache_dir: Path,
+                             variant: int = 0) -> torch.Tensor:
+    path = variant_path(cache_dir, rec["query_id"], variant)
     if not path.is_file():
         raise FileNotFoundError(
-            f"Direction-perturbed frame missing for {rec['query_id']}; the "
-            f"cache under {cache_dir} is incomplete.")
+            f"Direction-perturbed frame missing for {rec['query_id']} "
+            f"(variant {variant}); the cache under {cache_dir} is incomplete.")
     return torch.load(path, map_location="cpu")
 
 
@@ -306,11 +365,37 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
     ap.add_argument("--train_perturbation", default="isotropic",
-                    choices=("isotropic", "direction"),
+                    choices=("isotropic", "direction", "hardened_direction"),
                     help="what the attacker collected and adapts to: the "
                          "operating-point isotropic control (published "
-                         "behaviour) or this paper's direction perturbation "
-                         "(an adversary that anticipates the defense).")
+                         "behaviour), this paper's direction perturbation, or "
+                         "the EOT-hardened direction that is the final "
+                         "released mechanism. Finding R8 notes that the "
+                         "published adaptation evidence covers only the "
+                         "unhardened cache, so it does not speak to the "
+                         "mechanism actually shipped.")
+    ap.add_argument("--eot_sanitizers", nargs="*",
+                    default=["jpeg75", "jpeg50", "blur", "denoise"],
+                    help="transforms the hardened direction is optimised over. "
+                         "Used only when --train_perturbation is "
+                         "hardened_direction; must name entries of "
+                         "eval/sanitizers.py SANITIZERS, and the default is "
+                         "the set the published runs trained on.")
+    ap.add_argument("--eot_samples", type=int, default=2,
+                    help="transforms sampled per optimisation step for the "
+                         "EOT estimator.")
+    ap.add_argument("--release_variants", type=int, default=1,
+                    help="distinct released realisations cached per query, "
+                         "each with its own random start. R8 asks for the "
+                         "attacker to see fresh release randomness rather "
+                         "than one frozen realisation per frame; with N>1 a "
+                         "variant is drawn per epoch.")
+    ap.add_argument("--rebuild_gallery", action="store_true",
+                    help="re-embed the reference gallery with the adapted "
+                         "model at each validation, instead of holding it at "
+                         "the pretrained embeddings. R8 argues a "
+                         "gallery-rebuilding attacker is inside the threat "
+                         "space and must not be excluded by assumption.")
     ap.add_argument("--direction_surrogates", nargs="+",
                     default=["resnet50", "vgg16", "cosplace"],
                     help="surrogate ensemble the collected direction "
@@ -363,16 +448,24 @@ def main() -> int:
 
     cache_dir = Path(args.direction_cache) if args.direction_cache else \
         Path(str(args.output) + ".dircache")
-    if args.train_perturbation == "direction":
+    if args.train_perturbation in ("direction", "hardened_direction"):
         build_direction_cache(train_records + val_records, cache_dir, args,
                               gallery, gallery_ids, place_of, gallery_tensor,
                               resize_hw, device)
+        n_variants = max(1, args.release_variants)
 
         def train_perturb(rec, frame):
-            return cached_direction_perturb(rec, cache_dir)
+            # A fresh realisation per draw when several were cached, so the
+            # attacker adapts to the release distribution rather than to one
+            # frozen perturbation of each frame.
+            v = rng.randrange(n_variants) if n_variants > 1 else 0
+            return cached_direction_perturb(rec, cache_dir, v)
 
         def val_perturb(rec, frame, index):
-            return cached_direction_perturb(rec, cache_dir)
+            # Validation holds variant 0 fixed so the criterion is comparable
+            # across epochs; varying it would move the target under the
+            # model-selection rule.
+            return cached_direction_perturb(rec, cache_dir, 0)
     else:
         def train_perturb(rec, frame):
             return isotropic_perturb(frame, args.target_mse,
@@ -391,7 +484,35 @@ def main() -> int:
 
     with torch.no_grad():
         gal_emb = embed_gallery_batched(cfg, embedder, gallery_tensor).to(device)
-    print(f"[finetune] fixed (pretrained-model) gallery embeddings ready",
+
+    def current_gallery() -> torch.Tensor:
+        """Gallery embeddings to rank against at validation time.
+
+        Two attacker models. By default the gallery stays at the pretrained
+        embeddings, matching a deployment that does not re-index its whole
+        reference set every time a query encoder is adapted. With
+        --rebuild_gallery it is re-embedded with the adapted model, which is
+        the stronger adversary R8 says must not be excluded by assumption.
+
+        Re-embedding happens once per validation rather than once per step:
+        2,000 images per training step is not affordable, and the training
+        objective therefore still uses the epoch's starting gallery. That is an
+        approximation of a fully re-indexing attacker, and is reported as one
+        rather than described as the real thing.
+        """
+        if not args.rebuild_gallery:
+            return gal_emb
+        was_training = embedder.training
+        embedder.eval()
+        with torch.no_grad():
+            rebuilt = embed_gallery_batched(cfg, embedder,
+                                            gallery_tensor).to(device)
+        if was_training:
+            embedder.train()
+        return rebuilt
+
+    print(f"[finetune] gallery embeddings ready "
+          f"({'re-embedded each validation' if args.rebuild_gallery else 'fixed at the pretrained model'})",
           flush=True)
 
     blocks = trainable_submodule(embedder, args.backbone, args.unfreeze_blocks)
@@ -402,7 +523,7 @@ def main() -> int:
     optimizer = torch.optim.Adam(trainable_params, lr=args.lr)
 
     init_val_acc, init_rank, init_mrr = validation_top1(
-        embedder, cfg, gal_emb, gallery_ids, place_of,
+        embedder, cfg, current_gallery(), gallery_ids, place_of,
         val_records, resize_hw, args.target_mse, device, val_perturb)
     print(f"[finetune] epoch 0 (pretrained, no fine-tuning) "
           f"val_top1={init_val_acc:.4f} val_median_rank={init_rank:.1f} "
@@ -462,7 +583,7 @@ def main() -> int:
             step += 1
 
         val_acc, val_rank, val_mrr = validation_top1(
-            embedder, cfg, gal_emb, gallery_ids, place_of,
+            embedder, cfg, current_gallery(), gallery_ids, place_of,
             val_records, resize_hw, args.target_mse, device, val_perturb)
         marker = ""
         if val_acc > best_val_acc:
