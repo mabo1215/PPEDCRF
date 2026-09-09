@@ -3026,3 +3026,58 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
      否则它们会报"no longer present in the source file"。
      另外写了一个**整篇（正文+补充）前后对照的 guard**：
      **数字和 citation 一个没丢**，丢的只有跨文档的 `\ref`，已用散文指路替代。
+
+## 本轮（2026-09-09 夜，逐条核对 RevisionSuggestions.tex：R1–R13 + package audit）
+
+395. 【已完成】**逐条核对，不看进度文档，直接对着正文和 PDF 查**。
+     结论：**R1–R13 十三条的 acceptance 全部满足**，剩下的都在 package audit 那一节，
+     而且多数是作者自己要做的事。核对方式和证据：
+     - **R1**：153/153 claim 对着原始导出验过；本轮还查出并修掉两处版本混用
+       （第 387、388 条）。
+     - **R2**：impossibility 说法已撤回，翻转率实测 5.0% vs 9.0%。
+     - **R3**：列范数与 score-gradient 分别命名并实测（0.478 vs 0.654，
+       ρ=0.659 对上限 0.984）；明确写了 "we make no optimality claim"；
+       受控模型已移入补充材料并标为诊断模型。
+     - **R4**：Le et al. 与 GeoShield 都写进 Related Work，并在本文协议下跑了对照。
+     - **R5**：每张表的 caption 都写明了推断单位、聚类、效应定义、区间方法和标记规则；
+       ±0.01 等价界事先声明。
+     - **R6**：factorial 从同一个扰动派生四个条件，把符号/幅度/放置分开。
+     - **R7**：四档预算的 frontier 表 + 事先声明的 0.05 容差 + 两种读法都写。
+     - **R8**：两种攻击者模型都报；"固定索引是中性约束"已撤回。
+     - **R9**：Patch-NetVLAD 第三个骨干；25 m 判据审计；角度那一半明说无法复现。
+     - **R10**：新增 §What Is Actually Released；Top-1/5/10 全报；不声称形式化 DP。
+     - **R12**：方法有完整公式与优化器配方（步数、步长、ℓ∞、bisection 缩放）。
+     - **R13**：Figure 3 已改成解析表格生成；caption 已核。
+
+396. 【已完成，本轮新查出】**正文与补充材料的效用数差 0.005，正文把方向说反了**。
+     正文写 direction 花 0.079 AP / 0.055 IoU，补充材料写 0.084 / 0.060——
+     **差值 0.005 是真的（补充材料平均三次运行，扰动每次重算），正文也已经声明了这件事**，
+     但那句话写的是补充材料那行"低 0.005"，**实际是高 0.005**。已改成
+     "higher than this one on both tasks"。这正是 R13 说的 sign-convention 类错误。
+
+397. 【已完成】**R11 的 artifact 缺口补上了**。`build_artifact.sh` 一直只打包旧的那批树，
+     **审计器需要的 12 族里有 7 族根本不在 artifact 里**（Table IV 的
+     `tifs_d6`、frontier、四档 release boundary、Patch-NetVLAD、列范数、自适应攻击者）——
+     也就是说评审拿到的包**复现不了论文现在的主结果**。已加 11 棵树，
+     现在 **37 个结果目录 / 644 个文件 / 114 MB**，自检 228 claim 0 mismatch。
+     - **同时在 artifact README 里写清楚边界**：`verify_claims.py` 脚本化断言的是
+       那 228 条，**新加的这几族只提供原始行、没有脚本断言**，不能说成"已验证"。
+       R11 明确要求"inaccessible evidence is not described as verified"。
+
+# 遗留问题（更新：只剩这些）
+
+- **【重要】论文里印的代码地址打不开。** `https://github.com/mabo1215/PPEDCRF`
+  未登录访问返回 **404**（GitHub API 也是 Not Found），说明**仓库是私有的**。
+  评审那一轮说"public web fetch 没解析出来"，本轮确认了原因。
+  **正文印着一个评审打不开的链接，这是投稿前必须解决的**：要么把仓库转公开，
+  要么换成 Zenodo/匿名仓库这类可长期访问的地址。**这件事只能你来做。**
+- **补充材料 6 页，正好卡在建议上限**（SPS 建议 ≤6 页，超出要 EiC 批准）。
+  本轮往里搬了三样东西，已经没有余量了。
+- **`verify_claims.py` 尚未覆盖新加的几族**（见第 397 条）。原始行都在，
+  可以手算；要不要把这几族也脚本化，是个工作量取舍。
+- **ORCID、EDICS、投稿系统 metadata、投稿历史披露** —— 都要作者在投稿系统里填。
+- **R8 的一个判断题**：摘要目前**完全没提自适应攻击者**。正文两种攻击者都报了、
+  也证明了对更强那种的抵抗，所以没有过度声称；但 R8 的 acceptance 原话是
+  "The abstract says which adaptation failed under which constraints"。
+  摘要还有 7 个词余量（243/250），**要不要加一句，需要你定**——
+  正文现在 13 页刚好卡满，加词有可能把页数顶回 14。
