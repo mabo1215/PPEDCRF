@@ -2701,3 +2701,66 @@ paper's numbers can be checked.
 **P2 定 A6 训练数去留** → **P1 压页 15→13**（这两条有先后依赖，见第 368 条）→
 **P3 第二轮写回**（把 A6/A7b 的数注册进审计器，并像核 Figure 3 那样把其余每张图的
 caption 与生成器逐一核对）→ X1 等家里机器的结果。
+
+## 本轮（2026-09-09，家里机器：X1 闭合，allocation 家族全部复算通过）
+
+369. 【已完成】**八棵导出树全部在家里这台机器上，`docs/missing_exports_hunt.md` 的任务闭合**。
+     这次会话的工作目录是 `/mnt/d/source/PPEDCRF`（家里机器），不是上一轮的工作机。
+     `src/outputs/` 在这里是完整的，八棵一棵不缺：
+     | 树 | 文件数 | 体积 |
+     |---|---|---|
+     | `icme2027_placement_msls` | 23 | 7.0 MB |
+     | `operator_study` | 32 | 6.7 MB |
+     | `margin_oracle` | 2 | 2.2 MB |
+     | `known_jacobian` | 36 | 272 KB |
+     | `known_jacobian_operators` | 10 | 260 KB |
+     | `d4_3seed` | 8 | 5.1 MB |
+     | `sanfree_3seed` | 8 | 5.3 MB |
+     | `tifs5_analysis` | 19 | 76 KB |
+     `icme2027_placement_msls` 的 23 个文件、7.0 MB 与第 292 条记的 7.25 MB 对得上，
+     `final/per_query.csv` 正好 **9,600 行**（400 query × 8 placement × 3 seed，
+     backbone 全是 resnet18，种子 1234/1235/1236）。**不是空壳，是真的那棵树。**
+     `src/artifact/results/` 在这里也存在，26 棵齐全，
+     所以 `build_artifact.sh` 卡在第一棵缺失树上退出 1 这件事在这台机器上不存在。
+
+370. 【已完成】**allocation 家族的 16 个格子逐个复算，与正文分毫不差**。
+     不是"树在就算数"，是真的重新算了一遍。
+     - §"The Null Holds on Real Geographic Data" 的七格，用 query 作单位：
+       oracle_grad **−0.0008**、learned / random_fixed / saliency **+0.0008**、
+       anti_oracle_grad **+0.0025**、edge **+0.0050**、center **+0.0092**——
+       **七个全中**。正文引的两个 p 也中：oracle_grad **0.864→0.86**、
+       center **0.198→0.20**。
+     - **顺手弄清了正文的 p 到底是哪个检验**：`significance.csv` 里的
+       `mcnemar_exact_p` 给 oracle_grad 是 **1.00**，不是 0.86。0.86 来自
+       `analyze_placement_query_level.py` 的 **query-level Wilcoxon**。
+       两个数都在树里，取错一个就会写错。以后引 placement 的 p 一律走 query-level 那条。
+     - Table `tab:operator` 八行（uniform、Δ、p）全部复算通过：
+       15.68 档 0.1950/+0.0025/0.69、0.1892/−0.0008/0.83、0.1975/+0.0100/0.39、
+       0.2000/−0.0075/0.51；241.5 档 0.1592/−0.0433/0.008、0.0650/+0.0167/0.12、
+       0.1025/+0.0500/0.003、0.0525/+0.1150/<0.001。
+     - **意义**：R1 的 allocation 家族和 R5 的 allocation 那一半，从"卡在缺树"
+       变成"已用原始导出验过"。R11 在这台机器上也不再被 X1 挡住。
+
+371. 【新发现的缺口】**反过来了：这台机器缺的是上一轮刚跑出来的五棵新树**。
+     在这里跑 `audit_claim_consistency.py` 是 **140 条里 75 verified、0 mismatched、
+     65 unverifiable**，缺的树是 `tifs_a5`、`tifs_a8`、`tifs_a8_hi`、
+     `tifs_a8_mse60.0`、`tifs_d6`——正好是 A5 frontier、A8 释放边界、
+     Table IV 迁移/白盒那三族。它们在工作机上（工作机反过来没有那八棵）。
+     - **也就是说现在没有任何一台机器同时拥有全部十三族导出**。
+       审计器要跑出 140/140、artifact 要打包完整，必须先把两边合到一处。
+     - 八棵合起来只有 **约 27 MB**，是两个方向里明显更好搬的那一边。
+     - 全盘 find（/mnt/c 到 /mnt/g）确认这台机器上没有第二个 PPEDCRF checkout，
+       五棵新树不在本机任何角落。
+
+372. 【教训】**"某棵树找不到了"要按机器分别说，不能按仓库说**。第 344 条写
+     "仍缺八棵"，第 354 条据此写了一份"回家找"的清单——清单本身是对的，
+     但结论的措辞（"recovery is exhausted，所有挂载盘都搜过"）只对工作机成立。
+     同一个 git 仓库在两台机器上有**两套不相交的 gitignore 产物**，
+     这件事在结论里没有体现出来。以后凡是关于 `src/outputs/` 的结论，
+     都要带上"在哪台机器上"。
+
+下一步（全部不需要 GPU）：
+**P2 定 A6 训练数去留** → **P1 压页 15→13**（这两条有先后依赖，见第 368 条）→
+**P3 第二轮写回**（把 A6/A7b 的数注册进审计器，把刚复算通过的 allocation 家族
+也注册进去，并像核 Figure 3 那样把其余每张图的 caption 与生成器逐一核对）。
+**X1 已闭合**（第 369 条），取而代之的新任务是**把两台机器的导出合到一处**（第 371 条）。

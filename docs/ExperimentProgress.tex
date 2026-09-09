@@ -35,21 +35,23 @@ The active review is the fifth independent review in
 \texttt{docs/RevisionSuggestions.tex} (8 September 2026, IEEE TIFS, verdict
 \emph{not ready for submission; major scientific revision}), findings R1--R13.
 All experiments it called for have now been run. \textbf{Nine of the thirteen
-findings are closed}; the four that remain are blocked on export trees that are
-not on any reachable machine, on a page budget, or on the authors.
+findings are closed}; the four that remain are blocked on a page budget, on the
+authors, or on consolidating exports that are split across two machines.
 
 \paragraph{Compute state, 9 September 2026, 16:35 NZST.} \textbf{All four hosts
 are shut down} --- PRO 6000, 2c, vGPU 3090 and H800 all refuse the connection.
 Nothing is running or queued anywhere, and nothing needs to be: no open item
-below requires a GPU except the conditional regeneration in X1.
+below requires a GPU.
 
 \paragraph{Document state.} \texttt{main.pdf} \textbf{15 pages} against the
 13-page TIFS initial-submission ceiling --- content was added first by
 instruction and the compression pass is the next task. Abstract 250 words
 (window 150--250, no margin). \texttt{supplementary.pdf} 5 pages. Both build
 with 0 undefined references, 0 undefined citations, 0 overfull boxes.
-\textbf{140} claims verify against raw exports (was 110), \textbf{52} unit
-tests pass.
+\textbf{140} claims verify against raw exports on the work machine (was 110),
+\textbf{52} unit tests pass. On the home machine the same auditor reports
+\textbf{75} verified, \textbf{0} mismatched and 65 unverifiable, because the
+two machines hold disjoint halves of the export set --- see X2.
 
 \paragraph{One provenance gap opened by shutting 2c down.} The A6
 \emph{training} logs and checkpoints (\texttt{src/outputs/tifs\_a6}) were never
@@ -83,24 +85,29 @@ ID & Item & Status & What remains \\
 R1 & Prose, tables and exports described different numerical versions. &
 \partialstatus & \textbf{Direction family closed}: 140 of 140 claims verify
 against raw per-query rows, including the 30 added for A2, A5 and A8. The
-auditor caught two of my own rounding errors while being extended. \textbf{Two
-gaps remain}: (i) the allocation family's twelve numbers rest on
-\texttt{icme2027\_placement\_msls} and \texttt{operator\_study}, still missing;
-(ii) the A6 training-side MRR figures have no local provenance (see above). \\
+auditor caught two of my own rounding errors while being extended.
+\textbf{Allocation family now also closed}: the two governing trees were
+recovered on the home machine, and all sixteen printed cells recompute exactly
+--- the seven MSLS placement deltas ($-0.0008$ to $+0.0092$) with their quoted
+query-level $p$ values, and all eight rows of the operator table.
+\textbf{One gap remains}: the A6 training-side MRR figures have no local
+provenance (see above). \\
 
 R5 & Inference unit, clustering, multiplicity, equivalence margins. &
 \partialstatus & Closed for the direction family --- place-clustered bootstrap
 over 277 places, a named primary family under Holm, a $\pm0.01$ equivalence
-margin fixed in advance. \textbf{Still open}: the same treatment for the
-allocation family, which needs the same two missing trees as R1. \\
+margin fixed in advance. \textbf{Allocation family now also verified} against
+the recovered trees at the query level. Note the manuscript's placement $p$
+values are the query-level Wilcoxon statistic, not the exact McNemar $p$ also
+stored in those exports; the two differ materially (oracle-gradient: $0.86$
+against $1.00$), so that column must be sourced deliberately. \\
 
-R11 & The artifact is not a complete, current reviewer package. & \blocked &
-Eight trees still missing: \texttt{icme2027\_placement\_msls},
-\texttt{tifs5\_analysis}, \texttt{margin\_oracle}, \texttt{operator\_study},
-\texttt{known\_jacobian}, \texttt{known\_jacobian\_operators},
-\texttt{d4\_3seed}, \texttt{sanfree\_3seed}. \texttt{build\_artifact.sh} exits
-1 on the first absent tree. Recovery is exhausted --- all four hosts and every
-mounted local drive searched. Gate: X1. \\
+R11 & The artifact is not a complete, current reviewer package. &
+\partialstatus & \textbf{No longer gated on missing trees.} All eight are
+present on the home machine, and \texttt{src/artifact/results/} already holds
+its 26 trees there, so \texttt{build\_artifact.sh} no longer exits 1. Two items
+remain: the script does not yet copy the newest families (A5, A6, A8, A7b, D6,
+D7), and no single machine currently holds all thirteen families --- see X2. \\
 
 Pkg & Page budget and submission mechanics. & \pending & \textbf{15 pages
 against a 13-page ceiling.} Abstract at 250 words has no margin either. Cover
@@ -116,7 +123,7 @@ V1 & \texttt{USAGE.md} is gitignored, so its venue line is unprotected. &
 
 Only unfinished work appears below; every completed experiment has been removed
 and is recorded in \texttt{docs/progress.md}. Times are New Zealand Standard
-Time. Nothing here needs a GPU except X1's conditional branch.
+Time. Nothing here needs a GPU.
 
 \begin{longtable}{@{}p{0.19\linewidth}p{0.07\linewidth}p{0.05\linewidth}p{0.17\linewidth}p{0.44\linewidth}@{}}
 \caption{Open work as of 9 September 2026, 16:35 NZST. No host is running.}
@@ -167,18 +174,27 @@ against its generator the way Figure~3 was just checked. Figure~3's drift was
 found only because I went looking; the other figures have not had the same
 audit. \\
 
-X1 --- the eight missing export trees (R1, R5, R11) & \blocked & 33\% &
-\textbf{Awaiting the home-machine check} & Four of twelve recovered; recovery
-otherwise exhausted. \texttt{docs/missing\_exports\_hunt.md} carries the search
-spec. If they are gone, regeneration on 2c costs $\approx$6\,h and produces
-\emph{new} numbers, so \S\,``The Null Holds on Real Geographic Data'' and the
-operator table would need rewriting --- not to be started without the user's
-go-ahead. \\
+X1 --- the eight missing export trees (R1, R5, R11) & \done & 100\% &
+\textbf{Closed 9 Sep} & All eight are on the home machine, intact:
+\texttt{icme2027\_placement\_msls} carries its recorded 23 files and its
+\texttt{final/per\_query.csv} is exactly 9,600 rows. No regeneration is needed,
+so \S\,``The Null Holds on Real Geographic Data'' and the operator table keep
+their published numbers. \\
 
-R11 --- artifact rebuild and verification & \blocked & 0\% & X1 $+$ 2\,h &
-Rebuild from a clean extraction, add the claim auditor to
+X2 --- merge the two machines' exports (R1, R11) & \pending & 0\% &
+\textbf{30\,min, no GPU} & \textbf{New, and now the gate on R11.} Neither
+machine holds all thirteen families: the home machine has the eight recovered
+trees but not \texttt{tifs\_a5}, \texttt{tifs\_a8}, \texttt{tifs\_a8\_hi},
+\texttt{tifs\_a8\_mse60.0} or \texttt{tifs\_d6}; the work machine has the
+converse. The auditor therefore reports 75 of 140 here and 140 of 140 there,
+with zero mismatches on either side. The eight trees total $\approx$27\,MB, so
+moving them to the work machine is the cheaper direction. \\
+
+R11 --- artifact rebuild and verification & \pending & 0\% & X2 $+$ 2\,h &
+Extend \texttt{build\_artifact.sh} to the newest families (A5, A6, A8, A7b, D6,
+D7), rebuild from a clean extraction, add the claim auditor to
 \texttt{run\_verification.sh}, confirm the published code URL resolves
-publicly. Cannot start before X1. \\
+publicly. \\
 
 A7b-angular --- the heading criterion (R9) & \pending & 0\% &
 \textbf{Conditional} & The distance half is done (99.3\% agreement at 25\,m).
