@@ -194,3 +194,88 @@ def test_jpeg_roundtrip_is_lossy_and_smaller_at_lower_quality():
 def test_roundtrip_rejects_an_unknown_format():
     with pytest.raises(ValueError):
         roundtrip(torch.zeros((1, 3, 8, 8)), "webp", 90)
+
+
+# --- Cluster-versus-geographic positive audit (A7b, finding R9) -------------
+
+from scripts.audit_cluster_vs_geographic_positives import (  # noqa: E402
+    audit, haversine_m, has_coords)
+
+
+def test_haversine_matches_known_separations():
+    """Checked against distances that can be worked out independently.
+
+    One degree of latitude is close to 111.2 km everywhere, and the same point
+    must be zero from itself. A planar approximation would pass the first of
+    these and fail at high latitude, which is why the benchmark's spread from
+    Zurich to Manila makes the exact formula worth pinning.
+    """
+    assert haversine_m(0.0, 0.0, 0.0, 0.0) == pytest.approx(0.0, abs=1e-9)
+    assert haversine_m(0.0, 0.0, 1.0, 0.0) == pytest.approx(111195.0, rel=1e-3)
+    assert haversine_m(47.0, 8.0, 47.0, 8.0) == pytest.approx(0.0, abs=1e-9)
+    # Symmetry: the audit compares each query against every gallery entry, so
+    # an asymmetric distance would make the positive set depend on argument
+    # order.
+    a = haversine_m(31.99, 35.87, 32.01, 35.89)
+    b = haversine_m(32.01, 35.89, 31.99, 35.87)
+    assert a == pytest.approx(b, rel=1e-12)
+
+
+def test_has_coords_rejects_missing_and_nonfinite():
+    assert has_coords({"latitude": 1.0, "longitude": 2.0})
+    assert not has_coords({"latitude": 1.0})
+    assert not has_coords({"latitude": None, "longitude": 2.0})
+    assert not has_coords({"latitude": float("nan"), "longitude": 2.0})
+
+
+def _rec(qid, place, lat, lon, gallery):
+    return {"query_id": qid, "place_id": place, "latitude": lat,
+            "longitude": lon, "viewpoint": "Forward", "gallery": gallery}
+
+
+def test_audit_separates_unsupported_clusters_from_geo_only():
+    """A case built so each category is populated by construction.
+
+    q1's only cluster positive sits ~1.1 km away, so at a 25 m threshold it is
+    cluster_unsupported -- and it must be, even though an unrelated gallery
+    image sits 2 m from it. That is precisely the case an "is anything nearby"
+    test would wrongly pass. q2 has no cluster positive at all but does have
+    that near neighbour, so it is geo_only.
+    """
+    far = {"gallery_id": "g_far", "place_id": "P1", "latitude": 0.01,
+           "longitude": 0.0, "viewpoint": "Forward"}          # ~1.1 km away
+    near_other = {"gallery_id": "g_near", "place_id": "OTHER", "latitude": 0.0,
+                  "longitude": 0.00002, "viewpoint": "Forward"}  # ~2.2 m away
+    records = [
+        _rec("q1", "P1", 0.0, 0.0, [far, near_other]),
+        _rec("q2", "NOPOS", 0.0, 0.0, [far, near_other]),
+    ]
+    result = audit(records, [25.0])
+    s = result["per_threshold"]["25m"]
+    assert s["cluster_unsupported"] == 1  # q1: its cluster positive is 1.1 km away
+    assert s["geo_only"] == 1             # q2: near neighbour, no cluster match
+    assert s["cluster_supported"] == 0
+    assert s["queries"] == 2
+    # Both queries have a differently-labelled neighbour inside the threshold.
+    assert s["has_unlabelled_neighbour"] == 2
+
+
+def test_audit_counts_missing_coordinates_rather_than_dropping_them():
+    """Missing coordinates must be visible, not silently excluded."""
+    g = {"gallery_id": "g", "place_id": "P", "latitude": 0.0, "longitude": 0.0,
+         "viewpoint": "Forward"}
+    records = [_rec("ok", "P", 0.0, 0.0, [g]),
+               {"query_id": "bad", "place_id": "P", "viewpoint": "Forward",
+                "gallery": [g]}]
+    result = audit(records, [25.0])
+    assert result["queries"] == 2
+    assert result["queries_missing_coordinates"] == 1
+    assert result["per_threshold"]["25m"]["queries"] == 1
+
+
+def test_audit_reports_that_the_heading_criterion_is_not_audited():
+    """The angular half of the MSLS criterion must never look answered."""
+    g = {"gallery_id": "g", "place_id": "P", "latitude": 0.0, "longitude": 0.0,
+         "viewpoint": "Forward"}
+    result = audit([_rec("q", "P", 0.0, 0.0, [g])], [25.0])
+    assert "NOT AUDITED" in result["heading_criterion"]
