@@ -396,6 +396,98 @@ claim("Summary/allocation-bound", "\\S The Other Axis", "$0.012$", 0.012,
       locator="$0.012$")
 
 
+# --- A8, the released object (\S What Is Actually Released) ----------------
+def _a8(tree: str, condition: str, serialisation: str, field: str
+        ) -> Callable[[], Optional[float]]:
+    """Mean of one A8 column for one condition and serialisation."""
+    def go() -> Optional[float]:
+        rows = load(f"{tree}/serialized_release.csv")
+        vals = [float(r[field]) for r in rows
+                if r["condition"] == condition
+                and r["serialisation"] == serialisation
+                and r[field] not in ("", None)]
+        return float(np.mean(vals)) if vals else None
+    return go
+
+
+for tree, mse, cond, gain, amp in [
+        ("tifs_a8", "15.68", "direction", 0.773, 12.36),
+        ("tifs_a8", "15.68", "direction_eot", 0.618, 9.90),
+        ("tifs_a8_mse60.0", "60", "direction", 1.146, 18.34),
+        ("tifs_a8_hi", "241.5", "direction", 2.312, 36.99)]:
+    claim(f"A8/{mse}/{cond}/gain", "\\S What Is Actually Released",
+          f"$g={gain}$", gain, 5e-4, tree,
+          _a8(tree, cond, "float", "release_gain"),
+          locator=f"{gain}")
+    claim(f"A8/{mse}/{cond}/amplitude", "\\S What Is Actually Released",
+          f"{amp}", amp, 5e-3, tree,
+          _a8(tree, cond, "float", "max_abs_delta_float"),
+          locator=f"{amp}")
+
+for cond, ser, value in [
+        ("direction", "float", 0.0350), ("direction", "jpeg95", 0.0450),
+        ("direction", "jpeg75", 0.1050), ("direction_eot", "float", 0.0150),
+        ("direction_eot", "jpeg75", 0.0250), ("isotropic", "float", 0.2050),
+        ("isotropic", "jpeg75", 0.1950)]:
+    claim(f"A8/serialisation/{cond}/{ser}", "\\S What Is Actually Released",
+          f"${value:.4f}$".rstrip("0").rstrip(".") if False else f"{value}",
+          value, 5e-4, "tifs_a8", _a8("tifs_a8", cond, ser, "top1"),
+          locator=f"{value:.4f}")
+
+for ser, value in [("png", 15.77), ("jpeg95", 16.88), ("jpeg75", 23.97)]:
+    claim(f"A8/mse/{ser}", "\\S What Is Actually Released",
+          f"${value}$", value, 5e-3, "tifs_a8",
+          _a8("tifs_a8", "direction", ser, "mse_decoded"))
+
+
+# --- A5/A8, the privacy-utility frontier (Table tab:frontier) -------------
+FRONTIER = REPO / "paper" / "generated" / "tab_frontier.tex"
+
+
+def _miou(budget: str, condition: str) -> Callable[[], Optional[float]]:
+    """Dataset-level mIoU: pool intersections and unions per class first.
+
+    Averaging per-image IoU would be a different statistic, which is the
+    confusion finding R7 raises about detection AP.
+    """
+    def go() -> Optional[float]:
+        import json
+        path = OUT / f"tifs_a5/segmentation_mse{budget}/per_image.jsonl"
+        if not path.is_file():
+            return None
+        seen: Dict[tuple, dict] = {}
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                if line.strip():
+                    r = json.loads(line)
+                    seen[(r["image_id"], r["condition"], r.get("seed"))] = r
+        inter: Dict[str, int] = defaultdict(int)
+        union: Dict[str, int] = defaultdict(int)
+        for r in seen.values():
+            if r["condition"] != condition:
+                continue
+            for cls, (i_val, u_val) in (r.get("seg_iu") or {}).items():
+                inter[cls] += int(i_val)
+                union[cls] += int(u_val)
+        ious = [inter[c] / union[c] for c in union if union[c]]
+        return float(np.mean(ious)) if ious else None
+    return go
+
+
+for budget, cond, value in [
+        ("5.0", "clean", 0.6974),
+        ("5.0", "isotropic", 0.6828), ("5.0", "direction", 0.6479),
+        ("5.0", "hardened_direction", 0.6196),
+        ("15.68", "isotropic", 0.6692), ("15.68", "direction", 0.5877),
+        ("15.68", "hardened_direction", 0.5038),
+        ("60.0", "isotropic", 0.6295), ("60.0", "direction", 0.4203),
+        ("60.0", "hardened_direction", 0.2754),
+        ("241.5", "isotropic", 0.5784), ("241.5", "direction", 0.2118)]:
+    claim(f"A5/{budget}/{cond}/miou", "Table tab:frontier",
+          f"{value:.4f}", value, 5e-5, "tifs_a5", _miou(budget, cond),
+          source=FRONTIER)
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
