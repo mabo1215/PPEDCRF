@@ -46,8 +46,9 @@ renaming avoids a collision with the older TOMM E1--E7 in the same file.
 \paragraph{Document state.} Unchanged this session: \texttt{main.pdf}
 \textbf{13 pages} (the TIFS initial-submission ceiling), abstract 244 words,
 two figures; \texttt{supplementary.pdf} 5 pages; both with 0 undefined
-references, 0 undefined citations, 0 overfull boxes. \textbf{47} unit tests
-pass (was 32; fifteen were added for A2 and A8). No manuscript text changed
+references, 0 undefined citations, 0 overfull boxes. \textbf{52} unit tests
+pass (was 32; twenty were added for A2, A8 and the positives audit). No
+manuscript text changed
 this session --- the session bought the evidence that the next text pass needs,
 and the writeback rule forbids editing \texttt{paper/} ahead of a gate.
 
@@ -368,7 +369,7 @@ positive is 200\,m away because an unrelated image is next door; a regression
 test now pins exactly that case. The output states in words that the angular
 criterion is \textbf{not} audited. & \done &
 \texttt{src/scripts/audit\_cluster\_vs\_geographic\_positives.py};
-5 further tests, 52 total. \
+5 further tests, 52 total. \\
 
 C11 & Host rules recorded at the user's request: AutoDL academic acceleration
 (\texttt{source /etc/network\_turbo}) applies to all seetacloud hosts, must be
@@ -383,36 +384,88 @@ C12 & Cover letter rewritten around the audit contribution. & \done &
 
 \end{longtable}
 
-\section*{Table 4: A8 First Findings (superseded numbers, kept for the argument)}
+\section*{Table 4: A8 --- The Released Object (R10), Final Numbers}
 
-These come from the discarded first A8 pass (C6), so the \emph{values} will be
-restated from the re-run before anything enters the manuscript. The
-\emph{release-boundary} half does not depend on the surrogate ensemble, because
-the gain is set by MSE matching, and the re-run is so far reproducing it.
+Re-run with the published surrogate ensemble
+(\texttt{resnet50 vgg16 cosplace}) and \texttt{random\_start} 1.0, 200 queries,
+one seed. It reproduces the published operating point closely --- direction
+Top-1 \textbf{0.0350} against a published 0.0317, isotropic \textbf{0.2050}
+against 0.1967 --- which is the check that the audit describes the paper's
+release rather than a near neighbour of it. The discarded first pass had said
+0.160.
 
-\begin{longtable}{@{}p{0.20\linewidth}p{0.11\linewidth}p{0.12\linewidth}p{0.14\linewidth}p{0.37\linewidth}@{}}
+\begin{longtable}{@{}p{0.16\linewidth}p{0.08\linewidth}p{0.08\linewidth}p{0.09\linewidth}p{0.09\linewidth}p{0.36\linewidth}@{}}
+\caption{Top-1 by condition and serialisation at MSE 15.68, with the released
+amplitude. Place-clustered intervals over the city prefix.}
+\label{tab:a8-final}\\
 \toprule
-Condition / budget & Release gain & max$|\delta|$ & vs projection 16 &
-Reading \\
+Condition & float & PNG & JPEG95 & JPEG75 & Release amplitude \\
 \midrule
 \endhead
-direction @ MSE 15.68 & 0.58 & 9.3 & \textbf{inside} & The headline operating
-point does \emph{not} breach the bound. \\
-direction @ MSE 241.5 & 2.31 & 37.0 & \textbf{outside} & The breach is a
-property of the high budget, not of the mechanism. \\
-isotropic @ either & --- & 18.7 / 74.1 & n/a & Drawn, never projected; it has
-no bound to exceed and is not counted as a breach. \\
+direction & \textbf{0.0350} & 0.0350 & 0.0450 & \textbf{0.1050} &
+gain 0.773, max$|\delta|$ 12.4 --- \emph{inside} the projection of 16 \\
+direction (EOT) & \textbf{0.0150} & 0.0150 & 0.0200 & \textbf{0.0250} &
+gain 0.618, max$|\delta|$ 9.9 --- inside \\
+isotropic & 0.2050 & 0.2050 & 0.1950 & 0.1950 &
+drawn, never projected; no bound to exceed \\
 \bottomrule
 \end{longtable}
 
-Serialisation, same pass: PNG leaves Top-1 unchanged to four decimals, and
-JPEG75 changes it by at most 0.005 --- so the codec does \emph{not} rescue
-retrieval, which supports stating the privacy claim for a transmitted file. But
-JPEG inflates delivered distortion well past the matched budget
-(max$|\delta|$ $9.3\rightarrow37.4$, MSE $15.68\rightarrow21.67$), so
-\emph{matching distortion on float tensors does not match it on decoded files}.
-That is a limit on the matched-distortion protocol itself and belongs in the
-manuscript.
+\paragraph{Three readings, all new to the manuscript.}
+\begin{enumerate}
+\item \textbf{JPEG undoes most of the unhardened direction.} Top-1 rises from
+0.0350 to \textbf{0.1050} under JPEG75 --- three times the float figure,
+closing much of the gap to isotropic's 0.195. The EOT-hardened release barely
+moves (0.0150 to 0.0250), which is what it was trained for. \emph{EOT hardening
+is therefore not an optional extra for a deployment that transmits JPEG; it is
+what makes the effect survive the codec at all.} The paper evaluates float
+tensors and does not say this.
+\item \textbf{Matching distortion on floats does not match it on files.} JPEG75
+inflates delivered MSE from 15.68 to 23.97 and max$|\delta|$ from 12.4 to 37.9.
+That is a limit on the matched-distortion protocol itself, not on one run.
+\item \textbf{The projection breach is budget-specific.} At the operating point
+both optimised conditions stay inside the $\ell_\infty$ bound; the high-budget
+run (gain 2.31, max$|\delta|$ 37.0) does not. The manuscript presents the
+breach as a property of the mechanism.
+\end{enumerate}
+
+\section*{Table 4b: Privacy Against Measured Utility (A5, R7)}
+
+Utility is dataset-level mIoU on 200 VOC frames, pooling intersections and
+unions per class before taking the ratio --- the aggregation
+\texttt{evaluate\_direction\_utility.py} uses, reproduced to four decimals
+here. Clean mIoU is \textbf{0.6974} and identical across all four budgets,
+which is the check that the runs are comparable. Privacy is Top-1 on MSLS.
+\textbf{This is a cross-dataset pairing}: no single image contributes to both
+axes, and the join is by delivered-MSE budget.
+
+\begin{longtable}{@{}p{0.09\linewidth}p{0.22\linewidth}p{0.14\linewidth}p{0.12\linewidth}p{0.13\linewidth}p{0.16\linewidth}@{}}
+\caption{Declared tolerance: 0.05 mIoU drop, fixed before the results were
+read.}
+\label{tab:a5-frontier}\\
+\toprule
+Budget & Condition & Top-1 & mIoU & Drop & Admissible? \\
+\midrule
+\endhead
+15.68 & isotropic & 0.205 & 0.6692 & 0.0281 & \textbf{yes} \\
+15.68 & direction & 0.035 & 0.5877 & 0.1097 & no \\
+15.68 & direction (EOT) & 0.015 & 0.5038 & 0.1935 & no \\
+241.5 & isotropic & 0.155 & 0.5784 & 0.1189 & no \\
+241.5 & direction & 0.020 & 0.2118 & 0.4855 & no \\
+\bottomrule
+\end{longtable}
+
+\paragraph{The comparison at matched utility, which is what R7 asked for.}
+Reading down the \emph{Drop} column rather than across the budget rows:
+isotropic at MSE 241.5 spends $0.119$ mIoU to reach Top-1 $0.155$, while
+direction at MSE 15.68 spends $0.110$ --- slightly \emph{less} --- to reach
+Top-1 $0.035$. \textbf{Direction dominates: 4.4$\times$ better privacy at lower
+utility cost.} R7's objection was that a single matched-distortion operating
+point cannot establish a frontier. Measured at matched utility, the paper's
+central claim survives, which is worth having measured rather than assumed.
+
+Two further budgets (MSE 5.0 and 60.0) are running on 2c so that privacy exists
+at all four points rather than two; the rows above are the ones stateable now.
 
 \section*{Table 5: Cluster Positives Against Geographic Positives (A7b, R9)}
 
@@ -423,13 +476,13 @@ MSLS criterion is not reproduced here and is listed as open in Table~1.
 \begin{longtable}{@{}p{0.12\linewidth}p{0.16\linewidth}p{0.18\linewidth}p{0.14\linewidth}p{0.16\linewidth}p{0.12\linewidth}@{}}
 \toprule
 Threshold & Cluster supported & Cluster unsupported & Geo only &
-Unlabelled neighbour & Jaccard \
+Unlabelled neighbour & Jaccard \\
 \midrule
 \endhead
-10\,m & 0.775 & 0.225 & 0.000 & 0.005 & 0.178 \
-\textbf{25\,m} \emph{(MSLS)} & \textbf{0.993} & \textbf{0.007} & 0.000 & 0.013 & 0.343 \
-50\,m & 0.995 & 0.005 & 0.000 & 0.030 & 0.477 \
-100\,m & 0.998 & 0.003 & 0.000 & 0.100 & 0.649 \
+10\,m & 0.775 & 0.225 & 0.000 & 0.005 & 0.178 \\
+\textbf{25\,m} \emph{(MSLS)} & \textbf{0.993} & \textbf{0.007} & 0.000 & 0.013 & 0.343 \\
+50\,m & 0.995 & 0.005 & 0.000 & 0.030 & 0.477 \\
+100\,m & 0.998 & 0.003 & 0.000 & 0.100 & 0.649 \\
 \bottomrule
 \end{longtable}
 
