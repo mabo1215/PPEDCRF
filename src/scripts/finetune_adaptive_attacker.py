@@ -560,6 +560,7 @@ def main() -> int:
     best_val_acc = init_val_acc
     best_epoch = 0
     best_state = copy.deepcopy(embedder.state_dict())
+    print("[finetune] args: " + json.dumps(vars(args), default=str, sort_keys=True))
     print(f"[finetune] selecting checkpoints on '{args.select_on}' "
           f"(epoch 0 score {best_score:.5f})", flush=True)
 
@@ -630,7 +631,12 @@ def main() -> int:
               f"val_mrr={val_mrr:.5f}{marker} (step {step})", flush=True)
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    # The run log used to carry no record of the hyper-parameters, which left
+    # the manuscript unable to state the learning rate of a published run. Log
+    # them at the start and write them beside the checkpoint.
     torch.save(best_state, args.output)
+    with open(args.output + ".args.json", "w", encoding="utf-8") as fh:
+        json.dump(vars(args), fh, indent=2, default=str)
     with open(test_ids_path, "w", encoding="utf-8") as fh:
         json.dump([r["query_id"] for r in test_records], fh)
     print(f"[finetune] best epoch {best_epoch} (val_top1={best_val_acc:.4f}, "

@@ -112,7 +112,8 @@ def transfer_table(summaries, out):
         r"stronger. $\Delta$ is paired against the isotropic control, with a",
         r"query-level bootstrap interval and a Wilcoxon signed-rank test over the",
         r"400 per-query differences, seeds averaged within a query. Place-clustered",
-        r"intervals for the headline rows are given in \S\ref{sec:direction}.}",
+        r"intervals for the headline rows are given in \S\ref{sec:direction}. Patch-NetVLAD, the third held-out attacker, is reported in
+the text of \S\ref{sec:direction}.}",
         r"\label{tab:transfer}",
         r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{lccc}", r"\hline",

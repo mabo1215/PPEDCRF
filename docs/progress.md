@@ -3107,3 +3107,55 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
        Earlier Framing"等过程史措辞，11+3 张表用 resizebox 缩到 10pt 以下，
        Fig. 1 是 \scriptsize，Patch-NetVLAD 不在 Table IV。R9：跨数据集配对与未说明理由的 0.05 容差。
      - **本条只记录评审生成，不算任何修改完成。**
+
+## 第六轮修订（2026-09-09 深夜，按新评审推进：R2/R3/R4/R5/R6/R7/R8 落地，仍 13 页）
+
+399. 【已完成】**R2**：补充材料的自适应攻击者一节整段替换。新表 `tab_adaptive.tex`
+     由 `make_adaptive_attacker_table.py` 从 `tifs_a6_eval` 生成，12 行 + 2 行基线，
+     区间按 **134 个 place 聚类**——用这个方法重算，正文引的四个区间全部复现
+     （[−0.232,−0.092]、[−0.195,−0.079]、[−0.247,−0.118]、[−0.010,+0.051]）。
+     配方写进去了：102/80/200 place-disjoint、最后一个 block 8.39M 参数、
+     triplet margin 0.2、8 个难负例、Adam、batch 16、30 epoch、按 MRR 选点、
+     每次验证重建 gallery。**学习率日志里没有**（脚本只存 state_dict），见遗留问题。
+     `finetune_adaptive_attacker.py` 已改成开跑时打印全部参数并在 checkpoint 旁写
+     `.args.json`。审计器新增 8 条 A6 claim：**161/161 verified**。
+400. 【已完成】**R3**：三处"架构无关"改成实情——CosPlace 代理是 ResNet18 trunk，
+     MixVPR 是 ResNet50，Patch-NetVLAD 是 VGG16 而代理集含 VGG16；
+     迁移是跨权重/聚合/训练数据，不是跨架构。小节标题去掉 "from a different family"。
+401. 【已完成】**R4**（文字部分）：两处 "almost universally" 软化；
+     Contributions 与 Conclusion 里的 "significantly worse" 改为 "worse in one
+     exploratory cell"。**标题没动**——这是你的决定（见遗留问题）。
+402. 【已完成】**R5**：正文写明 frontier 与释放边界是**单种子、200 query/图**。
+     Table V 改由 `make_frontier_table.py` 从导出生成：每个 drop 带**配对图像
+     bootstrap** 区间（不是边际区间——边际区间宽到 ±0.07，配对后才是容差该对照的量），
+     每个 Top-1 带 query bootstrap 区间，admissible 改成三态（✓ / ∼ 跨线 / —）。
+     **三格跨线**（direction@5.0、isotropic@15.68、isotropic@60），
+     正文那句"only three cells are admissible"改为"one admissible, three straddle"；
+     结论"容差内无机制有效"不变。
+403. 【已完成】**R6/R7**：补充材料新增 §Reproducibility and Responsible Use
+     （各族用的显卡：RTX 3090 / 2×RTX 4080 SUPER / RTX PRO 6000；
+     Python 3.10.12、PyTorch 2.13.0、torchvision 0.28.0；大致算力）；
+     正文威胁模型加两句 dual-use；E1 一节加数据来源与不再分发的声明。
+404. 【已完成】**R8**（部分）：补充材料的 "Benchmarks Carried Over From the Earlier
+     Framing" 整节移出（扩展报告本来就有），留一段指路；正文对应指路改指扩展报告。
+     Table IV caption 指向 Patch-NetVLAD。Fig. 1 试过 \footnotesize，**页数顶不住，
+     已改回 \scriptsize**。
+405. 【已完成】**页数**：以上加字后到过 14 页，三轮修剪回到 **13 页**（末页 146 行，
+     几乎满）；补充材料 6 页（末页 119 行）。主文本 guard：**没丢任何数字或引用**；
+     整体 guard 丢的只有被替换的旧 S10 和移出的三张旧表的数。
+
+# 遗留问题（第六轮之后）
+
+- **【R1，只能你做】** `https://github.com/mabo1215/PPEDCRF` 未登录 404。
+  转公开，或存 Zenodo（带 DOI）并把标识印进论文。扩展报告也随之可达。
+- **【R4，你的决定】标题。** 评审建议改成不预设全称结论的标题，例如
+  *Allocation or Direction? A Matched-Distortion Audit of Visual Location-Privacy
+  Mechanisms*。正文所有全称措辞已经收敛，只剩标题没动。
+- **【R6，请确认】A6 的学习率。** 脚本默认 `1e-4`，但那次运行的日志和 checkpoint
+  都没记录参数。**当时有没有改过 `--lr`？** 确认后我把数值补进补充材料的配方里。
+- **【R8，我来做，未做】** 11+3 张 `\resizebox` 表改成不缩放的 `\footnotesize`
+  （要拆列）；Table IV 加 Patch-NetVLAD 行（需给 `make_tifs_tables.py` 补 a7b summary）。
+- **【R9，可选，要 GPU】** 在 400 张 MSLS 释放帧上跑一次冻结的检测器/分割器，
+  给 frontier 一行"同图"的联合测量。约 1 GPU 小时。
+- **补充材料正好 6 页**，再加东西要 EiC 批准或再挪。
+- **责任声明的措辞**是替你写的，投稿前请过目。

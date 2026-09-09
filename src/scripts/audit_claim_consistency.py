@@ -549,6 +549,45 @@ for cid, printed, value, tol, map_name, column in [
           "tifs_a2", _a2(map_name, column), locator=None)
 
 
+# --- A6, the adaptive attacker (\\S An Attacker That Adapts) ------------------
+# One CSV per (training exposure, gallery mode); baseline_hardened.csv is the
+# unadapted attacker on the same 200 held-out queries. Deltas are paired
+# against it per query, seeds averaged within a query first.
+def _a6_top1(fname: str, cond: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load(f"tifs_a6_eval/{fname}.csv")
+        if not rows:
+            return None
+        vals = per_query(rows, lambda r: r["condition"] == cond)
+        return float(np.mean(list(vals.values()))) if vals else None
+    return go
+
+
+def _a6_delta(fname: str, cond: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load(f"tifs_a6_eval/{fname}.csv")
+        base = load("tifs_a6_eval/baseline_hardened.csv")
+        if not rows or not base:
+            return None
+        a = per_query(rows, lambda r: r["condition"] == cond)
+        b = per_query(base, lambda r: r["condition"] == cond)
+        return paired(a, b)["delta"]
+    return go
+
+
+for cid, printed, value, tol, fn in [
+        ("A6/baseline/isotropic", "$0.2300$", 0.2300, 5e-5, _a6_top1("baseline_hardened", "isotropic")),
+        ("A6/baseline/direction", "$0.0350$", 0.0350, 5e-5, _a6_top1("baseline_hardened", "transfer_3")),
+        ("A6/stock/isotropic-trained/loss", "$0.160$", -0.160, 5e-4, _a6_delta("isotropic_stock", "isotropic")),
+        ("A6/stock/direction-trained/loss", "$0.135$", -0.135, 5e-4, _a6_delta("direction_stock", "isotropic")),
+        ("A6/stock/hardened-trained/loss", "$0.180$", -0.180, 5e-4, _a6_delta("hardened_direction_stock", "isotropic")),
+        ("A6/rebuilt/isotropic-trained/direction-delta", "$+0.0200$", 0.0200, 5e-4, _a6_delta("isotropic_rebuilt", "transfer_3")),
+        ("A6/rebuilt/hardened-trained/direction-top1", "$0.0300$", 0.0300, 5e-5, _a6_top1("hardened_direction_rebuilt", "transfer_3")),
+        ("A6/rebuilt/isotropic-trained/direction-top1", "$0.0550$", 0.0550, 5e-5, _a6_top1("isotropic_rebuilt", "transfer_3"))]:
+    claim(cid, "\\S An Attacker That Adapts", printed, value, tol, "tifs_a6_eval", fn,
+          locator=None)
+
+
 # --- A7b, the third held-out backbone (\S The Other Axis) -------------------
 # Patch-NetVLAD shares no architecture with the surrogate ensemble, so this is
 # the external-validity arm rather than another checkpoint of a seen family.
