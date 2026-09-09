@@ -505,6 +505,36 @@ for budget, cond, value in [
           source=FRONTIER)
 
 
+# --- A7b, the third held-out backbone (\S The Other Axis) -------------------
+# Patch-NetVLAD shares no architecture with the surrogate ensemble, so this is
+# the external-validity arm rather than another checkpoint of a seen family.
+def _a7b(round_: str, condition: str, stat: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load(f"tifs_a7b/a7b_pnv_{round_}.csv")
+        if not rows:
+            return None
+        if stat == "top1":
+            vals = per_query(rows, lambda r: r["condition"] == condition)
+            return float(np.mean(list(vals.values()))) if vals else None
+        d = per_query(rows, lambda r: r["condition"] == "transfer_3")
+        i = per_query(rows, lambda r: r["condition"] == "isotropic")
+        return paired(d, i)["delta"]
+    return go
+
+
+for round_, iso, direction, delta in [
+        ("plain", 0.4983, 0.3067, -0.1917),
+        ("eot", 0.4983, 0.2858, -0.2125)]:
+    claim(f"A7b/{round_}/isotropic", "\\S The Other Axis (Patch-NetVLAD)",
+          f"{iso:.4f}", iso, 5e-5, "tifs_a7b", _a7b(round_, "isotropic", "top1"))
+    claim(f"A7b/{round_}/direction", "\\S The Other Axis (Patch-NetVLAD)",
+          f"{direction:.4f}", direction, 5e-5, "tifs_a7b",
+          _a7b(round_, "transfer_3", "top1"))
+    claim(f"A7b/{round_}/delta", "\\S The Other Axis (Patch-NetVLAD)",
+          f"${delta:.4f}$", delta, 5e-4, "tifs_a7b",
+          _a7b(round_, "transfer_3", "delta"), locator=None)
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------

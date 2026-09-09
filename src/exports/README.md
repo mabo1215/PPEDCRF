@@ -26,6 +26,8 @@ a fresh clone on any host carries the evidence with it.
 | `tifs_a8_mse60.0` | 2 | 552 KB | The release-boundary measurement at delivered MSE 60 |
 | `tifs_a6` | 13 | 24 KB | Adaptive-attacker training logs and the held-out query ids |
 | `tifs_a6_eval` | 8 | 296 KB | The adaptive-attacker evaluation this section's conclusions rest on |
+| `tifs_a7b` | 3 | 488 KB | Patch-NetVLAD, the third held-out backbone (R9's external validity) |
+| `tifs_a8_mse5.0` | 2 | 544 KB | The release-boundary measurement at delivered MSE 5.0 |
 
 Every printed number these trees back was recomputed from them on
 9 September 2026 and matched the manuscript exactly: the seven placement deltas
@@ -57,9 +59,11 @@ comes first.
 Three trees are still missing here: `tifs_a8` and `tifs_a8_hi` (the
 release-boundary measurements at the operating point and at MSE 241.5) and
 `tifs_d6` (the transfer and white-box columns of Table IV). They back 51 of the
-auditor's 140 claims, and live on the work machine or on PRO 6000, which was
-not reachable when this was written. With everything else in place the auditor
-reports 89 of 140 with zero mismatches.
+auditor's 146 claims, and live on the work machine or on PRO 6000. A
+whole-filesystem search of 2c on 9 September found neither them nor any other
+copy, across both of its checkouts, so those three are the only families left
+and the work machine is the only place to look. With everything else in place the auditor
+reports 95 of 146 with zero mismatches.
 
 To add them from whichever machine has them:
 
@@ -68,7 +72,7 @@ cd <repo>
 for t in tifs_a8 tifs_a8_hi tifs_d6; do
   cp -r "src/outputs/$t" "src/exports/$t"
 done
-python3 src/scripts/audit_claim_consistency.py   # expect 140 of 140
+python3 src/scripts/audit_claim_consistency.py   # expect 146 of 146
 git add src/exports && git commit
 ```
 

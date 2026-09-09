@@ -1,0 +1,59 @@
+设置成功!
+注意：
+1. 仅限学术用途和加速访问github/huggingface，不承诺稳定性
+2. 开启加速后对访问其他资源如pip源等会*更慢*
+=== [01:28:21] A7b a7b_pnv_plain start ===
+[transfer] objective=self random_start=1.0 eot=off eval_sanitizers=['none']
+[transfer] device=cuda
+[transfer] 400 queries, 2000 gallery
+[transfer] gallery embedded with patchnetvlad
+[transfer] gallery embedded with resnet50
+[transfer] gallery embedded with vgg16
+[transfer] gallery embedded with cosplace
+[transfer] conditions=['isotropic', 'transfer_3']
+[transfer] 25/400 queries
+[transfer] 50/400 queries
+[transfer] 75/400 queries
+[transfer] 100/400 queries
+[transfer] 125/400 queries
+[transfer] 150/400 queries
+[transfer] 175/400 queries
+[transfer] 200/400 queries
+[transfer] 225/400 queries
+[transfer] 250/400 queries
+[transfer] 275/400 queries
+[transfer] 300/400 queries
+[transfer] 325/400 queries
+[transfer] 350/400 queries
+[transfer] 375/400 queries
+[transfer] 400/400 queries
+[transfer] done -> src/outputs/tifs_a7b/a7b_pnv_plain.csv
+=== [01:49:44] A7b a7b_pnv_plain rc=0 ===
+=== [01:49:44] A7b a7b_pnv_eot start ===
+[transfer] objective=self random_start=1.0 eot=['jpeg75', 'jpeg50', 'blur', 'denoise'] eval_sanitizers=['none']
+[transfer] device=cuda
+[transfer] 400 queries, 2000 gallery
+[transfer] gallery embedded with patchnetvlad
+[transfer] gallery embedded with resnet50
+[transfer] gallery embedded with vgg16
+[transfer] gallery embedded with cosplace
+[transfer] conditions=['isotropic', 'transfer_3']
+[transfer] 25/400 queries
+[transfer] 50/400 queries
+[transfer] 75/400 queries
+[transfer] 100/400 queries
+[transfer] 125/400 queries
+[transfer] 150/400 queries
+[transfer] 175/400 queries
+[transfer] 200/400 queries
+[transfer] 225/400 queries
+[transfer] 250/400 queries
+[transfer] 275/400 queries
+[transfer] 300/400 queries
+[transfer] 325/400 queries
+[transfer] 350/400 queries
+[transfer] 375/400 queries
+[transfer] 400/400 queries
+[transfer] done -> src/outputs/tifs_a7b/a7b_pnv_eot.csv
+=== [03:06:26] A7b a7b_pnv_eot rc=0 ===
+A7b ALL DONE
