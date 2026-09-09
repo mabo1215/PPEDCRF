@@ -1,0 +1,800 @@
+{"image_id": "voc_2008_002269", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [39488, 46674], "2": [7933, 15119]}}
+{"image_id": "voc_2008_002269", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [39652, 46782], "2": [7825, 14955]}}
+{"image_id": "voc_2008_002269", "condition": "direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [35381, 46383], "2": [8224, 19226]}}
+{"image_id": "voc_2008_002269", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [40066, 48242], "2": [6365, 14433], "8": [0, 108]}}
+{"image_id": "voc_2009_003196", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54153, 54319], "14": [5731, 5897]}}
+{"image_id": "voc_2009_003196", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54159, 54324], "14": [5726, 5891]}}
+{"image_id": "voc_2009_003196", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54069, 54382], "14": [5668, 5981]}}
+{"image_id": "voc_2009_003196", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [54193, 55930], "3": [0, 3807], "14": [248, 5852], "15": [0, 70]}}
+{"image_id": "voc_2010_001149", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [49999, 50870], "8": [0, 434], "9": [0, 330], "12": [0, 103], "18": [8622, 8914]}}
+{"image_id": "voc_2010_001149", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [49861, 50856], "8": [0, 434], "9": [0, 461], "12": [0, 79], "18": [8657, 8924]}}
+{"image_id": "voc_2010_001149", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50321, 55718], "8": [0, 434], "12": [0, 14], "18": [3898, 8887]}}
+{"image_id": "voc_2010_001149", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50336, 59636], "8": [0, 434], "18": [0, 8866]}}
+{"image_id": "voc_2007_008051", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [49030, 49992], "3": [10319, 11401], "12": [0, 120]}}
+{"image_id": "voc_2007_008051", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [48688, 52966], "3": [7165, 11743], "12": [0, 300]}}
+{"image_id": "voc_2007_008051", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [40343, 54653], "3": [5778, 20088]}}
+{"image_id": "voc_2007_008051", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47031, 53731], "3": [3454, 11993], "12": [0, 4653]}}
+{"image_id": "voc_2007_005460", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [31187, 32183], "8": [20802, 21798]}}
+{"image_id": "voc_2007_005460", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31192, 32499], "8": [20486, 21793]}}
+{"image_id": "voc_2007_005460", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [30803, 33018], "8": [10779, 22164], "12": [0, 9206]}}
+{"image_id": "voc_2007_005460", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [29768, 38421], "3": [0, 4389], "8": [339, 21742], "12": [0, 11310], "15": [0, 1]}}
+{"image_id": "voc_2010_003231", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [55665, 55829], "7": [4580, 4744]}}
+{"image_id": "voc_2010_003231", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55522, 55820], "7": [4589, 4887]}}
+{"image_id": "voc_2010_003231", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [55359, 55812], "7": [4597, 5050]}}
+{"image_id": "voc_2010_003231", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [54675, 55846], "7": [4563, 4812], "15": [0, 922]}}
+{"image_id": "voc_2008_007123", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54945, 55345], "10": [4889, 5289]}}
+{"image_id": "voc_2008_007123", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54945, 55961], "8": [0, 88], "10": [911, 5289], "12": [0, 3274]}}
+{"image_id": "voc_2008_007123", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54841, 56552], "3": [0, 241], "8": [0, 1971], "10": [0, 5289], "12": [0, 1473], "20": [0, 101]}}
+{"image_id": "voc_2008_007123", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [54871, 60234], "10": [0, 5289], "20": [0, 74]}}
+{"image_id": "voc_2010_001000", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [10694, 11104], "10": [33799, 34209]}}
+{"image_id": "voc_2010_001000", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [9722, 19326], "8": [0, 14452], "10": [11125, 34184], "20": [0, 997]}}
+{"image_id": "voc_2010_001000", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [2254, 41951], "8": [0, 2913], "10": [0, 34184], "20": [0, 8504]}}
+{"image_id": "voc_2010_001000", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [10719, 44903], "10": [0, 34184]}}
+{"image_id": "voc_2007_002400", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [18036, 18333], "3": [41231, 41528]}}
+{"image_id": "voc_2007_002400", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [18029, 18298], "3": [41266, 41535]}}
+{"image_id": "voc_2007_002400", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [15091, 22049], "3": [37515, 44473]}}
+{"image_id": "voc_2007_002400", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [18197, 42448], "3": [17116, 41367]}}
+{"image_id": "voc_2007_006680", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32260, 33597], "19": [24308, 25645]}}
+{"image_id": "voc_2007_006680", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32165, 33551], "19": [24354, 25740]}}
+{"image_id": "voc_2007_006680", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32617, 34342], "2": [0, 76], "19": [23487, 25288]}}
+{"image_id": "voc_2007_006680", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [32869, 48204], "2": [0, 121], "15": [0, 9437], "19": [641, 24538]}}
+{"image_id": "voc_2010_002150", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57945, 58232], "4": [2285, 2572]}}
+{"image_id": "voc_2010_002150", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57996, 58640], "4": [1877, 2521]}}
+{"image_id": "voc_2010_002150", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [58160, 60517], "4": [0, 2357]}}
+{"image_id": "voc_2010_002150", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [58160, 60517], "4": [0, 2357]}}
+{"image_id": "voc_2008_003026", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50854, 60975], "20": [0, 10121]}}
+{"image_id": "voc_2008_003026", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [50854, 60975], "20": [0, 10121]}}
+{"image_id": "voc_2008_003026", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50854, 60975], "20": [0, 10121]}}
+{"image_id": "voc_2008_003026", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50854, 60975], "20": [0, 10121]}}
+{"image_id": "voc_2009_002591", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59681, 60202], "1": [0, 1398], "4": [0, 941]}}
+{"image_id": "voc_2009_002591", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [59945, 60338], "1": [0, 908], "4": [90, 941]}}
+{"image_id": "voc_2009_002591", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [60141, 60306], "4": [805, 970]}}
+{"image_id": "voc_2009_002591", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [60170, 60580], "4": [531, 941]}}
+{"image_id": "voc_2010_002146", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [44017, 45515], "8": [7849, 8996], "16": [0, 351]}}
+{"image_id": "voc_2010_002146", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44229, 45748], "8": [7604, 9035], "16": [0, 112]}}
+{"image_id": "voc_2010_002146", "condition": "direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [43701, 45779], "3": [0, 793], "8": [0, 8959], "12": [0, 7496]}}
+{"image_id": "voc_2010_002146", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [44405, 53066], "3": [0, 291], "8": [0, 8959], "12": [0, 3], "15": [0, 4]}}
+{"image_id": "voc_2007_000529", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [43934, 48863], "3": [0, 5], "4": [0, 3786], "7": [26, 1043], "15": [0, 121]}}
+{"image_id": "voc_2007_000529", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [43675, 48740], "3": [0, 4], "4": [0, 3786], "7": [22, 1408], "15": [0, 143]}}
+{"image_id": "voc_2007_000529", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [44973, 48889], "4": [0, 3786], "7": [0, 130]}}
+{"image_id": "voc_2007_000529", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [44774, 48889], "3": [0, 2], "4": [0, 3786], "7": [0, 130], "15": [0, 197]}}
+{"image_id": "voc_2008_002521", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57830, 58184], "9": [634, 907], "11": [0, 81]}}
+{"image_id": "voc_2008_002521", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57869, 58177], "9": [641, 914], "11": [0, 35]}}
+{"image_id": "voc_2008_002521", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [57916, 58252], "9": [566, 902]}}
+{"image_id": "voc_2008_002521", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [57206, 58449], "9": [369, 1612]}}
+{"image_id": "voc_2009_005156", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46094, 52467], "2": [1942, 7407], "4": [0, 908]}}
+{"image_id": "voc_2009_005156", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [47515, 52559], "2": [1850, 6894]}}
+{"image_id": "voc_2009_005156", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [41945, 52968], "2": [1441, 4719], "4": [0, 7745]}}
+{"image_id": "voc_2009_005156", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [52114, 54077], "2": [332, 2295]}}
+{"image_id": "voc_2008_005544", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [47782, 49095], "19": [10993, 12306]}}
+{"image_id": "voc_2008_005544", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [47329, 48462], "19": [11626, 12759]}}
+{"image_id": "voc_2008_005544", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [46842, 48055], "15": [0, 65], "19": [12033, 13181]}}
+{"image_id": "voc_2008_005544", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [47652, 54228], "15": [0, 15], "19": [5860, 12421]}}
+{"image_id": "voc_2009_003903", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50017, 50808], "13": [6984, 7775]}}
+{"image_id": "voc_2009_003903", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50011, 50774], "13": [7018, 7781]}}
+{"image_id": "voc_2009_003903", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [49788, 50714], "13": [7078, 8004]}}
+{"image_id": "voc_2009_003903", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [49802, 50839], "13": [6953, 7990]}}
+{"image_id": "voc_2010_006026", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59759, 60010], "17": [718, 969]}}
+{"image_id": "voc_2010_006026", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59768, 60062], "17": [666, 960]}}
+{"image_id": "voc_2010_006026", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [59880, 60334], "17": [394, 848]}}
+{"image_id": "voc_2010_006026", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57307, 60728], "12": [0, 6], "15": [0, 2567], "17": [0, 848]}}
+{"image_id": "voc_2011_002041", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54052, 55569], "9": [4355, 5872]}}
+{"image_id": "voc_2011_002041", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54417, 55520], "9": [4404, 5507]}}
+{"image_id": "voc_2011_002041", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [55094, 55793], "9": [4131, 4830]}}
+{"image_id": "voc_2011_002041", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55288, 59924], "9": [0, 4636]}}
+{"image_id": "voc_2009_000201", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [48800, 52495], "5": [7684, 8170], "11": [0, 3209]}}
+{"image_id": "voc_2009_000201", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51984, 52779], "5": [7400, 8171], "11": [0, 24]}}
+{"image_id": "voc_2009_000201", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [52322, 59830], "5": [349, 7857]}}
+{"image_id": "voc_2009_000201", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [51994, 60179], "5": [0, 7857], "18": [0, 328]}}
+{"image_id": "voc_2007_009258", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [25184, 33917], "2": [6570, 15106], "15": [11817, 15430]}}
+{"image_id": "voc_2007_009258", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [25156, 34530], "2": [6433, 15002], "15": [11525, 15378]}}
+{"image_id": "voc_2007_009258", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [24741, 39446], "2": [6300, 15306], "15": [6539, 15692]}}
+{"image_id": "voc_2007_009258", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [25590, 45378], "2": [6077, 14649], "15": [1077, 15253]}}
+{"image_id": "voc_2011_002685", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [4616, 6722], "8": [52386, 54492]}}
+{"image_id": "voc_2011_002685", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [2786, 6688], "8": [52420, 56322]}}
+{"image_id": "voc_2011_002685", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [2903, 9490], "8": [49618, 56205]}}
+{"image_id": "voc_2011_002685", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [6107, 24391], "8": [34717, 53001]}}
+{"image_id": "voc_2010_003276", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [34972, 35505], "7": [23672, 24205]}}
+{"image_id": "voc_2010_003276", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [34926, 35705], "7": [23472, 24251]}}
+{"image_id": "voc_2010_003276", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [34819, 35608], "7": [23569, 24358]}}
+{"image_id": "voc_2010_003276", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [34716, 35742], "7": [23435, 24461]}}
+{"image_id": "voc_2010_001752", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [40351, 44970], "20": [7344, 11963]}}
+{"image_id": "voc_2010_001752", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [40283, 45861], "20": [6453, 12031]}}
+{"image_id": "voc_2010_001752", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [40327, 52314], "18": [0, 29], "20": [0, 11958]}}
+{"image_id": "voc_2010_001752", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [40326, 52314], "15": [0, 30], "20": [0, 11958]}}
+{"image_id": "voc_2010_000342", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [42212, 51826], "2": [3899, 13513]}}
+{"image_id": "voc_2010_000342", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [42057, 51821], "2": [3904, 13668]}}
+{"image_id": "voc_2010_000342", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44096, 52670], "2": [3055, 11629]}}
+{"image_id": "voc_2010_000342", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [50536, 54775], "2": [950, 5189]}}
+{"image_id": "voc_2009_001082", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [18020, 18545], "6": [40466, 40991]}}
+{"image_id": "voc_2009_001082", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [18001, 18570], "6": [40441, 41010]}}
+{"image_id": "voc_2009_001082", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [17541, 18529], "6": [40482, 41470]}}
+{"image_id": "voc_2009_001082", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [17128, 18556], "6": [40419, 41883], "7": [0, 36]}}
+{"image_id": "voc_2009_004033", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59735, 60855], "3": [0, 154], "12": [0, 1244]}}
+{"image_id": "voc_2009_004033", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [59612, 60994], "8": [0, 138], "12": [0, 1244]}}
+{"image_id": "voc_2009_004033", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [55722, 60994], "8": [0, 840], "12": [0, 4432]}}
+{"image_id": "voc_2009_004033", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59750, 60994], "12": [0, 1244]}}
+{"image_id": "voc_2011_000338", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53088, 55262], "9": [1726, 2685], "11": [820, 2759]}}
+{"image_id": "voc_2011_000338", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53260, 54776], "5": [0, 67], "9": [1803, 2547], "11": [1132, 2755]}}
+{"image_id": "voc_2011_000338", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53311, 57182], "9": [760, 2392], "11": [0, 2695]}}
+{"image_id": "voc_2011_000338", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [53340, 57916], "5": [0, 30], "9": [186, 2173], "11": [0, 2695]}}
+{"image_id": "voc_2009_000149", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [41020, 49654], "2": [2850, 11173], "15": [494, 939]}}
+{"image_id": "voc_2009_000149", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38227, 50213], "2": [2819, 11274], "15": [0, 3597]}}
+{"image_id": "voc_2009_000149", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [39113, 50198], "2": [2808, 11825], "15": [0, 2186]}}
+{"image_id": "voc_2009_000149", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [37833, 50318], "2": [2537, 11484], "3": [0, 1061], "12": [0, 1349], "15": [0, 1548]}}
+{"image_id": "voc_2009_002928", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [39021, 49586], "2": [5055, 15522], "16": [0, 588]}}
+{"image_id": "voc_2009_002928", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38906, 49823], "2": [4961, 15494], "16": [0, 588]}}
+{"image_id": "voc_2009_002928", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38700, 49539], "2": [5096, 15849], "16": [0, 588]}}
+{"image_id": "voc_2009_002928", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38172, 49544], "2": [5062, 16406], "16": [0, 588]}}
+{"image_id": "voc_2010_002305", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"8": [3360, 13527], "12": [0, 8502], "18": [0, 1665]}}
+{"image_id": "voc_2010_002305", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"8": [11835, 13527], "12": [0, 574], "18": [0, 1118]}}
+{"image_id": "voc_2010_002305", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [0, 12799], "8": [0, 13527], "12": [0, 728]}}
+{"image_id": "voc_2010_002305", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [0, 13157], "8": [0, 13527], "15": [0, 370]}}
+{"image_id": "voc_2010_000110", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32320, 43928], "3": [0, 12154], "12": [180, 13526], "15": [2993, 13437]}}
+{"image_id": "voc_2010_000110", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32208, 42342], "12": [11816, 13788], "15": [4966, 13418]}}
+{"image_id": "voc_2010_000110", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [32009, 45308], "12": [11596, 14131], "15": [2061, 13433]}}
+{"image_id": "voc_2010_000110", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [32326, 59066], "12": [0, 13526], "15": [0, 13620]}}
+{"image_id": "voc_2009_004730", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54073, 54769], "19": [4313, 5009]}}
+{"image_id": "voc_2009_004730", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [53895, 54398], "19": [4684, 5187]}}
+{"image_id": "voc_2009_004730", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54017, 54735], "19": [4347, 5065]}}
+{"image_id": "voc_2009_004730", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53982, 54408], "19": [4674, 5100]}}
+{"image_id": "voc_2009_001765", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57232, 57391], "3": [2854, 3013]}}
+{"image_id": "voc_2009_001765", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [57195, 57378], "3": [2867, 3050]}}
+{"image_id": "voc_2009_001765", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57256, 57566], "3": [2679, 2989]}}
+{"image_id": "voc_2009_001765", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57297, 57562], "3": [2683, 2948]}}
+{"image_id": "voc_2008_003369", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [41760, 41966], "1": [17416, 17622]}}
+{"image_id": "voc_2008_003369", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [41755, 42027], "1": [17355, 17627]}}
+{"image_id": "voc_2008_003369", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [41776, 42852], "1": [16530, 17606]}}
+{"image_id": "voc_2008_003369", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [41778, 48099], "1": [11283, 17604]}}
+{"image_id": "voc_2008_006835", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [48011, 48475], "17": [11029, 11493]}}
+{"image_id": "voc_2008_006835", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47968, 48607], "17": [10897, 11536]}}
+{"image_id": "voc_2008_006835", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47895, 48791], "17": [10713, 11609]}}
+{"image_id": "voc_2008_006835", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [47628, 49296], "17": [10208, 11876]}}
+{"image_id": "voc_2009_000628", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54135, 54282], "19": [5975, 6122]}}
+{"image_id": "voc_2009_000628", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54151, 54322], "19": [5935, 6106]}}
+{"image_id": "voc_2009_000628", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53655, 54545], "8": [0, 189], "12": [0, 312], "19": [5712, 6101]}}
+{"image_id": "voc_2009_000628", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [54125, 54359], "19": [5898, 6132]}}
+{"image_id": "voc_2009_003378", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50370, 51814], "3": [8052, 9496]}}
+{"image_id": "voc_2009_003378", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50419, 51891], "3": [7975, 9447]}}
+{"image_id": "voc_2009_003378", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [48831, 51218], "3": [8648, 11035]}}
+{"image_id": "voc_2009_003378", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [47556, 52319], "3": [5705, 12000], "15": [0, 2073], "20": [0, 79]}}
+{"image_id": "voc_2007_003917", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [35350, 36532], "7": [19728, 20910]}}
+{"image_id": "voc_2007_003917", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [35012, 36539], "7": [19721, 21248]}}
+{"image_id": "voc_2007_003917", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [32985, 36503], "7": [19748, 20358], "12": [0, 2926]}}
+{"image_id": "voc_2007_003917", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [20876, 36503], "7": [19757, 31453], "8": [0, 90], "12": [0, 3769], "15": [0, 72]}}
+{"image_id": "voc_2009_001731", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57542, 57744], "4": [0, 177], "18": [3013, 3038]}}
+{"image_id": "voc_2009_001731", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [57719, 57769], "18": [2988, 3038]}}
+{"image_id": "voc_2009_001731", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57719, 60757], "18": [0, 3038]}}
+{"image_id": "voc_2009_001731", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [57719, 60757], "18": [0, 3038]}}
+{"image_id": "voc_2010_003820", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59773, 60484], "3": [385, 1096]}}
+{"image_id": "voc_2010_003820", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57299, 59976], "3": [893, 3570]}}
+{"image_id": "voc_2010_003820", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54082, 59896], "3": [973, 6727], "8": [0, 60]}}
+{"image_id": "voc_2010_003820", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [58733, 60869], "3": [0, 1096], "8": [0, 479], "15": [0, 561]}}
+{"image_id": "voc_2010_000904", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [18998, 19813], "12": [38953, 39768]}}
+{"image_id": "voc_2010_000904", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [4332, 20351], "12": [18064, 39002], "15": [0, 35783]}}
+{"image_id": "voc_2010_000904", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [19263, 20269], "12": [38497, 39503]}}
+{"image_id": "voc_2010_000904", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [7850, 29653], "3": [0, 7406], "12": [0, 38957], "15": [0, 33666]}}
+{"image_id": "voc_2010_004789", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [47358, 47770], "10": [11097, 11509]}}
+{"image_id": "voc_2010_004789", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [47371, 47830], "10": [11037, 11496]}}
+{"image_id": "voc_2010_004789", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [47427, 47814], "10": [11053, 11440]}}
+{"image_id": "voc_2010_004789", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [47462, 48130], "10": [10737, 11405]}}
+{"image_id": "voc_2007_001377", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [60539, 60861], "1": [0, 322]}}
+{"image_id": "voc_2007_001377", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [60407, 60838], "1": [23, 454]}}
+{"image_id": "voc_2007_001377", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [60648, 60861], "1": [0, 213]}}
+{"image_id": "voc_2007_001377", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [60656, 60861], "1": [0, 205]}}
+{"image_id": "voc_2010_000874", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [28696, 30847], "13": [26068, 28219]}}
+{"image_id": "voc_2010_000874", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [28800, 31236], "13": [25679, 28115]}}
+{"image_id": "voc_2010_000874", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [29032, 41109], "3": [0, 434], "12": [0, 15372], "13": [0, 27883]}}
+{"image_id": "voc_2010_000874", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [27920, 39264], "3": [0, 18763], "13": [0, 27883]}}
+{"image_id": "voc_2010_005644", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [34673, 38147], "12": [21657, 25131]}}
+{"image_id": "voc_2010_005644", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [26688, 41938], "12": [17866, 33116]}}
+{"image_id": "voc_2010_005644", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [28010, 41228], "12": [18576, 31794]}}
+{"image_id": "voc_2010_005644", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [30566, 59686], "12": [0, 23464], "15": [0, 5892]}}
+{"image_id": "voc_2010_002921", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [43580, 46132], "9": [5608, 6684], "20": [6475, 7951]}}
+{"image_id": "voc_2010_002921", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [43602, 46147], "9": [5229, 6635], "20": [6839, 7978]}}
+{"image_id": "voc_2010_002921", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [43958, 51020], "9": [28, 6309], "15": [0, 1712], "20": [5456, 7947]}}
+{"image_id": "voc_2010_002921", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [43965, 55823], "9": [264, 6309], "15": [0, 39], "20": [2089, 7941]}}
+{"image_id": "voc_2010_003168", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [55424, 55526], "3": [4416, 4518]}}
+{"image_id": "voc_2010_003168", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [55423, 55573], "3": [4369, 4519]}}
+{"image_id": "voc_2010_003168", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53842, 55600], "3": [4342, 6100]}}
+{"image_id": "voc_2010_003168", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54899, 56692], "3": [1877, 4536], "15": [0, 1373], "20": [0, 507]}}
+{"image_id": "voc_2009_001535", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [16899, 37917], "12": [22298, 22663], "18": [0, 20661]}}
+{"image_id": "voc_2009_001535", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [5555, 39466], "12": [20748, 22566], "18": [0, 32103]}}
+{"image_id": "voc_2009_001535", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [37546, 37933], "12": [22286, 22673]}}
+{"image_id": "voc_2009_001535", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [36589, 50950], "12": [499, 22922], "15": [0, 9478]}}
+{"image_id": "voc_2010_000738", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46893, 48147], "5": [0, 58], "9": [0, 61], "15": [10427, 10835], "20": [602, 1469]}}
+{"image_id": "voc_2010_000738", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [46886, 48129], "5": [0, 58], "9": [0, 3], "15": [10491, 10897], "20": [561, 1467]}}
+{"image_id": "voc_2010_000738", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [44424, 49627], "5": [0, 58], "7": [0, 2351], "15": [9552, 11033], "20": [0, 1447]}}
+{"image_id": "voc_2010_000738", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [43415, 50299], "5": [0, 58], "7": [0, 3405], "15": [8882, 10986], "20": [0, 1447]}}
+{"image_id": "voc_2011_001060", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32652, 36245], "15": [9387, 12680], "19": [9900, 10468]}}
+{"image_id": "voc_2011_001060", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32776, 36204], "15": [8636, 12409], "19": [10067, 11240]}}
+{"image_id": "voc_2011_001060", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [32442, 38606], "15": [9202, 13756], "19": [6964, 10362]}}
+{"image_id": "voc_2011_001060", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31555, 47171], "8": [0, 2031], "9": [0, 311], "12": [0, 2291], "15": [4045, 12182], "18": [0, 1407], "19": [0, 10339]}}
+{"image_id": "voc_2010_003971", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [30108, 45640], "8": [4253, 4768], "9": [4215, 9002], "11": [0, 10656]}}
+{"image_id": "voc_2010_003971", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [29868, 42035], "8": [4400, 4966], "9": [6086, 10631], "11": [0, 10656]}}
+{"image_id": "voc_2010_003971", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [26619, 48816], "3": [0, 10538], "8": [0, 4593], "9": [0, 7420], "11": [0, 10656]}}
+{"image_id": "voc_2010_003971", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [28170, 52254], "3": [0, 5549], "8": [0, 4593], "9": [0, 7420], "11": [0, 10656]}}
+{"image_id": "voc_2007_005813", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [52634, 55636], "9": [0, 671], "16": [2249, 4580]}}
+{"image_id": "voc_2007_005813", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53854, 56060], "16": [1817, 3820], "20": [0, 219]}}
+{"image_id": "voc_2007_005813", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [55336, 57646], "16": [239, 2549]}}
+{"image_id": "voc_2007_005813", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [53740, 57885], "15": [0, 1596], "16": [0, 2549]}}
+{"image_id": "voc_2010_005206", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [36347, 36724], "12": [23311, 23688]}}
+{"image_id": "voc_2010_005206", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [36368, 36724], "12": [23311, 23667]}}
+{"image_id": "voc_2010_005206", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [36550, 37793], "12": [22242, 23485]}}
+{"image_id": "voc_2010_005206", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [36685, 42342], "12": [16319, 23350], "15": [0, 1374]}}
+{"image_id": "voc_2007_000762", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [21379, 24388], "5": [4725, 4987], "11": [15091, 16859], "15": [11151, 12424]}}
+{"image_id": "voc_2007_000762", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [21393, 24812], "5": [4667, 4944], "11": [15095, 16885], "15": [10726, 12482]}}
+{"image_id": "voc_2007_000762", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [23386, 41967], "3": [0, 26], "5": [325, 4860], "11": [4682, 15152], "15": [8465, 12141]}}
+{"image_id": "voc_2007_000762", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [22729, 46257], "5": [0, 4857], "11": [0, 15096], "15": [8981, 13084]}}
+{"image_id": "voc_2010_003956", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53570, 53918], "19": [6610, 6958]}}
+{"image_id": "voc_2010_003956", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53135, 53896], "19": [6632, 7393]}}
+{"image_id": "voc_2010_003956", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50818, 53991], "8": [0, 2582], "19": [6537, 7128]}}
+{"image_id": "voc_2010_003956", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [51791, 60462], "12": [0, 2103], "19": [66, 6634]}}
+{"image_id": "voc_2008_003846", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [40497, 44128], "7": [15548, 19179]}}
+{"image_id": "voc_2008_003846", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [40473, 41848], "7": [17828, 19203]}}
+{"image_id": "voc_2008_003846", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [40124, 41052], "7": [18624, 19552]}}
+{"image_id": "voc_2008_003846", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [39414, 41657], "7": [18019, 20262]}}
+{"image_id": "voc_2008_001013", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [28302, 34676], "4": [18158, 24409], "12": [0, 204], "15": [1250, 1413]}}
+{"image_id": "voc_2008_001013", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [29784, 38566], "4": [14323, 22989], "9": [0, 38], "12": [0, 29], "15": [1253, 1430]}}
+{"image_id": "voc_2008_001013", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [31420, 51544], "4": [118, 21084], "13": [0, 4], "15": [1251, 2991]}}
+{"image_id": "voc_2008_001013", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [28777, 38119], "4": [0, 21084], "10": [0, 5774], "12": [0, 53], "13": [0, 13036], "15": [170, 1399]}}
+{"image_id": "voc_2011_002812", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [52631, 53154], "7": [3126, 3191], "11": [0, 74], "15": [0, 200], "16": [191, 773]}}
+{"image_id": "voc_2011_002812", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [52694, 53147], "7": [3124, 3202], "15": [0, 400], "16": [0, 773]}}
+{"image_id": "voc_2011_002812", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [52640, 52851], "7": [3142, 3256], "15": [0, 658], "16": [20, 773]}}
+{"image_id": "voc_2011_002812", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [52495, 53086], "7": [2940, 3193], "8": [0, 315], "15": [0, 538], "16": [0, 773]}}
+{"image_id": "voc_2009_005038", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [24411, 29324], "5": [620, 3466], "11": [9062, 11858], "15": [16311, 18482], "16": [0, 402]}}
+{"image_id": "voc_2009_005038", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [23080, 28427], "5": [1121, 3487], "11": [9033, 12997], "15": [16743, 18601], "16": [45, 402]}}
+{"image_id": "voc_2009_005038", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [24657, 30305], "5": [0, 3462], "11": [8703, 11377], "15": [16327, 18703], "16": [0, 402]}}
+{"image_id": "voc_2009_005038", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [25307, 32763], "5": [0, 3462], "11": [7286, 9942], "15": [16031, 18743], "16": [0, 402]}}
+{"image_id": "voc_2008_008268", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [56926, 57512], "3": [766, 2648], "12": [0, 1], "15": [0, 1297]}}
+{"image_id": "voc_2008_008268", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [56878, 57461], "3": [1045, 2685], "15": [0, 1081]}}
+{"image_id": "voc_2008_008268", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [56736, 57272], "3": [2303, 2839]}}
+{"image_id": "voc_2008_008268", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [56575, 57291], "3": [2284, 3000]}}
+{"image_id": "voc_2008_000510", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [55217, 55781], "15": [3892, 4456]}}
+{"image_id": "voc_2008_000510", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55209, 55796], "15": [3877, 4464]}}
+{"image_id": "voc_2008_000510", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54960, 55834], "15": [3839, 4713]}}
+{"image_id": "voc_2008_000510", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55473, 55871], "15": [3802, 4200]}}
+{"image_id": "voc_2009_000931", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53957, 54327], "13": [5080, 5450]}}
+{"image_id": "voc_2009_000931", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53983, 54340], "13": [5067, 5424]}}
+{"image_id": "voc_2009_000931", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54055, 55909], "3": [0, 642], "12": [0, 1952], "13": [494, 5256], "15": [0, 506]}}
+{"image_id": "voc_2009_000931", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53985, 55189], "3": [0, 1958], "12": [0, 342], "13": [1669, 5266], "15": [0, 405]}}
+{"image_id": "voc_2009_002539", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50211, 50585], "12": [8945, 9319]}}
+{"image_id": "voc_2009_002539", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [50111, 50589], "12": [8941, 9419]}}
+{"image_id": "voc_2009_002539", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [50202, 50624], "12": [8906, 9328]}}
+{"image_id": "voc_2009_002539", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50103, 54063], "12": [5467, 9427]}}
+{"image_id": "voc_2008_000234", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [23710, 24034], "15": [35016, 35340]}}
+{"image_id": "voc_2008_000234", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [23696, 24041], "15": [35009, 35354]}}
+{"image_id": "voc_2008_000234", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [23663, 24022], "15": [35028, 35387]}}
+{"image_id": "voc_2008_000234", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [23589, 24083], "15": [34967, 35461]}}
+{"image_id": "voc_2010_005118", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [38518, 39130], "6": [17856, 18420], "15": [1888, 2038]}}
+{"image_id": "voc_2010_005118", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [38459, 39093], "6": [17849, 18468], "15": [1940, 2041]}}
+{"image_id": "voc_2010_005118", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38342, 39118], "6": [17825, 18579], "15": [1944, 2042]}}
+{"image_id": "voc_2010_005118", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38270, 39436], "6": [17578, 18643], "15": [1881, 2042]}}
+{"image_id": "voc_2007_001154", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53899, 53955], "16": [121, 138], "18": [6494, 6533]}}
+{"image_id": "voc_2007_001154", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53919, 53990], "16": [113, 138], "18": [6463, 6517]}}
+{"image_id": "voc_2007_001154", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53856, 54061], "16": [0, 137], "18": [6489, 6597]}}
+{"image_id": "voc_2007_001154", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53920, 60570], "16": [0, 137], "18": [0, 6513]}}
+{"image_id": "voc_2010_003453", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [24543, 25611], "7": [33212, 34280]}}
+{"image_id": "voc_2010_003453", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [24490, 25501], "7": [33322, 34333]}}
+{"image_id": "voc_2010_003453", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [24365, 26491], "7": [32332, 34458]}}
+{"image_id": "voc_2010_003453", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [20808, 32632], "7": [26191, 34888], "12": [0, 3127]}}
+{"image_id": "voc_2007_005354", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [41250, 42282], "14": [13809, 14586], "15": [2493, 2754]}}
+{"image_id": "voc_2007_005354", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [41098, 42283], "14": [13739, 14700], "15": [2502, 2852]}}
+{"image_id": "voc_2007_005354", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [40762, 42680], "14": [13369, 14999], "15": [2524, 2840]}}
+{"image_id": "voc_2007_005354", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [41057, 44990], "14": [11062, 14690], "15": [2535, 2840]}}
+{"image_id": "voc_2010_004165", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46264, 46399], "12": [1646, 3427], "15": [9715, 11615]}}
+{"image_id": "voc_2010_004165", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [46275, 46410], "12": [458, 3419], "15": [9710, 12794]}}
+{"image_id": "voc_2010_004165", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [46151, 46411], "12": [0, 3419], "15": [9703, 13382]}}
+{"image_id": "voc_2010_004165", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [46209, 46419], "12": [0, 3419], "15": [9695, 13324]}}
+{"image_id": "voc_2010_003409", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [55440, 56443], "9": [254, 1082], "15": [2230, 3039]}}
+{"image_id": "voc_2010_003409", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [55147, 56407], "9": [0, 773], "15": [2685, 3476]}}
+{"image_id": "voc_2010_003409", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [55562, 57786], "9": [0, 773], "15": [1426, 2941]}}
+{"image_id": "voc_2010_003409", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55539, 59244], "9": [0, 773], "15": [0, 2932]}}
+{"image_id": "voc_2009_003849", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [37991, 38957], "9": [2007, 2801], "11": [965, 1167], "15": [16251, 16491]}}
+{"image_id": "voc_2009_003849", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38298, 41688], "9": [377, 2428], "11": [0, 1103], "15": [16250, 16486]}}
+{"image_id": "voc_2009_003849", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [37848, 42087], "9": [0, 2370], "11": [0, 1103], "15": [16228, 16994]}}
+{"image_id": "voc_2009_003849", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [35089, 42431], "9": [0, 2370], "11": [0, 1103], "15": [15861, 19776]}}
+{"image_id": "voc_2011_000512", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [33226, 35074], "14": [22020, 23843], "15": [0, 25]}}
+{"image_id": "voc_2011_000512", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32662, 35000], "14": [22094, 24255], "15": [0, 177]}}
+{"image_id": "voc_2011_000512", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [34390, 35528], "14": [21566, 22704]}}
+{"image_id": "voc_2011_000512", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [34498, 36643], "2": [0, 115], "3": [0, 21], "14": [20236, 22579], "15": [0, 96]}}
+{"image_id": "voc_2010_004951", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [0, 789], "15": [0, 370], "19": [59585, 60744]}}
+{"image_id": "voc_2010_004951", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [0, 789], "15": [0, 370], "19": [59585, 60744]}}
+{"image_id": "voc_2010_004951", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [789, 60744], "15": [0, 370], "19": [0, 59585]}}
+{"image_id": "voc_2010_004951", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [0, 59119], "7": [0, 437], "8": [0, 1011], "12": [0, 966], "15": [0, 370], "19": [0, 59585]}}
+{"image_id": "voc_2008_004453", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [31290, 32987], "17": [24547, 26244]}}
+{"image_id": "voc_2008_004453", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31803, 49177], "3": [0, 232], "8": [0, 273], "17": [7852, 25731]}}
+{"image_id": "voc_2008_004453", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [28182, 33670], "3": [0, 27486], "17": [0, 25730]}}
+{"image_id": "voc_2008_004453", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [29586, 50475], "3": [0, 7242], "8": [0, 2026], "16": [0, 9], "17": [0, 25730]}}
+{"image_id": "voc_2011_001110", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [45069, 45716], "6": [412, 494], "7": [12242, 12829]}}
+{"image_id": "voc_2011_001110", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44875, 45710], "6": [404, 484], "7": [12244, 13045]}}
+{"image_id": "voc_2011_001110", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [44920, 45722], "6": [430, 647], "7": [12219, 12824]}}
+{"image_id": "voc_2011_001110", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [45147, 45794], "6": [398, 476], "7": [12173, 12774]}}
+{"image_id": "voc_2008_000215", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [30859, 31032], "15": [27768, 27941]}}
+{"image_id": "voc_2008_000215", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [30863, 31071], "15": [27729, 27937]}}
+{"image_id": "voc_2008_000215", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [30851, 31149], "15": [27651, 27949]}}
+{"image_id": "voc_2008_000215", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [30811, 31674], "15": [27126, 27989]}}
+{"image_id": "voc_2010_004382", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32975, 38348], "16": [14841, 20214]}}
+{"image_id": "voc_2010_004382", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [33540, 38480], "16": [14709, 19649]}}
+{"image_id": "voc_2010_004382", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [35368, 40841], "16": [12348, 17821]}}
+{"image_id": "voc_2010_004382", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [37898, 51342], "6": [0, 18], "7": [0, 12], "16": [1847, 15261]}}
+{"image_id": "voc_2008_004212", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53900, 54595], "19": [5792, 6487]}}
+{"image_id": "voc_2008_004212", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [53919, 54817], "19": [5570, 6468]}}
+{"image_id": "voc_2008_004212", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [53634, 54769], "19": [5618, 6753]}}
+{"image_id": "voc_2008_004212", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53914, 55309], "19": [5078, 6473]}}
+{"image_id": "voc_2007_007211", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50866, 51137], "14": [8955, 9226]}}
+{"image_id": "voc_2007_007211", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [50868, 51129], "14": [8963, 9224]}}
+{"image_id": "voc_2007_007211", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [50850, 51108], "14": [8984, 9242]}}
+{"image_id": "voc_2007_007211", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [50858, 51830], "14": [8262, 9234]}}
+{"image_id": "voc_2009_000828", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [51521, 51798], "4": [7835, 8112]}}
+{"image_id": "voc_2009_000828", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [51588, 51886], "4": [7747, 8045]}}
+{"image_id": "voc_2009_000828", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [51652, 58451], "4": [1019, 7981], "15": [0, 163]}}
+{"image_id": "voc_2009_000828", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51700, 56921], "3": [0, 2733], "4": [0, 7912]}}
+{"image_id": "voc_2007_004190", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [48359, 49616], "9": [0, 92], "20": [10400, 11565]}}
+{"image_id": "voc_2007_004190", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [48434, 49509], "20": [10507, 11582]}}
+{"image_id": "voc_2007_004190", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [48479, 51299], "20": [8717, 11537]}}
+{"image_id": "voc_2007_004190", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [46928, 60016], "15": [0, 1551], "20": [0, 11537]}}
+{"image_id": "voc_2009_001215", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [0, 359], "11": [55856, 58493], "15": [2495, 4881]}}
+{"image_id": "voc_2009_001215", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [0, 1028], "11": [57288, 58492], "15": [2523, 2753]}}
+{"image_id": "voc_2009_001215", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [0, 78], "11": [58289, 58551], "15": [2471, 2695]}}
+{"image_id": "voc_2009_001215", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999981, "psnr": 30.3493, "seg_iu": {"0": [14, 3211], "11": [57263, 59060], "15": [0, 2536]}}
+{"image_id": "voc_2008_008434", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [25691, 59224], "16": [0, 33533]}}
+{"image_id": "voc_2008_008434", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [25691, 59224], "16": [0, 33533]}}
+{"image_id": "voc_2008_008434", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [20072, 59224], "15": [0, 5619], "16": [0, 33533]}}
+{"image_id": "voc_2008_008434", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [16527, 59179], "8": [0, 462], "12": [0, 189], "15": [0, 8558], "16": [0, 33533]}}
+{"image_id": "voc_2009_004848", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50307, 52335], "2": [1051, 3345], "15": [3231, 3803]}}
+{"image_id": "voc_2009_004848", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50303, 52378], "2": [1036, 3390], "15": [3161, 3804]}}
+{"image_id": "voc_2009_004848", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [50103, 52239], "2": [1088, 3539], "15": [3278, 3825]}}
+{"image_id": "voc_2009_004848", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [50389, 52544], "2": [1009, 3349], "15": [2989, 3792]}}
+{"image_id": "voc_2007_003714", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [58769, 58882], "12": [0, 1826], "17": [1, 1940]}}
+{"image_id": "voc_2007_003714", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [58758, 58876], "12": [0, 1844], "17": [0, 1940]}}
+{"image_id": "voc_2007_003714", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [58752, 59177], "3": [0, 259], "12": [0, 352], "17": [931, 1947]}}
+{"image_id": "voc_2007_003714", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [58420, 58831], "3": [0, 2227], "17": [0, 1940]}}
+{"image_id": "voc_2009_001565", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [48493, 48674], "3": [11094, 11275]}}
+{"image_id": "voc_2009_001565", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [48501, 48678], "3": [11090, 11267]}}
+{"image_id": "voc_2009_001565", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [48512, 53482], "3": [6286, 11256]}}
+{"image_id": "voc_2009_001565", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [48055, 48779], "3": [10989, 11713]}}
+{"image_id": "voc_2010_003764", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [40127, 41734], "8": [17609, 19216]}}
+{"image_id": "voc_2010_003764", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [39443, 41761], "8": [17582, 19900]}}
+{"image_id": "voc_2010_003764", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [40263, 54216], "8": [4687, 19080], "15": [0, 440]}}
+{"image_id": "voc_2010_003764", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [41298, 58997], "8": [0, 17704], "15": [0, 492], "16": [0, 195]}}
+{"image_id": "voc_2010_000552", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [19377, 24596], "8": [32960, 37710], "9": [0, 2653], "18": [0, 212]}}
+{"image_id": "voc_2010_000552", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [17366, 22386], "8": [34255, 37733], "9": [0, 3392], "18": [0, 2376]}}
+{"image_id": "voc_2010_000552", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [18889, 22890], "8": [35657, 37748], "12": [0, 5], "18": [0, 2319]}}
+{"image_id": "voc_2010_000552", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999981, "psnr": 30.3493, "seg_iu": {"0": [9923, 23797], "3": [0, 3674], "8": [17110, 37736], "12": [0, 13209], "18": [0, 12059]}}
+{"image_id": "voc_2008_004610", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [38356, 38483], "19": [21112, 21239]}}
+{"image_id": "voc_2008_004610", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38323, 38499], "19": [21096, 21272]}}
+{"image_id": "voc_2008_004610", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38217, 38666], "19": [20929, 21378]}}
+{"image_id": "voc_2008_004610", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38169, 38745], "19": [20850, 21426]}}
+{"image_id": "voc_2011_000888", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [33718, 34522], "6": [24101, 25060], "15": [0, 155]}}
+{"image_id": "voc_2011_000888", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [33506, 34473], "6": [24150, 25272], "15": [0, 155]}}
+{"image_id": "voc_2011_000888", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [32835, 34891], "6": [23599, 25943], "7": [0, 133], "15": [0, 155]}}
+{"image_id": "voc_2011_000888", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [33544, 35466], "6": [22894, 25234], "7": [0, 263], "15": [0, 155]}}
+{"image_id": "voc_2011_000618", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [40900, 42003], "14": [12230, 13635], "15": [3570, 4068]}}
+{"image_id": "voc_2011_000618", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [40723, 41958], "14": [12302, 14162], "15": [3213, 4048]}}
+{"image_id": "voc_2011_000618", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [40752, 42090], "14": [12325, 14209], "15": [3021, 4009]}}
+{"image_id": "voc_2011_000618", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [41057, 42818], "14": [11535, 13959], "15": [2981, 4056]}}
+{"image_id": "voc_2007_009419", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57989, 59504], "16": [0, 1515]}}
+{"image_id": "voc_2007_009419", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57989, 59504], "16": [0, 1515]}}
+{"image_id": "voc_2007_009419", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57989, 59504], "16": [0, 1515]}}
+{"image_id": "voc_2007_009419", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [30532, 58092], "14": [0, 28869], "16": [0, 1515]}}
+{"image_id": "voc_2011_001674", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [31994, 34313], "15": [18495, 19651], "18": [5986, 7641]}}
+{"image_id": "voc_2011_001674", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [32029, 33381], "15": [18662, 20345], "18": [6071, 7592]}}
+{"image_id": "voc_2011_001674", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31970, 41511], "14": [0, 83], "15": [15479, 21039], "18": [566, 7432]}}
+{"image_id": "voc_2011_001674", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [32842, 48486], "15": [10093, 19227], "18": [0, 7432]}}
+{"image_id": "voc_2008_002681", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50350, 50534], "8": [9600, 9784]}}
+{"image_id": "voc_2008_002681", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [50382, 50599], "8": [9453, 9752], "17": [0, 82]}}
+{"image_id": "voc_2008_002681", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50313, 51390], "3": [0, 135], "8": [8508, 9686], "17": [0, 236]}}
+{"image_id": "voc_2008_002681", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50004, 51437], "3": [0, 8939], "8": [0, 9663], "15": [0, 225]}}
+{"image_id": "voc_2009_000426", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [36208, 36490], "6": [22997, 23279]}}
+{"image_id": "voc_2009_000426", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [35430, 36456], "6": [23031, 24057]}}
+{"image_id": "voc_2009_000426", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31973, 36379], "6": [23108, 27514]}}
+{"image_id": "voc_2009_000426", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [32241, 36544], "6": [22943, 27246]}}
+{"image_id": "voc_2007_003742", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [19342, 25639], "9": [0, 44], "11": [16488, 19810], "15": [17138, 20197]}}
+{"image_id": "voc_2007_003742", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [12912, 42002], "11": [215, 19741], "15": [17068, 23400], "20": [0, 3320]}}
+{"image_id": "voc_2007_003742", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [14896, 42671], "3": [0, 15402], "11": [0, 19741], "15": [6454, 19367], "20": [0, 127]}}
+{"image_id": "voc_2007_003742", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [18125, 46160], "3": [0, 6420], "11": [0, 19741], "15": [8422, 19790]}}
+{"image_id": "voc_2010_004543", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [55815, 59715], "5": [0, 2], "9": [194, 2724], "11": [0, 16], "16": [0, 947], "18": [0, 405]}}
+{"image_id": "voc_2010_004543", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [56181, 59834], "9": [75, 2938], "16": [0, 790]}}
+{"image_id": "voc_2010_004543", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [59264, 59909], "9": [0, 494], "16": [0, 151]}}
+{"image_id": "voc_2010_004543", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59415, 59909], "9": [0, 494]}}
+{"image_id": "voc_2010_002137", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [20171, 40690], "3": [0, 138], "8": [2002, 2298], "15": [4446, 4782], "16": [1239, 6071], "18": [0, 15345]}}
+{"image_id": "voc_2010_002137", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [16048, 36721], "3": [0, 1020], "8": [1460, 2293], "11": [0, 135], "15": [4444, 6234], "16": [4905, 8577], "18": [0, 15345]}}
+{"image_id": "voc_2010_002137", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [20033, 41455], "3": [0, 200], "8": [1527, 2345], "15": [4240, 5692], "16": [330, 6015], "18": [0, 15345]}}
+{"image_id": "voc_2010_002137", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [16503, 30361], "3": [0, 19580], "8": [0, 2293], "15": [2657, 4468], "16": [0, 5975], "18": [0, 15345]}}
+{"image_id": "voc_2011_000234", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [41669, 45190], "1": [0, 4220], "4": [9174, 16045], "15": [0, 46]}}
+{"image_id": "voc_2011_000234", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [41424, 51575], "1": [0, 7030], "4": [225, 16044], "15": [0, 46]}}
+{"image_id": "voc_2011_000234", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [42082, 58172], "4": [0, 16044], "15": [0, 46]}}
+{"image_id": "voc_2011_000234", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [42066, 58172], "4": [0, 16044], "15": [0, 62]}}
+{"image_id": "voc_2010_001951", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46384, 46791], "15": [166, 254], "19": [12659, 12978]}}
+{"image_id": "voc_2010_001951", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [46465, 46772], "15": [179, 254], "19": [12665, 12897]}}
+{"image_id": "voc_2010_001951", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [46005, 46767], "15": [168, 255], "19": [12681, 13356]}}
+{"image_id": "voc_2010_001951", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [45748, 47705], "15": [128, 251], "19": [11783, 13617]}}
+{"image_id": "voc_2009_003857", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [56162, 56527], "9": [0, 139], "20": [4085, 4311]}}
+{"image_id": "voc_2009_003857", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [55972, 56462], "9": [0, 113], "20": [4150, 4527]}}
+{"image_id": "voc_2009_003857", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [55925, 56611], "20": [4001, 4687]}}
+{"image_id": "voc_2009_003857", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [56356, 60612], "20": [0, 4256]}}
+{"image_id": "voc_2007_007996", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [29270, 34820], "9": [697, 4428], "12": [0, 36], "15": [11117, 13408], "18": [2128, 5550], "20": [0, 474]}}
+{"image_id": "voc_2007_007996", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [30250, 38169], "9": [600, 3408], "12": [0, 414], "15": [11186, 13555], "18": [0, 4244], "20": [0, 102]}}
+{"image_id": "voc_2007_007996", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [30043, 39704], "9": [86, 3160], "12": [0, 1585], "15": [9212, 13404], "18": [238, 4394], "20": [0, 102]}}
+{"image_id": "voc_2007_007996", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31049, 40383], "9": [490, 4476], "15": [7944, 13472], "18": [0, 4012], "20": [0, 102]}}
+{"image_id": "voc_2007_003841", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [13069, 13542], "10": [18966, 34777], "12": [0, 15738]}}
+{"image_id": "voc_2007_003841", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [13221, 18951], "3": [0, 217], "8": [0, 28306], "10": [0, 34700], "12": [0, 56], "17": [0, 641]}}
+{"image_id": "voc_2007_003841", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [12062, 24602], "3": [0, 24728], "10": [0, 34700]}}
+{"image_id": "voc_2007_003841", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [11967, 21476], "3": [0, 27005], "8": [0, 944], "10": [0, 34700]}}
+{"image_id": "voc_2011_001530", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [3587, 41847], "7": [0, 38070], "10": [472, 1005], "15": [14057, 18014]}}
+{"image_id": "voc_2011_001530", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [9313, 40122], "7": [0, 32483], "10": [71, 1005], "15": [16051, 18005], "17": [0, 2]}}
+{"image_id": "voc_2011_001530", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38099, 51518], "7": [0, 1968], "10": [0, 1005], "15": [6464, 17998]}}
+{"image_id": "voc_2011_001530", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [35174, 44263], "10": [0, 1005], "15": [14263, 22347]}}
+{"image_id": "voc_2008_001547", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [56580, 56810], "15": [3784, 4014]}}
+{"image_id": "voc_2008_001547", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [56535, 56845], "15": [3749, 4059]}}
+{"image_id": "voc_2008_001547", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [56694, 58725], "15": [1869, 3900]}}
+{"image_id": "voc_2008_001547", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55456, 60594], "3": [0, 865], "8": [0, 5], "12": [0, 375], "15": [0, 3893]}}
+{"image_id": "voc_2008_000725", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [55788, 56777], "2": [1324, 2002], "15": [980, 1291]}}
+{"image_id": "voc_2008_000725", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [55769, 56648], "2": [1355, 2002], "15": [1078, 1310]}}
+{"image_id": "voc_2008_000725", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54738, 57233], "2": [819, 2005], "15": [1029, 2338]}}
+{"image_id": "voc_2008_000725", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [55181, 57808], "2": [872, 2004], "3": [0, 25], "15": [376, 1896]}}
+{"image_id": "voc_2007_006864", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [22737, 25047], "15": [23919, 26229]}}
+{"image_id": "voc_2007_006864", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [22878, 25333], "15": [23633, 26088]}}
+{"image_id": "voc_2007_006864", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [22953, 26024], "8": [0, 714], "15": [22228, 26013]}}
+{"image_id": "voc_2007_006864", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [23893, 34492], "2": [0, 612], "15": [13914, 25021]}}
+{"image_id": "voc_2009_002982", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [45104, 45674], "7": [0, 19], "19": [13434, 13985]}}
+{"image_id": "voc_2009_002982", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44984, 45702], "7": [0, 136], "19": [13406, 13988]}}
+{"image_id": "voc_2009_002982", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [44861, 45844], "7": [0, 262], "19": [13264, 13985]}}
+{"image_id": "voc_2009_002982", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [45061, 46065], "19": [13043, 14047]}}
+{"image_id": "voc_2010_001908", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50285, 50589], "12": [8438, 8725], "15": [157, 174]}}
+{"image_id": "voc_2010_001908", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50242, 50605], "12": [8424, 8768], "15": [155, 174]}}
+{"image_id": "voc_2010_001908", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50207, 50759], "12": [8269, 8802], "15": [156, 175]}}
+{"image_id": "voc_2010_001908", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [50495, 59082], "10": [0, 50], "12": [0, 8515], "15": [50, 174], "17": [0, 2]}}
+{"image_id": "voc_2008_005049", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [52675, 54540], "14": [5380, 7245]}}
+{"image_id": "voc_2008_005049", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [52668, 54613], "14": [5307, 7252]}}
+{"image_id": "voc_2008_005049", "condition": "direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [52611, 54582], "14": [5338, 7309]}}
+{"image_id": "voc_2008_005049", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [51532, 57765], "3": [0, 2920], "14": [2021, 5602]}}
+{"image_id": "voc_2010_001962", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [25477, 30554], "18": [28973, 33130], "20": [0, 920]}}
+{"image_id": "voc_2010_001962", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [25097, 31557], "18": [27970, 34430]}}
+{"image_id": "voc_2010_001962", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [26402, 56623], "18": [2904, 33125]}}
+{"image_id": "voc_2010_001962", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [26170, 36855], "18": [22672, 33357]}}
+{"image_id": "voc_2010_000906", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53229, 53464], "4": [3393, 3628]}}
+{"image_id": "voc_2010_000906", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [53216, 53481], "4": [3376, 3641]}}
+{"image_id": "voc_2010_000906", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53397, 53910], "4": [2947, 3460]}}
+{"image_id": "voc_2010_000906", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [53438, 56850], "3": [0, 7], "4": [0, 3419]}}
+{"image_id": "voc_2010_001251", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [29728, 30907], "14": [27301, 28480]}}
+{"image_id": "voc_2010_001251", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [29355, 30826], "14": [27382, 28853]}}
+{"image_id": "voc_2010_001251", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [28873, 31756], "14": [26452, 29335]}}
+{"image_id": "voc_2010_001251", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [28660, 42720], "12": [0, 1749], "14": [15174, 28113]}}
+{"image_id": "voc_2007_004712", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [30397, 39037], "5": [0, 535], "9": [623, 2042], "11": [2344, 6949], "15": [11236, 12184], "16": [3021, 3793], "20": [0, 435]}}
+{"image_id": "voc_2007_004712", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [27910, 42217], "5": [0, 535], "9": [178, 1723], "11": [0, 6740], "15": [10759, 12184], "16": [3021, 3887], "20": [0, 3442]}}
+{"image_id": "voc_2007_004712", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [31231, 42658], "5": [0, 535], "9": [0, 1394], "11": [0, 6740], "15": [11142, 11943], "16": [2453, 4500]}}
+{"image_id": "voc_2007_004712", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [32446, 48066], "5": [0, 535], "9": [0, 1394], "11": [0, 6740], "12": [0, 7680], "15": [772, 11916], "16": [0, 3021], "17": [0, 26]}}
+{"image_id": "voc_2007_007007", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [21105, 35014], "5": [0, 179], "11": [50, 12212], "15": [18863, 20511]}}
+{"image_id": "voc_2007_007007", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [21118, 35953], "5": [0, 179], "11": [0, 12212], "15": [17906, 20566]}}
+{"image_id": "voc_2007_007007", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [17868, 39321], "5": [0, 179], "11": [0, 12212], "12": [0, 108], "15": [14348, 23898]}}
+{"image_id": "voc_2007_007007", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [19239, 38364], "5": [0, 179], "11": [0, 12212], "12": [0, 2121], "15": [13430, 22389]}}
+{"image_id": "voc_2010_005046", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [21525, 25202], "11": [1248, 3694], "15": [27910, 29979]}}
+{"image_id": "voc_2010_005046", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [21252, 26829], "11": [203, 3694], "15": [27303, 30277]}}
+{"image_id": "voc_2010_005046", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [21168, 29087], "11": [0, 3694], "15": [25423, 30186]}}
+{"image_id": "voc_2010_005046", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [21370, 29428], "11": [0, 3694], "15": [24908, 30158]}}
+{"image_id": "voc_2008_000700", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54291, 54518], "15": [5184, 5411]}}
+{"image_id": "voc_2008_000700", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54278, 54549], "15": [5153, 5424]}}
+{"image_id": "voc_2008_000700", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54314, 54580], "15": [5122, 5388]}}
+{"image_id": "voc_2008_000700", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [42176, 55633], "3": [0, 14478], "15": [1909, 5208]}}
+{"image_id": "voc_2009_002012", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46061, 46464], "12": [12605, 13007], "15": [0, 1]}}
+{"image_id": "voc_2009_002012", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [46085, 46678], "12": [12391, 12984]}}
+{"image_id": "voc_2009_002012", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [46134, 53929], "8": [0, 4338], "12": [309, 12935], "15": [0, 493]}}
+{"image_id": "voc_2009_002012", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [46111, 57276], "12": [0, 12935], "15": [0, 1816]}}
+{"image_id": "voc_2010_005718", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53128, 54335], "1": [3306, 4038], "7": [549, 1018], "15": [0, 6]}}
+{"image_id": "voc_2010_005718", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [52702, 54458], "1": [3215, 4470], "7": [517, 1018]}}
+{"image_id": "voc_2010_005718", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [49533, 54114], "1": [3462, 7643], "7": [610, 1018]}}
+{"image_id": "voc_2010_005718", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [52804, 57335], "1": [0, 3915], "7": [689, 1637]}}
+{"image_id": "voc_2008_005680", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [49682, 58533], "15": [0, 872], "16": [135, 8098], "18": [0, 16]}}
+{"image_id": "voc_2008_005680", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [48676, 57461], "15": [0, 1849], "16": [1207, 8143]}}
+{"image_id": "voc_2008_005680", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50477, 58668], "15": [0, 93], "16": [0, 8098]}}
+{"image_id": "voc_2008_005680", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [37441, 55233], "15": [0, 16564], "16": [0, 8098]}}
+{"image_id": "voc_2010_002251", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [41251, 41697], "14": [11064, 12025], "15": [4156, 4819]}}
+{"image_id": "voc_2010_002251", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [41248, 41707], "14": [11050, 12112], "15": [4076, 4819]}}
+{"image_id": "voc_2010_002251", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [40670, 41700], "14": [11075, 14195], "15": [2600, 4772]}}
+{"image_id": "voc_2010_002251", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [41387, 45235], "7": [0, 237], "14": [8778, 11868], "15": [2675, 4832]}}
+{"image_id": "voc_2011_002589", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [18486, 19424], "12": [39980, 40918]}}
+{"image_id": "voc_2011_002589", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [17426, 19487], "12": [39917, 41978]}}
+{"image_id": "voc_2011_002589", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [18576, 21915], "12": [37489, 40828]}}
+{"image_id": "voc_2011_002589", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [18632, 41373], "12": [17728, 40772], "15": [0, 303]}}
+{"image_id": "voc_2011_001434", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32066, 32378], "1": [24466, 24778]}}
+{"image_id": "voc_2011_001434", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [32043, 32436], "1": [24408, 24801]}}
+{"image_id": "voc_2011_001434", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [32038, 36471], "1": [20331, 24806], "3": [0, 42]}}
+{"image_id": "voc_2011_001434", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [29308, 37966], "1": [18789, 27536], "15": [0, 89]}}
+{"image_id": "voc_2009_003938", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [51885, 52169], "19": [6471, 6755]}}
+{"image_id": "voc_2009_003938", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [51857, 52285], "19": [6355, 6783]}}
+{"image_id": "voc_2009_003938", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51948, 53533], "19": [5107, 6692]}}
+{"image_id": "voc_2009_003938", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [51957, 54991], "19": [3649, 6683]}}
+{"image_id": "voc_2007_004468", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [9562, 19157], "5": [0, 40582], "9": [0, 2353], "11": [0, 44100], "18": [0, 620]}}
+{"image_id": "voc_2007_004468", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [15707, 58187], "5": [0, 40582], "11": [0, 1898]}}
+{"image_id": "voc_2007_004468", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [13998, 58187], "5": [0, 40582], "12": [0, 3607]}}
+{"image_id": "voc_2007_004468", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [17605, 58187], "5": [0, 40582]}}
+{"image_id": "voc_2007_009088", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [20915, 36714], "3": [23277, 39076]}}
+{"image_id": "voc_2007_009088", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [21718, 37110], "3": [0, 23471], "8": [0, 753], "12": [0, 35292], "15": [0, 1638]}}
+{"image_id": "voc_2007_009088", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [23571, 38127], "3": [590, 25648], "8": [0, 10], "12": [0, 31390], "15": [0, 646]}}
+{"image_id": "voc_2007_009088", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [20230, 41587], "3": [0, 23471], "15": [0, 34694]}}
+{"image_id": "voc_2010_004208", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54268, 54644], "4": [1853, 2258], "15": [0, 29]}}
+{"image_id": "voc_2010_004208", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54296, 54797], "4": [1700, 2230], "15": [0, 29]}}
+{"image_id": "voc_2010_004208", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54326, 56526], "4": [0, 2171], "15": [0, 29]}}
+{"image_id": "voc_2010_004208", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54313, 56095], "4": [402, 2213], "15": [0, 29]}}
+{"image_id": "voc_2007_001321", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [24154, 29496], "7": [30499, 35841]}}
+{"image_id": "voc_2007_001321", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [12708, 26920], "7": [33075, 47287]}}
+{"image_id": "voc_2007_001321", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [23293, 56361], "2": [0, 330], "7": [3304, 34306], "15": [0, 2396]}}
+{"image_id": "voc_2007_001321", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [25144, 59995], "7": [0, 34306], "16": [0, 545]}}
+{"image_id": "voc_2007_007341", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [36627, 52245], "1": [6552, 14454], "4": [0, 6941], "15": [463, 1296]}}
+{"image_id": "voc_2007_007341", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [40530, 53883], "1": [3303, 7056], "4": [0, 12157], "15": [442, 1207]}}
+{"image_id": "voc_2007_007341", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [40953, 55484], "1": [0, 6958], "4": [0, 12957], "15": [266, 1960]}}
+{"image_id": "voc_2007_007341", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [39709, 55948], "1": [0, 6958], "4": [0, 14650], "15": [253, 1060]}}
+{"image_id": "voc_2008_003511", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [35291, 37137], "12": [2675, 3053], "15": [19198, 20666]}}
+{"image_id": "voc_2008_003511", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [33385, 37055], "12": [2770, 3094], "15": [19185, 22531]}}
+{"image_id": "voc_2008_003511", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [35182, 39871], "12": [0, 3004], "15": [19139, 20824]}}
+{"image_id": "voc_2008_003511", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [33435, 39780], "12": [0, 3004], "15": [19230, 22571]}}
+{"image_id": "voc_2008_002240", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [22021, 27157], "14": [26250, 31386]}}
+{"image_id": "voc_2008_002240", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [22059, 28598], "7": [0, 17], "14": [24806, 31331], "15": [0, 3]}}
+{"image_id": "voc_2008_002240", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [21625, 28484], "14": [24923, 31723], "15": [0, 59]}}
+{"image_id": "voc_2008_002240", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [22314, 32025], "7": [0, 17], "14": [19830, 31085], "15": [0, 1543]}}
+{"image_id": "voc_2007_000727", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [52403, 54609], "6": [3087, 4524], "7": [1236, 1657], "15": [239, 587]}}
+{"image_id": "voc_2007_000727", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [52575, 57751], "6": [8, 4352], "7": [1179, 1691], "15": [202, 584]}}
+{"image_id": "voc_2007_000727", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [52593, 59065], "6": [0, 4352], "7": [106, 1643], "15": [0, 583]}}
+{"image_id": "voc_2007_000727", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [52600, 59128], "6": [0, 4352], "7": [0, 1679], "15": [0, 583]}}
+{"image_id": "voc_2008_007797", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32630, 33158], "6": [26891, 27419]}}
+{"image_id": "voc_2008_007797", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [32630, 33229], "6": [26820, 27419]}}
+{"image_id": "voc_2008_007797", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [31515, 32919], "6": [27130, 28531], "12": [0, 3]}}
+{"image_id": "voc_2008_007797", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32283, 33715], "6": [26334, 27480], "7": [0, 1], "8": [0, 98], "12": [0, 187]}}
+{"image_id": "voc_2011_002623", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [44849, 52974], "15": [6932, 7402], "19": [0, 7655]}}
+{"image_id": "voc_2011_002623", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [51607, 52854], "15": [7052, 8299]}}
+{"image_id": "voc_2011_002623", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [52659, 56195], "15": [3711, 7247]}}
+{"image_id": "voc_2011_002623", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [51435, 59695], "15": [211, 7090], "19": [0, 1381]}}
+{"image_id": "voc_2010_003547", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [52052, 54116], "4": [4984, 7048]}}
+{"image_id": "voc_2010_003547", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [52129, 56393], "4": [2707, 6971]}}
+{"image_id": "voc_2010_003547", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [52129, 58843], "4": [257, 6971]}}
+{"image_id": "voc_2010_003547", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50717, 58947], "3": [0, 1412], "4": [153, 6971]}}
+{"image_id": "voc_2007_009320", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [34830, 38571], "15": [13474, 13775], "17": [6098, 9558]}}
+{"image_id": "voc_2007_009320", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [35963, 42998], "15": [13509, 13883], "17": [1636, 8317]}}
+{"image_id": "voc_2007_009320", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [36311, 44330], "15": [13198, 15268], "17": [0, 7199]}}
+{"image_id": "voc_2007_009320", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [36510, 50531], "7": [0, 328], "15": [7303, 14435], "17": [0, 7199]}}
+{"image_id": "voc_2007_000837", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59766, 59900], "4": [661, 795]}}
+{"image_id": "voc_2007_000837", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59766, 59866], "4": [695, 795]}}
+{"image_id": "voc_2007_000837", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59766, 60561], "4": [0, 795]}}
+{"image_id": "voc_2007_000837", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [59766, 60561], "4": [0, 795]}}
+{"image_id": "voc_2010_001451", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [26603, 27104], "10": [0, 32125], "13": [0, 32598]}}
+{"image_id": "voc_2010_001451", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [26598, 28793], "10": [0, 30441], "13": [0, 32598]}}
+{"image_id": "voc_2010_001451", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [26603, 47934], "3": [0, 11227], "12": [0, 19], "13": [0, 32598], "15": [0, 49]}}
+{"image_id": "voc_2010_001451", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [26617, 53700], "3": [0, 952], "13": [0, 32598], "15": [0, 4563]}}
+{"image_id": "voc_2007_002284", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46093, 49592], "9": [0, 3], "16": [8749, 12245]}}
+{"image_id": "voc_2007_002284", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [46270, 48877], "16": [9464, 12071]}}
+{"image_id": "voc_2007_002284", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [41593, 52410], "7": [0, 3], "11": [0, 4229], "16": [5864, 11579], "18": [0, 1004]}}
+{"image_id": "voc_2007_002284", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [44938, 55688], "7": [0, 46], "11": [0, 2026], "16": [2653, 11323], "19": [0, 8]}}
+{"image_id": "voc_2007_009068", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [43603, 47888], "9": [695, 3599], "15": [3873, 6541], "16": [237, 591], "18": [2287, 6150]}}
+{"image_id": "voc_2007_009068", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44942, 49462], "9": [0, 2920], "15": [3595, 6865], "16": [2, 528], "18": [1490, 5660]}}
+{"image_id": "voc_2007_009068", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [44802, 53560], "9": [0, 2920], "15": [3440, 7639], "16": [0, 528], "18": [0, 2575]}}
+{"image_id": "voc_2007_009068", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44493, 54949], "9": [0, 2920], "15": [2775, 7224], "16": [0, 528], "18": [0, 2575]}}
+{"image_id": "voc_2007_002643", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53132, 53468], "2": [0, 373], "7": [2536, 2606], "14": [1016, 1886], "15": [1615, 2084]}}
+{"image_id": "voc_2007_002643", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53124, 53460], "2": [0, 306], "7": [2570, 2607], "14": [1069, 1895], "15": [1596, 2089]}}
+{"image_id": "voc_2007_002643", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [53137, 53888], "2": [0, 959], "7": [2404, 2604], "14": [308, 2039], "15": [1297, 2080]}}
+{"image_id": "voc_2007_002643", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [53145, 54381], "2": [0, 1909], "7": [2472, 2604], "14": [0, 1528], "15": [606, 2071]}}
+{"image_id": "voc_2009_005260", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57456, 57753], "3": [2829, 3126]}}
+{"image_id": "voc_2009_005260", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57466, 57961], "3": [2621, 3116]}}
+{"image_id": "voc_2009_005260", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57481, 57817], "3": [2765, 3101]}}
+{"image_id": "voc_2009_005260", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57494, 60370], "3": [212, 3088]}}
+{"image_id": "voc_2007_003848", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [30303, 30759], "19": [26695, 27151]}}
+{"image_id": "voc_2007_003848", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [30381, 32176], "19": [25278, 27073]}}
+{"image_id": "voc_2007_003848", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [30670, 57454], "19": [0, 26784]}}
+{"image_id": "voc_2007_003848", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [30528, 48074], "15": [0, 9522], "19": [0, 26784]}}
+{"image_id": "voc_2007_001733", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [58020, 58847], "17": [1042, 1869]}}
+{"image_id": "voc_2007_001733", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [58032, 58969], "17": [920, 1857]}}
+{"image_id": "voc_2007_001733", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [57677, 59551], "1": [0, 356], "3": [0, 339], "17": [0, 1855]}}
+{"image_id": "voc_2007_001733", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [58034, 59889], "17": [0, 1855]}}
+{"image_id": "voc_2009_001851", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [51033, 51161], "1": [8362, 8490]}}
+{"image_id": "voc_2009_001851", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51040, 51291], "1": [8232, 8483]}}
+{"image_id": "voc_2009_001851", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51046, 53657], "1": [5534, 8477], "15": [0, 332]}}
+{"image_id": "voc_2009_001851", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51054, 56076], "1": [3284, 8469], "4": [0, 163]}}
+{"image_id": "voc_2009_002649", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [13836, 15586], "5": [14243, 15100], "11": [0, 1491], "15": [6425, 6869]}}
+{"image_id": "voc_2009_002649", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [13449, 16332], "5": [14703, 15900], "11": [0, 610], "15": [5642, 6914]}}
+{"image_id": "voc_2009_002649", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [11104, 27040], "5": [3057, 14934], "11": [0, 764], "15": [6156, 10495]}}
+{"image_id": "voc_2009_002649", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [11018, 29254], "5": [0, 14934], "12": [0, 11600], "15": [0, 6744]}}
+{"image_id": "voc_2011_001601", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [0, 214], "8": [4226, 12745], "12": [0, 8134], "15": [0, 9], "18": [46980, 47588]}}
+{"image_id": "voc_2011_001601", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"8": [11087, 12801], "12": [0, 1268], "15": [0, 2416], "18": [44732, 47592]}}
+{"image_id": "voc_2011_001601", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [0, 26201], "8": [2631, 12712], "12": [0, 7663], "15": [0, 1865], "18": [21520, 47304]}}
+{"image_id": "voc_2011_001601", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [0, 54022], "8": [0, 12712], "11": [0, 1801], "15": [0, 4125], "18": [0, 47236]}}
+{"image_id": "voc_2011_000045", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50939, 51312], "12": [8583, 8956]}}
+{"image_id": "voc_2011_000045", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50941, 51365], "12": [8530, 8954]}}
+{"image_id": "voc_2011_000045", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [51125, 58017], "8": [0, 1996], "12": [0, 8652]}}
+{"image_id": "voc_2011_000045", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50541, 59248], "12": [0, 8652], "15": [0, 1349]}}
+{"image_id": "voc_2010_002512", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [9746, 10844], "8": [10088, 10282], "9": [299, 1203]}}
+{"image_id": "voc_2010_002512", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [9708, 10812], "8": [10070, 10282], "9": [349, 1241]}}
+{"image_id": "voc_2010_002512", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [9830, 11119], "8": [10094, 10282], "9": [18, 1119]}}
+{"image_id": "voc_2010_002512", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [9830, 11327], "8": [9896, 10282], "9": [8, 1119]}}
+{"image_id": "voc_2010_002310", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54970, 55074], "1": [4806, 4910]}}
+{"image_id": "voc_2010_002310", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [54971, 55144], "1": [4736, 4909]}}
+{"image_id": "voc_2010_002310", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54935, 55471], "1": [4409, 4945]}}
+{"image_id": "voc_2010_002310", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [55017, 59627], "1": [0, 4863], "3": [0, 253]}}
+{"image_id": "voc_2007_007235", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [48050, 48751], "2": [2879, 4027], "15": [3522, 4427]}}
+{"image_id": "voc_2007_007235", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47942, 48692], "2": [2998, 4326], "15": [3368, 4330]}}
+{"image_id": "voc_2007_007235", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47729, 49420], "2": [2584, 4046], "15": [3145, 4732]}}
+{"image_id": "voc_2007_007235", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [47630, 52210], "2": [1950, 4244], "15": [899, 4723]}}
+{"image_id": "voc_2008_003856", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [28907, 29002], "1": [0, 14], "7": [0, 8], "15": [7839, 7928]}}
+{"image_id": "voc_2008_003856", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [28896, 28972], "1": [0, 14], "7": [0, 11], "15": [7873, 7932]}}
+{"image_id": "voc_2008_003856", "condition": "direction", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [28903, 28965], "1": [0, 14], "15": [7884, 7932]}}
+{"image_id": "voc_2008_003856", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [28900, 28966], "1": [0, 14], "15": [7883, 7935]}}
+{"image_id": "voc_2007_000663", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [12563, 17081], "6": [38138, 44611], "7": [1070, 4307]}}
+{"image_id": "voc_2007_000663", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [12773, 19182], "6": [19342, 44137], "7": [1555, 20781]}}
+{"image_id": "voc_2007_000663", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [12789, 22879], "6": [6004, 44077], "7": [1586, 30435]}}
+{"image_id": "voc_2007_000663", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [12795, 48795], "2": [0, 3229], "5": [0, 950], "6": [0, 44077], "7": [1234, 6628], "15": [0, 62]}}
+{"image_id": "voc_2009_002291", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [35277, 35393], "19": [23802, 23918]}}
+{"image_id": "voc_2009_002291", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [35248, 35526], "19": [23669, 23947]}}
+{"image_id": "voc_2009_002291", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [35103, 35853], "19": [23342, 24092]}}
+{"image_id": "voc_2009_002291", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [35216, 38718], "19": [20477, 23979]}}
+{"image_id": "voc_2007_000452", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [45491, 49202], "8": [0, 494], "9": [37, 1101], "15": [0, 20], "18": [9879, 13519], "20": [0, 119]}}
+{"image_id": "voc_2007_000452", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [45634, 49177], "8": [0, 738], "9": [25, 1155], "12": [0, 1], "15": [0, 612], "18": [9913, 12607]}}
+{"image_id": "voc_2007_000452", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [42600, 49837], "8": [0, 3], "9": [0, 1404], "12": [0, 508], "15": [0, 2459], "18": [9247, 13804]}}
+{"image_id": "voc_2007_000452", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44863, 57229], "8": [0, 704], "9": [0, 1080], "12": [0, 106], "15": [0, 4477], "18": [1284, 10119]}}
+{"image_id": "voc_2011_000283", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [34006, 34430], "19": [23506, 23930]}}
+{"image_id": "voc_2011_000283", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [33679, 34510], "19": [23426, 24257]}}
+{"image_id": "voc_2011_000283", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32410, 35947], "19": [21989, 25526]}}
+{"image_id": "voc_2011_000283", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [34247, 57936], "15": [0, 102], "19": [0, 23587]}}
+{"image_id": "voc_2007_002470", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [36491, 38282], "3": [0, 434], "8": [20897, 22144], "11": [0, 964]}}
+{"image_id": "voc_2007_002470", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [36926, 38363], "8": [21243, 22680]}}
+{"image_id": "voc_2007_002470", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [35566, 38714], "3": [0, 23385], "8": [0, 21547]}}
+{"image_id": "voc_2007_002470", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [25537, 41281], "3": [0, 30847], "8": [0, 21547]}}
+{"image_id": "voc_2007_002619", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [42658, 43352], "1": [15752, 16446]}}
+{"image_id": "voc_2007_002619", "condition": "isotropic", "seed": 1234, "effective_mse": 60.000011, "psnr": 30.3493, "seg_iu": {"0": [42684, 43983], "1": [15121, 16420]}}
+{"image_id": "voc_2007_002619", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [42878, 58264], "1": [840, 16226]}}
+{"image_id": "voc_2007_002619", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [42878, 58865], "1": [0, 16226], "3": [0, 239]}}
+{"image_id": "voc_2007_002132", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57325, 57458], "20": [3414, 3547]}}
+{"image_id": "voc_2007_002132", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57323, 57558], "20": [3314, 3549]}}
+{"image_id": "voc_2007_002132", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57388, 60872], "20": [0, 3484]}}
+{"image_id": "voc_2007_002132", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [57388, 60872], "20": [0, 3484]}}
+{"image_id": "voc_2007_008222", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [46335, 46638], "12": [12790, 13093]}}
+{"image_id": "voc_2007_008222", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [46315, 46733], "12": [12695, 13113]}}
+{"image_id": "voc_2007_008222", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [46280, 47499], "3": [0, 12130], "12": [1, 12946]}}
+{"image_id": "voc_2007_008222", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [45881, 47777], "3": [0, 12252], "12": [0, 12946]}}
+{"image_id": "voc_2008_001404", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [45278, 45935], "2": [2749, 4366], "14": [0, 672], "15": [7764, 8412]}}
+{"image_id": "voc_2008_001404", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [45279, 46126], "2": [3395, 4469], "15": [7597, 8310]}}
+{"image_id": "voc_2008_001404", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [45299, 46882], "2": [2980, 4449], "15": [7332, 8234]}}
+{"image_id": "voc_2008_001404", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [45303, 47689], "2": [2972, 4380], "15": [6709, 8123]}}
+{"image_id": "voc_2009_003043", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53926, 54898], "4": [3845, 4841], "15": [0, 24]}}
+{"image_id": "voc_2009_003043", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53262, 54985], "4": [3758, 5505], "15": [0, 24]}}
+{"image_id": "voc_2009_003043", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54730, 57427], "4": [1333, 4017], "15": [3, 24]}}
+{"image_id": "voc_2009_003043", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [54766, 58599], "4": [168, 3977], "15": [0, 24]}}
+{"image_id": "voc_2010_003060", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [42457, 42923], "12": [16856, 17322]}}
+{"image_id": "voc_2010_003060", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38338, 43651], "12": [16128, 21441]}}
+{"image_id": "voc_2010_003060", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38209, 43418], "12": [16361, 21570]}}
+{"image_id": "voc_2010_003060", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [41165, 49110], "12": [0, 16956], "15": [0, 12327]}}
+{"image_id": "voc_2009_002521", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [49358, 49585], "5": [10336, 10563]}}
+{"image_id": "voc_2009_002521", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [49348, 49585], "5": [10336, 10573]}}
+{"image_id": "voc_2009_002521", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [49541, 51652], "5": [8269, 10380]}}
+{"image_id": "voc_2009_002521", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [49585, 59921], "5": [0, 10336]}}
+{"image_id": "voc_2009_004568", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54446, 54720], "3": [3751, 4025]}}
+{"image_id": "voc_2009_004568", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54458, 54732], "3": [3739, 4013]}}
+{"image_id": "voc_2009_004568", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54456, 54923], "3": [3548, 4015]}}
+{"image_id": "voc_2009_004568", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [54368, 55146], "3": [3325, 4103]}}
+{"image_id": "voc_2007_003711", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [37650, 38340], "6": [20357, 21545], "7": [305, 331], "15": [0, 518]}}
+{"image_id": "voc_2007_003711", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [37752, 38370], "6": [20311, 21440], "7": [308, 347], "15": [0, 518]}}
+{"image_id": "voc_2007_003711", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [37639, 38456], "6": [20142, 21553], "7": [307, 431], "15": [0, 518]}}
+{"image_id": "voc_2007_003711", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [37724, 39510], "6": [19289, 21491], "7": [80, 331], "15": [0, 621]}}
+{"image_id": "voc_2009_004084", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [54742, 55684], "3": [4411, 5353]}}
+{"image_id": "voc_2009_004084", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [54868, 55706], "3": [4389, 5227]}}
+{"image_id": "voc_2009_004084", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53014, 56045], "3": [4050, 7081]}}
+{"image_id": "voc_2009_004084", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [54425, 57693], "3": [2340, 5415], "8": [0, 255], "17": [0, 62]}}
+{"image_id": "voc_2010_005160", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [39266, 42384], "6": [3529, 4713], "14": [10411, 11183], "15": [0, 574], "17": [295, 1079]}}
+{"image_id": "voc_2010_005160", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [39495, 43993], "6": [1997, 4400], "14": [10361, 11303], "15": [0, 540], "17": [0, 1079], "19": [0, 266]}}
+{"image_id": "voc_2010_005160", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [39997, 45559], "2": [0, 8184], "6": [0, 4325], "7": [0, 81], "14": [1235, 10854], "15": [0, 80], "17": [0, 1079], "19": [0, 2040]}}
+{"image_id": "voc_2010_005160", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [39992, 46785], "2": [0, 5272], "6": [0, 4325], "14": [4903, 11078], "17": [0, 1079]}}
+{"image_id": "voc_2009_000771", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [25874, 26060], "10": [31602, 31788]}}
+{"image_id": "voc_2009_000771", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [25900, 26332], "10": [31330, 31762]}}
+{"image_id": "voc_2009_000771", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [25925, 38633], "8": [0, 141], "10": [5267, 31737], "12": [0, 13621]}}
+{"image_id": "voc_2009_000771", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [25773, 31995], "10": [0, 31737], "12": [0, 25667], "20": [0, 152]}}
+{"image_id": "voc_2008_007498", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [51402, 52664], "3": [6439, 7701]}}
+{"image_id": "voc_2008_007498", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [51412, 52673], "3": [6354, 7691], "8": [0, 76]}}
+{"image_id": "voc_2008_007498", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [46106, 51887], "3": [0, 7618], "12": [0, 12595]}}
+{"image_id": "voc_2008_007498", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [48011, 53526], "3": [0, 7618], "8": [0, 8], "12": [0, 31], "15": [0, 9012]}}
+{"image_id": "voc_2011_000456", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57935, 58242], "3": [637, 2444], "17": [0, 1610]}}
+{"image_id": "voc_2011_000456", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57984, 58570], "3": [20, 2438], "13": [0, 283], "17": [0, 1573]}}
+{"image_id": "voc_2011_000456", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57990, 58717], "3": [1717, 2444]}}
+{"image_id": "voc_2011_000456", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57391, 58503], "3": [0, 2438], "13": [0, 1999], "15": [0, 537]}}
+{"image_id": "voc_2010_002691", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [34954, 35216], "13": [23928, 24190]}}
+{"image_id": "voc_2010_002691", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [34666, 35322], "13": [23822, 24478]}}
+{"image_id": "voc_2010_002691", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [35005, 35682], "12": [0, 23592], "13": [0, 24009]}}
+{"image_id": "voc_2010_002691", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [34845, 39269], "8": [0, 18764], "12": [0, 1401], "13": [0, 24009]}}
+{"image_id": "voc_2007_006802", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [25793, 26478], "15": [0, 834], "19": [32335, 33854]}}
+{"image_id": "voc_2007_006802", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [25820, 26866], "15": [0, 834], "19": [31950, 33824]}}
+{"image_id": "voc_2007_006802", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [26107, 36404], "15": [196, 867], "19": [22615, 33105]}}
+{"image_id": "voc_2007_006802", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [26158, 59097], "5": [0, 13], "15": [0, 834], "19": [537, 32655]}}
+{"image_id": "voc_2010_000628", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57839, 58027], "7": [2798, 2984], "15": [0, 2]}}
+{"image_id": "voc_2010_000628", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57830, 57990], "7": [2835, 2984], "15": [0, 11]}}
+{"image_id": "voc_2010_000628", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57803, 58447], "7": [2378, 2984], "13": [0, 25], "15": [0, 13]}}
+{"image_id": "voc_2010_000628", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [56987, 60738], "7": [87, 2984], "15": [0, 16], "18": [0, 838]}}
+{"image_id": "voc_2007_007168", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [36810, 37905], "4": [0, 878], "19": [20630, 22075]}}
+{"image_id": "voc_2007_007168", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [36917, 37737], "19": [21412, 22232]}}
+{"image_id": "voc_2007_007168", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [37140, 42400], "19": [16749, 22009]}}
+{"image_id": "voc_2007_007168", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [35489, 52853], "4": [0, 2478], "19": [5478, 22000]}}
+{"image_id": "voc_2007_003110", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [56350, 57401], "12": [2873, 3484], "15": [0, 99], "17": [0, 541]}}
+{"image_id": "voc_2007_003110", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [56843, 57939], "12": [2398, 3476], "15": [0, 37], "17": [0, 55]}}
+{"image_id": "voc_2007_003110", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [56898, 58760], "12": [1614, 3476]}}
+{"image_id": "voc_2007_003110", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [56069, 58693], "12": [1681, 3534], "15": [0, 771]}}
+{"image_id": "voc_2008_007548", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [51842, 52949], "8": [6928, 8025], "15": [0, 10]}}
+{"image_id": "voc_2008_007548", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [51883, 52994], "8": [6883, 7994]}}
+{"image_id": "voc_2008_007548", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [52654, 55000], "3": [0, 1387], "8": [3499, 7116], "9": [0, 2], "12": [0, 3], "20": [0, 93]}}
+{"image_id": "voc_2008_007548", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50037, 55270], "3": [0, 6161], "8": [0, 6949], "12": [0, 675], "20": [0, 662]}}
+{"image_id": "voc_2008_003821", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [39962, 52158], "9": [3948, 6757], "20": [0, 9387]}}
+{"image_id": "voc_2008_003821", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [44304, 56000], "9": [106, 5271], "20": [0, 6531]}}
+{"image_id": "voc_2008_003821", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [42087, 56106], "9": [0, 5266], "20": [0, 8753]}}
+{"image_id": "voc_2008_003821", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50329, 56106], "9": [0, 5266], "20": [0, 511]}}
+{"image_id": "voc_2009_000037", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57745, 58173], "3": [2140, 2568]}}
+{"image_id": "voc_2009_000037", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [57794, 58154], "3": [2159, 2519]}}
+{"image_id": "voc_2009_000037", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [57841, 58351], "3": [1962, 2472]}}
+{"image_id": "voc_2009_000037", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [56922, 58416], "3": [1897, 3333], "12": [0, 58]}}
+{"image_id": "voc_2011_002641", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [31843, 33684], "5": [0, 358], "9": [0, 833], "15": [22630, 23572]}}
+{"image_id": "voc_2011_002641", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [31810, 33486], "5": [0, 358], "9": [0, 833], "15": [22654, 23779]}}
+{"image_id": "voc_2011_002641", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [31655, 32722], "5": [0, 358], "9": [0, 833], "15": [22741, 24611]}}
+{"image_id": "voc_2011_002641", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [31158, 33852], "5": [0, 358], "9": [0, 833], "15": [22214, 24505]}}
+{"image_id": "voc_2007_004275", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [38700, 40462], "14": [13694, 14868], "15": [4079, 4541], "16": [0, 758]}}
+{"image_id": "voc_2007_004275", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38664, 40488], "14": [13691, 14952], "15": [4007, 4542], "16": [0, 758]}}
+{"image_id": "voc_2007_004275", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [38456, 49142], "2": [0, 406], "3": [0, 1967], "14": [3777, 14518], "15": [3534, 4544], "16": [0, 758]}}
+{"image_id": "voc_2007_004275", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [38233, 56219], "3": [0, 2742], "14": [0, 14487], "15": [0, 4663], "16": [0, 758]}}
+{"image_id": "voc_2008_006229", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [51673, 52721], "4": [5734, 6782]}}
+{"image_id": "voc_2008_006229", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [52082, 52808], "4": [5647, 6373]}}
+{"image_id": "voc_2008_006229", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [52538, 54085], "4": [4370, 5917]}}
+{"image_id": "voc_2008_006229", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999985, "psnr": 30.3493, "seg_iu": {"0": [51816, 58179], "4": [225, 5864], "18": [0, 775], "19": [0, 51]}}
+{"image_id": "voc_2010_003187", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [34188, 36492], "12": [23364, 25668]}}
+{"image_id": "voc_2010_003187", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [34190, 36540], "12": [23316, 25666]}}
+{"image_id": "voc_2010_003187", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [34187, 47783], "12": [12073, 25669]}}
+{"image_id": "voc_2010_003187", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [34156, 51576], "3": [0, 7951], "8": [0, 363], "12": [0, 25666]}}
+{"image_id": "voc_2008_000009", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59764, 59907], "10": [559, 911], "13": [0, 231]}}
+{"image_id": "voc_2008_000009", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59751, 59929], "10": [757, 935]}}
+{"image_id": "voc_2008_000009", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [59776, 60588], "10": [7, 910], "13": [0, 87], "15": [0, 4]}}
+{"image_id": "voc_2008_000009", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [56263, 60686], "3": [0, 3484], "10": [0, 910], "12": [0, 29]}}
+{"image_id": "voc_2008_006554", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32975, 40172], "6": [15101, 21906], "15": [2879, 3341]}}
+{"image_id": "voc_2008_006554", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [34143, 41209], "6": [14780, 21048], "15": [2154, 3040]}}
+{"image_id": "voc_2008_006554", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [36827, 43425], "6": [6829, 15265], "7": [0, 8274], "14": [0, 290], "15": [2192, 3272]}}
+{"image_id": "voc_2008_006554", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [39814, 53635], "6": [0, 15225], "7": [0, 3344], "15": [1208, 3148]}}
+{"image_id": "voc_2008_007031", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [52341, 52528], "10": [7608, 7795]}}
+{"image_id": "voc_2008_007031", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [52348, 52536], "10": [7600, 7788]}}
+{"image_id": "voc_2008_007031", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [52354, 53065], "3": [0, 838], "10": [6196, 7782], "12": [0, 37]}}
+{"image_id": "voc_2008_007031", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [52353, 52823], "10": [7313, 7783]}}
+{"image_id": "voc_2007_004189", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [53742, 54077], "12": [4260, 4595]}}
+{"image_id": "voc_2007_004189", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53813, 54306], "12": [3650, 4524], "17": [0, 381]}}
+{"image_id": "voc_2007_004189", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [53827, 55178], "8": [0, 38], "12": [2454, 4510], "17": [0, 667]}}
+{"image_id": "voc_2007_004189", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [53230, 55680], "3": [0, 2688], "12": [568, 4508]}}
+{"image_id": "voc_2009_000136", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [57709, 57782], "20": [3231, 3304]}}
+{"image_id": "voc_2009_000136", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57706, 57890], "20": [3123, 3307]}}
+{"image_id": "voc_2009_000136", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57709, 61013], "20": [0, 3304]}}
+{"image_id": "voc_2009_000136", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [57709, 61013], "20": [0, 3304]}}
+{"image_id": "voc_2010_003495", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [50873, 51110], "1": [7973, 8210]}}
+{"image_id": "voc_2010_003495", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50849, 51096], "1": [7987, 8234]}}
+{"image_id": "voc_2010_003495", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [50830, 53015], "1": [6066, 8253], "15": [0, 2]}}
+{"image_id": "voc_2010_003495", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [50549, 55230], "1": [0, 8158], "3": [0, 1639], "15": [0, 2590]}}
+{"image_id": "voc_2007_008645", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [59095, 59648], "4": [623, 1176]}}
+{"image_id": "voc_2007_008645", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [59302, 59679], "4": [592, 969]}}
+{"image_id": "voc_2007_008645", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [59547, 60007], "4": [264, 724]}}
+{"image_id": "voc_2007_008645", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [59578, 60271], "4": [0, 693]}}
+{"image_id": "voc_2009_002265", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [47254, 47443], "19": [11663, 11852]}}
+{"image_id": "voc_2009_002265", "condition": "isotropic", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47255, 47520], "19": [11586, 11851]}}
+{"image_id": "voc_2009_002265", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [47241, 47647], "19": [11459, 11865]}}
+{"image_id": "voc_2009_002265", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [47253, 47585], "19": [11521, 11853]}}
+{"image_id": "voc_2011_000238", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [49441, 59179], "4": [0, 9738]}}
+{"image_id": "voc_2011_000238", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [49441, 59179], "4": [0, 9738]}}
+{"image_id": "voc_2011_000238", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [49441, 59179], "4": [0, 9738]}}
+{"image_id": "voc_2011_000238", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [49430, 59179], "4": [0, 9738], "20": [0, 11]}}
+{"image_id": "voc_2011_002308", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [32771, 32846], "15": [27189, 27264]}}
+{"image_id": "voc_2011_002308", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [32751, 32896], "15": [27139, 27284]}}
+{"image_id": "voc_2011_002308", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [28858, 32883], "8": [0, 3013], "12": [0, 4], "15": [27152, 28160]}}
+{"image_id": "voc_2011_002308", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [23540, 36786], "3": [0, 3592], "12": [0, 4299], "15": [23124, 27752], "20": [0, 977]}}
+{"image_id": "voc_2008_005439", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [36151, 45770], "9": [0, 492], "20": [13779, 23890]}}
+{"image_id": "voc_2008_005439", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [36108, 50350], "20": [9691, 23933]}}
+{"image_id": "voc_2008_005439", "condition": "direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [35303, 52449], "18": [0, 935], "20": [7592, 23803]}}
+{"image_id": "voc_2008_005439", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [35708, 59998], "15": [0, 678], "18": [0, 43], "20": [0, 23655]}}
+{"image_id": "voc_2008_003110", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [44176, 44885], "3": [13413, 14122]}}
+{"image_id": "voc_2008_003110", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999992, "psnr": 30.3493, "seg_iu": {"0": [44201, 44935], "3": [13363, 14097]}}
+{"image_id": "voc_2008_003110", "condition": "direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [44063, 45002], "3": [13296, 14235]}}
+{"image_id": "voc_2008_003110", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [43970, 44817], "3": [13481, 14328]}}
+{"image_id": "voc_2010_000682", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [42762, 43015], "6": [16481, 16621], "7": [50, 116], "15": [34, 81]}}
+{"image_id": "voc_2010_000682", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [42721, 42992], "6": [16487, 16631], "7": [68, 149], "15": [33, 79]}}
+{"image_id": "voc_2010_000682", "condition": "direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [40327, 43227], "6": [16313, 16664], "7": [40, 2515], "15": [0, 74]}}
+{"image_id": "voc_2010_000682", "condition": "hardened_direction", "seed": 1234, "effective_mse": 60.0, "psnr": 30.3493, "seg_iu": {"0": [41998, 43059], "6": [16469, 16840], "7": [46, 668], "15": [6, 74]}}
+{"image_id": "voc_2010_005021", "condition": "clean", "seed": 1234, "effective_mse": 0.0, "psnr": 138.1308, "seg_iu": {"0": [14630, 20066], "8": [27044, 27738], "9": [9156, 15875], "11": [0, 811]}}
+{"image_id": "voc_2010_005021", "condition": "isotropic", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [14144, 19760], "8": [26931, 27594], "9": [9620, 16494], "11": [0, 777]}}
+{"image_id": "voc_2010_005021", "condition": "direction", "seed": 1234, "effective_mse": 60.000008, "psnr": 30.3493, "seg_iu": {"0": [17877, 26367], "3": [0, 276], "8": [25482, 27922], "9": [4492, 12409], "11": [0, 495]}}
+{"image_id": "voc_2010_005021", "condition": "hardened_direction", "seed": 1234, "effective_mse": 59.999996, "psnr": 30.3493, "seg_iu": {"0": [19168, 40935], "3": [0, 1425], "8": [11893, 27474], "9": [2273, 11291], "11": [0, 337], "15": [0, 524]}}

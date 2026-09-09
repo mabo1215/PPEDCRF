@@ -1,0 +1,36 @@
+{
+  "eval_backbone": "resnet18",
+  "surrogates": [
+    "resnet50",
+    "vgg16",
+    "cosplace"
+  ],
+  "conditions": [
+    "direction",
+    "direction_eot",
+    "isotropic"
+  ],
+  "target_mse": 60.0,
+  "steps": 20,
+  "step_size": 1.0,
+  "linf": 16.0,
+  "random_start": 8.0,
+  "eot_sanitizers": [
+    "jpeg75",
+    "jpeg50",
+    "blur",
+    "denoise"
+  ],
+  "eot_samples": 2,
+  "jpeg_qualities": [
+    95,
+    75
+  ],
+  "seeds": [
+    1234
+  ],
+  "height": 192,
+  "width": 320,
+  "queries": 200,
+  "synthetic": false
+}

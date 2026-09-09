@@ -1,0 +1,42 @@
+{
+  "rows": [
+    {
+      "condition": "clean",
+      "seed": 1234,
+      "mean_effective_mse": 0.0,
+      "mean_psnr": 138.1308,
+      "miou": 0.697352
+    },
+    {
+      "condition": "isotropic",
+      "seed": 1234,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "miou": 0.66923
+    },
+    {
+      "condition": "direction",
+      "seed": 1234,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "miou": 0.587694
+    },
+    {
+      "condition": "hardened_direction",
+      "seed": 1234,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "miou": 0.503813
+    }
+  ],
+  "manifest": "utility_subset/utility_manifest_segmentation.jsonl",
+  "surrogates": [
+    "resnet50",
+    "vgg16",
+    "cosplace"
+  ],
+  "target_mse": 15.68,
+  "steps": 20,
+  "device": "cuda",
+  "n_images": 200
+}

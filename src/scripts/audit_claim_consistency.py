@@ -468,8 +468,9 @@ def _miou(budget: str, condition: str) -> Callable[[], Optional[float]]:
     """
     def go() -> Optional[float]:
         import json
-        path = OUT / f"tifs_a5/segmentation_mse{budget}/per_image.jsonl"
-        if not path.is_file():
+        rel = f"tifs_a5/segmentation_mse{budget}/per_image.jsonl"
+        path = next((root / rel for root in ROOTS if (root / rel).is_file()), None)
+        if path is None:
             return None
         seen: Dict[tuple, dict] = {}
         with path.open(encoding="utf-8") as fh:

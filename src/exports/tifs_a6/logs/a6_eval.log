@@ -1,0 +1,20 @@
+设置成功!
+注意：
+1. 仅限学术用途和加速访问github/huggingface，不承诺稳定性
+2. 开启加速后对访问其他资源如pip源等会*更慢*
+=== [02:49:09] baseline (pretrained) ===
+[transfer] objective=self random_start=1.0 eot=['jpeg75', 'jpeg50', 'blur', 'denoise'] eval_sanitizers=['none']
+[transfer] device=cuda
+[transfer] restricted to 200 queries from src/outputs/tifs_a6/hardened_direction.pt.test_query_ids.json
+[transfer] 200 queries, 2000 gallery
+[transfer] gallery embedded with resnet18
+[transfer] gallery embedded with resnet50
+[transfer] gallery embedded with vgg16
+[transfer] gallery embedded with cosplace
+[transfer] conditions=['isotropic', 'transfer_3']
+[transfer] 25/200 queries
+[transfer] 50/200 queries
+[transfer] 75/200 queries
+[transfer] 100/200 queries
+[transfer] 125/200 queries
+[transfer] 150/200 queries

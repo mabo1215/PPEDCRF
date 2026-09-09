@@ -1,0 +1,19 @@
+[transfer] objective=self random_start=1.0 eot=off eval_sanitizers=['none']
+[transfer] device=cuda
+[transfer] restricted to 200 queries from src/outputs/tifs_a6/isotropic.pt.test_query_ids.json
+[transfer] 200 queries, 2000 gallery
+[transfer] loaded adapted checkpoint for resnet18 from src/outputs/tifs_a6/isotropic.pt (gallery re-indexed with the adapted model)
+[transfer] gallery embedded with resnet18
+[transfer] gallery embedded with resnet50
+[transfer] gallery embedded with vgg16
+[transfer] gallery embedded with cosplace
+[transfer] conditions=['isotropic', 'transfer_3']
+[transfer] 25/200 queries
+[transfer] 50/200 queries
+[transfer] 75/200 queries
+[transfer] 100/200 queries
+[transfer] 125/200 queries
+[transfer] 150/200 queries
+[transfer] 175/200 queries
+[transfer] 200/200 queries
+[transfer] done -> src/outputs/tifs_a6_eval/isotropic_rebuilt.csv

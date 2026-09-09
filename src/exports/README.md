@@ -22,6 +22,10 @@ a fresh clone on any host carries the evidence with it.
 | `d4_3seed` | 8 | 5.1 MB | A three-seed run of the direction family |
 | `sanfree_3seed` | 8 | 5.3 MB | The gallery-free three-seed run |
 | `tifs5_analysis` | 19 | 76 KB | Analysis-script outputs, regenerable from the rows above |
+| `tifs_a5` | 8 | 740 KB | The four-budget privacy-utility frontier (dataset-level mIoU) |
+| `tifs_a8_mse60.0` | 2 | 552 KB | The release-boundary measurement at delivered MSE 60 |
+| `tifs_a6` | 13 | 24 KB | Adaptive-attacker training logs and the held-out query ids |
+| `tifs_a6_eval` | 8 | 296 KB | The adaptive-attacker evaluation this section's conclusions rest on |
 
 Every printed number these trees back was recomputed from them on
 9 September 2026 and matched the manuscript exactly: the seven placement deltas
@@ -50,23 +54,33 @@ comes first.
 
 ## Still missing
 
-Five trees from the A5/A8/D6 round exist only on the work machine:
-`tifs_a5`, `tifs_a8`, `tifs_a8_hi`, `tifs_a8_mse60.0`, `tifs_d6`. They back the
-privacy-utility frontier, the release-boundary section and the transfer and
-white-box columns of Table IV -- 65 of the auditor's 140 claims. Until they are
-committed here the same way, the auditor reports 75 of 140 on any machine that
-lacks them.
+Three trees are still missing here: `tifs_a8` and `tifs_a8_hi` (the
+release-boundary measurements at the operating point and at MSE 241.5) and
+`tifs_d6` (the transfer and white-box columns of Table IV). They back 51 of the
+auditor's 140 claims, and live on the work machine or on PRO 6000, which was
+not reachable when this was written. With everything else in place the auditor
+reports 89 of 140 with zero mismatches.
 
-To add them from the work machine:
+To add them from whichever machine has them:
 
 ```bash
 cd <repo>
-for t in tifs_a5 tifs_a8 tifs_a8_hi tifs_a8_mse60.0 tifs_d6; do
+for t in tifs_a8 tifs_a8_hi tifs_d6; do
   cp -r "src/outputs/$t" "src/exports/$t"
 done
 python3 src/scripts/audit_claim_consistency.py   # expect 140 of 140
 git add src/exports && git commit
 ```
+
+## A note on `tifs_a6`
+
+Only the logs, the run metadata and the held-out query ids are here. The
+original tree on the compute host is 901 MB, almost all of it a cache of
+perturbed frames (`.pt`) that is regenerable and does not belong in git. What
+was kept is what the manuscript's two training-side numbers rest on: `a6.log`
+records validation MRR `0.04718` at epoch 0 for the hardened exposure and
+`0.05776` for the unhardened one, both runs then selecting epoch 8, which is
+what the text reports as `0.047` and `0.058`.
 
 ## What does not belong here
 

@@ -1,0 +1,150 @@
+设置成功!
+注意：
+1. 仅限学术用途和加速访问github/huggingface，不承诺稳定性
+2. 开启加速后对访问其他资源如pip源等会*更慢*
+=== [01:24:40] A6 condition=hardened_direction start ===
+[finetune] device=cuda
+[finetune] 102 train / 80 validation / 200 held-out test queries (all mutually place-disjoint)
+[finetune] building direction cache: 182 of 182 frames missing, 3 variant(s) each
+[finetune] hardened cache: EOT over ['jpeg75', 'jpeg50', 'blur', 'denoise']
+[finetune] surrogate ready: resnet50
+[finetune] surrogate ready: vgg16
+[finetune] surrogate ready: cosplace
+[finetune] direction cache 25/182
+[finetune] direction cache 50/182
+[finetune] direction cache 75/182
+[finetune] direction cache 100/182
+[finetune] direction cache 125/182
+[finetune] direction cache 150/182
+[finetune] direction cache 175/182
+[finetune] direction cache complete
+[finetune] gallery embeddings ready (re-embedded each validation)
+[finetune] training 8393728 params in the last 1 block(s)
+[finetune] epoch 0 (pretrained, no fine-tuning) val_top1=0.0000 val_median_rank=113.0 val_mrr=0.04718
+[finetune] selecting checkpoints on 'mrr' (epoch 0 score 0.04718)
+[finetune] epoch 1/30 mean_triplet_loss=0.2285 val_top1=0.0000 val_median_rank=158.0 val_mrr=0.04028 (step 7)
+[finetune] epoch 2/30 mean_triplet_loss=0.2131 val_top1=0.0125 val_median_rank=105.0 val_mrr=0.06456 (best so far) (step 14)
+[finetune] epoch 3/30 mean_triplet_loss=0.1951 val_top1=0.0250 val_median_rank=79.0 val_mrr=0.07897 (best so far) (step 21)
+[finetune] epoch 4/30 mean_triplet_loss=0.1825 val_top1=0.0250 val_median_rank=122.0 val_mrr=0.07020 (step 28)
+[finetune] epoch 5/30 mean_triplet_loss=0.1757 val_top1=0.0250 val_median_rank=103.0 val_mrr=0.06773 (step 35)
+[finetune] epoch 6/30 mean_triplet_loss=0.1591 val_top1=0.0125 val_median_rank=121.0 val_mrr=0.05128 (step 42)
+[finetune] epoch 7/30 mean_triplet_loss=0.1444 val_top1=0.0125 val_median_rank=111.0 val_mrr=0.05522 (step 49)
+[finetune] epoch 8/30 mean_triplet_loss=0.1345 val_top1=0.0375 val_median_rank=125.0 val_mrr=0.08304 (best so far) (step 56)
+[finetune] epoch 9/30 mean_triplet_loss=0.1295 val_top1=0.0125 val_median_rank=152.0 val_mrr=0.04490 (step 63)
+[finetune] epoch 10/30 mean_triplet_loss=0.1211 val_top1=0.0250 val_median_rank=92.0 val_mrr=0.06472 (step 70)
+[finetune] epoch 11/30 mean_triplet_loss=0.1131 val_top1=0.0250 val_median_rank=126.0 val_mrr=0.05282 (step 77)
+[finetune] epoch 12/30 mean_triplet_loss=0.1020 val_top1=0.0125 val_median_rank=130.0 val_mrr=0.03865 (step 84)
+[finetune] epoch 13/30 mean_triplet_loss=0.0898 val_top1=0.0250 val_median_rank=141.0 val_mrr=0.05057 (step 91)
+[finetune] epoch 14/30 mean_triplet_loss=0.0969 val_top1=0.0375 val_median_rank=96.0 val_mrr=0.06855 (step 98)
+[finetune] epoch 15/30 mean_triplet_loss=0.0947 val_top1=0.0125 val_median_rank=111.0 val_mrr=0.05011 (step 105)
+[finetune] epoch 16/30 mean_triplet_loss=0.0928 val_top1=0.0000 val_median_rank=135.0 val_mrr=0.03345 (step 112)
+[finetune] epoch 17/30 mean_triplet_loss=0.0858 val_top1=0.0125 val_median_rank=92.0 val_mrr=0.05002 (step 119)
+[finetune] epoch 18/30 mean_triplet_loss=0.0805 val_top1=0.0000 val_median_rank=121.0 val_mrr=0.04783 (step 126)
+[finetune] epoch 19/30 mean_triplet_loss=0.0774 val_top1=0.0000 val_median_rank=109.0 val_mrr=0.05036 (step 133)
+[finetune] epoch 20/30 mean_triplet_loss=0.0812 val_top1=0.0125 val_median_rank=104.0 val_mrr=0.06308 (step 140)
+[finetune] epoch 21/30 mean_triplet_loss=0.0684 val_top1=0.0250 val_median_rank=91.0 val_mrr=0.06921 (step 147)
+[finetune] epoch 22/30 mean_triplet_loss=0.0730 val_top1=0.0375 val_median_rank=100.0 val_mrr=0.07452 (step 154)
+[finetune] epoch 23/30 mean_triplet_loss=0.0686 val_top1=0.0125 val_median_rank=114.0 val_mrr=0.05493 (step 161)
+[finetune] epoch 24/30 mean_triplet_loss=0.0663 val_top1=0.0125 val_median_rank=113.0 val_mrr=0.03998 (step 168)
+[finetune] epoch 25/30 mean_triplet_loss=0.0573 val_top1=0.0375 val_median_rank=96.0 val_mrr=0.07375 (step 175)
+[finetune] epoch 26/30 mean_triplet_loss=0.0587 val_top1=0.0375 val_median_rank=80.0 val_mrr=0.07029 (step 182)
+[finetune] epoch 27/30 mean_triplet_loss=0.0652 val_top1=0.0125 val_median_rank=141.0 val_mrr=0.04451 (step 189)
+[finetune] epoch 28/30 mean_triplet_loss=0.0674 val_top1=0.0125 val_median_rank=139.0 val_mrr=0.04601 (step 196)
+[finetune] epoch 29/30 mean_triplet_loss=0.0545 val_top1=0.0250 val_median_rank=110.0 val_mrr=0.05567 (step 203)
+[finetune] epoch 30/30 mean_triplet_loss=0.0592 val_top1=0.0125 val_median_rank=117.0 val_mrr=0.05345 (step 210)
+[finetune] best epoch 8 (val_top1=0.0375, vs 0.0000 before fine-tuning) -> src/outputs/tifs_a6/hardened_direction.pt
+[finetune] held-out test query_ids -> src/outputs/tifs_a6/hardened_direction.pt.test_query_ids.json
+=== [01:56:32] A6 hardened_direction rc=0 ===
+=== [01:56:32] A6 condition=direction start ===
+[finetune] device=cuda
+[finetune] 102 train / 80 validation / 200 held-out test queries (all mutually place-disjoint)
+[finetune] building direction cache: 182 of 182 frames missing, 3 variant(s) each
+[finetune] surrogate ready: resnet50
+[finetune] surrogate ready: vgg16
+[finetune] surrogate ready: cosplace
+[finetune] direction cache 25/182
+[finetune] direction cache 50/182
+[finetune] direction cache 75/182
+[finetune] direction cache 100/182
+[finetune] direction cache 125/182
+[finetune] direction cache 150/182
+[finetune] direction cache 175/182
+[finetune] direction cache complete
+[finetune] gallery embeddings ready (re-embedded each validation)
+[finetune] training 8393728 params in the last 1 block(s)
+[finetune] epoch 0 (pretrained, no fine-tuning) val_top1=0.0000 val_median_rank=68.0 val_mrr=0.05776
+[finetune] selecting checkpoints on 'mrr' (epoch 0 score 0.05776)
+[finetune] epoch 1/30 mean_triplet_loss=0.2196 val_top1=0.0375 val_median_rank=121.0 val_mrr=0.07377 (best so far) (step 7)
+[finetune] epoch 2/30 mean_triplet_loss=0.2103 val_top1=0.0125 val_median_rank=80.0 val_mrr=0.06567 (step 14)
+[finetune] epoch 3/30 mean_triplet_loss=0.1998 val_top1=0.0000 val_median_rank=76.0 val_mrr=0.06526 (step 21)
+[finetune] epoch 4/30 mean_triplet_loss=0.1877 val_top1=0.0375 val_median_rank=83.0 val_mrr=0.08082 (best so far) (step 28)
+[finetune] epoch 5/30 mean_triplet_loss=0.1817 val_top1=0.0250 val_median_rank=89.0 val_mrr=0.07296 (step 35)
+[finetune] epoch 6/30 mean_triplet_loss=0.1697 val_top1=0.0250 val_median_rank=84.0 val_mrr=0.07183 (step 42)
+[finetune] epoch 7/30 mean_triplet_loss=0.1498 val_top1=0.0125 val_median_rank=75.0 val_mrr=0.05869 (step 49)
+[finetune] epoch 8/30 mean_triplet_loss=0.1459 val_top1=0.0625 val_median_rank=99.0 val_mrr=0.10336 (best so far) (step 56)
+[finetune] epoch 9/30 mean_triplet_loss=0.1422 val_top1=0.0250 val_median_rank=127.0 val_mrr=0.06994 (step 63)
+[finetune] epoch 10/30 mean_triplet_loss=0.1358 val_top1=0.0375 val_median_rank=108.0 val_mrr=0.07921 (step 70)
+[finetune] epoch 11/30 mean_triplet_loss=0.1273 val_top1=0.0250 val_median_rank=110.0 val_mrr=0.08593 (step 77)
+[finetune] epoch 12/30 mean_triplet_loss=0.1095 val_top1=0.0375 val_median_rank=143.0 val_mrr=0.07333 (step 84)
+[finetune] epoch 13/30 mean_triplet_loss=0.1003 val_top1=0.0250 val_median_rank=117.0 val_mrr=0.05395 (step 91)
+[finetune] epoch 14/30 mean_triplet_loss=0.1059 val_top1=0.0500 val_median_rank=131.0 val_mrr=0.08329 (step 98)
+[finetune] epoch 15/30 mean_triplet_loss=0.1011 val_top1=0.0125 val_median_rank=93.0 val_mrr=0.06746 (step 105)
+[finetune] epoch 16/30 mean_triplet_loss=0.1013 val_top1=0.0250 val_median_rank=71.0 val_mrr=0.06608 (step 112)
+[finetune] epoch 17/30 mean_triplet_loss=0.0910 val_top1=0.0375 val_median_rank=88.0 val_mrr=0.07467 (step 119)
+[finetune] epoch 18/30 mean_triplet_loss=0.0848 val_top1=0.0500 val_median_rank=91.0 val_mrr=0.07256 (step 126)
+[finetune] epoch 19/30 mean_triplet_loss=0.0822 val_top1=0.0375 val_median_rank=122.0 val_mrr=0.06486 (step 133)
+[finetune] epoch 20/30 mean_triplet_loss=0.0815 val_top1=0.0125 val_median_rank=100.0 val_mrr=0.05716 (step 140)
+[finetune] epoch 21/30 mean_triplet_loss=0.0789 val_top1=0.0250 val_median_rank=94.0 val_mrr=0.07234 (step 147)
+[finetune] epoch 22/30 mean_triplet_loss=0.0800 val_top1=0.0125 val_median_rank=94.0 val_mrr=0.05026 (step 154)
+[finetune] epoch 23/30 mean_triplet_loss=0.0755 val_top1=0.0250 val_median_rank=132.0 val_mrr=0.05170 (step 161)
+[finetune] epoch 24/30 mean_triplet_loss=0.0666 val_top1=0.0125 val_median_rank=88.0 val_mrr=0.06143 (step 168)
+[finetune] epoch 25/30 mean_triplet_loss=0.0633 val_top1=0.0375 val_median_rank=107.0 val_mrr=0.07671 (step 175)
+[finetune] epoch 26/30 mean_triplet_loss=0.0636 val_top1=0.0125 val_median_rank=104.0 val_mrr=0.04828 (step 182)
+[finetune] epoch 27/30 mean_triplet_loss=0.0757 val_top1=0.0375 val_median_rank=116.0 val_mrr=0.07209 (step 189)
+[finetune] epoch 28/30 mean_triplet_loss=0.0684 val_top1=0.0625 val_median_rank=81.0 val_mrr=0.09578 (step 196)
+[finetune] epoch 29/30 mean_triplet_loss=0.0654 val_top1=0.0500 val_median_rank=112.0 val_mrr=0.08714 (step 203)
+[finetune] epoch 30/30 mean_triplet_loss=0.0648 val_top1=0.0375 val_median_rank=129.0 val_mrr=0.08968 (step 210)
+[finetune] best epoch 8 (val_top1=0.0625, vs 0.0000 before fine-tuning) -> src/outputs/tifs_a6/direction.pt
+[finetune] held-out test query_ids -> src/outputs/tifs_a6/direction.pt.test_query_ids.json
+=== [02:06:36] A6 direction rc=0 ===
+=== [02:06:36] A6 condition=isotropic start ===
+[finetune] device=cuda
+[finetune] 102 train / 80 validation / 200 held-out test queries (all mutually place-disjoint)
+[finetune] gallery embeddings ready (re-embedded each validation)
+[finetune] training 8393728 params in the last 1 block(s)
+[finetune] epoch 0 (pretrained, no fine-tuning) val_top1=0.0250 val_median_rank=62.0 val_mrr=0.11913
+[finetune] selecting checkpoints on 'mrr' (epoch 0 score 0.11913)
+[finetune] epoch 1/30 mean_triplet_loss=0.1986 val_top1=0.0875 val_median_rank=39.0 val_mrr=0.15635 (best so far) (step 7)
+[finetune] epoch 2/30 mean_triplet_loss=0.1745 val_top1=0.0500 val_median_rank=39.0 val_mrr=0.13396 (step 14)
+[finetune] epoch 3/30 mean_triplet_loss=0.1622 val_top1=0.0875 val_median_rank=28.0 val_mrr=0.17559 (best so far) (step 21)
+[finetune] epoch 4/30 mean_triplet_loss=0.1524 val_top1=0.0625 val_median_rank=27.0 val_mrr=0.14573 (step 28)
+[finetune] epoch 5/30 mean_triplet_loss=0.1398 val_top1=0.0750 val_median_rank=31.0 val_mrr=0.15119 (step 35)
+[finetune] epoch 6/30 mean_triplet_loss=0.1333 val_top1=0.0375 val_median_rank=29.0 val_mrr=0.12909 (step 42)
+[finetune] epoch 7/30 mean_triplet_loss=0.1163 val_top1=0.0625 val_median_rank=28.0 val_mrr=0.15991 (step 49)
+[finetune] epoch 8/30 mean_triplet_loss=0.1118 val_top1=0.0625 val_median_rank=26.0 val_mrr=0.13950 (step 56)
+[finetune] epoch 9/30 mean_triplet_loss=0.0981 val_top1=0.0750 val_median_rank=36.0 val_mrr=0.13746 (step 63)
+[finetune] epoch 10/30 mean_triplet_loss=0.0949 val_top1=0.0500 val_median_rank=36.0 val_mrr=0.12286 (step 70)
+[finetune] epoch 11/30 mean_triplet_loss=0.0891 val_top1=0.0750 val_median_rank=37.0 val_mrr=0.14184 (step 77)
+[finetune] epoch 12/30 mean_triplet_loss=0.0842 val_top1=0.0375 val_median_rank=38.0 val_mrr=0.12066 (step 84)
+[finetune] epoch 13/30 mean_triplet_loss=0.0926 val_top1=0.0500 val_median_rank=32.0 val_mrr=0.12451 (step 91)
+[finetune] epoch 14/30 mean_triplet_loss=0.0804 val_top1=0.0500 val_median_rank=34.0 val_mrr=0.13940 (step 98)
+[finetune] epoch 15/30 mean_triplet_loss=0.0718 val_top1=0.0375 val_median_rank=33.0 val_mrr=0.12219 (step 105)
+[finetune] epoch 16/30 mean_triplet_loss=0.0795 val_top1=0.0375 val_median_rank=64.0 val_mrr=0.10876 (step 112)
+[finetune] epoch 17/30 mean_triplet_loss=0.0719 val_top1=0.0625 val_median_rank=33.0 val_mrr=0.14420 (step 119)
+[finetune] epoch 18/30 mean_triplet_loss=0.0719 val_top1=0.0625 val_median_rank=30.0 val_mrr=0.12633 (step 126)
+[finetune] epoch 19/30 mean_triplet_loss=0.0604 val_top1=0.0625 val_median_rank=40.0 val_mrr=0.11895 (step 133)
+[finetune] epoch 20/30 mean_triplet_loss=0.0584 val_top1=0.0375 val_median_rank=31.0 val_mrr=0.11180 (step 140)
+[finetune] epoch 21/30 mean_triplet_loss=0.0634 val_top1=0.0750 val_median_rank=46.0 val_mrr=0.13239 (step 147)
+[finetune] epoch 22/30 mean_triplet_loss=0.0525 val_top1=0.0875 val_median_rank=52.0 val_mrr=0.15381 (step 154)
+[finetune] epoch 23/30 mean_triplet_loss=0.0560 val_top1=0.0875 val_median_rank=42.0 val_mrr=0.16918 (step 161)
+[finetune] epoch 24/30 mean_triplet_loss=0.0603 val_top1=0.0750 val_median_rank=27.0 val_mrr=0.18413 (best so far) (step 168)
+[finetune] epoch 25/30 mean_triplet_loss=0.0578 val_top1=0.0500 val_median_rank=34.0 val_mrr=0.14630 (step 175)
+[finetune] epoch 26/30 mean_triplet_loss=0.0515 val_top1=0.0500 val_median_rank=31.0 val_mrr=0.13479 (step 182)
+[finetune] epoch 27/30 mean_triplet_loss=0.0612 val_top1=0.0625 val_median_rank=24.0 val_mrr=0.14304 (step 189)
+[finetune] epoch 28/30 mean_triplet_loss=0.0571 val_top1=0.0750 val_median_rank=28.0 val_mrr=0.15434 (step 196)
+[finetune] epoch 29/30 mean_triplet_loss=0.0558 val_top1=0.1125 val_median_rank=25.0 val_mrr=0.18079 (step 203)
+[finetune] epoch 30/30 mean_triplet_loss=0.0613 val_top1=0.1125 val_median_rank=31.0 val_mrr=0.19291 (best so far) (step 210)
+[finetune] best epoch 30 (val_top1=0.1125, vs 0.0250 before fine-tuning) -> src/outputs/tifs_a6/isotropic.pt
+[finetune] held-out test query_ids -> src/outputs/tifs_a6/isotropic.pt.test_query_ids.json
+=== [02:07:55] A6 isotropic rc=0 ===
+A6 ALL DONE
