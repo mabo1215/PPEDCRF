@@ -1,0 +1,318 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\emergencystretch}{3em}
+
+\definecolor{DoneGreen}{RGB}{20,115,70}
+\definecolor{RunOrange}{RGB}{180,90,0}
+\definecolor{PendRed}{RGB}{160,25,25}
+\newcommand{\done}{\textcolor{DoneGreen}{\textbf{$\checkmark$ Done}}}
+\newcommand{\running}{\textcolor{RunOrange}{\textbf{Running}}}
+\newcommand{\pending}{\textcolor{PendRed}{\textbf{Pending}}}
+\newcommand{\blocked}{\textcolor{PendRed}{\textbf{Blocked}}}
+\newcommand{\partialstatus}{\textcolor{RunOrange}{\textbf{Partial}}}
+
+\title{\textbf{Experiment Progress and Next-Step Plan}}
+\author{}
+\date{9 September 2026, 16:35 NZST --- IEEE TIFS, fifth independent review
+cycle, after the A2/A5/A6/A7b/A8 experiment round and the first manuscript
+writeback. This file carries \emph{only} open, running and not-yet-started
+work; completed items are removed once recorded in \texttt{docs/progress.md}.}
+
+\begin{document}
+\maketitle
+
+\section*{Where This Cycle Stands}
+
+The active review is the fifth independent review in
+\texttt{docs/RevisionSuggestions.tex} (8 September 2026, IEEE TIFS, verdict
+\emph{not ready for submission; major scientific revision}), findings R1--R13.
+All experiments it called for have now been run. \textbf{Nine of the thirteen
+findings are closed}; the four that remain are blocked on a page budget, on the
+authors, or on consolidating exports that are split across two machines.
+
+\paragraph{Compute state, 9 September 2026, 16:35 NZST.} \textbf{All four hosts
+are shut down} --- PRO 6000, 2c, vGPU 3090 and H800 all refuse the connection.
+Nothing is running or queued anywhere, and nothing needs to be: no open item
+below requires a GPU.
+
+\paragraph{Document state.} \texttt{main.pdf} \textbf{15 pages} against the
+13-page TIFS initial-submission ceiling --- content was added first by
+instruction and the compression pass is the next task. Abstract 250 words
+(window 150--250, no margin). \texttt{supplementary.pdf} 5 pages. Both build
+with 0 undefined references, 0 undefined citations, 0 overfull boxes.
+\textbf{140} claims verify against raw exports on the work machine (was 110),
+\textbf{52} unit tests pass. On the home machine the same auditor reports
+\textbf{75} verified, \textbf{0} mismatched and 65 unverifiable, because the
+two machines hold disjoint halves of the export set --- see X2.
+
+\paragraph{One provenance gap opened by shutting 2c down.} The A6
+\emph{training} logs and checkpoints (\texttt{src/outputs/tifs\_a6}) were never
+copied off 2c; only the evaluation exports were. The manuscript quotes two
+numbers from those logs --- validation MRR $0.047$ and $0.058$ at the selected
+epoch~8 --- which therefore have no local provenance and are not in the
+auditor. Either 2c is restarted for a two-minute copy, or those two figures
+come out of the text. Everything else in \S\,``An Attacker That Adapts'' rests
+on \texttt{tifs\_a6\_eval}, which is local.
+
+\section*{Table 1: Open Items Against the Fifth Review}
+
+\begin{longtable}{@{}p{0.05\linewidth}p{0.24\linewidth}p{0.11\linewidth}p{0.52\linewidth}@{}}
+\caption{The four findings still open, and why. R2, R3, R4, R6, R7, R8, R9,
+R10, R12 and R13 are closed and no longer listed.}
+\label{tab:tifs5-open}\\
+\toprule
+ID & Item & Status & What remains \\
+\midrule
+\endfirsthead
+\toprule
+ID & Item & Status & What remains \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+R1 & Prose, tables and exports described different numerical versions. &
+\partialstatus & \textbf{Direction family closed}: 140 of 140 claims verify
+against raw per-query rows, including the 30 added for A2, A5 and A8. The
+auditor caught two of my own rounding errors while being extended.
+\textbf{Allocation family now also closed}: the two governing trees were
+recovered on the home machine, and all sixteen printed cells recompute exactly
+--- the seven MSLS placement deltas ($-0.0008$ to $+0.0092$) with their quoted
+query-level $p$ values, and all eight rows of the operator table.
+\textbf{One gap remains}: the A6 training-side MRR figures have no local
+provenance (see above). \\
+
+R5 & Inference unit, clustering, multiplicity, equivalence margins. &
+\partialstatus & Closed for the direction family --- place-clustered bootstrap
+over 277 places, a named primary family under Holm, a $\pm0.01$ equivalence
+margin fixed in advance. \textbf{Allocation family now also verified} against
+the recovered trees at the query level. Note the manuscript's placement $p$
+values are the query-level Wilcoxon statistic, not the exact McNemar $p$ also
+stored in those exports; the two differ materially (oracle-gradient: $0.86$
+against $1.00$), so that column must be sourced deliberately. \\
+
+R11 & The artifact is not a complete, current reviewer package. &
+\partialstatus & \textbf{No longer gated on missing trees.} All eight are
+present on the home machine, and \texttt{src/artifact/results/} already holds
+its 26 trees there, so \texttt{build\_artifact.sh} no longer exits 1. Two items
+remain: the script does not yet copy the newest families (A5, A6, A8, A7b, D6,
+D7), and no single machine currently holds all thirteen families --- see X2. \\
+
+Pkg & Page budget and submission mechanics. & \pending & \textbf{15 pages
+against a 13-page ceiling.} Abstract at 250 words has no margin either. Cover
+letter is rewritten; ORCIDs, EDICS and submission-system metadata are the
+authors' to complete. \\
+
+V1 & \texttt{USAGE.md} is gitignored, so its venue line is unprotected. &
+\pending & Awaiting the user's decision. \\
+
+\end{longtable}
+
+\section*{Table 2: Next-Step Plan}
+
+Only unfinished work appears below; every completed experiment has been removed
+and is recorded in \texttt{docs/progress.md}. Times are New Zealand Standard
+Time. Nothing here needs a GPU.
+
+\begin{longtable}{@{}p{0.19\linewidth}p{0.07\linewidth}p{0.05\linewidth}p{0.17\linewidth}p{0.44\linewidth}@{}}
+\caption{Open work as of 9 September 2026, 16:35 NZST. No host is running.}
+\label{tab:tifs5-schedule}\\
+\toprule
+Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
+\midrule
+\endfirsthead
+\toprule
+Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\textbf{P2 --- decide the A6 training figures} (R1) & \textcolor{PendRed}{\textbf{Awaiting user}} & 0\% &
+\textbf{2c up $+$ 5\,min, or 10\,min to delete} & \textbf{Do this first: it
+decides whether P1 edits the same paragraph twice.} The manuscript quotes
+validation MRR $0.047$ and $0.058$ at the selected epoch~8, from
+\texttt{src/outputs/tifs\_a6} on 2c, which was never copied off before the host
+was shut down. Those two numbers have no local provenance and are not in the
+auditor. Either restart 2c and copy \texttt{tifs\_a6} plus
+\texttt{logs/a6.log}, or delete the two figures --- deleting costs nothing
+scientifically, because the section's argument rests entirely on
+\texttt{tifs\_a6\_eval}, which is local. \\
+
+\textbf{P1 --- compress 15 pages to 13} (Pkg) & \textcolor{PendRed}{\textbf{Awaiting user}} & 0\% &
+\textbf{P2 $+$ 3\,h, no GPU} & \textbf{The critical path to submission}, and
+the one item here that changes what a reader sees. Candidates, cheapest first:
+\S\,Secondary Benchmarks entirely ($\approx$0.6\,page; it evaluates the
+additive mechanism rather than the final release, and says so); the overlap
+between \S\,Robustness to Non-Adaptive Preprocessing and the new \S\,What Is
+Actually Released ($\approx$0.4\,page); the learning-rate narrative in
+\S\,An Attacker That Adapts that A6 superseded ($\approx$0.3\,page); the
+budget-sweep prose Table~III already carries ($\approx$0.3\,page). Needs the
+user's agreement on what leaves the main text. Note the abstract is at
+\textbf{250 words against a 250 limit}, so it has no slack either and must be
+recounted if touched. \\
+
+\textbf{P3 --- second writeback pass} (R1, R13) & \pending & 0\% &
+\textbf{10 Sep, $\approx$15:00} (2\,h, no GPU) & Fold the A6/A7b numbers now in
+\texttt{progress.md} into the auditor as claims, re-read the whole manuscript
+for sentences the new evidence contradicts, and re-check every figure caption
+against its generator the way Figure~3 was just checked. Figure~3's drift was
+found only because I went looking; the other figures have not had the same
+audit. \\
+
+X1 --- the eight missing export trees (R1, R5, R11) & \done & 100\% &
+\textbf{Closed 9 Sep} & All eight are on the home machine, intact:
+\texttt{icme2027\_placement\_msls} carries its recorded 23 files and its
+\texttt{final/per\_query.csv} is exactly 9,600 rows. No regeneration is needed,
+so \S\,``The Null Holds on Real Geographic Data'' and the operator table keep
+their published numbers. \\
+
+X2 --- merge the two machines' exports (R1, R11) & \pending & 0\% &
+\textbf{30\,min, no GPU} & \textbf{New, and now the gate on R11.} Neither
+machine holds all thirteen families: the home machine has the eight recovered
+trees but not \texttt{tifs\_a5}, \texttt{tifs\_a8}, \texttt{tifs\_a8\_hi},
+\texttt{tifs\_a8\_mse60.0} or \texttt{tifs\_d6}; the work machine has the
+converse. The auditor therefore reports 75 of 140 here and 140 of 140 there,
+with zero mismatches on either side. The eight trees total $\approx$27\,MB, so
+moving them to the work machine is the cheaper direction. \\
+
+R11 --- artifact rebuild and verification & \pending & 0\% & X2 $+$ 2\,h &
+Extend \texttt{build\_artifact.sh} to the newest families (A5, A6, A8, A7b, D6,
+D7), rebuild from a clean extraction, add the claim auditor to
+\texttt{run\_verification.sh}, confirm the published code URL resolves
+publicly. \\
+
+A7b-angular --- the heading criterion (R9) & \pending & 0\% &
+\textbf{Conditional} & The distance half is done (99.3\% agreement at 25\,m).
+The angular half needs the raw MSLS \texttt{postprocessed.csv} heading column,
+which is not in the staged subset and is not on any reachable host. Either
+stage it from the original download or leave the limitation stated in the text,
+which it already is. \\
+
+V1 --- protect the venue line & \pending & 0\% & \textbf{Awaiting decision} &
+\texttt{USAGE.md} is gitignored. Either commit a tracked copy of the venue
+declaration or accept that it lives outside version control. \\
+
+\end{longtable}
+
+\section*{Table 3: Manuscript Edits This Session}
+
+\begin{longtable}{@{}p{0.06\linewidth}p{0.30\linewidth}p{0.09\linewidth}p{0.47\linewidth}@{}}
+\caption{Writeback of the experiment round, and the defects the cross-check
+turned up. Kept visible for one cycle.}
+\label{tab:tifs5-text}\\
+\toprule
+ID & Edit & Status & Location \\
+\midrule
+\endfirsthead
+\toprule
+ID & Edit & Status & Location \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+T34 (R8) & \S\,An Attacker That Adapts rewritten. Both attacker models now
+reported; the claim that a fixed gallery index is a neutral restriction is
+retired, because the fixed-index attacker \emph{loses} $0.135$--$0.180$ against
+baseline, every interval excluding zero. Selection moved to MRR, with the
+reason stated: under the directional exposures Top-1 is zero at every epoch, so
+Top-1 selection returns the pretrained model by construction. & \done &
+\texttt{main.tex}, \S\,An Attacker That Adapts. \\
+
+T35 (R7) & The sentence ``We do not have that frontier'' replaced by the
+frontier, over four budgets, with both readings: direction dominates at matched
+utility, \emph{and} at a $0.05$ mIoU tolerance nothing on offer meaningfully
+degrades the attacker. New generated table \texttt{tab\_frontier}. & \done &
+\texttt{main.tex} \S\,The Other Axis; \texttt{generated/tab\_frontier.tex}. \\
+
+T36 (R10) & New subsection \S\,What Is Actually Released: the amplitude bound
+is a property of the budget, not the mechanism; matched distortion on tensors
+is not matched distortion on files. & \done & \texttt{main.tex}. \\
+
+T37 (R9) & Third held-out backbone (Patch-NetVLAD, $-0.1917$
+$[-0.2320,-0.1507]$) and the cluster-versus-geographic positives audit
+($99.3\%$ at 25\,m, median $5.6$\,m, angular half declared unreproducible). &
+\done & \texttt{main.tex} \S\,The Other Axis, \S\,Experimental Protocol. \\
+
+T38 (R2, R3) & Eq.~(displacement) is stated in $\lVert J_i\rVert$, so the
+column norms are now measured rather than approximated by the score gradient:
+concentrations $0.477$ and $0.653$, agreement $0.656$ against a split-half
+ceiling of $0.982$. R2's counterexample becomes a measurement: allocation moves
+the margin-flip rate from $5.0\%$ to $9.2\%$ at fixed energy. & \done &
+\texttt{main.tex}, \S\,What Allocation Moves. \\
+
+D1 (R1, R13) & \textbf{Figure~3 was drawn from stale constants.} Its docstring
+claimed transcription from \texttt{tab\_sanitize.tex} ``so the figure and the
+table cannot disagree''; they had drifted by up to $0.014$, and the figure
+marked MixVPR/denoise non-significant although its interval
+$[-0.0367,-0.0017]$ excludes zero. \texttt{fig\_sanitize} now parses the table,
+so the invariant holds by construction. & \done &
+\texttt{make\_tifs\_review\_figures.py}. \\
+
+D2 (R13) & \texttt{tab\_sanitize}'s caption said ``the first five are the
+transforms the hardening was optimised over''. Four were; the fifth row is the
+identity. The main-text figure caption had been fixed and this one had not. &
+\done & \texttt{generated/tab\_sanitize.tex}. \\
+
+D3 (R13) & R13's fourth item was not closed: the controlled-model passage
+called operators interchangeable and concluded spatial structure was worth as
+little in the operator as in the map, while reporting placement gains of
+$-0.42$ to $-0.48$ in that same model. The two axes are now separated
+explicitly. & \done & \texttt{main.tex} \S\,Allocation II. \\
+
+D4 & ``Quality-preserving'' survived in four places after the frontier section
+retired the term, leaving the paper contradicting itself. Now
+``low-distortion'' except where the retraction itself is stated. & \done &
+\texttt{main.tex}. \\
+
+C14 & Auditor extended from 110 to 140 claims (A2, A5, A8 families). It caught
+two rounding errors I had introduced: a gain printed $1.14$ that recomputes to
+$1.146$, and $0.619$ that recomputes to $0.618$. & \done &
+\texttt{audit\_claim\_consistency.py}. \\
+
+D5 & Generated figures switched from PDF to \textbf{JPG} at the user's
+request. Rasterised at 600\,dpi, quality 95, chroma subsampling off: at
+300\,dpi a digit in these 5.5\,pt annotations is about 23 pixels tall and
+JPEG's $8\times8$ blocks land on the glyphs. Trades vector for raster --- the
+files grow from 18 and 22\,KB to 252 and 333\,KB and no longer scale
+losslessly; \texttt{-{}-format pdf} restores the previous output exactly. &
+\done & \texttt{figs/*.jpg}, \texttt{make\_tifs\_review\_figures.py}. \\
+
+D6 & \textbf{Process correction.} \texttt{paper/} is a submodule pointing at
+\texttt{PPEDCRF\_overleaf.git}, so manuscript edits live in a second
+repository; several earlier ``pushed'' reports covered only the parent. An
+automatic committer had been picking the edits up, so nothing was lost, but
+the closing sequence for any change under \texttt{paper/} is three steps:
+commit and push the submodule, \texttt{git add paper} in the parent, then
+commit and push the parent. The parent's \texttt{git status} shows only
+``\,m paper'', which is easy to read as unimportant. & \done & --- \\
+
+\end{longtable}
+
+\section*{Closed in This Cycle}
+
+R2, R3, R4, R6, R7, R8, R9, R10, R12 and R13 are closed; their evidence and the
+experiments behind it are recorded in \texttt{docs/progress.md} entries
+343--361. All eight experiments the review asked for (A1--A8) have been run:
+A1 and A7b's audit on CPU, A2 and A8 on PRO 6000, A5, A6 and A7b on 2c, with
+A3, A4 and A7's cross-time arms carried over from earlier cycles.
+
+\end{document}
