@@ -440,32 +440,59 @@ which is the check that the runs are comparable. Privacy is Top-1 on MSLS.
 axes, and the join is by delivered-MSE budget.
 
 \begin{longtable}{@{}p{0.09\linewidth}p{0.22\linewidth}p{0.14\linewidth}p{0.12\linewidth}p{0.13\linewidth}p{0.16\linewidth}@{}}
-\caption{Declared tolerance: 0.05 mIoU drop, fixed before the results were
-read.}
+\caption{All four budgets. Declared tolerance: 0.05 mIoU drop, fixed before the
+results were read. Clean Top-1 on this attacker is $\approx0.197$.}
 \label{tab:a5-frontier}\\
 \toprule
 Budget & Condition & Top-1 & mIoU & Drop & Admissible? \\
 \midrule
 \endhead
+5.0 & isotropic & 0.200 & 0.6828 & 0.0146 & \textbf{yes} \\
+5.0 & direction & 0.185 & 0.6479 & 0.0494 & \textbf{yes} \\
+5.0 & direction (EOT) & 0.145 & 0.6196 & 0.0778 & no \\
 15.68 & isotropic & 0.205 & 0.6692 & 0.0281 & \textbf{yes} \\
 15.68 & direction & 0.035 & 0.5877 & 0.1097 & no \\
 15.68 & direction (EOT) & 0.015 & 0.5038 & 0.1935 & no \\
+60.0 & isotropic & 0.190 & 0.6295 & 0.0679 & no \\
+60.0 & direction & 0.015 & 0.4203 & 0.2771 & no \\
+60.0 & direction (EOT) & 0.005 & 0.2754 & 0.4219 & no \\
 241.5 & isotropic & 0.155 & 0.5784 & 0.1189 & no \\
 241.5 & direction & 0.020 & 0.2118 & 0.4855 & no \\
 \bottomrule
 \end{longtable}
 
-\paragraph{The comparison at matched utility, which is what R7 asked for.}
-Reading down the \emph{Drop} column rather than across the budget rows:
-isotropic at MSE 241.5 spends $0.119$ mIoU to reach Top-1 $0.155$, while
-direction at MSE 15.68 spends $0.110$ --- slightly \emph{less} --- to reach
-Top-1 $0.035$. \textbf{Direction dominates: 4.4$\times$ better privacy at lower
-utility cost.} R7's objection was that a single matched-distortion operating
-point cannot establish a frontier. Measured at matched utility, the paper's
-central claim survives, which is worth having measured rather than assumed.
+\paragraph{Reading 1: at matched utility, direction dominates, and the margin
+grows with the utility one is willing to spend.} Reading down the \emph{Drop}
+column rather than across budget rows:
+\begin{itemize}
+\item Near $0.05$--$0.07$ drop: direction at MSE 5.0 spends $0.049$ for Top-1
+$0.185$; isotropic at MSE 60.0 spends $0.068$ for $0.190$. Direction is
+slightly better at slightly lower cost --- a marginal difference.
+\item Near $0.11$--$0.12$ drop: direction at MSE 15.68 spends $0.110$ for Top-1
+\textbf{0.035}; isotropic at MSE 241.5 spends $0.119$ for \textbf{0.155}.
+\textbf{Direction is 4.4$\times$ better at lower cost.}
+\end{itemize}
+Isotropic \emph{saturates}: it never drops below Top-1 $0.155$ at any budget
+tested, including one that costs $0.119$ mIoU. Direction reaches $0.015$. R7's
+objection was that a single matched-distortion operating point cannot establish
+a frontier; measured at matched utility across four budgets, the paper's
+central claim survives.
 
-Two further budgets (MSE 5.0 and 60.0) are running on 2c so that privacy exists
-at all four points rather than two; the rows above are the ones stateable now.
+\paragraph{Reading 2, which the manuscript must confront: at a $0.05$ tolerance
+almost no useful privacy is on offer at all.} Only three cells are admissible,
+and their Top-1 values are $0.200$, $0.185$ and $0.205$ against a clean $0.197$.
+\emph{Within a plausible utility budget, none of these mechanisms meaningfully
+degrades this attacker.} The paper's own operating point, MSE 15.68, costs
+$0.110$ mIoU --- more than double the declared tolerance. The honest statement
+is that the direction advantage is real and large, but that it is purchased at
+a utility price a deployment may well refuse, and the paper should say so
+rather than presenting MSE 15.68 as quality-preserving on the strength of a
+36\,dB PSNR figure. This is the single most consequential finding of the
+session for the manuscript's claims.
+
+The $0.05$ tolerance is one declared choice, not a fact about deployments; a
+looser tolerance changes which cells are admissible but not the shape of the
+frontier. The manuscript should state its tolerance explicitly and defend it.
 
 \section*{Table 5: Cluster Positives Against Geographic Positives (A7b, R9)}
 
