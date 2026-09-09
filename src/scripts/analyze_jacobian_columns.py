@@ -67,8 +67,21 @@ def main() -> int:
 
     with Path(args.input).open("r", encoding="utf-8", newline="") as fh:
         rows = list(csv.DictReader(fh))
-    by_map: Dict[str, List[dict]] = defaultdict(list)
+
+    # The producer writes one row per (query, map) and is resumable, so a run
+    # that was interrupted and restarted re-measures the queries that were in
+    # flight and appends them again. Averaging the raw rows would weight those
+    # queries twice, so keep the last row written for each (query, map) -- the
+    # completed re-measurement -- and make this summary independent of how many
+    # times the run was restarted.
+    latest: Dict[tuple, dict] = {}
     for r in rows:
+        latest[(r["query_id"], r["map"])] = r
+    deduped = list(latest.values())
+    dropped = len(rows) - len(deduped)
+
+    by_map: Dict[str, List[dict]] = defaultdict(list)
+    for r in deduped:
         by_map[r["map"]].append(r)
 
     ceiling = mean_sd(col(by_map.get("jacobian_colnorm", []),
@@ -76,6 +89,7 @@ def main() -> int:
 
     report: Dict[str, object] = {
         "n_rows": len(rows),
+        "n_rows_superseded_by_restart": dropped,
         "n_queries": len(by_map.get("jacobian_colnorm", [])),
         "split_half_ceiling": ceiling,
         "maps": {},

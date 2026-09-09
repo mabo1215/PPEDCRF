@@ -1,0 +1,13 @@
+{
+  "backbone": "resnet18",
+  "n_probes": [
+    128
+  ],
+  "draws": 32,
+  "sigma": 4.0,
+  "height": 192,
+  "width": 320,
+  "seed": 1234,
+  "queries": 150,
+  "synthetic": false
+}

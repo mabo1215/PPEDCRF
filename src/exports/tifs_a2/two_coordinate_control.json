@@ -1,0 +1,7 @@
+{
+  "variance_on_signal": 4.0,
+  "variance_off_signal": 0.0,
+  "flip_prob_on_signal": 0.3085375387259869,
+  "flip_prob_off_signal": 0.0,
+  "note": "Analytic; clean margin fixed at 1.0. Equal energy, different allocation, different flip probability."
+}

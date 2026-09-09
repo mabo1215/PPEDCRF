@@ -430,7 +430,7 @@ for tree, mse, cond, gain, amp in [
         ("tifs_a8", "15.68", "direction", 0.773, 12.36),
         ("tifs_a8", "15.68", "direction_eot", 0.618, 9.90),
         ("tifs_a8_mse60.0", "60", "direction", 1.146, 18.34),
-        ("tifs_a8_hi", "241.5", "direction", 2.312, 36.99)]:
+        ("tifs_a8_hi", "241.5", "direction", 3.078, 49.25)]:
     claim(f"A8/{mse}/{cond}/gain", "\\S What Is Actually Released",
           f"$g={gain}$", gain, 5e-4, tree,
           _a8(tree, cond, "float", "release_gain"),
@@ -503,6 +503,42 @@ for budget, cond, value in [
     claim(f"A5/{budget}/{cond}/miou", "Table tab:frontier",
           f"{value:.4f}", value, 5e-5, "tifs_a5", _miou(budget, cond),
           source=FRONTIER)
+
+
+# --- A2, the column-norm measurement (\\S What Allocation Moves) ------------
+# The producer is resumable, so a restarted run appends a second row for the
+# queries that were in flight. Keep the last row per (query, map) exactly as
+# analyze_jacobian_columns.py does, or the restarts get double-weighted.
+def _a2(map_name: str, column: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load("tifs_a2/jacobian_columns.csv")
+        if not rows:
+            return None
+        latest = {}
+        for r in rows:
+            latest[(r["query_id"], r["map"])] = r
+        vals = [float(r[column]) for r in latest.values()
+                if r["map"] == map_name and r[column] not in ("", "nan")]
+        return float(np.mean(vals)) if vals else None
+    return go
+
+
+for cid, printed, value, tol, map_name, column in [
+        ("A2/jacobian/concentration", "$0.478$", 0.478, 5e-4,
+         "jacobian_colnorm", "topdecile_concentration"),
+        ("A2/score_gradient/concentration", "$0.654$", 0.654, 5e-4,
+         "score_gradient", "topdecile_concentration"),
+        ("A2/uniform/concentration", "$0.100$", 0.100, 5e-4,
+         "uniform", "topdecile_concentration"),
+        ("A2/score_gradient/spearman", "$0.659$", 0.659, 5e-4,
+         "score_gradient", "spearman_vs_jacobian"),
+        ("A2/ceiling", "$0.984$", 0.984, 5e-4,
+         "jacobian_colnorm", "jacobian_split_half_spearman"),
+        ("A2/uniform/flip", "$5.0", 0.0498, 5e-4, "uniform", "rank_flip_rate"),
+        ("A2/score_gradient/flip", "$9.0", 0.0898, 5e-4,
+         "score_gradient", "rank_flip_rate")]:
+    claim(cid, "\\S What Allocation Moves (A2)", printed, value, tol,
+          "tifs_a2", _a2(map_name, column), locator=None)
 
 
 # --- A7b, the third held-out backbone (\S The Other Axis) -------------------
