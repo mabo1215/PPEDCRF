@@ -3350,28 +3350,54 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
      `\texttt{extended\_evidence\_report.pdf}` 当场按规则删掉了）；
      摘要 249 词；审计器 186/186。
 
-# 遗留问题（更新：R8/R9/R10 已闭合，只剩这些）
+## 逐条重扫 RevisionSuggestions.tex（2026-09-10，你问"还有什么需要补"）
 
-- **【R10，需要你决定】DOI 补齐了，但投稿 PDF 里印不出来。**
-  venue 指定的 `IEEEtran.bst`（v1.14，最新官方版）**完全不支持 `doi` 字段**
-  ——我已确认该文件里没有任何 doi 相关代码。所以 46 条 DOI 现在只在 `ref.bib` 里，
-  对读者、对最终排版、对 artifact 都有用，但审稿人翻 PDF 仍然看不到 DOI。
-  **建议：就这样交**（偏离 venue 指定的 bst 风险更大，而且 R10 的实质部分
-  ——正式版替换、错 DOI 修正、错标题修正——已经做完）。
-  如果你想让 DOI 出现在 PDF 里，需要换 bst 或把 DOI 塞进 note 字段，
-  代价是**参考文献会长约 50--90 行，13 页一定超**。
-  A： 就这样交
-- **【请你过目】责任使用（responsible use）与数据条款那两段措辞是我替你写的**，
-  投稿前请自己读一遍，尤其是"我们把审计协议而不是扰动本身当作贡献"这句定性。
-  A: 好的
-- **【回信时注意，不是缺陷】评审信里的表号和现在的文档对不上。**
-  评审写的时候正文有 5 张表，所以它说的 "Table IV"（迁移表）和 "Table V"（frontier）
-  在**当前文档里是 Table III 和 Table IV**——第六轮压页时删掉了一张表，
-  编号整体前移了。正文内部全用 `\ref`，排版没问题；
-  **写 response letter 时请按 caption 指代，不要照抄评审信里的表号**。
-  （审计器里那 5 个写死的 "Table IV" 标签已经改成 `Table tab:transfer`，不会再过期。）
-  A: 不用回信
-- **【我发现的一个既有缺口，不急】补充材料 E1 那张表（18 格 raw/PPEDCRF/Δ/CI）
-  的数字不在审计器覆盖范围里**，186 条 claim 一条都没指向它。
-  它不是正文主张的支撑表（正文只引"18 格里 5 格区间不含零"这一句），
-  所以这轮没动;要补的话是给 E1 的导出树写一族 claim。
+432. 【已完成】**把评审信 R1--R10 + presentation notes + file-level map 逐条对着当前文件重扫了一遍**
+     （不是凭记忆）。绝大部分确实已经闭合，但**扫出三条真的还没做完**，都已补上：
+433. 【已完成】**R1 的一半一直是漏的：补充材料自己不知道扩展报告在哪。**
+     补充材料**五处**引用 "the extended evidence report"，
+     而仓库地址只印在 `main.tex` 的作者脚注和独立标题页里。
+     补充材料是**单独上传的一个 PDF**，审稿人只看它就够不到那份报告。
+     现在开头段直接印出仓库地址，并补一句：**用发布的 per-query 导出重算本文档里
+     每一张表都不需要 GPU、也不需要图像，只有重跑攻击才需要**
+     （这正是 R1 action 里"state which parts are CPU-only"那一条）。
+     顺带核了一次：`https://github.com/mabo1215/PPEDCRF` 现在 API 返回 `private: false`。
+434. 【已完成】**R3 的清单部分**：三句"架构无关"上一轮已经改对了（这是 acceptance 的核心），
+     但 action 还要求"给出每个攻击者和每个代理的 trunk 与训练来源"，
+     之前只在 compute 段里顺带提了三个攻击者的 trunk，**代理一个都没列**。
+     现在补了一段按 trunk + 训练来源的清单，并**对着代码核过**：
+     ResNet18/50、VGG16、ViT-B/16 都是 torchvision ImageNet 分类器
+     （`retrieval_attack.py` 里 `ViT_B_16_Weights.DEFAULT` 等），
+     CosPlace 是 `ResNet18_512_cosplace.pth`、MixVPR 是
+     `resnet50_MixVPR_...ckpt`、Patch-NetVLAD 走官方 VGG16 backend。
+435. 【已完成】**R8 里"过程史措辞"其实还剩两处，上一轮漏了。**
+     评审点名的那句 "the superseded reference-targeted objective, with the
+     retraction of a single-seed denoising claim" **原样还在补充材料里**；
+     另有一条图注写着 "This figure was carried in the manuscript in an earlier
+     version and is retained here in full."。两处都删了——
+     acceptance 是"没有任何补充材料小节描述修订史"，这两句都在描述修订史。
+     （删掉它们正好也是压页的最后 3 行。）
+436. 【已完成】**补充材料仍是 6 页**：上面三项加了约 21 行，
+     靠压掉 Jacobian 一节（正文已经讲过结论，补充材料只留 setup 和 caveat）、
+     "Additional Benchmarks" 指路段、EOT/operator 两小节的行文、
+     以及删掉重复了两遍的"重算不需要 GPU"那句换回来的。
+     **没有删任何数字、任何定义、任何区间。**
+437. 【状态】**主文 13 页 / 补充 6 页 / 扩展报告 12 页，四份文档 0 overfull、
+     0 undefined reference/citation**；审计器 **186/186**。
+     **RevisionSuggestions.tex 里 R1--R10、presentation notes、
+     file-level map、E1--E6 实验计划，现在没有未落地项。**
+
+# 遗留问题（你已逐条答复，现予关闭）
+
+- ~~**【R10】DOI 印不进 PDF**~~ → **你答：就这样交。** 已按此定案：
+  46 条 DOI 留在 `ref.bib`（对最终排版和 artifact 有用），不动 venue 指定的 bst。
+- ~~**【责任使用措辞请过目】**~~ → **你答：好的。**
+  （说明一处：这一轮压页时把那段最后一句的断行重排了一次，**文字内容没有改**。）
+- ~~**【表号与评审信对不上，回信时注意】**~~ → **你答：不用回信。** 关闭。
+
+# 遗留问题（仍开着的，只剩一条）
+
+- **【不需要你决策，我自己排期】补充材料 E1 那张表的数字没有审计器覆盖。**
+  186 条 claim 没有一条指向它（18 格 raw/PPEDCRF/Δ/CI）。
+  它不是正文主张的支撑表——正文只引"18 格里 5 格区间不含零"这一句——
+  所以不影响这次投稿；要补是给 E1 的导出树写一族 claim。
