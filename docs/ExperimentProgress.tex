@@ -128,19 +128,24 @@ family's twelve numbers, which rest on \texttt{icme2027\_placement\_msls} and
 
 R2 & The allocation-cannot-decide-ranking claim was asserted from an identity
 about expected squared displacement. & \done & Margin-variance analysis with an
-explicit two-coordinate counterexample. A2 (running) adds the measured
-counterpart: predicted first-order margin variance against realised margin
-change, with rank flips and pre/post-clamp energy. \\
+explicit two-coordinate counterexample. \textbf{A2 supplies the measurement}:
+at fixed energy uniform allocation flips $5.0\%$ of margins and the
+score-gradient placement $9.2\%$, so allocation does move the ranking
+distribution. First-order prediction overstates the realised spread by
+$1.5$--$3.5\times$, so the linearisation is reported as approximate. \\
 
 R3 & ``Oracle'', ``strictly correct'' and ``bound'' exceed what is measured.
-& \partialstatus & Naming now closed in \emph{both} places. The manuscript was
+& \done & Naming now closed in \emph{both} places. The manuscript was
 fixed last cycle; this session fixed the reviewable code, where
 \texttt{margin\_gradient\_map} still called itself ``the strictly correct
 oracle''. The condition keys \texttt{oracle\_grad} and \texttt{margin\_oracle}
 are deliberately \emph{not} renamed (published CSVs are keyed on them); the
 module docstring now maps each key to the quantity it computes and states that
-neither is an optimum nor a Jacobian column norm. \textbf{Still open}: A2's
-measurement of how far apart those quantities actually are --- running, 58\%. \\
+neither is an optimum nor a Jacobian column norm. \textbf{A2 has measured how
+far apart they are} (Table~4c): rank agreement $0.656$ against a split-half
+ceiling of $0.982$, top-decile overlap $0.33$, concentrations $65.3\%$ and
+$47.7\%$. They are different quantities, and the manuscript's $64.7\%$ is
+reproduced at $65.3\%$ on an independent sample. \\
 
 R5 & Inference unit, clustering, multiplicity, equivalence margins. &
 \partialstatus & Closed for the direction family: place-clustered bootstrap
@@ -149,12 +154,13 @@ contrasts under Holm, and a $\pm0.01$ Top-1 equivalence margin fixed before
 testing. \textbf{Still open}: the same treatment for the allocation family,
 which needs \texttt{icme2027\_placement\_msls}. \\
 
-R7 & Matched distortion is not a utility frontier. & \running & Experiment A5
-is \textbf{running on 2c}, four measured budgets (MSE 5.0, 15.68, 60.0, 241.5)
-$\times$ four conditions (clean, isotropic, direction, hardened direction),
-EOT over the published \texttt{jpeg75 jpeg50 blur denoise}. Gate: report
-privacy against segmenter metrics with a declared utility tolerance, or state
-the cross-dataset limitation explicitly. \\
+R7 & Matched distortion is not a utility frontier. & \done & A5 complete, four
+budgets $\times$ four conditions, joined to A8 privacy at the same budgets
+(Table~4b). Direction dominates at matched utility and isotropic saturates.
+\textbf{But} at the declared $0.05$ mIoU tolerance only three cells are
+admissible and none meaningfully degrades the attacker, so the manuscript must
+stop calling MSE 15.68 quality-preserving on a PSNR figure alone. The
+cross-dataset pairing is labelled as such throughout. \\
 
 R8 & The adaptation claim rests on a restricted attacker. & \partialstatus &
 The unsupported claim was replaced by a stipulated constraint plus an explicit
@@ -173,11 +179,12 @@ numeric heading), a second dataset, and one more held-out strong VPR
 architecture. \\
 
 R10 & Top-1 is not location privacy; the release boundary is incomplete. &
-\running & Top-1/5/10 for the transfer contrast were verified last cycle. A8 is
-\textbf{running on PRO 6000} at both budgets and has already produced the
-result the manuscript needs (see Table~4): the $\ell_\infty$ projection is
-\emph{not} breached at the operating point and \emph{is} breached at the high
-budget --- a distinction the paper currently does not draw. \\
+\done & A8 complete at four budgets (Table~4). The $\ell_\infty$ projection is
+\emph{not} breached at the operating point and \emph{is} at the high budget ---
+a distinction the paper does not draw. Top-1/5/10 are now reported on
+\emph{decoded} files: JPEG75 lifts the unhardened direction from $0.035$ to
+$0.105$ while the EOT release holds, so EOT hardening is what makes the effect
+survive transmission at all. \\
 
 R11 & The artifact is not a complete, current reviewer package. & \blocked &
 Was twelve trees missing; now \textbf{eight}: \texttt{icme2027\_placement\_msls},
@@ -224,32 +231,25 @@ Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-\textbf{A8-hi --- released amplitude at the high budget} (R10) & \running &
-75\% & \textbf{$\approx$12:25} & PRO 6000, 1{,}201 of 1{,}600 rows. 200 queries
-$\times$ \{direction, isotropic\} $\times$ \{float, PNG, JPEG95, JPEG75\} at
-MSE 241.5. Already answers its question: gain $\approx3.1$, max$|\delta|
-\approx 49$, \emph{outside} the projection of 16. \\
+\textbf{A8 --- the released object, four budgets} (R10) & \done & 100\% &
+\textbf{finished 13:05} & PRO 6000 carried MSE 15.68 and 241.5, 2c carried 5.0
+and 60.0; 200 queries each, published surrogates. Results in Table~4. Three
+findings: JPEG75 lifts the unhardened direction's Top-1 from $0.035$ to
+$0.105$ while the EOT release barely moves; JPEG inflates delivered distortion
+past the matched budget; the projection breach is budget-specific. \\
 
-\textbf{A8 --- released amplitude and serialisation at the operating point}
-(R10) & \running & 20\% & \textbf{$\approx$12:55} & PRO 6000, 473 of 2{,}400
-rows. Adds the hardened condition, so three conditions rather than two, at
-MSE 15.68. Gain $\approx0.6$--$0.7$, max$|\delta| \approx 9$--$12$,
-\emph{inside} the projection. Re-run of an earlier complete pass that used the
-wrong surrogate ensemble (see Table~3, C6). \\
+\textbf{A5 --- privacy against measured utility over budgets} (R7) & \done &
+100\% & \textbf{finished 12:50} & 2c, both cards, four budgets $\times$ four
+conditions. Results in Table~4b. Direction dominates at matched utility, but at
+a $0.05$ mIoU tolerance nothing on offer meaningfully degrades the attacker ---
+the finding the manuscript must confront. \\
 
-\textbf{A5 --- privacy against measured utility over budgets} (R7) & \running &
-24\% & \textbf{$\approx$14:05} & 2c, both cards. GPU0 carries MSE 5.0
-(125/200 images) then 15.68; GPU1 carries 60.0 (64/200) then 241.5. Four
-conditions including the hardened direction. The retrieval half rides on A3,
-already published; this supplies the utility axis the frontier claim needs. \\
-
-\textbf{A2 --- what the sensitivity maps measure} (R2, R3) & \running & 58\% &
-\textbf{$\approx$13:55} & PRO 6000, 351 of 600 rows (150 queries $\times$ 4
-maps). Random-projection Jacobian column norms against the score-gradient and
-margin-gradient maps, with a split-half ceiling so disagreement can be told
-from estimator noise. Slowed badly by tenant contention before the thread cap;
-resumes correctly now that finished queries are skipped before the estimate is
-paid for. \\
+\textbf{A2 --- what the sensitivity maps measure} (R2, R3) & \done & 100\% &
+\textbf{finished 13:00} & PRO 6000, 153 queries at 128 probes, split-half
+ceiling $0.9819$. Results in Table~4c. The score-gradient and column-norm maps
+agree at only $0.656$ with $0.33$ top-decile overlap, so they are different
+quantities; allocation moves the margin-flip rate from $5.0\%$ to $9.2\%$ at
+fixed energy. \\
 
 A6 --- adaptation against the hardened release (R8) & \pending & 5\% &
 2c free $\approx$14:05, then $+6$\,h $\Rightarrow$ \textbf{$\approx$20:00} &
@@ -493,6 +493,47 @@ session for the manuscript's claims.
 The $0.05$ tolerance is one declared choice, not a fact about deployments; a
 looser tolerance changes which cells are admissible but not the shape of the
 frontier. The manuscript should state its tolerance explicitly and defend it.
+
+\section*{Table 4c: What the Sensitivity Maps Measure (A2, R2/R3)}
+
+153 queries, 128 random probes each. The correlation between two independent
+half-estimates of the column norms is \textbf{$0.9819 \pm 0.0126$}: that is the
+ceiling any cross-map agreement could reach, so agreement below it is a real
+difference and not estimator noise.
+
+\begin{longtable}{@{}p{0.21\linewidth}p{0.18\linewidth}p{0.14\linewidth}p{0.16\linewidth}p{0.13\linewidth}@{}}
+\toprule
+Map & $\rho$ vs column norms & Top-decile overlap & Top-decile concentration &
+Margin-flip rate \\
+\midrule
+\endhead
+Jacobian column norms & 1.000 (self) & 1.000 & \textbf{0.477} & 0.085 \\
+Score gradient & \textbf{0.656} & 0.326 & \textbf{0.653} & 0.092 \\
+Margin gradient & 0.654 & 0.322 & 0.647 & 0.080 \\
+Uniform & undefined (all ties) & 0.039 & 0.100 & \textbf{0.050} \\
+\bottomrule
+\end{longtable}
+
+\textbf{R3.} The score-gradient map and the column norms agree at $0.656$
+against a ceiling of $0.982$ and share a third of their top decile: they are
+different quantities, which is what last cycle's renaming asserted and this
+measures. The manuscript's own $64.7\%$ is reproduced here at $65.3\%$ on an
+independent sample, so the paper's figure is right and correctly attributed to
+the score gradient. What is new is $47.7\%$ for the column norms, which the
+paper does not report and which R3 asks to have distinguished. Both far exceed
+the $10.0\%$ a uniform map gives, so ``attacker sensitivity is strongly
+concentrated'' holds under either quantity.
+
+\textbf{R2.} At fixed energy, uniform allocation flips $5.0\%$ of margins and
+the score-gradient placement $9.2\%$. \emph{Allocation does change the ranking
+distribution}, which is the review's counterexample and what the original
+impossibility claim denied. It does not resurrect a Top-1 placement benefit ---
+these are margin flips on a population whose mean clean margin is already
+negative --- but it settles that the claim was wrong on its own terms.
+First-order prediction overstates the realised margin spread by
+$1.5$--$3.5\times$, so the linearisation is optimistic and should be reported
+as approximate. Clamp loss is $2$--$4\%$ of energy, measured rather than
+assumed.
 
 \section*{Table 5: Cluster Positives Against Geographic Positives (A7b, R9)}
 
