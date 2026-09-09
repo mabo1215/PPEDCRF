@@ -2851,3 +2851,45 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
        Robustness to Preprocessing 3,981 / 0.65；Conclusion 3,385 / 0.55；
        Contributions 3,214 / 0.53；What Is Actually Released 2,415 / 0.40。
      - **补充材料 5 → 6 页**（搬进去的内容），TIFS 对补充材料无页数限制。
+
+## 本轮收尾（2026-09-09 夜，全文紧缩：15 → 14 页，第二页压不出来）
+
+378. 【已完成】**按用户选的"全文紧缩、不删任何一节"做了完整一遍，11 个批次**。
+     覆盖所有有余量的节：三节 allocation、direction、factorial、释放边界、
+     自适应攻击者、预处理鲁棒性、Related Work、Introduction、Contributions、
+     方法各小节。
+     - **写了一个 guard 脚本**（`scratchpad/guard.py` 思路）：每批改完就比对
+       改前改后**数字、citation、ref、label 的多重集合**，少一个就报错。
+       全程干净——**一个数字、一条引用都没丢**。
+       中途 guard 抓到过一次：我把"reads $0.0058$ rather than $0.0000$"里的
+       `0.0000` 删了，虽然是重复表述，但删掉后那句对比就断了，已还原。
+     - 审计器仍是 **89 verified / 0 mismatched / 0 claims lost from source**，
+       编译 0 undefined reference。
+     - **结果：main.pdf 15 → 14 页。**
+
+379. 【结论：第二页靠紧缩压不出来，必须动内容】
+     - 紧缩这一遍只删掉 **2,327 字符（2.6%）**，而且**收益急剧递减**：
+       最后一个批次扫完一整节只换来 **69 字符**。这就是这份稿子的上限——
+       正文本来就密。
+     - 本轮全部工作（删 Secondary Benchmarks + 四处批准的删减 + Controlled Check
+       搬走 + Protocol 压缩 + 全文紧缩）合计删掉 **5,359 字符**，正好买到一页。
+     - **14 → 13 还需要约 6,100 字符，是整个紧缩批次产出的两倍多。**
+       靠遣词造句拿不到，只能靠内容。
+     - 参考文献 47 条，占约 1.2 页；正文排到 p13，参考文献 p13–14。
+
+# 遗留问题（更新）
+
+- **最后一页需要用户决定砍什么内容。** 紧缩已经做到头了（见第 379 条）。
+  按代价从低到高，页当量是实测的：
+  1. §Which Part of the Perturbation Does the Work → 补充材料，**0.79 页**
+     （承载 R6 的三因子分离，正文留一段摘要指向它）
+  2. §What Allocation Moves, and What Decides a Ranking → 补充材料，**1.13 页**
+     （承载 R2 反例实测和 R3 的列范数区分，代价最大）
+  3. §The Null Holds on Real Geographic Data 压掉一半 ≈ **0.65 页**
+     （主否定结果，压它等于削弱本文最强的证据）
+  **推荐 1**：0.79 页够跨过页边界，而且 R6 的表本来就可以放补充材料，
+  正文留摘要不影响对 R6 的回应完整性。
+
+- **还缺三棵导出树**：`tifs_a8`、`tifs_a8_hi`、`tifs_d6`（工作机或 PRO 6000）。
+  拿到后 `cp -r` 进 `src/exports/` 提交即可到 140/140，命令在
+  `src/exports/README.md`。
