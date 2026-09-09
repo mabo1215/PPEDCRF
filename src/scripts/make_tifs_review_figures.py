@@ -30,6 +30,30 @@ CONTEXT = "#c3c2b7"
 
 COLUMN_IN = 3.5  # IEEE single-column width in inches
 
+# These figures carry 5.5pt annotations at 3.5in wide. At 300 dpi a digit is
+# about 23 pixels tall and JPEG's 8x8 blocks land on top of it; 600 dpi keeps
+# the ringing below what the printed page resolves.
+DPI_RASTER = 600
+
+
+def _save(fig, out) -> None:
+    """Write one figure, rasterising at DPI_RASTER when the format is lossy.
+
+    JPEG is requested for the submission package. It is lossy, and on line art
+    with small text the artefacts appear as ringing around glyph edges rather
+    than as anything a reader would call blur, so quality is pinned high and
+    subsampling turned off rather than left at the library defaults.
+    """
+    suffix = str(out).rsplit(".", 1)[-1].lower()
+    kwargs = {"bbox_inches": "tight", "pad_inches": 0.02}
+    if suffix in ("jpg", "jpeg"):
+        kwargs.update(dpi=DPI_RASTER,
+                      pil_kwargs={"quality": 95, "subsampling": 0,
+                                  "optimize": True})
+    elif suffix == "png":
+        kwargs.update(dpi=DPI_RASTER)
+    fig.savefig(out, **kwargs)
+
 
 def _style() -> None:
     plt.rcParams.update({
@@ -117,7 +141,7 @@ def fig_budget(out: Path) -> None:
     fig.text(0.5, -0.03, "positive is worse privacy",
              ha="center", fontsize=6, color=MUTED)
     fig.tight_layout(w_pad=0.6)
-    fig.savefig(out, bbox_inches="tight", pad_inches=0.02)
+    _save(fig, out)
     plt.close(fig)
 
 
@@ -216,7 +240,7 @@ def fig_sanitize(out: Path) -> None:
     fig.text(0.5, -0.05, "negative is better privacy",
              ha="center", fontsize=6, color=MUTED)
     fig.tight_layout(w_pad=0.4)
-    fig.savefig(out, bbox_inches="tight", pad_inches=0.02)
+    _save(fig, out)
     plt.close(fig)
 
 
@@ -224,12 +248,16 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", type=Path,
                     default=Path(__file__).resolve().parents[2] / "paper" / "figs")
+    ap.add_argument("--format", default="jpg", choices=("jpg", "pdf", "png"),
+                    help="Raster formats are written at DPI_RASTER. These are "
+                         "line plots with 5.5pt annotations, so a lossy format "
+                         "needs the high DPI to keep the labels clean.")
     args = ap.parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
     _style()
-    fig_budget(args.out_dir / "fig_budget_dependence.pdf")
-    fig_sanitize(args.out_dir / "fig_preprocessing_eot.pdf")
-    print(f"figures written to {args.out_dir}")
+    fig_budget(args.out_dir / f"fig_budget_dependence.{args.format}")
+    fig_sanitize(args.out_dir / f"fig_preprocessing_eot.{args.format}")
+    print(f"figures written to {args.out_dir} as .{args.format}")
 
 
 if __name__ == "__main__":
