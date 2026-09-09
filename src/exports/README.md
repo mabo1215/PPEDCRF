@@ -30,6 +30,11 @@ a fresh clone on any host carries the evidence with it.
 | `tifs_a8_mse5.0` | 2 | 544 KB | The release-boundary measurement at delivered MSE 5.0 |
 | `tifs_d6` | 12 | 20 MB | Table IV: the transfer and white-box columns on both attackers |
 | `tifs_d7` | 4 | 9.5 MB | Downstream detector and segmenter utility of the released frames |
+| `tifs_a8` | 3 | 548 KB | The release boundary at the operating point, delivered MSE 15.68 |
+| `tifs_a8_hi` | 3 | 368 KB | The release boundary at the high budget, delivered MSE 241.5 |
+| `tifs_a2` | 4 | 180 KB | Jacobian column norms and margin flip rates (R2, R3) |
+| `tifs_a8_vitstart8` | 2 | 552 KB | Superseded: the misconfigured operating-point run (see below) |
+| `tifs_a8_hi_vitstart8` | 2 | 368 KB | Superseded: the misconfigured high-budget run (see below) |
 
 Every printed number these trees back was recomputed from them on
 9 September 2026 and matched the manuscript exactly: the seven placement deltas
@@ -56,25 +61,31 @@ oracle-gradient cell is 0.86 one way and 1.00 the other. Recompute that column
 with `analyze_placement_query_level.py` rather than reading whichever column
 comes first.
 
-## Still missing
+## Nothing is missing
 
-Two trees are still missing here: `tifs_a8` and `tifs_a8_hi`, the
-release-boundary measurements at the operating point and at MSE 241.5. They
-back the last 16 of the auditor's 146 claims. Whole-filesystem searches of 2c
-and of vGPU 3090 on 9 September found no copy of either, so PRO 6000 -- where
-they were produced -- or the work machine is the only place left to look. With everything else in place the auditor
-reports 130 of 146 with zero mismatches.
+Every family the manuscript draws on is here. The auditor verifies **153 of 153
+claims, zero mismatched, nothing unverifiable** -- the first time that has been
+true on any single machine.
 
-To add them from whichever machine has them:
+## The two superseded runs, and why they are kept
 
-```bash
-cd <repo>
-for t in tifs_a8 tifs_a8_hi; do
-  cp -r "src/outputs/$t" "src/exports/$t"
-done
-python3 src/scripts/audit_claim_consistency.py   # expect 146 of 146
-git add src/exports && git commit
-```
+`tifs_a8_vitstart8` and `tifs_a8_hi_vitstart8` are an earlier A8 pair run with
+the wrong surrogate ensemble (`vit_b_16` in place of `cosplace`) and a random
+start of 8.0 rather than 1.0. Nothing reads them and they are evidence for
+nothing. They are kept because the manuscript had quoted one of them by
+mistake: the high-budget release gain and amplitude read `2.312` and `36.99`,
+which are this run's numbers, where the published configuration gives `3.078`
+and `49.25`. Keeping both makes that correction checkable against
+`run_config.json` instead of asking a reader to take it on trust.
+
+## A trap in `tifs_a2`
+
+The producer is resumable, so a restarted run appends a second row for every
+query that was in flight -- 28 of the 628 rows here. Averaging the raw rows
+double-weights those queries. `analyze_jacobian_columns.py` now keeps the last
+row per `(query, map)` and reports how many rows a restart superseded, so the
+summary does not depend on how many times the run was interrupted. Any new
+consumer of this tree must do the same.
 
 `tifs_d6` carries a `superseded/` subdirectory holding an earlier EOT run that
 was replaced by the three per-seed files beside it. It is kept as provenance;
