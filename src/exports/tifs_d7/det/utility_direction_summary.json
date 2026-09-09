@@ -1,0 +1,98 @@
+{
+  "rows": [
+    {
+      "condition": "clean",
+      "seed": 1234,
+      "mean_effective_mse": 0.0,
+      "mean_psnr": 138.1308,
+      "map50": 0.475474
+    },
+    {
+      "condition": "clean",
+      "seed": 5678,
+      "mean_effective_mse": 0.0,
+      "mean_psnr": 138.1308,
+      "map50": 0.475474
+    },
+    {
+      "condition": "clean",
+      "seed": 9012,
+      "mean_effective_mse": 0.0,
+      "mean_psnr": 138.1308,
+      "map50": 0.475474
+    },
+    {
+      "condition": "isotropic",
+      "seed": 1234,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.429243
+    },
+    {
+      "condition": "isotropic",
+      "seed": 5678,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.433376
+    },
+    {
+      "condition": "isotropic",
+      "seed": 9012,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.429332
+    },
+    {
+      "condition": "direction",
+      "seed": 1234,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.372039
+    },
+    {
+      "condition": "direction",
+      "seed": 5678,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.364387
+    },
+    {
+      "condition": "direction",
+      "seed": 9012,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.351998
+    },
+    {
+      "condition": "hardened_direction",
+      "seed": 1234,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.347464
+    },
+    {
+      "condition": "hardened_direction",
+      "seed": 5678,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.347785
+    },
+    {
+      "condition": "hardened_direction",
+      "seed": 9012,
+      "mean_effective_mse": 15.679999,
+      "mean_psnr": 36.1773,
+      "map50": 0.36212
+    }
+  ],
+  "manifest": "/root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF/utility_subset/utility_manifest_detection.jsonl",
+  "surrogates": [
+    "resnet50",
+    "vgg16",
+    "cosplace"
+  ],
+  "target_mse": 15.68,
+  "steps": 20,
+  "device": "cuda",
+  "n_images": 200
+}
