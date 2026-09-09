@@ -21,7 +21,7 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{9 September 2026, 16:10 NZST --- IEEE TIFS, fifth independent review
+\date{9 September 2026, 16:35 NZST --- IEEE TIFS, fifth independent review
 cycle, after the A2/A5/A6/A7b/A8 experiment round and the first manuscript
 writeback. This file carries \emph{only} open, running and not-yet-started
 work; completed items are removed once recorded in \texttt{docs/progress.md}.}
@@ -38,7 +38,7 @@ All experiments it called for have now been run. \textbf{Nine of the thirteen
 findings are closed}; the four that remain are blocked on export trees that are
 not on any reachable machine, on a page budget, or on the authors.
 
-\paragraph{Compute state, 9 September 2026, 16:10 NZST.} \textbf{All four hosts
+\paragraph{Compute state, 9 September 2026, 16:35 NZST.} \textbf{All four hosts
 are shut down} --- PRO 6000, 2c, vGPU 3090 and H800 all refuse the connection.
 Nothing is running or queued anywhere, and nothing needs to be: no open item
 below requires a GPU except the conditional regeneration in X1.
@@ -119,7 +119,7 @@ and is recorded in \texttt{docs/progress.md}. Times are New Zealand Standard
 Time. Nothing here needs a GPU except X1's conditional branch.
 
 \begin{longtable}{@{}p{0.19\linewidth}p{0.07\linewidth}p{0.05\linewidth}p{0.17\linewidth}p{0.44\linewidth}@{}}
-\caption{Open work as of 9 September 2026, 16:10 NZST. No host is running.}
+\caption{Open work as of 9 September 2026, 16:35 NZST. No host is running.}
 \label{tab:tifs5-schedule}\\
 \toprule
 Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
@@ -135,23 +135,29 @@ Item & Status & \% & Est.\ completion (NZST) & Purpose and notes \\
 \bottomrule
 \endlastfoot
 
-\textbf{P1 --- compress 15 pages to 13} (Pkg) & \pending & 0\% &
-\textbf{10 Sep, $\approx$12:00} (3\,h, no GPU) & \textbf{The critical path to
-submission.} Candidates, in the order I would cut them: \S\,Secondary
-Benchmarks entirely ($\approx$0.6\,page; it evaluates the additive mechanism,
-not the final release, and says so); the overlap between
-\S\,Robustness to Non-Adaptive Preprocessing and the new \S\,What Is Actually
-Released ($\approx$0.4\,page); the superseded learning-rate narrative in
-\S\,An Attacker That Adapts ($\approx$0.3\,page); the budget-sweep prose that
-Table~III already carries ($\approx$0.3\,page). Needs the user's agreement on
-what leaves the main text. \\
+\textbf{P2 --- decide the A6 training figures} (R1) & \textcolor{PendRed}{\textbf{Awaiting user}} & 0\% &
+\textbf{2c up $+$ 5\,min, or 10\,min to delete} & \textbf{Do this first: it
+decides whether P1 edits the same paragraph twice.} The manuscript quotes
+validation MRR $0.047$ and $0.058$ at the selected epoch~8, from
+\texttt{src/outputs/tifs\_a6} on 2c, which was never copied off before the host
+was shut down. Those two numbers have no local provenance and are not in the
+auditor. Either restart 2c and copy \texttt{tifs\_a6} plus
+\texttt{logs/a6.log}, or delete the two figures --- deleting costs nothing
+scientifically, because the section's argument rests entirely on
+\texttt{tifs\_a6\_eval}, which is local. \\
 
-\textbf{P2 --- recover A6 training provenance} (R1) & \pending & 0\% &
-\textbf{2c up $+$ 5\,min} & Copy \texttt{src/outputs/tifs\_a6} and
-\texttt{logs/a6.log} off 2c, then register the two MRR figures in the auditor.
-\emph{Or} delete those two figures from the manuscript, which costs nothing
-scientifically --- the argument rests on the evaluation numbers, which are
-local. Decide before the compression pass so the text is only edited once. \\
+\textbf{P1 --- compress 15 pages to 13} (Pkg) & \textcolor{PendRed}{\textbf{Awaiting user}} & 0\% &
+\textbf{P2 $+$ 3\,h, no GPU} & \textbf{The critical path to submission}, and
+the one item here that changes what a reader sees. Candidates, cheapest first:
+\S\,Secondary Benchmarks entirely ($\approx$0.6\,page; it evaluates the
+additive mechanism rather than the final release, and says so); the overlap
+between \S\,Robustness to Non-Adaptive Preprocessing and the new \S\,What Is
+Actually Released ($\approx$0.4\,page); the learning-rate narrative in
+\S\,An Attacker That Adapts that A6 superseded ($\approx$0.3\,page); the
+budget-sweep prose Table~III already carries ($\approx$0.3\,page). Needs the
+user's agreement on what leaves the main text. Note the abstract is at
+\textbf{250 words against a 250 limit}, so it has no slack either and must be
+recounted if touched. \\
 
 \textbf{P3 --- second writeback pass} (R1, R13) & \pending & 0\% &
 \textbf{10 Sep, $\approx$15:00} (2\,h, no GPU) & Fold the A6/A7b numbers now in
@@ -265,6 +271,23 @@ C14 & Auditor extended from 110 to 140 claims (A2, A5, A8 families). It caught
 two rounding errors I had introduced: a gain printed $1.14$ that recomputes to
 $1.146$, and $0.619$ that recomputes to $0.618$. & \done &
 \texttt{audit\_claim\_consistency.py}. \\
+
+D5 & Generated figures switched from PDF to \textbf{JPG} at the user's
+request. Rasterised at 600\,dpi, quality 95, chroma subsampling off: at
+300\,dpi a digit in these 5.5\,pt annotations is about 23 pixels tall and
+JPEG's $8\times8$ blocks land on the glyphs. Trades vector for raster --- the
+files grow from 18 and 22\,KB to 252 and 333\,KB and no longer scale
+losslessly; \texttt{-{}-format pdf} restores the previous output exactly. &
+\done & \texttt{figs/*.jpg}, \texttt{make\_tifs\_review\_figures.py}. \\
+
+D6 & \textbf{Process correction.} \texttt{paper/} is a submodule pointing at
+\texttt{PPEDCRF\_overleaf.git}, so manuscript edits live in a second
+repository; several earlier ``pushed'' reports covered only the parent. An
+automatic committer had been picking the edits up, so nothing was lost, but
+the closing sequence for any change under \texttt{paper/} is three steps:
+commit and push the submodule, \texttt{git add paper} in the parent, then
+commit and push the parent. The parent's \texttt{git status} shows only
+``\,m paper'', which is easy to read as unimportant. & \done & --- \\
 
 \end{longtable}
 
