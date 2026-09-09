@@ -2372,7 +2372,113 @@ paper's numbers can be checked.
        0 未定义引用/citation、0 overfull box、**32 个单测通过**（原 30，第 339 条加了 2）。
 
 
-下一步建议按这个顺序：等 PRO 6000 / H800 / 2c 任意一台开机 → X1 取回剩下的十二棵树
-（开机第一条命令就是 `ls src/outputs/`，取完再启动任何新任务）→ 本机 GPU 可以直接做的
-A2 与 A8（注意本机是 RTX 4050 Laptop，不是之前记的 3070）→ 开卡后的 A5 / A6 / A7b →
-投稿前重写 cover letter。
+## 本轮（2026-09-09 夜，PRO 6000 与 2c 双机开卡：A2/A8 落地、四棵树找回、R1 闭合）
+
+343. 【已完成】**PRO 6000 自己回来了，2c 由用户开成有卡模式，两台一起用**。
+     - PRO 6000（`ssh -p 48305`）：`RTX PRO 6000 Blackwell`，97,887 MiB。
+       **但这是一张和别的租户共用的卡**：开工时另外七个进程占着 95 GB 里的 90 GB，
+       A8 第一次启动就 `torch.OutOfMemoryError`（见第 345 条）。
+     - 2c（`ssh -p 42044`）：**两张 RTX 4080 SUPER，各 32 GB，都是空的**，
+       不和别人共用，比 PRO 6000 更适合跑满。密码在 `C:\work\9\saveway.txt`，
+       本轮已把本机公钥写进 2c 的 `authorized_keys`，之后免密。
+     - vGPU 3090：仍是**无卡模式**，容器里 `/dev/nvidia*` 根本不存在（不只是
+       `nvidia-smi` 没权限）。全盘 `find /` 搜过，十二棵树一棵都不在它上面。
+     - H800（44708）：仍然拒绝连接。
+
+344. 【已完成】**四棵导出树在 2c 上找到并取回，R1 的 direction 家族彻底闭合**。
+     - 位置不是主 checkout，而是 2c 上的**第二个 checkout**
+       `/root/autodl-tmp/ppedcrf_tifs5/PPEDCRF/src/outputs/`：
+       `tifs_a3b`、`tifs_a4sweep`、`tifs_a4mask`、`tifs_a7_n2o8`，60 个文件。
+       另从 2c 主 checkout 取回 `direction_utility_d3_2c`（12 MB，D3 效用导出）。
+     - **`audit_claim_consistency.py` 现在是 110 条全绿**：110 verified、
+       0 mismatched、**0 no-data**（今早还是 106/4）。差的那 4 条正是 A7 的
+       new-to-old 跨时段格，靠的就是 `tifs_a7_n2o8`。
+     - **教训（更正第 292 条）**：第 292 条说 `icme2027_placement_msls` 就在本机
+       `src/outputs/`，**不对**。本机该目录不存在，`src/artifact/results/` 也不存在，
+       把 C: 盘所有挂载盘搜了一遍都没有（G: 盘现在没挂）。今早的
+       `ExperimentProgress.tex` 记的才是准的。以后"某某树在本机"这种结论，
+       要么当场 `ls` 给出证据，要么不要写进结论。
+     - **仍缺八棵**：`icme2027_placement_msls`、`tifs5_analysis`、`margin_oracle`、
+       `operator_study`、`known_jacobian`、`known_jacobian_operators`、
+       `d4_3seed`、`sanfree_3seed`。R1 的 allocation 家族、R5 的 allocation 部分
+       和 R11 的打包仍然卡在这八棵上。
+
+345. 【已完成】**8 城市基准完整找回，而且和已发表的 D6 导出逐 query 对得上**。
+     - 中转卷上的 `msls8.tar` 里就有 `manifest_all8.jsonl`：
+       **400 query、277 个 unique place、2000 gallery**，八城各 50 query。
+       这正是评审意见里写的"400 queries but only 277 place labels"。
+     - 把它的 query_id 和本机 `src/outputs/tifs_d6/d6_r18_plain.csv` 的 400 个
+       query_id 排序后逐条比对：**完全相同**。
+     - 意义：那八棵还没找回的树**可以在完全相同的基准上重跑**，不是近似重跑。
+       X1 因此从"阻塞"降级成"花机时"。
+
+346. 【已完成】**A2 与 A8 两个脚本写完、本机冒烟通过、已推送**。
+     - `measure_jacobian_columns.py`（A2 / R2、R3）：用随机投影估
+       `E[(J^T v)_i^2] = ||J_i||^2`，每个探针只要一次反向传播；同时输出
+       **两个独立半样本估计之间的 split-half 相关**，这是任何跨图比较能达到的上限，
+       用来把"两张图真的不一样"和"估计器自己太吵"分开。第二半做 R2：
+       一阶预测的 margin 方差对实测 margin 变化，记 rank flip、夹持前后能量。
+     - `validate_serialized_release.py`（A8 / R10）：记录投影后与缩放后的两个幅度，
+       量化到 8 bit，再走 PNG / JPEG 往返，在**解码后的像素**上重跑检索。
+     - 两个脚本都带 `--synthetic N`，自己造帧，**没有数据集的机器上也能跑通全流程**；
+       合成帧上的任何数字都不进论文。
+     - 新增 15 个单测（共 **47** 个，原 32）。估计器是拿**闭式已知列范数的线性嵌入**
+       校的，不是自己和自己比；uniform 图的相关性断言为 NaN 而不是 0.0，因为
+       "无定义"和"无关"是两回事；PNG 断言量化后无损，这样审计里剩下的残差
+       就只能归给 float→int 那一步。
+
+347. 【已完成】**A8 第一次跑完 400 query（低预算 200 + 高预算 200），但配置跑偏，已重跑**。
+     - 跑偏在两处：代理模型用了 `resnet50 vgg16 vit_b_16`，而已发表的是
+       `resnet50 vgg16 cosplace`（`launch_tifs_d6d7.sh`）；`random_start` 用了 8.0，
+       而 `self` 目标的发表默认是 1.0。结果直接反映出来：direction 的 Top-1 是
+       **0.160**，而发表的三代理迁移是 **0.0317**。审计一个"差不多但不是那个"的
+       扰动没有意义，两个默认值都已改成发表配置并重跑。
+     - **但释放边界那一半的结论不依赖代理集**（增益由 MSE 匹配决定），可以保留：
+       * **操作点 MSE 15.68**：增益 0.58，max|δ| = **9.3**，**没有超过** ℓ∞ 投影 16。
+       * **高预算 MSE 241.5**：增益 2.31，max|δ| = **37.0**，**超过了**投影。
+       也就是说，论文现在把"投影被突破"当成机制的性质来写，其实那是**高预算那一档**
+       的性质，操作点这一档并没有突破。这个区分要写进正文。
+     - 序列化那一半（初版数字）：PNG 往返 Top-1 完全不变；JPEG75 也几乎不变
+       （0.160→0.160）。但 **JPEG 会把交付失真顶上去**：max|δ| 9.3→37.4、
+       MSE 15.68→21.67。"在 float 张量上匹配失真"不等于"在解码后的文件上匹配失真"，
+       这是 matched-distortion 协议本身的一个边界，重跑后按发表配置重新给数。
+
+348. 【已完成】**cover letter 按现在的论文重写**（第 342 条之后一直挂着的 Pkg 项）。
+     旧信卖的是 PPEDCRF、旧标题，还写着"DCRF 推断出的空间支撑本身就是一项贡献"——
+     这恰恰是本文**证伪**的东西（学到的图是常数）。新信以 matched-distortion 审计为
+     主线，把评审要求不要藏起来的三条限制写在正文里（不声称形式化 DP、强检索器下
+     Top-5/10 掉得比 Top-1 少得多、direction 比各向同性噪声更费下游效用），
+     并且直接承认 mask-guided 对抗扰动是已有工作，新的是**匹配失真下的对照**。
+
+349. 【已完成】**R3 在代码里的最后一处残留改掉**。正文早就改成 score-gradient 了，
+     但 `run_placement_rule_study.py` 里 `margin_gradient_map` 的 docstring 还写着
+     "the strictly correct oracle"。条件名 `oracle_grad` / `margin_oracle`
+     **不能改**（已发表的 CSV 就是按这些键存的），所以改的是模块 docstring：
+     明确写出每个键实际算的是什么，并且说清楚它既不是最优分配（在
+     `sum w_i^2 = E` 下最大化 `w_i^2` 的线性型会把能量全放到最大系数上），
+     也不是 Jacobian 列范数。
+
+350. 【进行中】**三台任务正在跑**（截至本条写下时）：
+     - PRO 6000：A2（150 query，已 345 行）、A8 低预算重跑、A8 高预算重跑。
+       这台卡是共用的，速度受别的租户影响很大，A2 一度被挤到 ~2.5 分钟/query。
+     - 2c GPU0：A5 分割效用，MSE 5.0 与 15.68；GPU1：MSE 60.0 与 241.5。
+       四档预算、四个条件（clean / isotropic / direction / hardened_direction），
+       EOT 用发表的 `jpeg75 jpeg50 blur denoise`。
+     - **踩过的坑，都已写进 `.claude/rules/src.md`**：`nohup &` 在 ssh 断开后会被
+       杀掉，要用 `setsid` 并且重定向 stdin；共用卡要看**空闲显存**而不是总显存；
+       AutoDL 的 `source /etc/network_turbo` 要在**作业内部**而不是启动 shell 里 source，
+       否则下载 checkpoint 会卡住（A5 第一次就是这么挂的，四个进程一起抢
+       torchvision 权重，全死）。
+
+351. 【已完成】**按用户要求把 AutoDL 学术加速写进规则**（`.claude/rules/src.md`，
+     所有 seetacloud 主机通用）。同时写清两条边界：它只加速 GitHub / HuggingFace，
+     对 pip 源反而更慢；它解决的是**可达性不是鉴权**，私有仓库照样
+     `could not read Username`。另外重申**凭据不下发到计算主机**（沿用第 240 条的约定），
+     要把代码送上没有鉴权的机器就用 `tar | ssh`，传的是数据不是凭据。
+
+
+下一步建议按这个顺序：等 PRO 6000 的 A2/A8 与 2c 的 A5 跑完 → 用发表配置的 A8 数字
+改写 R10 那一节（区分操作点与高预算两档的投影行为，并给出解码后文件的 Top-1/5/10）→
+A2 落地后决定 R3 的机理段是照原样保留还是围绕实测差异重写 → 2c 空出来后接 A6 与 A7b →
+仍缺的八棵树要么等用户家里的机器，要么在已经对上的 8 城市基准上重跑（重跑出的是新数字，
+placement 与 operator 两节要跟着改，动手前先确认）。

@@ -467,8 +467,18 @@ def main() -> int:
         writer.writeheader()
         handle.flush()
 
+    map_names = ("jacobian_colnorm", "score_gradient", "margin_gradient",
+                 "uniform")
     for record in records:
         qid = record["query_id"]
+        # Skip a finished query before doing any work on it. The per-map skip
+        # below is not enough on its own: the column-norm estimate is computed
+        # once per query, ahead of that loop, so a resumed run would pay its
+        # full cost -- the expensive part of this script -- for every query it
+        # then declines to write.
+        if all((qid, name, str(probes)) in done
+               for name in map_names for probes in args.n_probes):
+            continue
         frame = load_image(record["query_path"], resize_hw
                            ).unsqueeze(0).to(device)
 
