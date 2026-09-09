@@ -2,9 +2,9 @@ Cover Letter
 
 Dear Editor,
 
-We submit our manuscript entitled "Direction, Not Allocation: What Actually
-Buys Privacy Against Visual Location Retrieval" for consideration as a Regular
-Paper in IEEE Transactions on Information Forensics and Security.
+We submit our manuscript entitled "Allocation or Direction? A
+Matched-Distortion Audit of Visual Location-Privacy Mechanisms" for
+consideration as a Regular Paper in IEEE Transactions on Information Forensics and Security.
 
 Street-level imagery is routinely released after geographic metadata are
 stripped, yet the pixels themselves remain matchable against geo-tagged
