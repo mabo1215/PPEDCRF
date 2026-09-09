@@ -3081,3 +3081,29 @@ caption 与生成器逐一核对）→ X1 等家里机器的结果。
   "The abstract says which adaptation failed under which constraints"。
   摘要还有 7 个词余量（243/250），**要不要加一句，需要你定**——
   正文现在 13 页刚好卡满，加词有可能把页数顶回 14。
+
+## 第六轮独立评审（2026-09-09 夜，用户触发：按 TIFS 要求完整评审并覆盖 RevisionSuggestions.tex）
+
+398. 【已完成】**第六轮独立评审已写入 `docs/RevisionSuggestions.tex`（覆盖），10 页，编译 0 错误。**
+     按协议：不以上一轮评审和进度文档为输入，直接对着 `main.tex`（sha 1daed659…，13 页）、
+     `supplementary.tex`（sha e797834b…，6 页）和两份 PDF 审。
+     **结论：Major revision（不建议拒稿）。** 科学论证已经站得住；挡住接收的是四件
+     与科学无关、但审稿人能查到的事：
+     - **R1 Critical**：正文印的代码地址是私有仓库（未登录 404），
+       扩展证据报告和 claim 审计器审稿人都拿不到。**只能你来做。**
+     - **R2 Critical**：**补充材料的自适应攻击者一节还是被取代的旧实验**
+       （n=100、McNemar、学习率扫描，caption 还写着正文已撤回的结论
+       "gains nothing on the white-box bound"），而正文现在依赖的
+       双攻击者模型（n=200、重建 gallery、MRR 选点）**在补充材料里没有表**。
+     - **R3 Major**：三处"架构无关"的说法与代码不符——CosPlace 代理是
+       **ResNet18 trunk**（与弱攻击者同架构），MixVPR 是 ResNet50（与 ResNet18 同族），
+       Patch-NetVLAD 是 VGG16 trunk 而代理集里就有 VGG16。迁移是跨权重/跨任务，不是跨架构。
+     - **R5 Major**：frontier（Table V）和释放边界**只有一个种子（1234）、200 query，
+       正文没说，也没有任何区间**；4.4× 和"容差内无机制有效"两句主张都压在上面。
+     - R4：标题和"almost universally"等全称表述比正文强；"significantly worse"
+       来自 98 次比较里一个探索性 p=0.05（12 query）。R6：全文无硬件/软件/算力说明，
+       新自适应实验缺学习率、优化器、epoch、batch、split 大小。R7：法证期刊无
+       dual-use 声明、无 MSLS 数据条款声明。R8：补充材料仍有"Carried Over From the
+       Earlier Framing"等过程史措辞，11+3 张表用 resizebox 缩到 10pt 以下，
+       Fig. 1 是 \scriptsize，Patch-NetVLAD 不在 Table IV。R9：跨数据集配对与未说明理由的 0.05 容差。
+     - **本条只记录评审生成，不算任何修改完成。**
