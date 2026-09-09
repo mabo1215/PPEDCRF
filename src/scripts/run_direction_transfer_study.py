@@ -253,6 +253,15 @@ def main() -> int:
                          "or any query, so the white_box condition is "
                          "automatically re-optimised against the adapted "
                          "model. Surrogates are unaffected.")
+    ap.add_argument("--eval_rebuild_gallery", action="store_true",
+                    help="re-index the reference gallery with the adapted "
+                         "checkpoint instead of the stock model. Required to "
+                         "evaluate a checkpoint trained with "
+                         "finetune_adaptive_attacker.py --rebuild_gallery; "
+                         "without it a gallery-rebuilding attacker is scored "
+                         "against a gallery it would not actually use, which "
+                         "understates it. Default off, so every published run "
+                         "reproduces unchanged.")
     ap.add_argument("--query_id_file", default="",
                     help="optional JSON file with a list of query_ids to "
                          "restrict evaluation to, e.g. the held-out test "
@@ -329,23 +338,32 @@ def main() -> int:
                               input_size=default_input_size_for_backbone(b))
         e = make_default_embedder(cfg).eval().to(device)
         if b == args.eval_backbone and args.eval_checkpoint:
-            # The gallery stays indexed with the attacker's original (stock)
-            # model: re-embedding a whole reference database every time a
-            # query encoder is adapted is not something a real deployed
-            # system does, and it is what finetune_adaptive_attacker.py
-            # trained against (fixed pretrained-model targets). Only the
-            # query-side encoder -- used below for every condition's ranking
-            # and as the white_box gradient target -- is replaced.
-            gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor,
-                                               batch=args.gallery_batch)
+            # By default the gallery stays indexed with the attacker's original
+            # (stock) model: re-embedding a whole reference database every time
+            # a query encoder is adapted is not something a typical deployed
+            # system does, and it is what finetune_adaptive_attacker.py trains
+            # against by default. Only the query-side encoder -- used below for
+            # every condition's ranking and as the white_box gradient target --
+            # is replaced.
+            #
+            # --eval_rebuild_gallery instead re-indexes with the adapted model.
+            # That is the stronger adversary finding R8 says must not be
+            # excluded by assumption, and it is the only correct evaluation of
+            # a checkpoint that was itself trained with --rebuild_gallery:
+            # scoring a gallery-rebuilding attacker against a stock-indexed
+            # gallery would understate it.
             adapted = make_default_embedder(cfg).eval().to(device)
             state = torch.load(args.eval_checkpoint, map_location=device)
             adapted.load_state_dict(state, strict=True)
             adapted.eval()
+            index_with = adapted if args.eval_rebuild_gallery else e
+            gal_emb[b] = embed_gallery_batched(cfg, index_with, gallery_tensor,
+                                               batch=args.gallery_batch)
             e = adapted
+            how = ("gallery re-indexed with the adapted model"
+                   if args.eval_rebuild_gallery else "gallery stays stock-indexed")
             print(f"[transfer] loaded adapted checkpoint for {b} from "
-                  f"{args.eval_checkpoint} (gallery stays stock-indexed)",
-                  flush=True)
+                  f"{args.eval_checkpoint} ({how})", flush=True)
         else:
             gal_emb[b] = embed_gallery_batched(cfg, e, gallery_tensor,
                                                batch=args.gallery_batch)
