@@ -39,9 +39,17 @@ many epochs and overfit: it drove the training loss to near zero while
 *losing* held-out isotropic Top-1 accuracy relative to the un-fine-tuned
 model. The validation set (also place-disjoint from training and test) is
 used for simple early stopping -- the checkpoint saved is whichever epoch
-had the best validation Top-1 retrieval accuracy under the same noise the
-model trains on, not necessarily the last epoch -- to guard against the same
-failure mode recurring.
+scored best on --select_on under the same noise the model trains on, not
+necessarily the last epoch -- to guard against the same failure mode
+recurring.
+
+--select_on matters more than it looks. Under the direction and hardened
+conditions validation Top-1 is frequently 0 for every epoch, so selecting on
+Top-1 makes every checkpoint tie and the pretrained model win by default: the
+held-out null then follows by construction, which is exactly R8's objection.
+'mrr' and 'median_rank' remain informative in that regime -- a smoke run whose
+Top-1 never left 0.0000 still moved median rank from 199 to 128 in one epoch --
+and should be used whenever Top-1 is near the floor.
 
 The held-out test query_ids are written alongside the checkpoint so
 run_direction_transfer_study.py --query_id_file can evaluate on exactly the
@@ -390,6 +398,17 @@ def main() -> int:
                          "attacker to see fresh release randomness rather "
                          "than one frozen realisation per frame; with N>1 a "
                          "variant is drawn per epoch.")
+    ap.add_argument("--select_on", default="top1",
+                    choices=("top1", "mrr", "median_rank"),
+                    help="validation statistic used to pick the checkpoint. "
+                         "R8 objects that selecting on Top-1 can yield a "
+                         "held-out null by construction: when validation Top-1 "
+                         "is 0 for every epoch, every checkpoint ties and the "
+                         "pretrained model wins by default, so the experiment "
+                         "cannot show adaptation even if the model is learning. "
+                         "'mrr' and 'median_rank' stay informative in that "
+                         "regime and are the right choice for the direction "
+                         "and hardened conditions, where Top-1 is near zero.")
     ap.add_argument("--rebuild_gallery", action="store_true",
                     help="re-embed the reference gallery with the adapted "
                          "model at each validation, instead of holding it at "
@@ -528,9 +547,21 @@ def main() -> int:
     print(f"[finetune] epoch 0 (pretrained, no fine-tuning) "
           f"val_top1={init_val_acc:.4f} val_median_rank={init_rank:.1f} "
           f"val_mrr={init_mrr:.5f}", flush=True)
+
+    def selection_score(acc: float, rank: float, mrr: float) -> float:
+        # Higher is better for every criterion, so median rank is negated.
+        if args.select_on == "mrr":
+            return mrr
+        if args.select_on == "median_rank":
+            return -rank
+        return acc
+
+    best_score = selection_score(init_val_acc, init_rank, init_mrr)
     best_val_acc = init_val_acc
     best_epoch = 0
     best_state = copy.deepcopy(embedder.state_dict())
+    print(f"[finetune] selecting checkpoints on '{args.select_on}' "
+          f"(epoch 0 score {best_score:.5f})", flush=True)
 
     rng = random.Random(args.seed)
     step = 0
@@ -586,7 +617,9 @@ def main() -> int:
             embedder, cfg, current_gallery(), gallery_ids, place_of,
             val_records, resize_hw, args.target_mse, device, val_perturb)
         marker = ""
-        if val_acc > best_val_acc:
+        score = selection_score(val_acc, val_rank, val_mrr)
+        if score > best_score:
+            best_score = score
             best_val_acc = val_acc
             best_epoch = epoch + 1
             best_state = copy.deepcopy(embedder.state_dict())
