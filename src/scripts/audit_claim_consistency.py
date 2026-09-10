@@ -1674,13 +1674,13 @@ for name, constant, selective in [
             ("constant", "placement_study", constant),
             ("selective", "placement_study_maskbacked", selective)]:
         printed = "$\\pm0.000$" if value == 0 else f"${value:+.3f}$"
-        claim(f"TabI/{label}/{name}", "Table tab:placement", printed, value,
-              6e-4, tree, _placement_macro(tree, name), source=MAIN)
+        claim(f"TabI/{label}/{name}", "Table tab:placement_proxy", printed,
+              value, 6e-4, tree, _placement_macro(tree, name), source=EXT)
 
 
 # The printed interval endpoints, read back out of the generated column so the
 # registry cannot drift from the table by a rounding.
-for line in (MAIN.read_text(encoding="utf-8").splitlines()):
+for line in (EXT.read_text(encoding="utf-8").splitlines()):
     if not line.startswith(("anti-score-grad.", "learned support",
                             "score-gradient", "saliency", "centre bias",
                             "fixed random", "edge magnitude")):
@@ -1703,9 +1703,9 @@ for line in (MAIN.read_text(encoding="utf-8").splitlines()):
             body = body[: -len("^{\\ast}")]
         lo_s, hi_s = body.strip("[]").split(",")
         for end, printed_end in ((0, lo_s), (1, hi_s)):
-            claim(f"TabI/{label}/{key}/ci{end}", "Table tab:placement",
+            claim(f"TabI/{label}/{key}/ci{end}", "Table tab:placement_proxy",
                   cell, float(printed_end), 3e-3, tree,
-                  _placement_ci(tree, key, end), locator=cell, source=MAIN)
+                  _placement_ci(tree, key, end), locator=cell, source=EXT)
 
 
 # --- Table II: operators at matched delivered MSE ---------------------------
@@ -1742,15 +1742,15 @@ for tree, uniform, delta, pval in [
         ("operator_study/sigma32_blur", 0.1025, 0.0500, 0.003),
         ("operator_study/sigma32_mosaic", 0.0525, 0.1150, None)]:
     tag = tree.split("/")[1]
-    claim(f"TabII/{tag}/uniform", "Table tab:operator", f"{uniform:.4f}",
-          uniform, 5e-5, tree, _operator(tree, "uniform"), source=MAIN)
+    claim(f"TabII/{tag}/uniform", "Table tab:operator_full", f"{uniform:.4f}",
+          uniform, 5e-5, tree, _operator(tree, "uniform"), source=EXT)
     printed = f"${delta:+.4f}$" if delta not in (-0.0433, 0.0500, 0.1150) \
         else f"${delta:+.4f}^{{\\ast}}$"
-    claim(f"TabII/{tag}/delta", "Table tab:operator", printed, delta, 5e-5,
-          tree, _operator(tree, "delta"), source=MAIN)
+    claim(f"TabII/{tag}/delta", "Table tab:operator_full", printed, delta, 5e-5,
+          tree, _operator(tree, "delta"), source=EXT)
     if pval is not None:
-        claim(f"TabII/{tag}/p", "Table tab:operator", f"{pval:g}", pval,
-              max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=MAIN)
+        claim(f"TabII/{tag}/p", "Table tab:operator_full", f"{pval:g}", pval,
+              max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=EXT)
 
 
 # --- what the MSLS placement family certifies, and on which unit ------------

@@ -168,21 +168,28 @@ def main() -> int:
     # One column of an IEEE two-column page. Each placement rule carries both
     # attackers on one row, so the seven rules stay legible where fourteen
     # separate rows would not.
-    fig, axes = plt.subplots(1, 2, figsize=(3.45, 1.78),
-                             gridspec_kw={"width_ratios": [1.32, 1]})
+    # Equal widths and one shared x-range. The figure exists to put the two
+    # axes on the same scale, and two panels at different scales would invite
+    # exactly the comparison error it is meant to prevent.
+    fig, axes = plt.subplots(1, 2, figsize=(3.45, 1.78), sharex=True,
+                             gridspec_kw={"width_ratios": [1, 1]})
     ax = axes[0]
     ax.axvspan(-0.01, 0.01, color="0.88", zorder=0)
     ax.axvline(0, color="0.4", lw=0.7, zorder=1)
+    # The prescribed rules first, then the two solved maps. Keeping them on one
+    # axis is the point: every rule anyone has proposed sits inside the margin,
+    # and the map found by solving the same objective does not.
     names = [PLACEMENT_LABEL[k] for k in
              ["learned", "anti_oracle_grad", "oracle_grad", "saliency",
               "center", "random_fixed", "edge"]]
+    names += [OPTIMISED_LABEL["opt_transfer"], OPTIMISED_LABEL["opt_whitebox"]]
     by_rule = {n: [] for n in names}
     for label, d, lo, hi in rows:
         rule, attacker = label.rsplit(" (", 1)
-        by_rule[rule].append((attacker.rstrip(")"), d, lo, hi))
+        by_rule.setdefault(rule, []).append((attacker.rstrip(")"), d, lo, hi))
     for y, rule in enumerate(names):
         for (attacker, d, lo, hi), off, marker in zip(
-                by_rule[rule], (-0.17, 0.17), ("o", "s")):
+                by_rule.get(rule, []), (-0.17, 0.17), ("o", "s")):
             colour = "#2a6099" if attacker == "ResNet18" else "#b03030"
             ax.plot([lo, hi], [y + off, y + off], color=colour, lw=0.9, zorder=2)
             ax.plot([d], [y + off], marker, ms=2.6, color=colour, zorder=3)
@@ -192,8 +199,11 @@ def main() -> int:
     ax.set_xlabel(r"$\Delta$ Top-1 vs uniform", fontsize=6.4)
     ax.set_title("Allocation", fontsize=7)
     ax.tick_params(axis="x", labelsize=5.8)
-    ax.set_xlim(-0.045, 0.045)
-    ax.set_xticks([-0.04, 0.0, 0.04])
+    # Wide enough for the strongest contrast on either panel. The prescribed
+    # rules collapsing into the shaded margin at this scale is the finding,
+    # not a legibility problem.
+    ax.set_xlim(-0.235, 0.035)
+    ax.set_xticks([-0.20, -0.10, 0.0])
     # No legend: it collides with the widest interval whichever corner it goes
     # in, and the caption can carry two words.
 
@@ -214,8 +224,9 @@ def main() -> int:
     ax.set_xlabel(r"$\Delta$ Top-1 vs isotropic", fontsize=6.4)
     ax.set_title("Direction", fontsize=7)
     ax.tick_params(axis="x", labelsize=5.8)
-    ax.set_xlim(-0.26, 0.05)
-    ax.set_xticks([-0.2, -0.1, 0.0])
+    # sharex already fixes the range; setting it again here would silently
+    # move the left panel too.
+    ax.set_xticks([-0.20, -0.10, 0.0])
 
     for ax in axes:
         for side in ("top", "right"):

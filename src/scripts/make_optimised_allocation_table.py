@@ -170,7 +170,10 @@ def main() -> int:
         r"\begin{table}[t]", r"\centering",
         rf"\caption{{{caption}}}",
         rf"\label{{tab:optimised_allocation}}",
-        r"\footnotesize", r"\setlength{\tabcolsep}{1.6pt}",
+        # Seven columns do not fit an IEEE column at footnotesize; the
+        # manuscript's other placement tables use scriptsize for the
+        # same reason.
+        r"\scriptsize", r"\setlength{\tabcolsep}{1.1pt}",
         r"\begin{tabular}{lcccccc}", r"\hline",
         r"Condition & Top-1 $\downarrow$ & $\Delta$ & 95\% CI & $p$ "
         r"& $\Delta$ fresh & top-dec. \\",
