@@ -70,7 +70,7 @@ sections lost their restatements, and the paragraph on which queries an
 isotropic budget moves went to the extended report. The page returned to 13
 only on the eighth build, which is what a document at its ceiling costs.
 
-\paragraph{Verification state.} \textbf{521 claims verify against raw exports;
+\paragraph{Verification state.} \textbf{554 claims verify against raw exports;
 0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 395.
 The additions are Table~I and Table~II, which no checker had been asserting
 --- the two tables carrying the paper's central allocation results. Both were
@@ -83,7 +83,25 @@ committed tree, and every cell of the clip-pooling table is registered too.
 Both tables' intervals now draw from a stream seeded by the cell's own name, so
 an interval reproduces on its own rather than only as part of the sequence of
 draws that produced its table --- the first version of each disagreed with its
-recomputation in the third decimal for exactly that reason. 76 of the manuscript's 192 distinct three- and four-decimal
+recomputation in the third decimal for exactly that reason.
+
+\paragraph{Two released exports had been appended to twice.} Registering the
+tolerance calibration's derived statistics --- the gaps between six published
+segmenters, which is what defends the declared $0.05$ --- failed on the first
+run: recomputing from the released rows gave $0.0283/0.0339/0.1337$ where the
+supplement says $0.0257/0.0319/0.1255$. The paper was right and the file was
+wrong. The native-resolution rows carried \textbf{2{,}282 rows for 1{,}200
+(model, image) keys}: a re-run had appended rather than replaced, and one
+model's second pass stopped at 82 of 200 images, so its pooled ratio was skewed
+by partial double counting. The exporter's own analysis keeps the last row per
+key, which is why the summary it shipped was unaffected and the defect stayed
+invisible to every check. A scan of every released export under its full key
+found the same in the frontier's MSE-5.0 segmentation rows, and in the
+artifact's copy of them. All three are now one row per record, the artifact's
+manifest is regenerated, and the auditor deduplicates the way the exporter
+does. \emph{The lesson is narrow and worth keeping:} a summary computed by the
+same script that wrote the rows cannot detect that the rows were written
+twice. 76 of the manuscript's 192 distinct three- and four-decimal
 literals still carry no claim, most of them interval endpoints quoted beside a
 covered point estimate; the artifact README now says so in those words instead
 of asserting complete table coverage.
