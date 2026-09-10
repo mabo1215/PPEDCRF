@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import zlib
 import glob
 import os
 from collections import defaultdict
@@ -86,6 +87,14 @@ PLACEMENT_LABEL = {"learned": "learned support", "oracle_grad": "score-gradient"
                    "edge": "edge magnitude"}
 
 
+# A solved map is still a placement, so it is labelled as one; what separates
+# the two entries is only what the optimiser was allowed to see.
+OPTIMISED_LABEL = {
+    "opt_transfer": "solved, surrogates",
+    "opt_whitebox": "solved, attacker",
+}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--exports", default=str(REPO / "src" / "exports"))
@@ -107,8 +116,33 @@ def main() -> int:
             if name not in arms:
                 continue
             d, lo, hi = contrast(arms[name], ref, places,
-                                 abs(hash(name)) % 9999, args.n_boot)
+                                 zlib.crc32(name.encode()) % 9999,
+                                 args.n_boot)
             rows.append((f"{PLACEMENT_LABEL[name]} ({label})", d, lo, hi))
+
+    # The solved maps go on the same panel as the prescribed ones, because the
+    # whole point of the comparison is that they are the same axis given a
+    # different amount of search. Absent trees are skipped so the figure can be
+    # regenerated on a checkout that does not carry the run.
+    alloc_dir = ex / "optimised_allocation"
+    for label, stem, cond in [
+            ("ResNet18", "r1_r18_exp", "opt_transfer"),
+            ("ResNet18", "r1_r18_exp", "opt_whitebox"),
+            ("MixVPR", "r1_mix_exp", "opt_transfer"),
+            ("MixVPR", "r1_mix_exp", "opt_whitebox")]:
+        paths = sorted(alloc_dir.glob(f"{stem}*.csv"))
+        if not paths:
+            continue
+        arms = {}
+        for path in paths:
+            for key, val in per_query(str(path), "condition").items():
+                arms.setdefault(key, {}).update(val)
+        if cond not in arms or "uniform" not in arms:
+            continue
+        d, lo, hi = contrast(arms[cond], arms["uniform"], places,
+                             zlib.crc32(f"{stem}{cond}".encode()) % 9999,
+                             args.n_boot)
+        rows.append((f"{OPTIMISED_LABEL[cond]} ({label})", d, lo, hi))
 
     direction = []
     for label, path, cond in [

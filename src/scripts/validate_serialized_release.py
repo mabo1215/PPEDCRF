@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import zlib
 import io
 import json
 import sys
@@ -287,7 +288,7 @@ def main() -> int:
                        for s in serialisations):
                     continue
                 generator = torch.Generator().manual_seed(
-                    seed + abs(hash(qid)) % 100000)
+                    seed + zlib.crc32(qid.encode()) % 100000)
 
                 if condition == "isotropic":
                     # The operating-point control: same delivered budget, no
