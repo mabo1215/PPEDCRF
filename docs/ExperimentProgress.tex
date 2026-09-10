@@ -33,8 +33,7 @@ Earlier editions are in \texttt{docs/archived/}.}
 
 The active review is the tenth independent review in
 \texttt{docs/RevisionSuggestions.tex} (10 September 2026, IEEE TIFS, verdict
-\emph{minor revision}), findings R1--R7. \textbf{R2--R7 are closed; R1 is
-running on an RTX PRO~6000.} The cycle's substance is that the paper was
+\emph{minor revision}), findings R1--R7. \textbf{All seven are closed.} The cycle's substance is that the paper was
 reporting equivalence verdicts from point estimates while its own tables read
 intervals, and that the one table carrying the central negative claim had no
 intervals at all and was asserted by no checker. Both are now fixed, and
@@ -42,19 +41,20 @@ fixing the second changed what the table says: three pooled placement cells
 exclude zero, all three on the side that costs privacy, where the caption had
 said none was significant.
 
-\paragraph{Compute state.} \textbf{R1 is running on an RTX PRO~6000
-(96\,GB).} The clip-pooling attacker releases every frame of a query's clip
-and pools $k$ of them before ranking: 400 queries $\times$ 7 frames $\times$
-three conditions $\times$ three seeds, about 34{,}000 perturbation
-optimisations. It is sharded across 40 concurrent workers because the job is
-neither GPU-memory- nor CPU-bound but limited by how few kernels a single
+\paragraph{Compute state.} \textbf{Nothing is running; the PRO~6000 was shut
+down as soon as its rows were home.} R1 took about an hour of card time:
+57{,}024 rows over 384 queries, three conditions, four clip lengths and four
+poolings, across 40 concurrent workers. Forty rather than one because the job
+is neither GPU-memory- nor CPU-bound but limited by how few kernels a single
 worker keeps in flight --- one worker left the card at 30\% of its memory and
-the host at 12\% of its cores. Two lessons were paid for in wall clock: 16
-workers each parsing the 311\,MB manifest and building a 1.5\,GB gallery
-tensor at once thrashed the machine for twelve minutes with no output, which
-per-shard manifests and staggered starts fixed; and the neighbouring frames a
-clip needs were absent from every staged copy of MSLS, because each host holds
-only the images its existing manifests reference.
+the host at 12\% of its cores. Three things cost wall clock and are worth
+recording: 16 workers each parsing the 311\,MB manifest and building a
+1.5\,GB gallery tensor at once thrashed the machine for twelve minutes with no
+output, which per-shard manifests and staggered starts fixed; the neighbouring
+frames a clip needs were absent from every staged copy of MSLS, because each
+host holds only the images its existing manifests reference; and ten of the
+forty workers died during startup and had to be relaunched, which the runner's
+resume made cheap.
 
 \paragraph{Document state.} \texttt{main.pdf} \textbf{13 pages} against the
 13-page TIFS ceiling; abstract \textbf{243} words counting each math
@@ -70,7 +70,7 @@ sections lost their restatements, and the paragraph on which queries an
 isotropic budget moves went to the extended report. The page returned to 13
 only on the eighth build, which is what a document at its ceiling costs.
 
-\paragraph{Verification state.} \textbf{432 claims verify against raw exports;
+\paragraph{Verification state.} \textbf{521 claims verify against raw exports;
 0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 395.
 The additions are Table~I and Table~II, which no checker had been asserting
 --- the two tables carrying the paper's central allocation results. Both were
@@ -79,7 +79,11 @@ values: its $\Delta$ is a macro-average over the seven (benchmark, backbone)
 cells, not the pooled row average, which weights the six-backbone proxy six
 times as heavily as the 50-pair one and gives visibly different numbers. The
 placement rows now sit in \texttt{src/exports/} so the claim recomputes from a
-committed tree. 76 of the manuscript's 192 distinct three- and four-decimal
+committed tree, and every cell of the clip-pooling table is registered too.
+Both tables' intervals now draw from a stream seeded by the cell's own name, so
+an interval reproduces on its own rather than only as part of the sequence of
+draws that produced its table --- the first version of each disagreed with its
+recomputation in the third decimal for exactly that reason. 76 of the manuscript's 192 distinct three- and four-decimal
 literals still carry no claim, most of them interval endpoints quoted beside a
 covered point estimate; the artifact README now says so in those words instead
 of asserting complete table coverage.
@@ -96,8 +100,8 @@ if one is reintroduced and goes stale.
 \section*{Table 1: Open Work Against the Tenth Review}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.11\linewidth}p{0.56\linewidth}@{}}
-\caption{R1 is running; R2--R7 are closed. The two that changed what the paper
-claims are R2 and R3.}
+\caption{All seven are closed. The three that changed what the paper claims
+are R1, R2 and R3.}
 \label{tab:tifs10-open}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
@@ -108,13 +112,18 @@ claims are R2 and R3.}
 \midrule
 \endhead
 
-R1 & A frame-level defense for a video-level threat & \running & The
-clip-pooling attacker the extended report already runs against allocation,
-now run against the direction arm it never covered. Clips come from MSLS's own
-sequence metadata: all 400 queries carry it, 384 reach a full seven frames
-whose neighbours share the query's place label. Releasing every frame and
-pooling $k$ of them is the attack an uploaded video actually permits. On an
-RTX PRO~6000, 40 workers. \\
+R1 & A frame-level defense for a video-level threat & \done & The
+clip-pooling attacker the extended report already ran against allocation, now
+run against the direction arm it never covered. Pooling helps the attacker on
+every arm and recovers none of the frame-level result: mean pooling takes the
+direction from Top-1 $0.037$ to $0.057$ while its control goes
+$0.206\to0.234$, so the contrast \emph{widens} to $-0.177$ $[-0.234,-0.122]$
+place-clustered; the strongest pooling leaves the direction at $0.063$ against
+a control at $0.222$. Twenty-seven cells, every one significant on the
+clustered unit. Clips come from MSLS's own sequence metadata, so no new
+imagery was needed --- but the neighbouring frames themselves had to be
+shipped, since every staged copy of the dataset holds only what its manifests
+already reference. \\
 \addlinespace
 
 R2 & Equivalence verdicts read off point estimates & \done & The declared rule
