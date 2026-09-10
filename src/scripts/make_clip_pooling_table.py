@@ -17,6 +17,7 @@ import argparse
 import csv
 import glob
 import os
+import zlib
 from collections import defaultdict
 from pathlib import Path
 
@@ -71,10 +72,20 @@ def main() -> int:
     ap.add_argument("--n_boot", type=int, default=10000)
     args = ap.parse_args()
 
-    raw, cells = [], defaultdict(lambda: defaultdict(list))
+    # A row can appear twice: ten shards were relaunched after dying early and
+    # their replacements recomputed a few groups. The recomputation is not
+    # bit-identical -- the backward pass through the surrogates is not
+    # deterministic -- so these are two draws of the same condition rather
+    # than copies, and the export keeps the first.
+    raw, cells, seen = [], defaultdict(lambda: defaultdict(list)), set()
     for path in sorted(glob.glob(args.rows)):
         with open(path, newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
+                key = (r["query_id"], r["condition"], r["seed"],
+                       r["clip_len"], r["pooling"])
+                if key in seen:
+                    continue
+                seen.add(key)
                 raw.append(r)
                 cells[(r["condition"], int(r["clip_len"]), r["pooling"])][
                     r["query_id"]].append(float(int(r["correct_rank"]) == 1))
@@ -135,7 +146,13 @@ def main() -> int:
                 continue
             qs = sorted(set(arm) & set(ref) & set(pm))
             d = np.array([arm[q] - ref[q] for q in qs])
-            lo, hi = boot(d, np.array([pm[q] for q in qs]), args.n_boot, rng)
+            # A stream per cell, seeded from the cell's own name: an interval
+            # is then reproducible on its own rather than only as part of the
+            # sequence of draws that produced the whole table.
+            cell_rng = np.random.default_rng(
+                zlib.crc32(f"{pooling}|{cond}".encode()) & 0x7FFFFFFF)
+            lo, hi = boot(d, np.array([pm[q] for q in qs]), args.n_boot,
+                          cell_rng)
             try:
                 pv = float(wilcoxon(d).pvalue)
             except ValueError:

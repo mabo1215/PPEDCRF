@@ -33,6 +33,7 @@ import csv
 import glob as globmod
 import statistics
 import sys
+import zlib
 from collections import defaultdict
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence
@@ -1505,6 +1506,112 @@ for cid, printed, value, key in [
           6e-3, "icme2027_placement_msls",
           (lambda k: (lambda: _msls_placement_family().get(k)))(key),
           source=MAIN)
+
+
+# --- the clip-pooling study -------------------------------------------------
+# The threat model releases one frame; the scenario uploads video. Every cell
+# of that table is registered, read out of the generated file so the registry
+# cannot drift from what is printed, and recomputed from the released rows.
+CLIP_TAB = REPO / "paper" / "generated" / "tab_clip_pooling.tex"
+_CLIP: Dict[str, object] = {}
+
+
+def _clip_cells():
+    if _CLIP:
+        return _CLIP
+    rows = load("clip_pooling/per_query.csv")
+    if not rows:
+        return {}
+    cells: Dict[tuple, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list))
+    for r in rows:
+        cells[(r["condition"], int(r["clip_len"]), r["pooling"])][
+            r["query_id"]].append(float(int(r["correct_rank"]) == 1))
+    per = {k: {q: float(np.mean(v)) for q, v in d.items()}
+           for k, d in cells.items()}
+    common = set.intersection(*[set(v) for v in per.values()])
+    _CLIP["per"] = {k: {q: v for q, v in d.items() if q in common}
+                    for k, d in per.items()}
+    place = {}
+    for r in load("tifs_d6/*.csv"):
+        if "correct_place" in r:
+            place.setdefault(r["query_id"], r["correct_place"])
+    _CLIP["place"] = place
+    return _CLIP
+
+
+def _clip(cond: str, k: int, pooling: str, stat: str):
+    def go() -> Optional[float]:
+        c = _clip_cells()
+        if not c:
+            return None
+        per, place = c["per"], c["place"]
+        arm = per.get((cond, k, pooling))
+        if not arm:
+            return None
+        if stat == "top1":
+            return float(np.mean(list(arm.values())))
+        ref = per.get(("isotropic", k, pooling))
+        qs = sorted(set(arm) & set(ref) & set(place))
+        d = np.array([arm[q] - ref[q] for q in qs])
+        if stat == "delta":
+            return float(d.mean())
+        rng = np.random.default_rng(
+            zlib.crc32(f"{pooling}|{cond}".encode()) & 0x7FFFFFFF)
+        ids = np.array([place[q] for q in qs])
+        uniq, inv = np.unique(ids, return_inverse=True)
+        groups = [np.flatnonzero(inv == i) for i in range(len(uniq))]
+        draws = np.empty(10000)
+        for b in range(10000):
+            pick = rng.integers(0, len(groups), len(groups))
+            draws[b] = d[np.concatenate([groups[i] for i in pick])].mean()
+        lo, hi = np.percentile(draws, [2.5, 97.5])
+        return float(lo if stat == "ci0" else hi)
+    return go
+
+
+if CLIP_TAB.is_file():
+    _pooling, _key = None, {"isotropic control": "isotropic",
+                            "direction": "direction",
+                            "hardened direction": "hardened"}
+    for line in CLIP_TAB.read_text(encoding="utf-8").splitlines():
+        if "pooling:" in line:
+            _pooling = line.split("pooling:")[1].split("}")[0].strip()
+            _pooling = {"mean": "mean", "max": "max",
+                        "best frame": "best_frame"}.get(_pooling, _pooling)
+            continue
+        cols = [c.strip() for c in line.rstrip("\\").split("&")]
+        if _pooling is None or len(cols) != 7 or cols[0] not in _key:
+            continue
+        cond = _key[cols[0]]
+        for k, printed in zip((1, 2, 4, 7), cols[1:5]):
+            claim(f"Clip/{_pooling}/{cond}/k{k}", "Table tab:clip_pooling",
+                  printed, float(printed), 5e-5, "clip_pooling",
+                  _clip(cond, k, _pooling, "top1"), source=CLIP_TAB)
+        if cols[5] == "---":
+            continue
+        claim(f"Clip/{_pooling}/{cond}/delta", "Table tab:clip_pooling",
+              cols[5], float(cols[5].strip("$")), 5e-5, "clip_pooling",
+              _clip(cond, 7, _pooling, "delta"), source=CLIP_TAB)
+        _lo, _hi = cols[6].strip("$[]").split(",")
+        for _end, _printed in (("ci0", _lo), ("ci1", _hi)):
+            claim(f"Clip/{_pooling}/{cond}/{_end}", "Table tab:clip_pooling",
+                  cols[6], float(_printed), 3e-3, "clip_pooling",
+                  _clip(cond, 7, _pooling, _end), locator=cols[6],
+                  source=CLIP_TAB)
+
+# The four numbers the manuscript quotes from that table.
+for cid, printed, value, cond, k, pooling, stat in [
+        ("Clip/main/mean/delta", "$-0.177$", -0.177, "direction", 7, "mean",
+         "delta"),
+        ("Clip/main/mean/ci", "$[-0.234,-0.122]$", -0.234, "direction", 7,
+         "mean", "ci0"),
+        ("Clip/main/best/top1", "$0.063$", 0.063, "direction", 7,
+         "best_frame", "top1"),
+        ("Clip/main/best/control", "$0.222$", 0.222, "isotropic", 7,
+         "best_frame", "top1")]:
+    claim(cid, "\\S An attacker holding the clip", printed, value, 6e-4,
+          "clip_pooling", _clip(cond, k, pooling, stat), source=MAIN)
 
 
 # --------------------------------------------------------------------------
