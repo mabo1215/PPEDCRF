@@ -48,6 +48,19 @@ copy_file() {  # $1 = relative path under an export root, $2 = path inside resul
   cp "$src" "$dst"
 }
 
+# Same, but from src/exports/ only. Some families keep a raw run tree under
+# src/outputs/ as well, and it is not the released form: the clip runs hold
+# per-shard files with rows a relaunched shard recomputed, and the
+# purification run carries an internal column the export drops. The export is
+# what the manuscript's tables and the claim auditor read, so it is what the
+# bundle must ship.
+copy_released() {  # $1 = relative path under src/exports, $2 = path in results/
+  local src="$EXPORTS/$1" dst="results/$2"
+  [ -f "$src" ] || { echo "missing export file: $1 (looked in $EXPORTS)" >&2; exit 1; }
+  mkdir -p "$(dirname "$dst")"
+  cp "$src" "$dst"
+}
+
 echo "== collecting exports (CSV/JSON/status only; no images or weights) =="
 rm -rf results
 
@@ -115,6 +128,34 @@ copy_tree tifs_a8_mse60.0    release_boundary_mse60
 copy_tree tifs_a8_mse5.0     release_boundary_mse5
 copy_tree tifs_a6            adaptive_attacker_training
 copy_tree tifs_a6_eval       adaptive_attacker_eval
+
+# --- the tenth-review round: the two new attackers, the third dataset, the
+# --- second seed of the frontier, and the segmenter spread the mIoU
+# --- tolerance is calibrated against. The manuscript's clip and purification
+# --- paragraphs have no support in this bundle without these.
+copy_released clip_pooling/per_query.csv \
+              clip_pooling_resnet18/per_query.csv
+copy_released clip_pooling_mixvpr/per_query.csv \
+              clip_pooling_mixvpr/per_query.csv
+copy_released purification/per_query.csv \
+              purification/resnet18.csv
+copy_released purification/per_query_mixvpr.csv \
+              purification/mixvpr.csv
+copy_tree msls_clips              clip_manifest
+copy_tree segmenter_spread        segmenter_spread
+copy_tree segmenter_spread_native segmenter_spread_native
+copy_tree kitti360_rows           crossdataset_kitti360
+copy_tree placement_mixvpr_rows   placement_mixvpr
+copy_tree e1_msls_rows            placement_msls_rows
+copy_tree tifs6_vit               transfer_vit
+copy_tree tifs6_joint             utility_joint
+copy_tree tifs6_a5_s2             frontier_segmentation_seed2
+copy_tree tifs6_a8_mse5.0_s2      release_boundary_mse5_seed2
+copy_tree tifs6_a8_mse15.68_s2    release_boundary_mse15.68_seed2
+copy_tree tifs6_a8_mse60.0_s2     release_boundary_mse60_seed2
+copy_tree tifs6_a8_mse241.5_s2    release_boundary_mse241.5_seed2
+copy_tree tifs_a8_vitstart8       release_boundary_vit
+copy_tree tifs_a8_hi_vitstart8    release_boundary_vit_hi
 
 # --- EOT hardening: one file per condition, three seeds concatenated --------
 # The seeds were run as separate jobs, and one of them (ResNet18 seed 5678)

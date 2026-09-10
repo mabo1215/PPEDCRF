@@ -42,9 +42,10 @@ exclude zero, all three on the side that costs privacy, where the caption had
 said none was significant.
 
 \paragraph{Compute state.} \textbf{Nothing is running; the PRO~6000 was shut
-down as soon as its rows were home.} R1 took about an hour of card time:
-57{,}024 rows over 384 queries, three conditions, four clip lengths and four
-poolings, across 40 concurrent workers. Forty rather than one because the job
+down as soon as its rows were home, and its SSH port refuses connections.}
+R1 took about an hour of card time on each attacker: 57{,}024 rows over 384
+queries, three conditions, four clip lengths and four poolings, against
+ResNet18 and again against MixVPR, across 40 concurrent workers. Forty rather than one because the job
 is neither GPU-memory- nor CPU-bound but limited by how few kernels a single
 worker keeps in flight --- one worker left the card at 30\% of its memory and
 the host at 12\% of its cores. Three things cost wall clock and are worth
@@ -61,7 +62,7 @@ resume made cheap.
 expression as one word (window 150--250);
 \texttt{supplementary.pdf} \textbf{6 pages}, the SPS ceiling without
 Editor-in-Chief approval; \texttt{titlepage.pdf} 1 page; the extended evidence
-report, released with the code and not submitted, 12 pages. All four build with
+report, released with the code and not submitted, 14 pages. All four build with
 \textbf{0 undefined references, 0 undefined citations and 0 overfull boxes}.
 Table~I gained two interval columns and the manuscript gained a paragraph
 naming purification as the untested attack; both were paid for out of prose ---
@@ -70,7 +71,7 @@ sections lost their restatements, and the paragraph on which queries an
 isotropic budget moves went to the extended report. The page returned to 13
 only on the eighth build, which is what a document at its ceiling costs.
 
-\paragraph{Verification state.} \textbf{554 claims verify against raw exports;
+\paragraph{Verification state.} \textbf{624 claims verify against raw exports;
 0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 395.
 The additions are Table~I and Table~II, which no checker had been asserting
 --- the two tables carrying the paper's central allocation results. Both were
@@ -115,6 +116,18 @@ undefined references while the manuscript pointed at the wrong table. The
 manuscript now carries no literal S-number at all, and the check fails loudly
 if one is reintroduced and goes stale.
 
+\paragraph{The reviewer bundle was a round behind.} It shipped rows for none of
+the families added in the last two cycles, while its own README promised that
+every unscripted family's raw rows travel with it. Sixteen export trees were
+added --- both clip runs, both purification runs, the clip manifest, the ViT
+transfer, the KITTI-360 replication, the segmenter spread, the MixVPR
+placement rows and the second-seed frontier and release-boundary trees ---
+taking the manifest from 644 files to \textbf{743}. The clip and purification
+trees are copied from the committed exports rather than the raw run
+directories on purpose: the raw clip shards carry rows a relaunched shard
+recomputed, and the raw purification file carries an internal column the
+export drops, so the released form is the one the tables and the auditor read.
+
 \section*{Table 1: Open Work Against the Tenth Review}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.11\linewidth}p{0.56\linewidth}@{}}
@@ -141,7 +154,9 @@ a control at $0.222$. Twenty-seven cells, every one significant on the
 clustered unit. Clips come from MSLS's own sequence metadata, so no new
 imagery was needed --- but the neighbouring frames themselves had to be
 shipped, since every staged copy of the dataset holds only what its manifests
-already reference. \\
+already reference. Repeated against MixVPR on the same manifests, budgets and
+seeds: the direction still separates from zero under every pooling, $-0.035$
+to $-0.086$, so a clip does not undo this axis on either attacker. \\
 \addlinespace
 
 R2 & Equivalence verdicts read off point estimates & \done & The declared rule
@@ -179,7 +194,10 @@ purifier trained on the wrong release still recovers a quarter. The advantage
 over the control survives but more than halves, $-0.2083$ to $-0.0933$. The
 first purifier trained here learned the \emph{identity} --- its loss settled
 at exactly the value copying the input gives --- and its null would have been
-an artifact; the reconstruction check now gates the retrieval numbers. \\
+an artifact; the reconstruction check now gates the retrieval numbers. Against
+MixVPR the same attacker erases rather than halves: an advantage of $-0.0417$
+$[-0.083,-0.003]$ unpurified becomes $-0.0217$ $[-0.057,+0.012]$, an interval
+spanning zero. \\
 \addlinespace
 
 R7 & Presentation & \done & A sentence in the protocol section had lost its

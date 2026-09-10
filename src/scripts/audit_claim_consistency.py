@@ -732,6 +732,61 @@ for round_, iso, direction, delta in [
           _a7b(round_, "transfer_3", "delta"), locator=None)
 
 
+# --- the intervals beside the two held-out backbones ------------------------
+# The manuscript reads "both excluding zero" off these endpoints, so they carry
+# the claim rather than decorate it. The bootstrap here resamples places from a
+# per-cell seeded stream rather than replaying the analysis script's single
+# shared stream, so the endpoints land within a thousandth of the printed ones
+# instead of exactly on them; the tolerance is the same one every other
+# resampled endpoint in this registry is checked at.
+def _cluster_ci(tree: str, filename: str, cond: str, end: str, key: str):
+    def go() -> Optional[float]:
+        rows = load(f"{tree}/{filename}")
+        if not rows:
+            return None
+        per: Dict[str, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(list))
+        place: Dict[str, str] = {}
+        for r in rows:
+            per[r["condition"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+            place[r["query_id"]] = r["correct_place"]
+        m = {c: {q: float(np.mean(v)) for q, v in d.items()}
+             for c, d in per.items()}
+        arm, ref = m.get(cond), m.get("isotropic")
+        if not arm or not ref:
+            return None
+        qs = sorted(set(arm) & set(ref))
+        d = np.array([arm[q] - ref[q] for q in qs])
+        ids = np.array([place[q] for q in qs])
+        uniq, inv = np.unique(ids, return_inverse=True)
+        groups = [np.flatnonzero(inv == i) for i in range(len(uniq))]
+        rng = np.random.default_rng(zlib.crc32(key.encode()) & 0x7FFFFFFF)
+        draws = np.empty(10000)
+        for b in range(10000):
+            pick = rng.integers(0, len(groups), len(groups))
+            draws[b] = d[np.concatenate([groups[i] for i in pick])].mean()
+        lo, hi = np.percentile(draws, [2.5, 97.5])
+        return float(lo if end == "ci0" else hi)
+    return go
+
+
+for cid, tree, filename, key, printed, lo, hi in [
+        ("A7b/plain/ci", "tifs_a7b", "a7b_pnv_plain.csv", "pnv|plain",
+         "$[-0.2320,-0.1507]$", -0.2320, -0.1507),
+        ("A7b/eot/ci", "tifs_a7b", "a7b_pnv_eot.csv", "pnv|eot",
+         "$[-0.2530,-0.1716]$", -0.2530, -0.1716),
+        ("ViT/plain/ci", "tifs6_vit", "vit_plain.csv", "vit|plain",
+         "$[-0.0428,-0.0056]$", -0.0428, -0.0056),
+        ("ViT/eot/ci", "tifs6_vit", "vit_eot.csv", "vit|eot",
+         "$[-0.0662,-0.0066]$", -0.0662, -0.0066)]:
+    for end, value in (("ci0", lo), ("ci1", hi)):
+        claim(f"{cid}/{end}", "\\S The Other Axis (held-out backbones)",
+              printed, value, 3e-3, tree,
+              _cluster_ci(tree, filename, "transfer_3", end, key),
+              locator=printed, source=MAIN)
+
+
 # --- the segmenter spread that calibrates the mIoU tolerance ----------------
 # The declared tolerance is only meaningful against a reference scale, so it is
 # calibrated against six published segmenters scored on the same 200 images at
@@ -1599,65 +1654,77 @@ def _clip_cells():
     return _CLIP
 
 
-def _clip(cond: str, k: int, pooling: str, stat: str):
-    def go() -> Optional[float]:
-        c = _clip_cells()
-        if not c:
-            return None
-        per, place = c["per"], c["place"]
-        arm = per.get((cond, k, pooling))
-        if not arm:
-            return None
-        if stat == "top1":
-            return float(np.mean(list(arm.values())))
-        ref = per.get(("isotropic", k, pooling))
-        qs = sorted(set(arm) & set(ref) & set(place))
-        d = np.array([arm[q] - ref[q] for q in qs])
-        if stat == "delta":
-            return float(d.mean())
-        rng = np.random.default_rng(
-            zlib.crc32(f"{pooling}|{cond}".encode()) & 0x7FFFFFFF)
-        ids = np.array([place[q] for q in qs])
-        uniq, inv = np.unique(ids, return_inverse=True)
-        groups = [np.flatnonzero(inv == i) for i in range(len(uniq))]
-        draws = np.empty(10000)
-        for b in range(10000):
-            pick = rng.integers(0, len(groups), len(groups))
-            draws[b] = d[np.concatenate([groups[i] for i in pick])].mean()
-        lo, hi = np.percentile(draws, [2.5, 97.5])
-        return float(lo if stat == "ci0" else hi)
-    return go
+def _clip_family(cells_fn):
+    """Recompute one cell of a clip-pooling table from its released rows."""
+    def make(cond: str, k: int, pooling: str, stat: str):
+        def go() -> Optional[float]:
+            c = cells_fn()
+            if not c:
+                return None
+            per, place = c["per"], c["place"]
+            arm = per.get((cond, k, pooling))
+            if not arm:
+                return None
+            if stat == "top1":
+                return float(np.mean(list(arm.values())))
+            ref = per.get(("isotropic", k, pooling))
+            qs = sorted(set(arm) & set(ref) & set(place))
+            d = np.array([arm[q] - ref[q] for q in qs])
+            if stat == "delta":
+                return float(d.mean())
+            rng = np.random.default_rng(
+                zlib.crc32(f"{pooling}|{cond}".encode()) & 0x7FFFFFFF)
+            ids = np.array([place[q] for q in qs])
+            uniq, inv = np.unique(ids, return_inverse=True)
+            groups = [np.flatnonzero(inv == i) for i in range(len(uniq))]
+            draws = np.empty(10000)
+            for b in range(10000):
+                pick = rng.integers(0, len(groups), len(groups))
+                draws[b] = d[np.concatenate([groups[i] for i in pick])].mean()
+            lo, hi = np.percentile(draws, [2.5, 97.5])
+            return float(lo if stat == "ci0" else hi)
+        return go
+    return make
 
 
-if CLIP_TAB.is_file():
-    _pooling, _key = None, {"isotropic control": "isotropic",
-                            "direction": "direction",
-                            "hardened direction": "hardened"}
-    for line in CLIP_TAB.read_text(encoding="utf-8").splitlines():
+_clip = _clip_family(_clip_cells)
+
+
+def _register_clip_table(tab, make, prefix: str, label: str, tree: str):
+    """Register every cell of a generated clip-pooling table."""
+    if not tab.is_file():
+        return
+    pooling, key = None, {"isotropic control": "isotropic",
+                          "direction": "direction",
+                          "hardened direction": "hardened"}
+    for line in tab.read_text(encoding="utf-8").splitlines():
         if "pooling:" in line:
-            _pooling = line.split("pooling:")[1].split("}")[0].strip()
-            _pooling = {"mean": "mean", "max": "max",
-                        "best frame": "best_frame"}.get(_pooling, _pooling)
+            pooling = line.split("pooling:")[1].split("}")[0].strip()
+            pooling = {"mean": "mean", "max": "max",
+                       "best frame": "best_frame"}.get(pooling, pooling)
             continue
         cols = [c.strip() for c in line.rstrip("\\").split("&")]
-        if _pooling is None or len(cols) != 7 or cols[0] not in _key:
+        if pooling is None or len(cols) != 7 or cols[0] not in key:
             continue
-        cond = _key[cols[0]]
+        cond = key[cols[0]]
         for k, printed in zip((1, 2, 4, 7), cols[1:5]):
-            claim(f"Clip/{_pooling}/{cond}/k{k}", "Table tab:clip_pooling",
-                  printed, float(printed), 5e-5, "clip_pooling",
-                  _clip(cond, k, _pooling, "top1"), source=CLIP_TAB)
+            claim(f"{prefix}/{pooling}/{cond}/k{k}", f"Table {label}",
+                  printed, float(printed), 5e-5, tree,
+                  make(cond, k, pooling, "top1"), source=tab)
         if cols[5] == "---":
             continue
-        claim(f"Clip/{_pooling}/{cond}/delta", "Table tab:clip_pooling",
-              cols[5], float(cols[5].strip("$")), 5e-5, "clip_pooling",
-              _clip(cond, 7, _pooling, "delta"), source=CLIP_TAB)
-        _lo, _hi = cols[6].strip("$[]").split(",")
-        for _end, _printed in (("ci0", _lo), ("ci1", _hi)):
-            claim(f"Clip/{_pooling}/{cond}/{_end}", "Table tab:clip_pooling",
-                  cols[6], float(_printed), 3e-3, "clip_pooling",
-                  _clip(cond, 7, _pooling, _end), locator=cols[6],
-                  source=CLIP_TAB)
+        claim(f"{prefix}/{pooling}/{cond}/delta", f"Table {label}",
+              cols[5], float(cols[5].strip("$")), 5e-5, tree,
+              make(cond, 7, pooling, "delta"), source=tab)
+        lo, hi = cols[6].strip("$[]").split(",")
+        for end, printed in (("ci0", lo), ("ci1", hi)):
+            claim(f"{prefix}/{pooling}/{cond}/{end}", f"Table {label}",
+                  cols[6], float(printed), 3e-3, tree,
+                  make(cond, 7, pooling, end), locator=cols[6], source=tab)
+
+
+_register_clip_table(CLIP_TAB, _clip, "Clip", "tab:clip_pooling",
+                     "clip_pooling")
 
 # The four numbers the manuscript quotes from that table.
 for cid, printed, value, cond, k, pooling, stat in [
@@ -1671,6 +1738,61 @@ for cid, printed, value, cond, k, pooling, stat in [
          "best_frame", "top1")]:
     claim(cid, "\\S An attacker holding the clip", printed, value, 6e-4,
           "clip_pooling", _clip(cond, k, pooling, stat), source=MAIN)
+
+
+# The same study against the strong retriever. These rows carry their own
+# place labels, so the place-clustered interval does not have to borrow them
+# from another export the way the weak-attacker run does.
+CLIP_MIX_TAB = REPO / "paper" / "generated" / "tab_clip_pooling_mixvpr.tex"
+_CLIP_MIX: Dict[str, object] = {}
+
+
+def _clip_mix_cells():
+    if _CLIP_MIX:
+        return _CLIP_MIX
+    rows = load("clip_pooling_mixvpr/per_query.csv")
+    if not rows:
+        return {}
+    cells: Dict[tuple, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list))
+    place: Dict[str, str] = {}
+    for r in rows:
+        cells[(r["condition"], int(r["clip_len"]), r["pooling"])][
+            r["query_id"]].append(float(int(r["correct_rank"]) == 1))
+        place[r["query_id"]] = r["correct_place"]
+    per = {k: {q: float(np.mean(v)) for q, v in d.items()}
+           for k, d in cells.items()}
+    common = set.intersection(*[set(v) for v in per.values()])
+    _CLIP_MIX["per"] = {k: {q: v for q, v in d.items() if q in common}
+                        for k, d in per.items()}
+    _CLIP_MIX["place"] = place
+    return _CLIP_MIX
+
+
+_clip_mix = _clip_family(_clip_mix_cells)
+_register_clip_table(CLIP_MIX_TAB, _clip_mix, "ClipMix",
+                     "tab:clip_pooling_mixvpr", "clip_pooling_mixvpr")
+
+# The range the manuscript quotes across poolings on the strong retriever:
+# the smallest and largest separation from zero the direction still holds.
+for cid, printed, value, pooling in [
+        ("ClipMix/main/smallest", "$-0.035$", -0.035, "best_frame"),
+        ("ClipMix/main/largest", "$-0.086$", -0.086, "max")]:
+    claim(cid, "\\S An attacker holding the clip", printed, value, 6e-4,
+          "clip_pooling_mixvpr", _clip_mix("direction", 7, pooling, "delta"),
+          source=MAIN)
+
+# The supplement prints the same three deltas at full precision; registering
+# them there as well is what stops the rounded range in the manuscript and the
+# supplement's numbers from drifting apart from the table they both read.
+for cid, printed, value, pooling in [
+        ("ClipMix/supp/mean", "$-0.0391$", -0.0391, "mean"),
+        ("ClipMix/supp/max", "$-0.0859$", -0.0859, "max"),
+        ("ClipMix/supp/best", "$-0.0347$", -0.0347, "best_frame")]:
+    claim(cid, "\\S An Attacker Holding the Clip (supplement)", printed, value,
+          6e-5, "clip_pooling_mixvpr",
+          _clip_mix("direction", 7, pooling, "delta"), locator=printed,
+          source=SUPP)
 
 
 # --- the purification attack ------------------------------------------------
