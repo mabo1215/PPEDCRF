@@ -985,6 +985,119 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
      `paper/` 三份文档和 `src/` 未做任何修改，624 条 claim 仍全绿。
 
 
+## 第十一轮修订（2026-09-11，你批准 R1 + R5，vGPU 3090 有卡模式）
+
+522. 【已完成，不需要计算的十条里的七条】**R2、R3、R6、R8、R9、R11、R12 已全部落地到
+     `paper/main.tex` 和 `paper/supplementary.tex`，780 条 claim 仍然全绿。**
+     - **R2**：改掉了一句被自己数据推翻的话。原文"white-box bound is fragile to
+       every operator"——重算 13 个 transform 后，**4-bit 量化在两个攻击者上都几乎
+       没恢复**（ResNet18 0.0058，和不加变换一模一样；MixVPR 0.0067 对 0.0008），
+       ResNet18 上 median 也几乎没恢复（0.0075）。而且旁边两个区间各取自不同子集。
+       现在改成"对平滑和有损编码脆弱、对量化不脆弱"，并点名例外，
+       前后对比也统一到同一组 transform 上（0.007--0.71 → 0.018--0.37）。
+     - **R3**：clean baseline 是 **0.2100**，不是 0.197（后者是 MSE 15.68 的
+       isotropic control）。Table IV 标题和 §III-G 都改了；§III-G 那句原来读成
+       "加噪声把检索抬到 clean 之上"，改对之后反而更干净（0.210 对 0.210）。
+     - **R6**：margin oracle 补进正文了。它是全研究里**最偏向"有利"的 placement
+       点估计**（Δ=−0.0083，query CI [−0.027,+0.009]，place CI [−0.026,+0.009]，
+       p=0.31，top-decile 0.649），而且是 §III-J 理论点名的那条规则。
+       连它都不分离，论证反而更强。
+     - **R8**：七个等价判定里那两个 negligible，**有一个是常数图和自己比**
+       （MixVPR 上 0.7800 对 0.7800、CI [0,0]、p=1.00）。正文两处 tally 都加了这句，
+       并说明非退化格实际只有一个达到 ±0.01。
+     - **R9**：§III-A 原来说"query 区间总是更窄"，和 §III-C 自己的 0.94--1.10× 矛盾，
+       现在按 family 分开写。KITTI-360 那句也加了分辨率说明（16 个 place 撑不起
+       ±0.012，实际约 ±0.04）。
+     - **R11**：ref.bib **48 → 63 条**。补了 KITTI-360、VOC、COCO、ImageNet、
+       spectral-residual saliency；MSLS 从 GitHub 仓库改成 CVPR 2020 那篇（key 没动）；
+       并补了 10 条 2023--2025（GeoCLIP、PIGEON、EigenPlaces、SALAD、AnyLoc、
+       IMPRESS、Lee&Kim ICCV23、Chelani CVPR23、DeepPrivacy2、GPTGeoChat）。
+       每条都用 Crossref/官方 proceedings 核过，没有臆造条目。
+     - **R12**：Table S5 标题原来把 `none` 数进"训练过的 transform"（说五个，实际四个）；
+       "W.b." 列其实是 hardened 白盒但没标——现在**拆成 unhardened / hardened 两列**，
+       正文 §III-G 引的 unhardened 区间和表终于对得上了。
+       Fig S2 换成了题注真正描述的那张（13 个 transform 带分隔线）。
+       p 值格式统一成一条规则（新增 `src/scripts/_pvalue.py`）。
+     - **两处 clean mIoU 不是四舍五入错误**：Table IV 的 0.6973 是**三次执行合并**
+       （0.69733338），补充材料的 0.6974 是单次执行（0.69735201）——
+       冻结分割器不是逐位确定的。补充材料现在把这句写明了，而不是留一个矛盾给读者。
+523. 【已完成】**R4：Table S5 登记进 auditor，claim 数 624 → 780。**
+     - 之前的判断有一处**是我错了**：八个留出 transform 的行**并没有**不在 reviewer 包里，
+       它们在 `results/transfer_table4/` 里（13 个 sanitizer 是列不是文件）。
+       评审文件已当场更正。
+     - 但底下压着一个**更糟的 bug**：`src/outputs/tifs_d6/` 现在只剩 `summary/*.json`，
+       而打包脚本只要那个目录存在就优先用它——**下次重建会把两张表背后的
+       每一行 per-query 数据都悄悄换成两个 JSON**。已改成只从 `src/exports/` 取，
+       并以 `preprocessing_13transform/` 这个读者能看懂的名字发布。包 743 → 751 个文件。
+     - README 那句"every cell of every table"改成了真话；
+       字面值覆盖率改成 auditor 的 `--coverage` 输出（当前：
+       `260 个字面值，231 有 claim，29 没有`），不再是 prose 里一个没人算的数。
+524. 【进行中】**R1：给 allocation 轴同样的搜索预算。**
+     - 新脚本 `src/scripts/run_optimised_allocation_study.py`：直接对 `w` 求解
+       （softplus 参数化 + Adam，每步投影回能量门 mean(w²)=1，逐帧 bisection 到
+       delivered MSE 15.68），目标函数、surrogate、步数都和方向臂一致。
+     - **一个必须记下来的设计发现（16 query 的 smoke test 逼出来的）**：
+       第一版让 `w` 对着**将要释放的那一次噪声实现**优化，Top-1 直接掉到 **0.000**。
+       这不是 placement 结果——`eps` 的符号是固定的，`w` 只要在符号不利的像素上
+       压到接近零，就等于**在挑符号**，而挑符号就是方向轴。
+       §III-J 的边际分析正好解释：只有 `w` 与 `eps` 独立时 allocation 才只进方差。
+     - 所以现在跑**两种 noise mode**：`expectation`（每步重采噪声，`w` 与实现独立，
+       这才是评审问的那条臂）和 `realised`（保留，作为关于符号的证据）。
+       **每张优化出来的图都在一条优化器没见过的噪声上再打一次分**（`_crossdraw`）——
+       真正的空间偏好会迁移，挑符号不会。
+     - 状态：6 个 job 在跑（两个攻击者 × 两种 mode），400 query × 3 seed。
+       **按项目的 3-seed 规则，现在的部分导出只用来决定要不要继续跑，不作结论。**
+525. 【进行中】**R5：Patch-NetVLAD 和 ViT-B/16 上补净化和 13 个 transform。**
+     4 个 job（两个攻击者 × plain/EOT）加 2 个净化 job。
+     ViT 那个 plain job 第一次被 OOM 打死（12 个进程抢一张卡，gallery embedding
+     是每个 job 的内存峰值），已加显存闸门重跑，launcher 现在就是它自己的恢复路径。
+526. 【进行中】**页数**：正文 14 页（上限 13）、补充材料 7 页（上限 6），
+     两个压缩任务在跑，目标 12 / 5，给还没回来的实验结果留出余量。
+     压缩用 auditor 当护栏——780 条 claim 每条都断言某个字面值仍在文中，
+     所以删到事实就会立刻红。
+
+
+527. 【R1 结果，会改论文结论】**"解出来"的 placement 图确实打得过 uniform。**
+     三个 job 已跑完（每个 400 query x 3 seed，两道闸门都精确成立：
+     delivered MSE 15.68、mean(w²)=1.000000）。
+     - **expectation mode（图看不到任何一次噪声实现，这才是 allocation 轴）**：
+       - ResNet18：uniform 0.2042 → **0.1492**，Δ=**−0.0550**
+         place CI [−0.084,−0.028]，p=3e-5；
+         **换一条优化器没见过的噪声、和那条噪声上的 uniform 配对**：−0.0392 [−0.068,−0.011]，p=3e-3。
+       - MixVPR：uniform 0.7867 → **0.6817**，Δ=**−0.1050** [−0.137,−0.075]，p=6e-11；
+         换噪声后 −0.0942 [−0.126,−0.066]，p=8e-10。
+       - 搜索预算加倍，效应也加倍（ResNet18 −0.083，MixVPR −0.194）。
+       - **两套独立实现算出同一组数**：我为这条臂写的分析，和论文里produce每一个
+         direction 数字的 `analyze_tifs_d6.compare()`，结果完全一致
+         （后者还给出 McNemar 精确 p：3.6e-10 / 9.5e-6 / 1.1e-14）。
+     - **realised mode（图看得到将要释放的那次噪声）**：ResNet18 上
+       opt_whitebox 把 Top-1 打到 **0.0025**（Δ=−0.2017，p=1.4e-18），
+       **但换一条噪声后是 +0.0025（p=0.89）——一点不剩。**
+       opt_transfer 同样：自己那条噪声上 −0.0750，换噪声 −0.0008（p=0.67）。
+       **这就是"挑符号"的证明**：允许 placement 图依赖扰动的实现，
+       它产生的巨大效应 100% 是那一次实现专属的，和空间位置无关。
+     - **对论文的影响**：结论里"Allocation over pixels buys nothing we can detect"
+       **按字面已经不成立**，必须改写。但 prescribed 规则的 null 一个字都不用动——
+       真正的结论变成更强的一句：**同样的信息，score-gradient 规则（拿攻击者梯度
+       renormalise）买到 −0.0008，把同一个目标解出来买到 −0.0550。
+       失败的是启发式，不是这条轴。** 而且不是"集中度"的问题——
+       margin-gradient 规则的 top-decile 是 0.649，比解出来的图（0.555）还集中。
+     - **还差最后一个数**：`opt_transfer`（expectation mode，不给攻击者访问权）。
+       它决定论文主张的最终形态。跑完之前不写任何一版进论文。
+528. 【已完成】**补充材料回到 6 页**（0 overfull、0 undefined、799 条 claim 全绿），
+     并且装进了 R7 要的那张表：正文中心负面结论的完整表格
+     （每条规则对 uniform、两种推断单位、每格的判定），
+     还把 margin oracle 和它的逆一起放了进去。
+     - 腾出空间的办法：**删掉 Fig S2**。它画的就是正下方那张表的 Δ 列，
+       而那张表现在还多两列白盒界——删图不损失任何证据，换来的是
+       审稿人原本根本无法核对的主证据。
+     - 压缩把 prose 砍掉 9%（主要是 operator 一节里重复它自己公式的段落），
+       没有动任何公式、常数或 hedge。
+     - 顺带修掉两个我自己的错：那个 overfull 其实在 KITTI 表里（252pt 的栏宽塞了
+       256.9pt 的表），不在正文；还有一处 `\ref` 我本意指"边际分析"，
+       却静默解析到了补充材料的 Jacobian 一节——**编译零 undefined，
+       所以这类错才会活下来**。
+
 # 遗留问题
 
 - **【无需决策，R1 已完成】** 结果已拉回本地并写进论文（`src/exports/clip_pooling/`，
@@ -996,16 +1109,16 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 - **【无需决策，本轮无待办】** 第十轮 R1--R7 全部闭合，三份文档都在页数上限之内，
   624 条 claim 全绿，reviewer 包已重建。
 
-- **【等你决定，第十一轮评审已出】** 评审结论是 **Major revision**，12 条，
-  10 条不需要新计算。**需要你拍板的只有两件事**：
-  1. **R1（optimised-allocation 臂）跑不跑？** 这是唯一可能改结论的一条，
-     需要一次 GPU run（规模约等于一个 direction-transfer condition）。
-     我的建议是跑——按 §III-J 的一阶论证它多半也打不过 uniform，
-     那样论文核心主张会从"匹配失真"升级成"失真和搜索预算都匹配"，明显更强。
-     A: 需要  vGPU 有卡模式已开
-  2. **R5（Patch-NetVLAD / ViT 上补净化和 JPEG-50）跑不跑？** 很小的一次 run，
-     split、denoiser、release、评估脚本全都现成。不跑的话摘要和结论的领句
-     必须按"仅对所测强度的检索器成立"重写。
-     A: 需要  vGPU 有卡模式已开
-  剩下 10 条（R2--R4、R6--R12）我可以直接开始改，不需要你答复——
-  说一声就进入第十一轮修订。
+- **【已回答，正在执行】** 第十一轮评审的两个问题你都答了"需要"，两个实验都已在
+  vGPU 3090 上开跑（12 个 screen，48G 显存打满，100% 利用率）。
+  R1 的设计中途改过一次，原因写在第 524 条：让 placement 图看着自己的噪声实现优化
+  会变成"挑符号"，那是方向轴不是分配轴，所以现在跑两种 noise mode 并加了
+  cross-draw 对照。**按 3-seed 规则，跑完之前不写任何结论进论文。**
+
+- **【无需决策】** 剩下 10 条评审意见（R2--R4、R6--R12）已全部落地，780 条 claim 全绿。
+  正文和补充材料正在压缩到 12 / 5 页，给实验结果留余量。
+
+- **【跑完之后我会做的事，不需要你答复】**
+  1. 拉回结果 → 生成表和图 → 写进论文 → 重跑 auditor → 重编译核页数；
+  2. **vGPU 3090 关机**（你要求的，避免扣费）；
+  3. 再走一遍全文检查，把 12 条评审意见逐条对照确认。
