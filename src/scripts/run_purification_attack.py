@@ -246,24 +246,31 @@ def main() -> int:
     resize_hw = (args.height, args.width)
     gallery_ids = sorted(gallery)
     place_of = {g: gallery[g]["place_id"] for g in gallery_ids}
-    gallery_tensor = torch.stack(
-        [load_image(gallery[g]["path"], resize_hw) for g in gallery_ids])
 
     names = [args.eval_backbone] + [b for b in args.surrogates
                                     if b != args.eval_backbone]
+    # Building releases needs the surrogates and nothing else. Embedding a
+    # 2,000-image gallery in every cache-building worker is the difference
+    # between a job that shares one card comfortably and one that thrashes it.
+    if args.build_only:
+        names = [b for b in names if b != args.eval_backbone]
     embedders, sizes, ev_gal = {}, {}, None
     for b in names:
         cfg = RetrievalConfig(backbone=b,
                               input_size=default_input_size_for_backbone(b))
         e = make_default_embedder(cfg).eval().to(device)
         if b == args.eval_backbone:
+            gallery_tensor = torch.stack(
+                [load_image(gallery[g]["path"], resize_hw)
+                 for g in gallery_ids])
             g = embed_gallery_batched(cfg, e, gallery_tensor,
                                       batch=args.gallery_batch)
             ev_gal = (g / g.norm(dim=-1, keepdim=True).clamp_min(1e-12)).to(device)
+            del gallery_tensor
         embedders[b], sizes[b] = e, cfg.input_size
         torch.cuda.empty_cache()
         print(f"[purify] {b} ready", flush=True)
-    surrogates = [b for b in names if b != args.eval_backbone]
+    surrogates = [b for b in args.surrogates if b != args.eval_backbone]
 
     cache_root = Path(args.cache)
     mine = (lambda rs: [r for i, r in enumerate(rs)
