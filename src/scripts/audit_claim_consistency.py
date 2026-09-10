@@ -1614,6 +1614,101 @@ for cid, printed, value, cond, k, pooling, stat in [
           "clip_pooling", _clip(cond, k, pooling, stat), source=MAIN)
 
 
+# --- the purification attack ------------------------------------------------
+# Read out of the generated table so the registry cannot drift from what is
+# printed, and recomputed from the released rows.
+PURIFY_TAB = REPO / "paper" / "generated" / "tab_purification.tex"
+_PURIFY: Dict[str, object] = {}
+
+
+def _purify_cells():
+    if _PURIFY:
+        return _PURIFY
+    rows = load("purification/per_query.csv")
+    if not rows:
+        return {}
+    cells: Dict[tuple, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list))
+    place: Dict[str, str] = {}
+    for r in rows:
+        cells[(r["condition"], r["purifier"])][r["query_id"]].append(
+            float(int(r["correct_rank"]) == 1))
+        place[r["query_id"]] = r["correct_place"]
+    _PURIFY["per"] = {k: {q: float(np.mean(v)) for q, v in d.items()}
+                      for k, d in cells.items()}
+    _PURIFY["place"] = place
+    return _PURIFY
+
+
+def _purify(condition: str, purifier: str, stat: str, ref: str = ""):
+    def go() -> Optional[float]:
+        c = _purify_cells()
+        if not c:
+            return None
+        per, place = c["per"], c["place"]
+        arm = per.get((condition, purifier))
+        if not arm:
+            return None
+        if stat == "top1":
+            return float(np.mean(list(arm.values())))
+        base = per.get((condition, ref or "none"))
+        if not base:
+            return None
+        qs = sorted(set(arm) & set(base))
+        d = np.array([arm[q] - base[q] for q in qs])
+        if stat == "delta":
+            return float(d.mean())
+        rng = np.random.default_rng(
+            zlib.crc32(f"{condition}|{purifier}".encode()) & 0x7FFFFFFF)
+        ids = np.array([place[q] for q in qs])
+        uniq, inv = np.unique(ids, return_inverse=True)
+        groups = [np.flatnonzero(inv == i) for i in range(len(uniq))]
+        draws = np.empty(10000)
+        for b in range(10000):
+            pick = rng.integers(0, len(groups), len(groups))
+            draws[b] = d[np.concatenate([groups[i] for i in pick])].mean()
+        lo, hi = np.percentile(draws, [2.5, 97.5])
+        return float(lo if stat == "ci0" else hi)
+    return go
+
+
+if PURIFY_TAB.is_file():
+    _row_key = {"clean (unperturbed)": ("clean", "none"),
+                "isotropic control": ("isotropic", "none"),
+                "direction": ("direction", "none"),
+                "hardened direction": ("hardened", "none")}
+    _pending = None
+    for line in PURIFY_TAB.read_text(encoding="utf-8").splitlines():
+        cols = [c.strip() for c in line.rstrip("\\").split("&")]
+        if len(cols) != 5:
+            continue
+        if cols[0] in _row_key:
+            _pending = _row_key[cols[0]]
+            claim(f"Purify/{_pending[0]}/{_pending[1]}/top1",
+                  "Table tab:purification", cols[1], float(cols[1]), 5e-5,
+                  "purification", _purify(*_pending, "top1"),
+                  source=PURIFY_TAB)
+            continue
+        if not cols[0].startswith("\\quad") or _pending is None:
+            continue
+        _cond = _pending[0]
+        _pur = "direction" if "wrong release" in cols[0] else _cond
+        claim(f"Purify/{_cond}/{_pur}/top1", "Table tab:purification",
+              cols[1], float(cols[1]), 5e-5, "purification",
+              _purify(_cond, _pur, "top1"), locator=cols[1],
+              source=PURIFY_TAB)
+        claim(f"Purify/{_cond}/{_pur}/delta", "Table tab:purification",
+              cols[2], float(cols[2].strip("$")), 5e-5, "purification",
+              _purify(_cond, _pur, "delta"), locator=cols[2],
+              source=PURIFY_TAB)
+        _lo, _hi = cols[3].strip("$[]").split(",")
+        for _end, _printed in (("ci0", _lo), ("ci1", _hi)):
+            claim(f"Purify/{_cond}/{_pur}/{_end}", "Table tab:purification",
+                  cols[3], float(_printed), 3e-3, "purification",
+                  _purify(_cond, _pur, _end), locator=cols[3],
+                  source=PURIFY_TAB)
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
