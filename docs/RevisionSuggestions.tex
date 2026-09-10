@@ -11,7 +11,7 @@
 \setlength{\headheight}{14pt}
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{Independent academic review for IEEE TIFS --- ninth cycle}
+\lhead{Independent academic review for IEEE TIFS --- tenth cycle}
 \rhead{10 September 2026}
 \cfoot{\thepage}
 \setlength{\parindent}{0pt}
@@ -36,435 +36,593 @@
 
 \section{Review basis, scope, and overall recommendation}
 
-This is a fresh review of the current submission package against the IEEE TIFS
-author requirements and the standards a TIFS referee would apply. It does not
-use any previous review file, the project's progress notes, or any earlier
-completion judgment as input. Every statement was checked against the sources,
-the rendered PDFs, and --- where a claim needed testing --- against the
-released per-query exports and manifest metadata, recomputed independently.
+This review was written from the current submission package alone --- the
+compiled \file{main.pdf} (13 pages), \file{supplementary.pdf} (6 pages) and
+\file{titlepage.pdf}, read against their sources --- and from the released
+exports and verification artifact, which I re-executed. No previous review,
+progress document or completion claim was used as input. Where a judgement
+required a number that the documents do not print, I recomputed it from the
+released per-query rows; every such recomputation is reproduced in
+\S\ref{sec:verification} so the authors can repeat it.
 
-The reviewed main source is \file{paper/main.tex}, SHA-256 prefix
-\file{32903e34a6742ab8}, 13 pages. The supplement,
-\file{paper/supplementary.tex}, prefix \file{7dc4fdb4cee53734}, is six pages
-and carries ten tables. The bibliography holds 47 entries, all cited.
+\textbf{Overall recommendation: minor revision.} The contribution is
+appropriate for TIFS and the work is unusually careful: the protocol is
+stated before its results, the negative findings are reported with the
+qualifications that limit them, the mechanism's own defect is disclosed
+rather than hidden, and a reproducibility artifact accompanies the claims.
+Six of the seven findings below require no new computation --- they are
+corrections of statements the paper's own tables and exports contradict.
+One (\S\ref{rev:R1}) asks for one additional run on data already in hand.
 
-\textbf{Overall recommendation: minor revision.} The package is in good
-condition and the previous cycle's corrections hold: the second dataset's
-direction contrast now prints both the query-level and the place-clustered
-interval and the manuscript no longer claims an effect the clustered interval
-does not separate; all thirteen placement conditions are reported; the place
-count appears beside the query count.
+The reason this is not an accept-as-is is concentrated in
+\S\ref{rev:R2} and \S\ref{rev:R3}. The paper declares an inferential
+vocabulary in \S III-A and then applies a different one in the prose that
+states its central result; and the released artifact, whose whole purpose is
+to let a referee check the numbers, makes three mutually inconsistent claims
+about what it verifies. In a paper whose contribution \emph{is} auditing,
+these are not cosmetic.
 
-This review's findings concentrate on the same addition, because it is the
-newest evidence and it is now load-bearing. \textbf{The second dataset's null is
-reported without a clean baseline or any demonstrated-power control.} Every
-null in the paper on the first dataset is anchored by a clean Top-1 and by a
-white-box arm that collapses it, so the reader can see the measurement could
-have detected something. On KITTI-360 neither is reported: the exports contain
-only perturbed arms, no clean condition appears anywhere in either document,
-and the one arm that could serve as a positive control --- direction --- is
-precisely the one the last revision correctly marked as not separated under the
-prescribed unit. As it stands, ``the null replicates on a second dataset''
-rests on a benchmark whose sensitivity has not been shown.
+\subsection*{Summary of findings}
 
-Two further findings sit beside it. The new benchmark's place label is
-disclosed asymmetrically: the supplement reports that $100\%$ of positives
-within $25$\,m carry the query's label, and does not report that $1{,}211$ of
-the $1{,}816$ labelled positives --- two thirds --- lie \emph{beyond} that
-radius. And after four tables were moved to the extended report over the last
-two cycles, the supplement's opening paragraph no longer describes its own
-contents.
-
-None of this touches the first dataset's results, which remain well defended.
-The corrections are cheap: one clean pass on an existing manifest, one number
-printed beside another, and one paragraph rewritten.
-
-\subsection{Summary of the work}
-The paper asks whether visual location-privacy mechanisms buy protection
-through \emph{where} a bounded distortion budget is spent or through \emph{where
-the perturbation points}, and answers with a protocol that holds delivered
-distortion fixed while varying one axis at a time. On a place-labelled MSLS
-subset, against a weak and a strong retriever, no placement rule beats uniform
-spreading at the low-distortion operating point --- eight placement rules,
-three published-model placements, two gradient-guided placements and four
-operators, every difference within $\pm0.012$ Top-1 --- while a
-surrogate-optimised direction transfers to four held-out attackers at the same
-distortion. The paper decomposes the direction effect, measures its downstream
-cost against two motivated tolerances, repeats the utility measurement on the
-frames retrieval is scored on, audits the serialized release, evaluates two
-adaptive attackers, offers a conditional first-order account checked against a
-controlled model with a known Jacobian, and repeats both central contrasts on a
-second dataset built from KITTI-360 revisits.
-
-\subsection{Strengths worth preserving}
-\begin{itemize}
-\item The allocation null is defended on two datasets, two mechanism
-checkpoints, six attacker backbones, four operators and three published-model
-priors, and it survives recomputation under a clustered unit of inference on
-both. That is a well-supported negative result.
-\item The previous cycle's self-correction is exemplary and should be kept
-visible: a positive claim was withdrawn when the prescribed unit of inference
-did not support it, with the point estimate left unchanged and both intervals
-printed. Papers rarely show this.
-\item The instrumentation continues to earn its keep: 388 recomputed claims, a
-cross-document reference checker, and a table generator that now fails if a
-condition present in an export is missing from the table it renders.
-\item Inference is declared and followed: query as the unit with seeds averaged
-within it, a named primary family of four contrasts Holm-corrected, everything
-else labelled exploratory, and a $\pm0.01$ equivalence margin fixed before
-testing with ``no benefit detected'' distinguished from ``negligible''.
-\item The KITTI-360 construction records the two approaches that failed, which
-is what lets a reader judge whether the one that worked was a reasonable
-choice.
-\end{itemize}
-
-\section{Official submission requirements and package audit}
-
-\subsection{Policy baseline}
-A concise paraphrase of the official SPS instructions~\cite{spsauthors}:
-\begin{itemize}
-\item Initial regular papers: at most 13 double-column pages in 10-point type,
-references included.
-\item Abstract 150--250 words, self-contained, without abbreviations,
-references, footnotes or displayed equations.
-\item Single-anonymized review; ORCIDs; submission metadata matching the
-manuscript; EDICS selected.
-\item Supplementary material recommended to stay within six double-column
-pages; numbering unambiguous across manuscript and supplement.
-\item Originality, related-work and prior-submission disclosure.
-\end{itemize}
-TIFS additionally publishes reproducibility guidance for deep-learning
-submissions~\cite{tifsdl} and raises that expectation for negative results
-challenging published work~\cite{tifsscope}.
-
-\subsection{Observed compliance}
-\begin{longtable}{L{0.21\linewidth}L{0.71\linewidth}}
+\begin{longtable}{@{}L{0.055\linewidth}L{0.115\linewidth}L{0.60\linewidth}L{0.15\linewidth}@{}}
 \toprule
-Item & Current assessment \\
+\textbf{ID} & \textbf{Priority} & \textbf{Finding} & \textbf{New runs?} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Priority} & \textbf{Finding} & \textbf{New runs?} \\
 \midrule
 \endhead
-Main length & 13 pages including references. Compliant, at the ceiling. \\
-Supplement length & Six pages, ten tables, last page full. Compliant, with no
-slack --- which is the constraint behind R3. \\
-Abstract & 247 words; no abbreviations, citations, footnotes or displayed
-equations. Compliant. \\
-Numbering & Main Tables I--IV and Fig.~1; supplement S1--S10, Figs.~S1--S2. The
-manuscript carries no literal cross-document number and the checker reports
-none broken. Compliant. \\
-Formatting & IEEEtran journal, 10-point body, no scaled tables, nothing below
-\file{\textbackslash footnotesize} but mathematical scripts. Compliant. \\
-Availability & Compliant; the printed repository resolves without credentials
-and the supplement prints the identifier. \\
-Reproducibility statement & Compliant: hardware per family, framework and
-versions, compute, the adaptive-attacker recipe with split sizes, attacker and
-surrogate trunks with training sources. The second dataset's construction is
-documented in the supplement and its builder is released. \\
-Ethics / responsible use & Compliant. \\
-Bibliography & 47 entries, all cited. DOIs recorded in source; the mandated
-\file{IEEEtran.bst} does not typeset them, which is a property of the style. \\
-Author disclosure & Present. ORCIDs, EDICS and submission metadata remain the
-authors' task. \\
+R1 & Major & The deployment scenario is uploaded video; the defense and the
+attack are evaluated on single frames. The paper's own evidence base contains
+a multi-frame attacker, but it was run only against the allocation axis,
+never against the direction arm the paper recommends. & Yes --- one run,
+existing manifests \\
+\addlinespace
+R2 & Major & The equivalence margin declared in \S III-A is applied to
+intervals in the tables and to point estimates in the prose. By the declared
+rule, 2 of 7 placement cells per attacker are \emph{negligible} and 5 are
+\emph{no benefit detected}; the manuscript and supplement both say one cell
+is the exception. Table~I carries no intervals at all. & No \\
+\addlinespace
+R3 & Major & The released artifact states three different claim counts
+(395, 228, 153) and asserts a coverage it does not have. Table~I and
+Table~II are registered in neither checker. & No \\
+\addlinespace
+R4 & Moderate & \S III-G contradicts itself eight lines apart on the
+manuscript's own operating point (0.098 vs 0.110 mIoU), and the direction
+utility cost is quoted from a different execution in each of the two
+documents. & No \\
+\addlinespace
+R5 & Moderate & The placement taxonomy (eight? eleven? thirteen?) is
+counted three different ways in the abstract, \S III-B and the conclusion. & No \\
+\addlinespace
+R6 & Moderate & The adaptive attacker is a last-block fine-tune. Purification
+--- a learned or diffusion denoiser trained on released/clean pairs --- is
+the standard attack on this perturbation class and is neither run nor
+discussed. & Optional \\
+\addlinespace
+R7 & Minor & Presentation: a broken sentence in the protocol section, a
+$p=0.000$, one quantity printed two ways, a single figure in a 13-page
+paper, and no space reserved for the biographies TIFS requires. & No \\
 \bottomrule
 \end{longtable}
 
-\section{Major findings and required revisions}
+\section{Findings}
 
-\finding{R1}{Major}{The second dataset's null is reported without a clean
-baseline or any demonstrated-power control}
+\finding{R1}{Major}{A frame-level defense for a video-level threat, with the
+multi-frame attacker run on the other axis}
+
 \evidence
-A null result carries weight only in proportion to the demonstrated sensitivity
-of the measurement that produced it. On the first dataset the paper meets that
-standard carefully and repeatedly: clean Top-1 is quoted six times
-($0.21$ for ResNet18, $0.79$ for MixVPR, $0.867$ in the controlled model), the
-mechanism's own effect is shown against it, and a white-box arm collapses Top-1
-to $0.000$--$0.055$, which demonstrates the benchmark is attackable and that
-the protocol can register a large effect when one exists.
+The introduction motivates the work with dashcams, bodycams, drones and
+wearables --- devices that upload \emph{sequences}. The threat model then
+narrows to a single frame: ``the released object and the evaluated attack are
+frame-level'', and the supplement's reproducibility section confirms every
+retrieval number is computed from one query frame.
 
-On KITTI-360 none of this is present. The manuscript reports the uniform
-reference at $0.1512$ and the isotropic control at $0.1483$, and never states
-what an unperturbed query scores. The released exports confirm the gap is in
-the data and not merely in the prose: \file{kitti360\_rows/placement.csv}
-contains thirteen conditions, all of them perturbed placements, and
-\file{direction.csv} contains \file{isotropic} and \file{transfer\_3} only. No
-clean or raw condition was run, and no white-box arm was run.
+That narrowing is declared, so it is not concealed. But the paper's own
+evidence base already contains the attacker that tests it. The extended
+report runs a clip-pooling adversary over lengths $1,2,4,7$ with four pooling
+strategies including an oracle best-frame selector, 33{,}600 rows, and finds
+the allocation mechanism's advantage does not degrade with clip length. That
+study covers \texttt{raw}, \texttt{full} (the additive mechanism) and
+\texttt{global\_noise}. \emph{It does not cover the directional release} ---
+the arm this paper recommends, and the only arm on which it detects privacy.
 
-The consequence is specific. A reader cannot tell whether $0.1512$ under
-uniform represents a small reduction from a clean $0.16$ or a large one from a
-clean $0.60$. If clean Top-1 on this benchmark were already near $0.15$ --- and
-a coarse place label over a 2{,}000-image gallery makes that possible --- then
-there was little retrieval to destroy, every placement would be
-indistinguishable from every other for want of anything to move, and the
-replication would demonstrate nothing about allocation. The paper's own
-sentence, ``that null replicates on a second place-labelled dataset'', would
-then be unsupported in the strong sense a referee reads it.
+The concern is specific rather than generic. The gallery-free direction
+pushes each frame away from \emph{its own} clean embedding, so the
+displacement direction is re-derived per frame and is not shared across a
+clip. Averaging $k$ released frames averages $k$ differently-oriented
+displacements while the location signal they perturb is common to all $k$;
+first-order, the perturbation's contribution to a mean-pooled query shrinks
+like $1/\sqrt{k}$ relative to a coherent one. An attacker who receives the
+video --- which the motivating scenario hands it --- may therefore recover a
+large part of what the frame-level number reports. The paper cannot leave a
+reader to guess whether the headline $0.197\to0.032$ survives $k=7$.
 
-The one arm that could have served as a positive control is the direction
-contrast, and the previous revision correctly established that it is not
-separated from zero under the prescribed clustered unit,
-$[-0.137,+0.021]$. So the benchmark currently has neither an anchor nor a
-demonstrated ability to detect an effect.
+This bears directly on the central comparison as well. If clip pooling
+recovers direction but not allocation, the paper's thesis needs the
+qualification; if it recovers neither, the thesis is materially stronger and
+the paper should say so.
 
-\action
-Run one clean pass over the same manifest, gallery and seeds --- no
-perturbation --- and report clean Top-1 for this benchmark wherever the
-perturbed levels are quoted, as is done for every other benchmark in the paper.
-This is minutes of work on hardware already used for these runs and needs no
-new data. Add a white-box arm on the same manifest if it is equally cheap: it
-is the power check the first dataset has and this one lacks, and it would show
-the benchmark can register a large effect. Then state the reading honestly: if
-clean Top-1 is well above the perturbed levels, the null is anchored and the
-replication claim stands; if it is not, say that the second dataset has too
-little retrieval to detect allocation effects and confine the replication claim
-accordingly.
+\action Run the clip-pooling attacker against the directional arms, using the
+machinery that already produced the extended report's sequence table.
+KITTI-360 is a video corpus whose frames are already local, and its
+place-labelled manifest is already built, so the natural run is: clip lengths
+$1,2,4,7$; mean, max and best-frame pooling; conditions \{isotropic control,
+surrogate direction, EOT-hardened direction\}; the existing three seeds and
+the same delivered MSE. Report Top-1 against clip length for each condition,
+with the place-clustered interval this benchmark requires, and state the
+result in one paragraph of \S III-E with the table in the supplement or the
+extended report. If pooling does recover the effect, say so and move the
+recommendation accordingly --- the paper has been willing to report against
+itself before and should be here.
 
-\acceptance
-Clean Top-1 is reported for the second dataset wherever perturbed levels are,
-and the replication claim is qualified by whatever that number shows.
+\acceptance A paragraph in \S III-E answering, with numbers, what a
+seven-frame mean-pooling attacker does to the direction arm, and a
+corresponding qualification (or its explicit absence) in the abstract and
+conclusion.
 
-\finding{R2}{Major}{The new benchmark's place label is disclosed
-asymmetrically}
+\finding{R2}{Major}{The declared equivalence vocabulary is not the one the
+prose uses, and the central table has no intervals}
+
 \evidence
-The supplement states that of the gallery frames within $25$\,m of a query,
-$100\%$ carry that query's label, and adds that ``the converse is permissive
---- a labelled positive may lie beyond $25$\,m, a place being a road stretch.''
-The magnitude of that converse is not given. From the manifest metadata:
-$605$ positives lie within $25$\,m and all $605$ share the label, while
-$1{,}211$ labelled positives lie beyond it. \textbf{Two thirds of what counts
-as a hit on this benchmark is farther from the query than the radius the
-agreement figure is computed against.}
+\S III-A fixes the vocabulary before any result: ``We call a difference
+negligible only when its interval lies inside a margin of $\pm0.01$
+Top-1\dots\ where an interval covers zero but is wider than the margin we say
+no benefit was \emph{detected} and give the interval.'' The generated tables
+obey this. Table~S6's caption states it explicitly and its verdict column is
+correct: on the strong attacker, \emph{two} cells are \emph{negligible} and
+\emph{five} are \emph{none det.}
 
-Reporting the exact figure in the strict direction and only an adjective in the
-permissive one is the kind of asymmetry a referee notices, and it matters here
-because it bears directly on R1: a permissive criterion inflates Top-1 for
-every condition equally, which is harmless for the paired contrasts the paper
-reads, but it also raises the floor and compresses the range in which any
-placement effect could show itself.
+The prose says the opposite. \S III-C: ``every difference from uniform is
+inside $|\Delta|\le0.012$, with the score-gradient cell the only one outside
+the $\pm0.01$ margin, so it is a no-benefit-detected rather than a
+negligible-effect verdict.'' The supplement repeats it: ``One cell, the
+score-gradient placement, falls outside the $\pm0.01$ margin without being
+significant, so it earns `none det.'\ not `negligible'.'' That sentence sits
+immediately above a table printing \emph{five} \texttt{none det.}\ rows. Both
+sentences apply the margin to the point estimate; the declared rule, and the
+table, apply it to the interval.
 
-The manuscript's treatment of the first dataset is the model to follow. There,
-the cluster label is audited against the geometry in both directions and both
-numbers are printed --- $99.3\%$ agreement at $25$\,m and $77.5\%$ at $10$\,m
---- with the shortfall named rather than characterised.
+The same substitution governs the weak-attacker result, which is the
+manuscript's primary placement claim: ``no placement differs significantly in
+any of the seven comparisons and every difference is inside $\pm0.01$ Top-1'',
+followed by seven point estimates and no intervals. Recomputing from
+\file{icme2027\_placement\_msls/final/per\_query.csv} on the paper's own
+procedure gives:
 
-\action
-Print both counts where the $100\%$ is printed: $605$ of $605$ within the
-radius carry the label, and $1{,}211$ labelled positives lie beyond it because
-a place is a road stretch. One clause. Then say what follows for the reading:
-the criterion is exact in the strict direction and permissive in the other, so
-absolute Top-1 is an upper bound and only the paired contrasts are
-interpretable --- which the supplement already says, but without the evidence
-that makes it concrete.
-
-\acceptance
-Both directions of the label audit are quantified wherever either is.
-
-\finding{R3}{Major}{The supplement's opening paragraph no longer describes its
-own contents}
-\evidence
-The supplement opens: ``This supplement carries the tables the manuscript's
-claims rest on \dots\ Material that supports those tables rather than the
-claims --- the matched-PSNR sweep's extensions, the white-box attacker's
-five-backbone extension, the sequence-length and proxy50 studies, the
-reference-targeted preprocessing table, the KITTI-360 unary diagnostic and the
-implementation notes --- is in the extended evidence report.''
-
-Neither sentence is now accurate. Over the last two cycles four tables were
-moved from the supplement to the extended report to make room:
-\begin{itemize}
-\item the per-rule placement study behind the manuscript's Table~I;
-\item the two-city E1 multi-backbone table;
-\item the white-box per-backbone table;
-\item the budget sweep table.
-\end{itemize}
-The first of these is the detail behind the paper's \emph{central negative
-result}. A referee who wants to see the per-rule numbers that Table~I pools ---
-the obvious thing to check --- is told by this paragraph that the supplement
-carries the tables the claims rest on, finds it does not, and is not told where
-it went except by a sentence four pages later. The inventory of what is in the
-extended report lists six items and none of the four that were added.
-
-Each individual pointer elsewhere in the supplement is correct: the sections
-that lost a table say so and name the extended report, and the extended report
-does contain all four, which I verified. The defect is confined to the opening
-paragraph, but that paragraph is what tells a reader how to use the two
-documents.
-
-\action
-Rewrite the opening to say what is where. Something close to: this supplement
-carries the tables the manuscript reaches most directly; the per-rule placement
-study behind Table~I, the two-city E1 table, the white-box per-backbone table
-and the budget sweep are in the extended evidence report, together with the
-material that supports those tables rather than the claims. The paragraph is
-already the right length; it needs to be true rather than longer.
-
-\acceptance
-A reader following the opening paragraph can predict which document holds any
-given table.
-
-\finding{R4}{Moderate}{The paper now owns both halves of a methodological
-lesson and states only the benign one}
-\evidence
-The manuscript reports, of the first dataset, that ``clustering the bootstrap
-on the 277 places rather than the 400 queries widens intervals by
-$1.08$--$1.25\times$ and moves no conclusion \dots\ as expected when $206$ of
-the $277$ places contribute a single query.'' On the second dataset, clustering
-widens the direction interval by $1.93\times$ and does move the conclusion,
-because 227 queries come from 16 places.
-
-Both statements are correct and both are in the paper. What is missing is the
-sentence connecting them, which is a genuine methodological contribution the
-work has earned: how much clustering costs is governed by queries per place,
-it is nearly free when most places contribute one query, and it can reverse a
-verdict when they contribute fourteen. A reader currently has to notice the
-two numbers pages apart and derive the rule.
-
-\action
-Add one sentence where the second dataset's clustered interval is reported,
-connecting it to the first dataset's $1.08$--$1.25\times$: the widening scales
-with queries per place, $1.44$ there against $14.2$ here, which is why the same
-procedure is nearly free on one benchmark and decisive on the other. It costs a
-line and converts an apparent inconsistency into a stated result.
-
-\acceptance
-The relationship between queries per place and the cost of clustering is stated
-once, where both numbers can be seen.
-
-\finding{R5}{Minor}{Two placement-set sizes, reconciled by the reader}
-\evidence
-The abstract and the first dataset speak of eight energy-matched placement
-rules; the second dataset reports thirteen. Both are correct --- the second run
-included the two margin-oracle rules and the three published-model priors as
-part of the same sweep --- but nothing says so, and a reader who counts is left
-to work out whether the sets differ or one is a superset.
-\action
-One clause where the second dataset's count first appears, naming what the
-thirteen contain relative to the eight.
-\acceptance
-The two counts are reconciled in the text.
-
-\finding{R6}{Minor}{Instrumentation scope, now correctly stated, is worth
-keeping correct}
-\evidence
-The artifact README now states that the checker covers every table cell in both
-documents plus registered prose figures, and that roughly a third of the
-manuscript's three- and four-decimal literals have no claim. That is accurate
-and was a correction made last cycle. The scope will drift again as numbers are
-added: the two conditions that went unreported for a cycle were invisible to a
-checker that verifies only what is declared, which is why the generator now
-reconciles its condition list against the export.
-\action
-No change now. When R1's clean baseline is added, register it as a claim in the
-same pass, so the newest and most load-bearing number on the second dataset is
-not the one outside the registry.
-\acceptance
-Any number added in response to this review is registered when it is printed.
-
-\section{Targeted analysis and experiment plan}
-
-One item needs computation and it is small; the rest is document work.
-
-\begin{longtable}{L{0.07\linewidth}L{0.27\linewidth}L{0.56\linewidth}}
+\begin{center}
+\footnotesize
+\begin{tabular}{lccccc}
 \toprule
-ID & Purpose & Minimal design and output \\
+Placement & $\Delta$ & query 95\% CI & place-clustered 95\% CI & widening & verdict at $\pm0.01$ \\
+\midrule
+anti-score-grad. & $+0.0025$ & $[-0.0025,+0.0075]$ & $[-0.0025,+0.0075]$ & $0.99\times$ & negligible \\
+learned support  & $+0.0008$ & $[+0.0000,+0.0025]$ & $[+0.0000,+0.0026]$ & $1.06\times$ & negligible$^{\dagger}$ \\
+fixed random     & $+0.0008$ & $[-0.0100,+0.0117]$ & $[-0.0095,+0.0111]$ & $0.95\times$ & none det. \\
+saliency         & $+0.0008$ & $[-0.0133,+0.0150]$ & $[-0.0142,+0.0168]$ & $1.09\times$ & none det. \\
+score-gradient   & $-0.0008$ & $[-0.0183,+0.0158]$ & $[-0.0184,+0.0156]$ & $1.00\times$ & none det. \\
+edge magnitude   & $+0.0050$ & $[-0.0142,+0.0250]$ & $[-0.0125,+0.0226]$ & $0.90\times$ & none det. \\
+centre bias      & $+0.0092$ & $[-0.0075,+0.0258]$ & $[-0.0078,+0.0267]$ & $1.03\times$ & none det. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\footnotesize $^{\dagger}$At this checkpoint the learned map is numerically the
+uniform map, so this pass is tautological: the condition and its control are
+the same perturbation. \normalsize
+
+Two consequences, and one of them is good news.
+
+\textbf{First, the equivalence claim is weaker than stated and should be
+restated, not defended.} With 400 query clusters the typical interval
+half-width is $0.015$--$0.018$; the study cannot certify a $\pm0.01$ margin
+and was never going to. Exactly one non-degenerate cell per attacker meets it.
+The honest statement is the one the tables already make: five of seven
+comparisons are \emph{no benefit detected} with intervals up to $\pm0.027$,
+and this is what the abstract's ``every difference within $\pm0.012$ Top-1''
+should be rewritten to reflect --- that phrase describes point estimates and
+will be read as an equivalence result. The paper should also report, as a
+descriptive statistic rather than a substituted margin, the smallest margin
+its data do certify: \textbf{$\pm0.027$ certifies every placement cell on
+both attackers and both units}. Since the direction effect it is contrasted
+against is $-0.165$, a $\pm0.027$ band still separates the two axes by a
+factor of six. The comparison the paper is actually making survives the
+correction comfortably; it is the wording that does not. Do not move the
+pre-registered margin --- it was fixed before testing and that matters ---
+but do report what the data certify beside it.
+
+\textbf{Second, the unit-of-inference question closes cleanly, and the paper
+should print that it does.} The manuscript applies place-clustering to the
+direction family and, on KITTI-360, shows that it decides a verdict there
+($1.93\times$ widening at 14.2 queries per place). It never applies it to the
+allocation family, which is the paper's central claim. The widening column
+above answers it: $0.90$--$1.09\times$, no verdict changed, on either
+attacker. One sentence closes a question a referee will otherwise ask, and it
+costs no compute --- the join is exact, the 400 query identifiers in the
+placement export match the 400 in the transfer export, 277 places, 206 of them
+singletons.
+
+\textbf{Third, Table~I carries no intervals, no $n$ and no verdicts.} It is
+the manuscript's primary allocation result and it prints fourteen point
+estimates and a caption asserting non-significance. A TIFS referee cannot
+assess a null from point estimates. Add the interval and the verdict, or
+replace the table with the figure recommended in \S\ref{rev:R7}.
+
+\action Correct the two prose sentences to match the tables; state the
+minimum detectable effect ($\approx0.017$ at this $n$) where the margin is
+declared; report the $\pm0.027$ certified margin as a descriptive statistic;
+add a sentence giving the place-clustered widening for the allocation family
+($0.90$--$1.09\times$, no verdict changed); and give Table~I intervals and
+verdicts on the same footing as Table~S6.
+
+\acceptance No sentence in either document assigns an equivalence verdict
+from a point estimate; Table~I carries intervals; the abstract's placement
+claim reads as ``no benefit detected'' with its interval, not as an
+equivalence.
+
+\finding{R3}{Major}{The reproducibility artifact contradicts itself about what
+it verifies}
+
+\evidence
+TIFS reviewers are directed to the artifact, and this one is good: the
+manifest verifies (644 files, all checksums match), the one-command path runs
+CPU-only in under a minute, and it passed here --- 228 claims, 0 mismatches.
+Three statements in its \file{README.md} are nevertheless wrong or mutually
+inconsistent:
+
+\begin{itemize}
+\item Line 5: ``It currently verifies \textbf{395} of them.'' The bundled
+verifier checks \textbf{228}.
+\item Line 142, in the same file: ``\file{verify\_claims.py} recomputes
+\textbf{228} claims'', followed by an explicit and accurate list of the
+families it does \emph{not} cover.
+\item Line 152: ``\file{audit\_claim\_consistency.py}, which checks all
+\textbf{153} manuscript claims''. That script currently registers 395.
+\end{itemize}
+
+Three counts for two checkers, none of which agrees with another. Worse, line
+7 asserts ``every cell of every table in the manuscript and the supplement is
+checked'', which line 142 then contradicts three paragraphs later --- and
+which is false for both checkers: \textbf{Table~I and Table~II are registered
+in neither}. I verified this two ways: the repository auditor's claim groups
+contain no entry for either table (it covers \texttt{tab:placement\_mixvpr},
+not \texttt{tab:placement}), and the artifact verifier checks the placement
+study as Top-1 \emph{levels} per checkpoint, not as the $\Delta$ column
+Table~I prints.
+
+For the record, both tables are \emph{correct}. I recomputed all eight rows of
+Table~II from \file{operator\_study/} and every cell reproduces exactly,
+including the $p$ column, which is a query-level Wilcoxon and not the McNemar
+$p$ stored beside it in the same CSV ($0.693\to0.69$, $0.833\to0.83$,
+$0.394\to0.39$, $0.513\to0.51$, $0.0082\to0.008$, $0.123\to0.12$,
+$0.0025\to0.003$, $7.9\times10^{-10}\to{<}0.001$). The defect is the coverage
+claim, not the numbers --- but a referee who checks the artifact and finds its
+own summary line unreliable will discount everything else it says.
+
+\action Make the artifact state one number per checker and only claims it can
+support: what the bundled command verifies, what the repository auditor
+additionally verifies, and --- explicitly --- that the registry is not a sweep.
+Register Table~I's $\Delta$ column and Table~II's cells with the repository
+auditor; both recompute from exports that are already released, and the
+recomputation for Table~II is eight lines. Update the stale ``153''.
+
+\acceptance Every count in the artifact README matches the checker it names,
+verified by running both; Table~I and Table~II each have registered claims;
+no sentence claims complete table coverage.
+
+\finding{R4}{Moderate}{A number that contradicts the table eight lines above
+it, and a measurement reported from two different runs}
+
+\evidence
+Two distinct problems, both in the utility discussion.
+
+\textbf{(a) A stale literal inside a self-contradicting paragraph.} \S III-G
+reads: ``\dots five straddle the line, among them the operating point's
+direction arm at Top-1 $0.041$ for a drop of $0.098$ $[0.047,0.144]$'' ---
+which matches Table~IV --- and then, eight lines later, ``This paper's
+operating point costs $0.110$ mIoU, more than twice even the generous
+tolerance.'' Table~IV gives $0.0981$ for the direction arm at MSE $15.68$ and
+$0.1906$ for the hardened one. No condition at that budget costs $0.110$. The
+literal predates the current frontier run: the same commit that introduced it
+also stated ``only three cells are admissible'' where the table now shows one.
+The conclusion the sentence draws survives the correction ($0.098$ is still
+about twice $0.05$), so this is a one-word fix --- but it is precisely the
+class of defect the paper's own auditing apparatus exists to prevent, and it
+sits in the paragraph that decides deployability.
+
+\textbf{(b) The same quantity from two executions, one per document.} The
+manuscript reports the direction's utility cost as $0.079$ AP and $0.055$ IoU,
+with the paired contrasts $-0.058$ AP ($p=6\times10^{-14}$) and $-0.048$ IoU
+($p=5\times10^{-9}$). Table~S8 reports $0.084$ and $0.060$, with $-0.063$ AP
+($p=3.3\times10^{-14}$) and $-0.053$ IoU ($p=4.7\times10^{-11}$). Both are
+real: running the repository's own paired analysis, the manuscript's numbers
+reproduce exactly from one export tree (per-image IoU $0.6835$, $\Delta$
+$-0.0483$, $p=4.71\times10^{-9}$) and the supplement's from another
+(per-image IoU $0.6787$, $\Delta$ $-0.0531$, $p=4.73\times10^{-11}$). The
+manuscript's bridging sentence --- ``the Supplementary Material reports both
+separately over three runs, which puts its direction row $0.005$ higher on
+both tasks'' --- is true only if ``row'' means the cost; the printed row value
+is $0.005$ \emph{lower}. A referee comparing the two documents sees two
+numbers for one measurement and an explanation that appears to have the sign
+backwards.
+
+Note also that only the supplement's tree contains the EOT-hardened arm, so
+it is the more complete of the two executions.
+
+\action Fix $0.110\to0.098$ (and check the sentence's ``more than twice''
+against the corrected value). Then quote \emph{one} execution in both
+documents --- the one carrying the hardened arm --- and state in the
+supplement that the direction perturbation is re-optimised per execution,
+with the observed run-to-run spread ($0.005$ IoU over the executions
+released) given once as a number rather than as a comparative clause.
+
+\acceptance No number in \S III-G disagrees with Table~IV; the direction
+utility cost has one value per metric across both documents, with the
+run-to-run spread reported explicitly.
+
+\finding{R5}{Moderate}{The placement taxonomy is counted three different ways}
+
+\evidence
+\S III-B constructs the set: ``six --- the learned map, a uniform control,
+spectral-residual saliency, Sobel edge magnitude, a centre-bias prior and a
+fixed random field --- \dots\ plus two from the attacker's own input
+gradients'', i.e.\ eight \emph{including} the uniform reference and
+\emph{including} the two gradient-guided rules. Table~I then prints seven
+$\Delta$ rows, being the eight minus the reference. \S III-C adds three
+published-model placements as a separate arm, and KITTI-360 uses ``thirteen
+\dots\ the eight of Table~I plus two margin oracles and three
+published-model priors'' --- which is consistent with the \S III-B
+definition.
+
+The abstract and the conclusion are not. The abstract: ``none of eight
+energy-matched placement rules --- two gradient-guided --- three
+published-model placements or four operators beats uniform spreading''; since
+uniform is one of the eight, this asks whether uniform beats itself, and the
+interposed em-dash clause makes the sentence hard to parse at all. The
+conclusion: ``Across eight placement rules, three driven by published
+segmentation models, two gradient-guided placements, two checkpoints\dots'',
+which reads as $8+3+2$ and double-counts the two gradient-guided rules
+already inside the eight.
+
+This matters more than a counting slip: the size of the placement family is
+the scope of the paper's central negative claim, and a referee tallying it
+will get 8, 11 or 13 depending on which sentence they read.
+
+\action Fix one taxonomy and use it verbatim in all five places (abstract,
+\S III-B, \S III-C, Table~I caption, conclusion). The clearest is: seven
+energy-matched placement rules compared against a uniform reference, of which
+two are gradient-guided; three further placements driven by published
+segmentation models; two margin oracles on the second dataset --- twelve
+comparisons against uniform in total, thirteen conditions with the reference.
+Rewrite the abstract sentence so the reference is not one of the things said
+not to beat itself.
+
+\acceptance The same count appears in every location, and each location says
+whether the reference is included.
+
+\finding{R6}{Moderate}{The adaptive attacker does not include purification}
+
+\evidence
+\S III-J is careful about what it tests and honest about what it does not:
+a frozen trunk with a fine-tuned last block, two attacker models, three
+mutually place-disjoint splits, and the observation --- which is a genuine
+methodological contribution --- that selecting on a floored metric
+manufactures a null. It closes by naming what remains untested: ``a fully
+unfrozen encoder, training data beyond this benchmark, or re-indexing at
+every optimisation step''.
+
+The omission a TIFS referee will name first is not on that list.
+\emph{Purification} --- training a denoiser on paired (released, clean)
+frames, or passing the release through a pretrained diffusion purifier before
+embedding --- is the standard attack on the perturbation class this paper
+recommends, and it is strictly stronger than the four hand-designed
+transforms of \S III-H, which the paper already shows recover most of the
+white-box bound. \S III-H's own result is the reason to expect purification to
+matter: if a $\sigma=2$ blur takes the unhardened direction to
+$\Delta=-0.0025$, a denoiser trained on the mechanism's output distribution
+should do considerably better, and the EOT hardening is optimised over
+exactly the four cheap transforms rather than over a learned one.
+
+The paper's ``an attacker who reads this paper can look for a ninth
+transform'' anticipates this in spirit, but a referee will want the named
+attack addressed rather than gestured at.
+
+\action Either (preferred) run one purification arm --- a small denoiser
+(e.g.\ DnCNN-scale) trained on the released/clean pairs of the training split
+already constructed for \S III-J, evaluated on the same held-out split
+against the hardened and unhardened releases --- or, if the compute is not
+available for this revision, add a paragraph to \S III-J that names
+purification as the untested attack, states why the four-transform result
+bounds nothing about it, and scopes the deployability claim accordingly. The
+first option is a small run: the splits, the releases and the evaluation
+harness all exist.
+
+\acceptance Purification appears by name in the manuscript, either with a
+measurement or as an explicitly scoped limitation carried into the
+conclusion.
+
+\finding{R7}{Minor}{Presentation and submission mechanics}
+
+\evidence and required fixes, in decreasing order of visibility:
+
+\begin{enumerate}
+\item \textbf{A broken sentence in the protocol section (p.\ 4).} ``For query
+$q_i$ we the correct-versus-hardest-negative margin is $m_i=\dots$'' --- a
+dangling ``we''. This is in the section that defines the paper's measurement,
+which is the worst place for it.
+
+\item \textbf{One figure in thirteen pages.} The only main-paper figure is
+the TikZ protocol schematic; the headline contrast --- allocation flat,
+direction moving --- is carried entirely by tables, with the one plot of a
+placement result in the supplement. A single two-panel figure would fix this
+and \S\ref{rev:R2} together: left panel, $\Delta$ against uniform for every
+placement with its interval and the $\pm0.01$ margin drawn; right panel, the
+direction contrasts on the same Top-1 axis. A referee then sees the paper's
+claim in one glance instead of assembling it from Table~I, Table~S6 and three
+paragraphs. It can replace Table~I rather than add to the page budget.
+
+\item \textbf{$p=0.000$} in the KITTI-360 table's white-box row. Print
+${<}0.001$; a $p$ of exactly zero is not a quantity. The same table mixes two-
+and three-decimal $p$ values ($0.798$ beside $1.00$).
+
+\item \textbf{One quantity printed two ways.} Clean mIoU appears as $0.6974$
+in \S III-G, $0.6973$ in Table~IV's caption and $0.6973$ in Table~S8, against
+a measured $0.697352$. Round once, everywhere.
+
+\item \textbf{The KITTI placement rows carry only query-level intervals}
+while the text claims ``none separates from zero under either unit''. The
+claim is almost certainly safe --- widening an interval that covers zero
+keeps it covering zero --- but the table prescribes the clustered interval
+for the direction row and then does not print it for the thirteen placement
+rows the sentence is about. Either print them or say in the caption why the
+query-level interval suffices for a null.
+
+\item \textbf{No space is reserved for biographies.} TIFS papers carry author
+biographies; the manuscript is at exactly 13 of 13 pages with none. Reserve
+the space now --- roughly half a column per author --- rather than
+discovering the overflow at acceptance.
+
+\item \textbf{Figure format.} Both supplement figures are 600\,dpi JPEG.
+Resolution is adequate, but line plots should be vector (PDF/EPS) for IEEE
+production; JPEG artefacts on thin lines and small text are visible at print
+size.
+\end{enumerate}
+
+\section{What the submission package already satisfies}
+
+Verified against the current IEEE TIFS author requirements, so the authors do
+not spend revision effort re-checking these:
+
+\begin{longtable}{@{}L{0.24\linewidth}L{0.20\linewidth}L{0.50\linewidth}@{}}
+\toprule
+\textbf{Requirement} & \textbf{Status} & \textbf{Measured} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Requirement} & \textbf{Status} & \textbf{Measured} \\
 \midrule
 \endhead
-E1 & Clean baseline and power (R1) & One unperturbed pass over the existing
-KITTI-360 manifest, gallery and seeds, reporting clean Top-1; a white-box arm
-on the same manifest if equally cheap. Register both as claims. Minutes on the
-hardware already used, no new data. \\
-E2 & Label audit (R2) & Print the two counts already in the manifest metadata,
-$605$ of $605$ within the radius and $1{,}211$ beyond it, where the $100\%$ is
-printed. No computation. \\
-E3 & Document map (R3) & Rewrite the supplement's opening paragraph to name
-which document holds which table. No computation. \\
-E4 & Statements (R4, R5) & Connect the two clustering factors; reconcile the
-two placement-set sizes. No computation. \\
+Main paper length & Satisfied & 13 pages, IEEEtran \texttt{[10pt,journal]} \\
+Abstract length & Satisfied & 234 words, counting each math expression as one
+word; no citations, footnotes or displayed math \\
+Supplementary length & Satisfied & 6 pages, the SPS ceiling without
+Editor-in-Chief approval \\
+Single-anonymized review & Satisfied & Author block and affiliations
+disclosed, as TIFS requires \\
+Keywords & Satisfied & Six index terms \\
+Bibliography & Satisfied & 47 entries, all cited; no cited key missing;
+\texttt{IEEEtran} style \\
+Cross-references & Satisfied & 0 undefined references and 0 undefined
+citations in all documents; no literal \texttt{Table~S$n$} in the manuscript,
+so nothing can go stale silently \\
+Typesetting & Satisfied & 0 overfull boxes in main, supplement and title page
+\\
+Figures present & Satisfied & All four referenced files exist; 600\,dpi \\
+Reproducibility artifact & Satisfied with caveat & Manifest verifies (644
+files); one-command check passes (228 claims, 0 mismatches); see
+\S\ref{rev:R3} for its coverage statements \\
+Ethics / data & Satisfied & Public datasets under their own terms; no imagery
+redistributed; responsible-use section present and specific \\
 \bottomrule
 \end{longtable}
 
-\textbf{Stopping rule.} A revision is complete when every benchmark reports the
-baseline against which its null is read, every audit figure is given in both
-directions, and the opening of each document describes that document.
+\section{What requires new computation, and what does not}
 
-\section{Presentation notes not tied to a finding}
-\begin{itemize}
-\item Table~S2's caption carries a great deal: query count, place count, seeds,
-frame gap, both intervals, the place-shape caveat. It is accurate but dense;
-splitting the construction detail into the section text, which already
-discusses it, would let the caption say what the table shows.
-\item The manuscript quotes the second dataset's direction contrast in the
-running text with both intervals, which is right, but the sentence is long
-enough that the clustered interval arrives after two subordinate clauses.
-Leading with it would match the paper's own conclusion about which unit binds.
-\item The supplement's KITTI-360 section and the manuscript's paragraph both
-explain the revisit construction. One of them can point at the other.
-\end{itemize}
-
-\section{File-level revision map}
-
-\begin{longtable}{L{0.23\linewidth}L{0.16\linewidth}L{0.51\linewidth}}
+\begin{longtable}{@{}L{0.06\linewidth}L{0.44\linewidth}L{0.44\linewidth}@{}}
 \toprule
-Target & Items & Completion evidence \\
+\textbf{ID} & \textbf{Work} & \textbf{Cost} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Work} & \textbf{Cost} \\
 \midrule
 \endhead
-\file{paper/main.tex} & R1, R4, R5 & Clean Top-1 for the second dataset quoted
-beside its perturbed levels; the clustering-cost relationship stated; the two
-placement-set sizes reconciled. \\
-\file{paper/supplementary.tex} & R1--R3 & Clean baseline in the second
-dataset's section; both label-audit counts printed; opening paragraph rewritten
-to map tables to documents. \\
-\file{paper/generated/tab\_kitti360.tex} & R1 & A clean row, or the clean level
-in the caption. \\
-\file{src/scripts/} & R1, R6 & The clean pass run and exported; the new number
-registered as a claim. \\
-\file{docs/progress.md} & all & Actual work recorded; this review's generation
-is not recorded as revision completion. \\
+R1 & Clip-pooling attacker against the direction arms & One GPU run. Existing
+manifests, existing releases, existing pooling code; KITTI-360 frames are
+already local. Comparable in size to a single direction-transfer condition. \\
+\addlinespace
+R2 & Correct the verdict language; add intervals to Table~I; report the
+certified margin and the clustered widening & None. The clustered intervals
+are computed in \S\ref{sec:verification} and can be pasted in. \\
+\addlinespace
+R3 & Reconcile the artifact's counts; register Table~I and Table~II & None.
+Both recompute from released exports. \\
+\addlinespace
+R4 & Fix $0.110$; unify the utility execution across the two documents & None. \\
+\addlinespace
+R5 & One taxonomy, five locations & None. \\
+\addlinespace
+R6 & Purification arm & One small GPU run \emph{or} one scoped paragraph. \\
+\addlinespace
+R7 & Presentation & None, except drawing the recommended figure. \\
 \bottomrule
 \end{longtable}
 
-\section{Final assessment}
+\section{Verification performed for this review}
+\label{sec:verification}
 
-The paper's central claim is in good shape and its handling of the last
-cycle's correction was better than most published work manages: a positive
-result was withdrawn when the paper's own unit of inference failed to support
-it, with the estimate left standing and both intervals printed. That episode
-should survive into the submitted version, because it is evidence about how the
-rest of the numbers were treated.
+Every quantitative statement above was recomputed from the released exports
+rather than read from the documents. The checks, so the authors can repeat
+them:
 
-What this review asks for is that the second dataset be held to the same
-standard as the first. On MSLS the paper never states a null without also
-stating what a clean query scores and showing, with a white-box arm, that the
-benchmark can be moved. On KITTI-360 it does both without either. That is not
-a claim that the replication is wrong --- the placement differences there are
-small and mutually consistent, and the direction point estimate matches MSLS in
-sign and size. It is that a referee cannot currently distinguish ``allocation
-does nothing on this dataset'' from ``this dataset had nothing to detect'', and
-one unperturbed pass over a manifest that already exists would settle it.
+\begin{enumerate}
+\item \textbf{Place-clustered re-analysis of the placement family.} Joined
+the 400 query identifiers of
+\file{src/exports/icme2027\_placement\_msls/final/per\_query.csv} and
+\file{src/exports/placement\_mixvpr\_rows/per\_query.csv} onto the
+\texttt{correct\_place} column of the \file{src/exports/tifs\_d6} exports
+(400/400 matched, 277 places, 206 singletons, 1.44 queries per place),
+averaged seeds within a query, paired against the uniform arm, and took a
+10{,}000-resample bootstrap over queries and over places. Widening
+$0.90$--$1.09\times$; no verdict changes; the smallest margin certifying every
+cell is $\pm0.027$ on both attackers and both units.
 
-The other two findings are disclosure rather than evidence: a label audit
-reported in one direction and characterised in the other, and an opening
-paragraph that has fallen out of step with a supplement reorganised twice
-around it. Both are minutes of work and both remove things a referee would
-otherwise have to discover.
+\item \textbf{Table~II re-derivation.} All eight rows recomputed from
+\file{src/exports/operator\_study/}; Top-1, $\Delta$ and the query-level
+Wilcoxon $p$ all reproduce. Noted that the $p$ printed is not the McNemar $p$
+stored in the same CSV, which is correct but undocumented.
 
-All findings above are open at the end of this review; none is claimed to have
-been addressed by writing this document.
+\item \textbf{Direction utility.} Ran the repository's own paired analysis on
+both utility caches; the manuscript's numbers reproduce from one and the
+supplement's from the other, as reported in \S\ref{rev:R4}.
 
-\begin{thebibliography}{9}
-\bibitem{spsauthors}
-IEEE Signal Processing Society, ``Information for Authors,'' official
-instructions for Transactions and Journals. Accessed 10 September 2026.\\
-\url{https://signalprocessingsociety.org/publications-resources/information-authors}
+\item \textbf{Artifact.} Ran the one-command check: manifest verified over 644
+files, 228 claims, 0 mismatches. Ran the repository auditor: 395 claims, 0
+mismatches. Listed the auditor's claim groups and confirmed that neither
+Table~I nor Table~II appears.
 
-\bibitem{tifsscope}
-IEEE Signal Processing Society, ``IEEE Transactions on Information Forensics
-and Security,'' scope and reproducibility guidance. Accessed 10 September
-2026.\\
-\url{https://signalprocessingsociety.org/publications-resources/ieee-transactions-information-forensics-and-security/ieee-transactions}
+\item \textbf{Coverage.} Of 192 distinct three- and four-decimal literals in
+the manuscript, 76 are not registered with either checker; the $0.110$ of
+\S\ref{rev:R4} is one of them, and is the only one of the load-bearing
+literals I sampled that fails to reproduce.
 
-\bibitem{tifsdl}
-IEEE TIFS Editorial Board, ``Guides for deep learning submissions,''
-reproducibility guidance. Accessed 10 September 2026.\\
-\url{https://signalprocessingsociety.org/sites/default/files/uploads/publications_resources/docs/Guidelines__deep_learning_submissions.pdf}
-\end{thebibliography}
+\item \textbf{Bibliography and floats.} 47 entries, 47 cited, no dangling
+keys; four table environments in the manuscript numbered I--IV; all
+\texttt{includegraphics} targets present.
+\end{enumerate}
+
+\section{Assessment}
+
+Setting the findings aside: this is a good paper, and the two Major items are
+about how it states what it measured rather than about what it measured. The
+protocol is the contribution and it is a real one --- holding delivered
+distortion fixed through the clamp, deriving every control from the same
+optimised perturbation, and separating the axes rather than comparing whole
+systems is the right design, and the paper applies it to its own testbed
+harshly enough to expose that testbed's map as a constant. The negative
+result is reported with the qualifications that bound it, the positive one
+with the four that limit it, and the paper repeatedly reports against its own
+thesis where the data say so.
+
+What holds it below the line at present is that the sentences a referee reads
+first --- the abstract's placement claim, the two ``one cell'' sentences, the
+operating point's utility cost --- are each contradicted by a table inside the
+same submission, and the artifact that exists to let a referee check this
+disagrees with itself about what it checks. None of that requires new
+science. R1 does require a run, and it is the one finding that could change a
+conclusion rather than a sentence: a defense motivated by uploaded video
+should be measured against an attacker that has the video.
 
 \end{document}

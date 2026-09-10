@@ -639,11 +639,74 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
      这类缺口审计器抓不到：**没登记的行是隐形的**，388/388 全绿时它并不存在。
 
 
+## 第十轮独立评审（2026-09-10，你触发：按 TIFS 要求重新评审并覆盖 RevisionSuggestions.tex）
+
+495. 【已完成】**第十轮评审已整段覆盖写入 `docs/RevisionSuggestions.tex`
+     （9 页，0 overfull、0 warning）。** 按协议：不用任何旧评审、进度文档或"已完成"
+     判断作输入，直接对 `main.pdf`/`main.tex`（13 页）、`supplementary`（6 页）审，
+     需要判断的地方**全部从导出重算**（重算过程写在评审最后一节，你可以逐条复跑）。
+     **结论：Minor revision。** 七条里六条不需要任何新计算。
+496. 【R1，Major —— 唯一需要跑实验的一条】**场景是"上传视频"，防御和攻击都只在单帧上评。**
+     - 论文自己的证据里**已经有多帧攻击者**（clip 长度 1/2/4/7、四种 pooling、
+       含 oracle best-frame，33,600 行），但**只跑了 allocation 那半**
+       （raw / PPEDCRF / global_noise），**从没跑过 direction**——
+       而 direction 是论文唯一测到隐私、并且拿去做推荐的那条臂。
+     - 担心是具体的：gallery-free 方向是**逐帧**从该帧自己的干净嵌入推开的，
+       k 帧的位移方向互不相同；mean-pooling 把 k 个不同朝向的位移平均掉，
+       而被扰动的地点信号是 k 帧共有的——一阶看，扰动的贡献相对相干信号
+       按 $1/\sqrt{k}$ 缩小。**拿到整段视频的攻击者可能把 0.197→0.032 收回相当一部分。**
+     - **便宜**：KITTI-360 本来就是视频、帧在本地、place manifest 已建好，
+       pooling 代码在扩展报告那套里就有。规模约等于一个 direction-transfer condition。
+497. 【R2，Major，不用算】**§III-A 声明的等价词汇，和正文实际用的不是同一套。**
+     声明是"区间落在 ±0.01 内才叫 negligible"，表格照做了（强攻击者表：
+     **2 个 negligible、5 个 none det.**），**但正文和补充材料都写"只有 score-gradient
+     那一格例外"**——补充材料那句话的正下方就是印着五个 none det. 的表。
+     我按论文自己的流程重算了七个对照（重算见评审 §6）：
+     - 只有 **2/7** 的区间落在 ±0.01 内，其中一个还是退化的（learned map 在该
+       checkpoint 上就是 uniform，等于自己跟自己比）；
+     - 400 个 query 下区间半宽典型 **0.015--0.018**，**这个样本量本来就证不出 ±0.01**；
+     - **能证出来的最小 margin 是 ±0.027**（两个攻击者、两种口径都成立），
+       而 direction 效应是 −0.165，**差 6 倍，结论完全站得住**——要改的是措辞不是结论。
+     - 顺带把悬着的问题关掉了：**allocation 家族做 place-clustered 只放宽 0.90--1.09×,
+       没有任何一格结论改变**（KITTI 上是 1.93×，那是 14.2 queries/place 的缘故）。
+     - 另外 **Table I 一个区间都没印**，这是论文最核心的否定性结果表。
+498. 【R3，Major，不用算】**可复现 artifact 自己对不上自己。**
+     同一个 README 里三个数：第 5 行"verifies **395**"、第 142 行"recomputes **228**"、
+     第 152 行"checks all **153** manuscript claims"。实测：打包的
+     `verify_claims.py` = **228 条 0 失配**，仓库里的 auditor = **395 条 0 失配**，153 是旧数。
+     第 7 行还写着"两份文档的每一个表格单元都被检查"，**这句是假的**——
+     **Table I 和 Table II 两个 checker 都没登记**。
+     （**这三个数里的 395 是我上一轮改进去的**：只改了那一行的数字，没读完整份文件。）
+     两张表本身是**对的**——我把 Table II 八行全部从导出重算，Top-1/Δ/p 全中，
+     其中 p 是 query-level Wilcoxon 而不是同一个 CSV 里存的 McNemar p（对，但没写明）。
+499. 【R4/R5/R6/R7，Moderate--Minor，除 R6 外都不用算】
+     - **R4**：§III-G 隔八行自相矛盾——先写"operating point 掉 0.098 [0.047,0.144]"
+       （和 Table IV 一致），再写"**This paper's operating point costs 0.110 mIoU**"。
+       0.110 **任何条件都对不上**，是旧 frontier 跑法留下的僵尸数字（同一个 commit 里
+       还写着"three cells admissible"，现在表里只有一格）。**结论不受影响**（0.098 也是 0.05 的两倍）。
+       另外 direction 的 utility 代价，**正文引的是一次执行、补充材料引的是另一次**
+       （0.6835/−0.0483/p=4.7e-9 对 0.6787/−0.0531/p=4.7e-11），两份数据都在仓库里、
+       都能复算，但正文那句"补充材料的 direction 行高 0.005"读起来方向是反的。
+     - **R5**：放置口径三个地方三种数法（8 / 8+3 / 8+3+2），摘要那句还让 uniform
+       和自己比。
+     - **R6**：自适应攻击者只做了最后一块微调，**purification（拿 released/clean 对
+       训一个去噪器）没做也没提**——这是对抗扰动这一类最标准的攻击，而 §III-H 自己
+       已经证明一个 σ=2 模糊就能把未加固的方向打到 −0.0025。跑或者明说，二选一。
+     - **R7**：p.4 有一句**断句**（"For query $q_i$ we the correct-versus-hardest-negative
+       margin is"）；13 页只有 1 张图（唯一那张还是流程示意图）；KITTI 表里 p=0.000；
+       clean mIoU 印成 0.6973 和 0.6974 两种；TIFS 要作者简介，**现在 13/13 页没给它留位置**。
+500. 【状态】论文本轮**未改动**：13 页 / 6 页 / 摘要 234 词 / auditor 395/395 /
+     artifact 228/228 / 跨文档引用 0 broken。评审只写评审，不算修改完成。
+
+
 # 遗留问题
 
-- 【无】第九轮评审 R1--R6 全部落地，**当前没有需要你决策、确认或补数据的事项**。
-  下一步按流程是再触发一次独立评审（`重新开始评审并生成评审修改意见`），
-  或者直接进入投稿准备。
-- 【备注，不阻塞】需要 GPU 的实验本轮同样没有出现：R1 的两臂在本机 3070 上跑完，
-  2c 与 vGPU 3090 都不需要开机。若下一轮评审要求第三个数据集或更大规模的
-  白盒扫描，那时才需要远程卡。
+- **【需要你决策，R1】KITTI-360 上加跑一次 clip-pooling 攻击者打 direction 臂。**
+  clip 长度 1/2/4/7 × mean/max/best-frame × {isotropic, direction, hardened}，
+  三个 seed，同样的 delivered MSE。**帧在本地、manifest 已建好、pooling 代码已有**，
+  规模约等于一个 direction-transfer condition（本机 3070 估计 1--2 小时）。
+  需要你说一句：**在本机跑，还是开远程卡？**
+- **【可选，R6】purification 攻击者**（拿 §III-J 已经切好的 train split 的
+  released/clean 对训一个小去噪器，在同一个 held-out split 上评）。
+  同样是小实验；如果不跑，就在 §III-J 里明写"purification 未测"并相应收窄部署主张。
+- 其余 R2--R5、R7 **不需要你决策、也不需要任何新计算**，随时可以开改。
