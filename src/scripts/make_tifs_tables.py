@@ -4,29 +4,54 @@ Every cell the paper quotes comes from `analyze_tifs_d6.py --json`, so the
 figure, the LaTeX tables and the prose cannot drift apart -- which they have
 twice in this repository's history.
 
+The summaries live under src/outputs/, which is gitignored, so a fresh
+checkout does not have them. The per-query rows they are built from do
+travel, under src/exports/tifs_d6/, and one command turns them back into the
+summaries:
+
+    python src/scripts/rebuild_tifs_d6_summaries.py
+
 Writes:
   paper/figs/fig_preprocessing_eot.pdf   trained and held-out transforms,
                                          unhardened against hardened
   paper/generated/tab_transfer.tex       the transfer ladder (manuscript Table II)
   paper/generated/tab_sanitize.tex       the full preprocessing table (supplement)
+
+`make_tifs_review_figures.py` writes a *different* figure to that same
+filename -- two panels over the trained transforms only, no held-out block --
+and that is the one currently in the supplement. Until the two are reconciled,
+pass --no_figure to regenerate the tables without disturbing it.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _pvalue import fmt_p_exponent as fmt_p  # noqa: E402
+
 BLUE, CONTEXT = "#2a78d6", "#c3c2b7"
 MUTED, INK, GRID = "#898781", "#0b0b0b", "#e6e5e0"
 COLUMN_IN = 3.5
 
-TRAINED = ["none", "jpeg75", "jpeg50", "blur", "denoise"]
+# Three groups, kept apart because a list called TRAINED that contains the
+# untransformed control is how the supplement's caption came to count five
+# transforms where the EOT expectation runs over four. The row order the
+# tables and the figure use is CONTROL + TRAINED + HELD_OUT; nothing else may
+# assume that the first element of TRAINED is the control.
+CONTROL = ["none"]
+TRAINED = ["jpeg75", "jpeg50", "blur", "denoise"]
 HELD_OUT = ["jpeg60", "jpeg30", "median3", "resize_half", "blur2",
             "bitdepth4", "random_one", "jpeg50_blur"]
+ROW_ORDER = CONTROL + TRAINED + HELD_OUT
+# Everything left of the figure's divider and above the tables' first rule.
+SEEN_AT_OPTIMISATION = len(CONTROL) + len(TRAINED)
 PRETTY = {"none": "none", "jpeg75": "JPEG-75", "jpeg50": "JPEG-50",
           "blur": "blur", "denoise": "denoise", "jpeg60": "JPEG-60",
           "jpeg30": "JPEG-30", "median3": "median", "resize_half": "resize",
@@ -39,14 +64,9 @@ def sig(cell):
     return cell["wilcoxon_p"] < ALPHA
 
 
-def fmt_p(p):
-    if p >= 0.01:
-        return "%.2f" % p
-    exp = 0
-    while p < 1 and p != 0:
-        p *= 10
-        exp += 1
-    return "$%.0f{\\times}10^{-%d}$" % (p, exp)
+def wb_cell(value):
+    """A white-box Top-1 cell, or a dash where the summary has no value."""
+    return "--" if value is None else "%.4f" % value
 
 
 def held_out_summary(csv_paths):
@@ -83,7 +103,7 @@ def figure(summaries, out):
         "xtick.color": MUTED, "ytick.color": MUTED, "axes.spines.top": False,
         "axes.spines.right": False, "axes.linewidth": 0.6, "pdf.fonttype": 42,
     })
-    order = TRAINED + HELD_OUT
+    order = ROW_ORDER
     fig, axes = plt.subplots(2, 1, figsize=(COLUMN_IN, 3.3), sharex=True)
     width = 0.38
     for ax, (name, s) in zip(axes, summaries):
@@ -92,7 +112,7 @@ def figure(summaries, out):
         har = [s["hardened"][k]["delta"] for k in order]
         floor = min(min(unh), min(har)) * 1.30
         ax.axhline(0, color=MUTED, lw=0.6, zorder=1)
-        ax.axvline(len(TRAINED) - 0.5, color=GRID, lw=1.0, zorder=0)
+        ax.axvline(SEEN_AT_OPTIMISATION - 0.5, color=GRID, lw=1.0, zorder=0)
         ax.bar([i - width / 2 - 0.02 for i in x], unh, width, color=CONTEXT,
                edgecolor="none", zorder=2, label="unhardened")
         ax.bar([i + width / 2 + 0.02 for i in x], har, width, color=BLUE,
@@ -110,10 +130,11 @@ def figure(summaries, out):
         ax.set_ylabel(r"$\Delta$ Top-1")
 
     # Region labels above the top panel, clear of everything else.
-    axes[0].text((len(TRAINED) - 1) / 2.0, 1.06, "hardened against these",
+    axes[0].text((SEEN_AT_OPTIMISATION - 1) / 2.0, 1.06,
+                 "hardened against these",
                  transform=axes[0].get_xaxis_transform(), ha="center",
                  va="bottom", fontsize=5.5, color=MUTED)
-    axes[0].text(len(TRAINED) + (len(HELD_OUT) - 1) / 2.0, 1.06,
+    axes[0].text(SEEN_AT_OPTIMISATION + (len(HELD_OUT) - 1) / 2.0, 1.06,
                  "never seen by the optimiser",
                  transform=axes[0].get_xaxis_transform(), ha="center",
                  va="bottom", fontsize=5.5, color=MUTED)
@@ -191,37 +212,53 @@ def transfer_table(summaries, held_out, out):
 
 
 def sanitize_table(summaries, out):
+    """The supplement's full preprocessing table.
+
+    Two things the caption has to get right, because a referee checks them
+    against the prose. First the counts: the first row is the untransformed
+    control, and the EOT expectation runs over the four transforms after it,
+    not five. Second the white-box column: the summary carries the bound under
+    both releases, and printing only the hardened one under an unqualified
+    heading contradicts the manuscript, which quotes the unhardened range. Both
+    are printed, each inside its own release's block.
+    """
     lines = [
         r"\begin{table}[t]", r"\centering",
         r"\caption{Every attacker-side transform, unhardened against",
-        r"EOT-hardened, on both attackers. The first five are the transforms",
-        r"the hardening was optimised over; the last eight it never saw.",
+        r"EOT-hardened, on both attackers. The first row is the untransformed",
+        r"control; the next four are the transforms the hardening was optimised",
+        r"over; the last eight it never saw.",
         r"$\Delta$ is against that row's own isotropic control, with a",
         r"query-cluster bootstrap interval; $\dagger$ marks a cell whose",
-        r"interval spans zero. ``W.b.'' is the white-box bound under the same",
-        r"transform.}",
+        r"interval spans zero. The two ``W.b.'' columns are the white-box bound",
+        r"under the same transform, one for the unhardened release and one for",
+        r"the EOT-hardened release.}",
         r"\label{tab:sanitize}",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{2pt}",
-        r"\begin{tabular}{llccccc}", r"\hline",
-        r" & & \multicolumn{2}{c}{Unhardened} & \multicolumn{2}{c}{EOT-hardened} & \\",
-        r"Attacker & Transform & Top-1 $\downarrow$ & $\Delta$ & Top-1 $\downarrow$ & $\Delta$ & W.b. \\",
+        r"\begin{tabular}{lcccccc}", r"\hline",
+        r" & \multicolumn{3}{c}{Unhardened} & \multicolumn{3}{c}{EOT-hardened} \\",
+        r"Transform & Top-1 $\downarrow$ & $\Delta$ & W.b. & Top-1 $\downarrow$ "
+        r"& $\Delta$ & W.b. \\",
         r"\hline",
     ]
-    order = TRAINED + HELD_OUT
+    titles = {"ResNet18": r"\textit{Weak attacker: ResNet18}",
+              "MixVPR": r"\textit{Strong attacker: MixVPR}"}
     for key, s in summaries:
         name = "ResNet18" if "ResNet18" in key else "MixVPR"
-        lines.append(r"\multirow{13}{*}{%s}" % name)
-        for k in order:
+        lines.append(r"\multicolumn{7}{l}{%s} \\" % titles[name])
+        for k in ROW_ORDER:
             u, h = s["unhardened"][k], s["hardened"][k]
-            wb = s["white_box"].get(k, {}).get("hardened")
+            wb = s["white_box"].get(k, {})
             mark = "" if sig(u) else r"$^\dagger$"
-            sep = r"\cline{2-7}" if k == "denoise" else ""
-            lines.append(r" & %s & %.4f & $%+.4f$%s & \textbf{%.4f} & "
-                         r"$\mathbf{%+.4f}$ & %s \\ %s"
-                         % (PRETTY[k], u["top1"], u["delta"], mark, h["top1"],
-                            h["delta"], "%.4f" % wb if wb is not None else "--",
-                            sep))
+            lines.append(r"%s & %.4f & $%+.4f$%s & %s & \textbf{%.4f} & "
+                         r"$\mathbf{%+.4f}$ & %s \\"
+                         % (PRETTY[k], u["top1"], u["delta"], mark,
+                            wb_cell(wb.get("unhardened")), h["top1"], h["delta"],
+                            wb_cell(wb.get("hardened"))))
+            # The rules that make the caption's three groups checkable.
+            if k in (CONTROL[-1], TRAINED[-1]):
+                lines.append(r"\cline{1-7}")
         lines.append(r"\hline")
     lines += [r"\end{tabular}", r"\end{table}"]
     open(out, "w", encoding="utf-8").write("\n".join(lines) + "\n")
@@ -234,12 +271,22 @@ def main() -> None:
     ap.add_argument("--paper", default="paper")
     ap.add_argument("--exports", default="src/exports",
                     help="Where the held-out attackers' own export trees live.")
+    ap.add_argument("--no_figure", action="store_true",
+                    help="Write only the tables. Another script writes a "
+                         "different figure to the same filename, so the "
+                         "tables can be regenerated without touching it.")
     args = ap.parse_args()
 
     summaries = []
     for tag, label in (("resnet18", "ResNet18"), ("mixvpr", "MixVPR")):
-        with open(os.path.join(args.summary_dir, tag + ".json"),
-                  encoding="utf-8") as fh:
+        path = os.path.join(args.summary_dir, tag + ".json")
+        if not os.path.exists(path):
+            raise SystemExit(
+                "%s is missing. src/outputs/ is gitignored, so a fresh "
+                "checkout has the per-query rows but not the summaries built "
+                "from them. Rebuild them with:\n"
+                "    python src/scripts/rebuild_tifs_d6_summaries.py" % path)
+        with open(path, encoding="utf-8") as fh:
             summaries.append((label, json.load(fh)))
 
     # Two attackers with no surrogate trunk in common with the ensemble. Absent
@@ -260,8 +307,9 @@ def main() -> None:
     gen = os.path.join(args.paper, "generated")
     os.makedirs(gen, exist_ok=True)
     os.makedirs(os.path.join(args.paper, "figs"), exist_ok=True)
-    figure(summaries, os.path.join(args.paper, "figs",
-                                   "fig_preprocessing_eot.pdf"))
+    if not args.no_figure:
+        figure(summaries, os.path.join(args.paper, "figs",
+                                       "fig_preprocessing_eot.pdf"))
     transfer_table(summaries, held_out, os.path.join(gen, "tab_transfer.tex"))
     sanitize_table(summaries, os.path.join(gen, "tab_sanitize.tex"))
 

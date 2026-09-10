@@ -55,10 +55,6 @@ def boot(diff, ids, n, rng):
     return np.percentile(stats, [2.5, 97.5])
 
 
-def p_str(p: float) -> str:
-    return "$<$0.001" if p < 5e-4 else f"{p:.3f}"
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--rows", default=str(REPO / "src" / "outputs" /

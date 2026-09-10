@@ -27,10 +27,8 @@ resolve_tree() {  # $1 = tree name; echoes the directory, or nothing
 
 # Only these extensions travel: raw per-query outcomes, summaries, run metadata
 # and status files. No imagery, no weights, no logs.
-copy_tree() {  # $1 = tree name, $2 = name inside results/
-  local src dst="results/$2" rel
-  src="$(resolve_tree "$1")"
-  [ -n "$src" ] || { echo "missing export tree: $1 (looked in $OUT and $EXPORTS)" >&2; exit 1; }
+copy_files() {  # $1 = source directory, $2 = name inside results/
+  local src="$1" dst="results/$2" rel
   find "$src" -type f \( -name '*.csv' -o -name '*.json' -o -name '*.jsonl' \
        -o -name '*.txt' -o -name '*.sha256' \) -print0 |
     while IFS= read -r -d '' f; do
@@ -38,6 +36,23 @@ copy_tree() {  # $1 = tree name, $2 = name inside results/
       mkdir -p "$dst/$(dirname "$rel")"
       cp "$f" "$dst/$rel"
     done
+}
+
+copy_tree() {  # $1 = tree name, $2 = name inside results/
+  local src
+  src="$(resolve_tree "$1")"
+  [ -n "$src" ] || { echo "missing export tree: $1 (looked in $OUT and $EXPORTS)" >&2; exit 1; }
+  copy_files "$src" "$2"
+}
+
+# Same, but from src/exports/ only, for a family whose src/outputs/ tree has
+# been reduced to the run's JSON summaries while the released per-query rows
+# live in src/exports/. resolve_tree() prefers src/outputs/ whenever the
+# directory exists at all, so such a family must name its root explicitly or
+# the bundle silently ships the summaries and drops every row.
+copy_released_tree() {  # $1 = tree name under src/exports, $2 = name in results/
+  [ -d "$EXPORTS/$1" ] || { echo "missing released tree: $1 (looked in $EXPORTS)" >&2; exit 1; }
+  copy_files "$EXPORTS/$1" "$2"
 }
 
 copy_file() {  # $1 = relative path under an export root, $2 = path inside results/
@@ -114,10 +129,11 @@ copy_tree tifs_a7_o2n8   crosstime_old2new
 copy_tree tifs_a7_n2o8   crosstime_new2old
 copy_tree tifs5_analysis analysis_reports
 
-# --- the TIFS round: the families behind Table IV, the frontier, the release
-# --- boundary, the third held-out backbone and the column-norm measurement.
+# --- the TIFS round: the families behind the transfer table, the frontier,
+# --- the release boundary, the third held-out backbone and the column-norm
+# --- measurement.
 # Without these the bundle cannot support the manuscript's current headlines.
-copy_tree tifs_d6            transfer_table4
+copy_released_tree tifs_d6   transfer_table4
 copy_tree tifs_d7            utility_released_frames
 copy_tree tifs_a5            frontier_segmentation
 copy_tree tifs_a2            jacobian_columns
@@ -156,6 +172,25 @@ copy_tree tifs6_a8_mse60.0_s2     release_boundary_mse60_seed2
 copy_tree tifs6_a8_mse241.5_s2    release_boundary_mse241.5_seed2
 copy_tree tifs_a8_vitstart8       release_boundary_vit
 copy_tree tifs_a8_hi_vitstart8    release_boundary_vit_hi
+
+# --- the thirteen-transform preprocessing study ----------------------------
+# The same rows as transfer_table4/, under the name of the study they carry.
+# The preprocessing table is the only support for the manuscript's held-out
+# sentence, and its eight held-out transforms exist nowhere else in the
+# bundle: the sanitize_* trees above carry the four transforms the hardening
+# was optimised over and direction_eot/ those four plus the untouched
+# control. A referee following that table to its rows should not have to know
+# that "transfer_table4" is also where the preprocessing study lives.
+copy_released tifs_d6/d6_r18_plain.csv \
+              preprocessing_13transform/resnet18_unhardened.csv
+copy_released tifs_d6/d6_mix_plain.csv \
+              preprocessing_13transform/mixvpr_unhardened.csv
+for seed in 1234 5678 9012; do
+  copy_released "tifs_d6/d6_r18_eot_s$seed.csv" \
+                "preprocessing_13transform/resnet18_hardened_s$seed.csv"
+  copy_released "tifs_d6/d6_mix_eot_s$seed.csv" \
+                "preprocessing_13transform/mixvpr_hardened_s$seed.csv"
+done
 
 # --- EOT hardening: one file per condition, three seeds concatenated --------
 # The seeds were run as separate jobs, and one of them (ResNet18 seed 5678)

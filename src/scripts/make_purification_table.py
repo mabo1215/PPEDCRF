@@ -20,12 +20,16 @@ from __future__ import annotations
 import argparse
 import csv
 import glob
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict
 
 import numpy as np
 from scipy.stats import wilcoxon
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _pvalue import fmt_p  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 LABEL = {("clean", "none"): "clean (unperturbed)",
@@ -52,10 +56,6 @@ def boot(diff: np.ndarray, ids: np.ndarray, n: int, seed: int) -> tuple:
         pick = rng.integers(0, len(groups), len(groups))
         draws[b] = diff[np.concatenate([groups[i] for i in pick])].mean()
     return tuple(np.percentile(draws, [2.5, 97.5]))
-
-
-def p_str(p: float) -> str:
-    return "$<$0.001" if p < 5e-4 else f"{p:.3f}"
 
 
 def main() -> int:
@@ -134,7 +134,7 @@ def main() -> int:
         # question is what the purifier bought, not what the release cost.
         delta, lo, hi, pv = contrast(key, (key[0], "none"), i)
         lines.append(rf"{LABEL[key]:<28} & {top1:.4f} & ${delta:+.4f}$ & "
-                     rf"$[{lo:+.3f},{hi:+.3f}]$ & {p_str(pv)} \\")
+                     rf"$[{lo:+.3f},{hi:+.3f}]$ & {fmt_p(pv)} \\")
         stats.append({"cell": key, "top1": top1, "delta": delta,
                       "ci": [lo, hi], "p": pv})
 

@@ -24,12 +24,16 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
 from scipy.stats import wilcoxon
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _pvalue import fmt_p  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -138,7 +142,7 @@ def main() -> int:
                    else ("none det." if pval >= 0.05 else "significant"))
         lines.append(
             rf"{label:<20} & {top1:.4f} & ${diff.mean():+.4f}$ & "
-            rf"$[{lo:+.3f},{hi:+.3f}]$ & {pval:.2f} & {verdict} \\")
+            rf"$[{lo:+.3f},{hi:+.3f}]$ & {fmt_p(pval)} & {verdict} \\")
         stats.append({"placement": key, "top1": top1, "delta": float(diff.mean()),
                       "ci": [lo, hi], "p": pval, "verdict": verdict})
     lines += [r"\hline", r"\end{tabular}", r"\end{table}", ""]

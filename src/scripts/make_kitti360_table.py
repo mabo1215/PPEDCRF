@@ -39,12 +39,16 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
 from scipy.stats import wilcoxon
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _pvalue import fmt_p  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -131,13 +135,6 @@ def compare(arm, ref, rng, places=None):
 
 
 
-def p_str(p: float) -> str:
-    """A p-value a reader can act on. A Wilcoxon p is never exactly zero, and
-    printing 0.000 claims a precision the test does not have; below the
-    resolution of three decimals the honest form is the bound."""
-    return "$<$0.001" if p < 5e-4 else f"{p:.3f}"
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--placement",
@@ -199,7 +196,7 @@ def main() -> int:
         top1, delta, lo, hi, p, n, cl = compare(arm, ref, rng, places)
         worst = max(worst, abs(delta))
         lines.append(rf"{label:<18} & {top1:.4f} & ${delta:+.4f}$ & "
-                     rf"$[{lo:+.3f},{hi:+.3f}]$ & {p:.2f} \\")
+                     rf"$[{lo:+.3f},{hi:+.3f}]$ & {fmt_p(p)} \\")
         stats.append({"arm": "placement", "name": key, "top1": top1,
                       "delta": delta, "ci": [lo, hi], "p": p, "n": n,
                       "clustered_ci": list(cl[:2]) if cl else None})
@@ -230,7 +227,7 @@ def main() -> int:
             t1, dl, lo2, hi2, pv, nn, cc = compare(arm, raw, rng, places)
             ci = cc if cc else (lo2, hi2)
             base_lines.append(rf"{label:<18} & {t1:.4f} & ${dl:+.4f}$ & "
-                              rf"$[{ci[0]:+.3f},{ci[1]:+.3f}]$ & {p_str(pv)} \\")
+                              rf"$[{ci[0]:+.3f},{ci[1]:+.3f}]$ & {fmt_p(pv)} \\")
             stats.append({"arm": "reference", "name": key, "top1": t1,
                           "delta": dl, "ci": [lo2, hi2],
                           "clustered_ci": list(cc[:2]) if cc else None,
@@ -274,7 +271,7 @@ def main() -> int:
         r"\multicolumn{5}{l}{\textit{Direction: surrogate ensemble, same budget}} \\",
         rf"isotropic (ref.)   & {np.mean(list(iso.values())):.4f} & --- & --- & --- \\",
         rf"3 surrogates       & {dtop1:.4f} & ${ddelta:+.4f}$ & "
-        rf"$[{dlo:+.3f},{dhi:+.3f}]$ & {p_str(dp)} \\",
+        rf"$[{dlo:+.3f},{dhi:+.3f}]$ & {fmt_p(dp)} \\",
         rf"\quad clustered on {n_places} places & & & "
         rf"$[{dcl[0]:+.3f},{dcl[1]:+.3f}]$ & \\" if dcl else "",
         r"\hline", r"\end{tabular}", r"\end{table}", ""]

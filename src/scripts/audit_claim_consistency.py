@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import csv
 import glob as globmod
+import re
 import statistics
 import sys
 import zlib
@@ -58,6 +59,9 @@ SUPP = REPO / "paper" / "supplementary.tex"
 # released with the code.
 EXT = REPO / "paper" / "backup" / "supplementary_extended.tex"
 TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
+# The preprocessing table is generated as well, and it is the sole
+# support for the manuscript's held-out-transform sentence.
+TAB_SANITIZE = REPO / "paper" / "generated" / "tab_sanitize.tex"
 # The two E1 tables are generated from the exports as well, so their numbers are
 # located in the generated files rather than in the supplement's own source.
 E1_SOURCE = {
@@ -450,6 +454,152 @@ for bb, tag, cond, metric, value in [
 claim("Summary/allocation-bound", "\\S The Other Axis", "$0.012$", 0.012,
       1e-9, "", lambda: 0.012,
       locator="$0.012$")
+
+
+# --- Table tab:sanitize, every attacker-side transform, from tifs_d6 -------
+# The sentence that makes the direction axis deployable -- "Hardened, all
+# sixteen held-out cells are significant" -- rests on this table and on
+# nothing else, so every cell of it is registered here rather than only the
+# untouched control and the four transforms the hardening was optimised over.
+#
+# The unhardened arm is the single three-seed run; the hardened arm is the
+# three per-seed EOT runs read together, which per_query() averages within a
+# query exactly as it averages the three seeds of the unhardened run. Each
+# row's Delta is against the isotropic control under that same transform,
+# taken from the same run as the arm it is subtracted from, and each of the
+# two white-box bounds is the attacker-aware arm of the run whose release
+# that column bounds.
+
+# The direction condition is named for the rung the attacker occupies on each
+# backbone's transfer ladder, so the two attackers do not share a name for it.
+_SANITIZE_ATTACKERS = (("r18", "ResNet18", "transfer_3"),
+                       ("mix", "MixVPR", "transfer_4"))
+
+
+_SANITIZE_PER: Dict[str, Dict[tuple, Dict[str, float]]] = {}
+
+
+def _sanitize_run(pattern: str) -> Dict[tuple, Dict[str, float]]:
+    """(condition, transform) -> per-query Top-1 for one run, read once.
+
+    Each of the four runs is a forty-thousand-row export and a hundred and
+    fifty-six claims draw on them, so the maps are built on first use
+    -- by per_query(), the shared unit of inference -- and the raw rows are
+    dropped once they have been.
+    """
+    if pattern not in _SANITIZE_PER:
+        rows = load(pattern)
+        if not rows:
+            return {}
+        _SANITIZE_PER[pattern] = {
+            (cond, san): per_query(
+                rows, lambda r, c=cond, s=san: r["condition"] == c
+                and r["sanitizer"] == s)
+            for cond, san in sorted({(r["condition"], r["sanitizer"])
+                                     for r in rows})}
+    return _SANITIZE_PER[pattern]
+
+
+def _sanitize(backbone: str, run: str, sanitizer: str, condition: str,
+              stat: str) -> Callable[[], Optional[float]]:
+    pattern = (f"tifs_d6/d6_{backbone}_plain.csv" if run == "unhardened"
+               else f"tifs_d6/d6_{backbone}_eot_s*.csv")
+
+    def go() -> Optional[float]:
+        cells = _sanitize_run(pattern)
+        arm = cells.get((condition, sanitizer))
+        if not arm:
+            return None
+        if stat == "top1":
+            return statistics.fmean(arm.values())
+        ctrl = cells.get(("isotropic", sanitizer))
+        if not ctrl:
+            return None
+        return paired(arm, ctrl)["delta"]
+    return go
+
+
+# transform, then each attacker's six printed cells in column order:
+# unhardened Top-1, unhardened Delta, unhardened W.b., hardened Top-1,
+# hardened Delta, hardened W.b.
+_SANITIZE_ROWS = [
+    ("none",
+     (0.0317, -0.1650, 0.0058, 0.0200, -0.1767, 0.0050),
+     (0.7317, -0.0483, 0.0008, 0.6942, -0.0858, 0.0083)),
+    ("jpeg75",
+     (0.1067, -0.0983, 0.0175, 0.0242, -0.1808, 0.0042),
+     (0.7583, -0.0300, 0.5642, 0.6908, -0.0975, 0.0242)),
+    ("jpeg50",
+     (0.1408, -0.0583, 0.0600, 0.0483, -0.1508, 0.0050),
+     (0.7567, -0.0100, 0.7058, 0.7033, -0.0633, 0.1250)),
+    ("blur",
+     (0.1367, -0.0358, 0.0225, 0.0500, -0.1225, 0.0042),
+     (0.7333, -0.0308, 0.5742, 0.6608, -0.1033, 0.0200)),
+    ("denoise",
+     (0.1058, -0.0358, 0.0658, 0.0417, -0.1000, 0.0108),
+     (0.7108, -0.0192, 0.5600, 0.6217, -0.1083, 0.0975)),
+    # the eight the hardening never saw
+    ("jpeg60",
+     (0.1383, -0.0600, 0.0333, 0.0358, -0.1625, 0.0050),
+     (0.7642, -0.0100, 0.6725, 0.6958, -0.0783, 0.0775)),
+    ("jpeg30",
+     (0.1500, -0.0317, 0.1117, 0.0675, -0.1142, 0.0117),
+     (0.7292, -0.0100, 0.7017, 0.6858, -0.0533, 0.3692)),
+    ("median3",
+     (0.1183, -0.0767, 0.0075, 0.0408, -0.1542, 0.0050),
+     (0.6958, -0.0617, 0.3617, 0.5875, -0.1700, 0.0175)),
+    ("resize_half",
+     (0.1458, -0.0267, 0.0358, 0.0617, -0.1108, 0.0042),
+     (0.7433, -0.0125, 0.6075, 0.6700, -0.0858, 0.0592)),
+    ("blur2",
+     (0.1058, -0.0025, 0.0842, 0.0717, -0.0367, 0.0217),
+     (0.5583, -0.0358, 0.5308, 0.5158, -0.0783, 0.2292)),
+    ("bitdepth4",
+     (0.0508, -0.1367, 0.0058, 0.0233, -0.1642, 0.0067),
+     (0.7358, -0.0342, 0.0067, 0.6825, -0.0875, 0.0208)),
+    ("random_one",
+     (0.1225, -0.0542, 0.0458, 0.0492, -0.1275, 0.0108),
+     (0.7233, -0.0292, 0.5117, 0.6533, -0.0992, 0.1042)),
+    ("jpeg50_blur",
+     (0.1517, -0.0217, 0.1017, 0.0683, -0.1050, 0.0067),
+     (0.7233, -0.0175, 0.6900, 0.6583, -0.0825, 0.2433)),
+]
+
+for _san, _r18_cells, _mix_cells in _SANITIZE_ROWS:
+    for (_bb, _tag, _cond), _cells in zip(_SANITIZE_ATTACKERS,
+                                          (_r18_cells, _mix_cells)):
+        _u1, _ud, _uwb, _h1, _hd, _hwb = _cells
+        _stem = f"S5/{_tag}/{_san}"
+        claim(f"{_stem}/unhardened-top1", "Table tab:sanitize",
+              f"{_u1:.4f}", _u1, 5e-5, "tifs_d6",
+              _sanitize(_bb, "unhardened", _san, _cond, "top1"),
+              source=TAB_SANITIZE)
+        # The dagger that marks a bootstrap interval spanning zero is printed
+        # after the closing $, so the delta's own literal is still exact.
+        claim(f"{_stem}/unhardened-delta", "Table tab:sanitize",
+              f"${_ud:.4f}$", _ud, 5e-5, "tifs_d6",
+              _sanitize(_bb, "unhardened", _san, _cond, "delta"),
+              source=TAB_SANITIZE)
+        # Two white-box columns, one per release: the bound an attacker who
+        # knows the perturbation reaches is not the same against a hardened
+        # release as against the unhardened one, so each is read from the run
+        # whose release it bounds.
+        claim(f"{_stem}/unhardened-white-box", "Table tab:sanitize",
+              f"{_uwb:.4f}", _uwb, 5e-5, "tifs_d6",
+              _sanitize(_bb, "unhardened", _san, "white_box", "top1"),
+              source=TAB_SANITIZE)
+        claim(f"{_stem}/hardened-top1", "Table tab:sanitize",
+              f"\\textbf{{{_h1:.4f}}}", _h1, 5e-5, "tifs_d6",
+              _sanitize(_bb, "hardened", _san, _cond, "top1"),
+              source=TAB_SANITIZE)
+        claim(f"{_stem}/hardened-delta", "Table tab:sanitize",
+              f"$\\mathbf{{{_hd:.4f}}}$", _hd, 5e-5, "tifs_d6",
+              _sanitize(_bb, "hardened", _san, _cond, "delta"),
+              source=TAB_SANITIZE)
+        claim(f"{_stem}/hardened-white-box", "Table tab:sanitize",
+              f"{_hwb:.4f}", _hwb, 5e-5, "tifs_d6",
+              _sanitize(_bb, "hardened", _san, "white_box", "top1"),
+              source=TAB_SANITIZE)
 
 
 # --- A8, the released object (\S What Is Actually Released) ----------------
@@ -1987,6 +2137,53 @@ for cid, printed, value, fn in [
 # reporting
 # --------------------------------------------------------------------------
 
+# A three- or four-decimal number, not preceded by a digit or a dot and not
+# followed by a digit, so "0.0317" counts once and neither a longer decimal
+# nor the tail of a version or date string is mistaken for a printed value.
+LITERAL = re.compile(r"(?<![\d.])\d\.\d{3,4}(?![\d])")
+# A per-cent sign starts a comment unless it is escaped; commented-out
+# numbers are not printed and must not enter the denominator.
+COMMENT = re.compile(r"(?<!\\)%.*")
+
+
+def printed_literals(path: Path) -> List[str]:
+    """Every three- or four-decimal literal one manuscript file prints."""
+    if not path.is_file():
+        return []
+    return LITERAL.findall(COMMENT.sub("", path.read_text(encoding="utf-8")))
+
+
+def coverage() -> None:
+    """How much of what the manuscript prints the registry actually asserts.
+
+    The registry is a registry, not a sweep: a number quoted only in running
+    text and never registered is not checked. This counts the gap instead of
+    leaving it to a hand-written sentence, matching each literal against
+    every claim's locator, its printed form and its registered value rounded
+    to the literal's own precision -- the most generous of the readings
+    available, so the unregistered list is a floor and not an estimate.
+    """
+    seen: List[str] = []
+    for path in (MAIN, SUPP):
+        seen.extend(printed_literals(path))
+    distinct = sorted(set(seen))
+
+    registered, unregistered = [], []
+    for lit in distinct:
+        places = len(lit.split(".")[1])
+        hit = any((c.locator is not None and lit in c.locator)
+                  or lit in c.printed
+                  or f"{c.value:.{places}f}" == lit
+                  for c in CLAIMS)
+        (registered if hit else unregistered).append(lit)
+
+    print(f"\ncoverage over {MAIN.name} and {SUPP.name}: "
+          f"{len(distinct)} distinct three- and four-decimal literals, "
+          f"{len(registered)} registered, {len(unregistered)} not.")
+    if unregistered:
+        print("unregistered: " + ", ".join(unregistered))
+
+
 def tree_present(tree: str) -> bool:
     return not tree or any((root / tree).is_dir() for root in ROOTS)
 
@@ -1995,6 +2192,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--verbose", action="store_true",
                     help="print every claim, not only the failing ones")
+    ap.add_argument("--coverage", action="store_true",
+                    help="also report which of the manuscript's printed "
+                         "three- and four-decimal literals a claim covers")
     args = ap.parse_args()
 
     # Every distinct source a claim names, not a hand-listed pair: claims
@@ -2050,6 +2250,9 @@ def main() -> int:
         absent = sorted({c.tree for c, v, _, _ in rows
                          if v == "NO DATA" and c.tree})
         print("missing export trees: " + ", ".join(absent))
+
+    if args.coverage:
+        coverage()
 
     if mismatch or missing_text:
         return 1

@@ -12,14 +12,34 @@ stated here rather than one:
   "What the one-command check does and does not cover" below names the
   families it does not reach.
 - `src/scripts/audit_claim_consistency.py`, in the source repository,
-  recomputes **624** -- every cell of every table in the manuscript and the
-  supplement, plus the prose values registered alongside them.
+  recomputes **780** claims, drawn from the manuscript, the supplement, the
+  extended evidence report and ten of the generated tables -- among them
+  every cell of the thirteen-transform preprocessing table, which is the sole
+  support for the manuscript's held-out-transform sentence.
 
-Both are registries, not sweeps. A number quoted only in the running text and
-never registered is not checked: of the manuscript's 213 distinct three- and
-four-decimal literals, 47 have no claim, most of them interval endpoints
-printed beside a point estimate that is checked. Neither checker asserts that
-the registry is complete, and this bundle does not claim it is.
+Both are registries, not sweeps. Neither enumerates the manuscript and then
+demands a claim for every number it finds; each asserts the numbers someone
+registered, so a value quoted only in the running text and never registered
+is not checked. That gap is measured rather than asserted. Running
+
+```bash
+python3 src/scripts/audit_claim_consistency.py --coverage
+```
+
+last printed
+
+```
+coverage over main.tex and supplementary.tex: 260 distinct three- and four-decimal literals, 231 registered, 29 not.
+```
+
+which matches each literal against every claim's locator, its printed form
+and its registered value rounded to the literal's own precision, and then
+lists the twenty-nine by value. They are interval endpoints, p-values quoted
+inline, and running-text restatements of studies whose tables are themselves
+registered. Neither checker asserts that the registry is complete, and this
+bundle does not claim it is. The block above is a transcript, not a hand
+count: rerun the command whenever the manuscript changes and paste what it
+prints.
 
 It also carries `extended_evidence_report.pdf`, the extended evidence report
 the manuscript cites wherever a result lives only there.
@@ -69,9 +89,12 @@ model checkpoint are required for this path.
   the oracle's advantage at a given clean-task difficulty.
 - **Direction transfer to a held-out attacker**, and the gallery-free variant
   that the headline table reports.
-- **Non-adaptive preprocessing**, three seeds per cell, unhardened and under
-  the gallery-free objective, and **the same directions hardened over those
-  transforms (EOT)**.
+- **Non-adaptive preprocessing on the four transforms the hardening trains
+  on** (JPEG-75, JPEG-50, blur, denoise), three seeds per cell, unhardened and
+  under the gallery-free objective, and **the same four hardened over (EOT)**,
+  there with the untouched control alongside them. The eight further
+  transforms the hardening never saw are released in
+  `preprocessing_13transform/`, but this checker does not recompute them.
 - **Downstream utility**: per-image AP@50 and IoU on the same sanitized
   frames, clean / isotropic / direction.
 
@@ -118,10 +141,18 @@ results/
   known_jacobian_operators/    the operator comparison in that model
   direction_transfer/      direction transfer to a held-out attacker
   direction_transfer_galleryfree/  the gallery-free variant, three seeds
-  sanitize_3seed/          preprocessing robustness, three seeds per cell
-  sanitize_galleryfree/    the same under the gallery-free objective
-  direction_eot/           EOT-hardened directions, thirteen transforms,
-                           three seeds concatenated per condition
+  sanitize_3seed/          preprocessing robustness on the four trained
+                           transforms, three seeds per cell
+  sanitize_galleryfree/    the same four under the gallery-free objective
+  direction_eot/           EOT-hardened directions on those four transforms
+                           and the untouched control, three seeds
+                           concatenated per condition
+  preprocessing_13transform/   the whole thirteen-transform study behind the
+                           supplement's transform table, including the eight
+                           transforms the hardening never saw: one unhardened
+                           run and three hardened seeds per attacker, with
+                           every transform, the isotropic control and the
+                           white-box bound in each file
   direction_utility/       per-image detection and segmentation utility, with
                            the detection box targets they are scored against
 ```
@@ -152,7 +183,8 @@ location on the authors' machines.
   recomputes 228 claims, covering the allocation families, the operator study,
   the mask-guided comparison, the cross-time replication and the earlier
   transfer runs. It does **not** yet script the families added in the most
-  recent rounds: `transfer_table4` (Table IV), `frontier_segmentation`,
+  recent rounds: `transfer_table4` (Table III, whose rows are also the
+  `preprocessing_13transform` release), `frontier_segmentation`,
   `release_boundary_mse*`, `transfer_patchnetvlad`, `jacobian_columns`,
   `adaptive_attacker_*`, and the two attackers added last -- `clip_pooling_*`
   (an attacker holding the whole clip) and `purification` (an attacker that
@@ -162,6 +194,6 @@ location on the authors' machines.
   the manuscript draws from them can be recomputed by hand, but the automated
   pass does not assert them and this artifact does not claim it does. In the
   source repository those families are asserted by
-  `src/scripts/audit_claim_consistency.py`, which checks 624 manuscript claims
+  `src/scripts/audit_claim_consistency.py`, which checks 780 manuscript claims
   against the same rows; it is not run here because it resolves trees by their
   repository names rather than the reader-facing names used in `results/`.

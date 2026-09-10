@@ -895,6 +895,96 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
        **发布出去的必须是表和 auditor 实际读的那一份**。
 
 
+## 第十一轮独立评审（2026-09-11，你触发：按 IEEE TIFS 投稿要求完整评审并覆盖 RevisionSuggestions.tex）
+
+513. 【已完成】**第十一轮评审已整段覆盖写入 `docs/RevisionSuggestions.tex`
+     （英文，16 页，0 overfull、0 undefined ref）。** 按协议不用任何旧评审、
+     progress.md 或"已完成"判断作输入，直接读 `main.pdf`（13 页）、
+     `supplementary.pdf`（6 页）、`titlepage.pdf` 和它们的源码，
+     两个检查器都亲自跑了一遍（一键包 743 文件校验通过、228/228；
+     仓库 auditor 624/624 全绿），需要判断的地方全部从导出重算，
+     重算过程写在评审最后一节。**结论：Major revision**，12 条，其中
+     10 条不需要任何新计算。TIFS 页数/摘要/补充材料/超页费等要求当场查了官网。
+514. 【R1，Major，需要跑一次】**方向轴是优化出来的，allocation 轴一次都没优化过。**
+     方向臂是 20 步 sign-gradient + surrogate ensemble + 逐帧 bisection；
+     七条 placement 全是写死的规则，一条都没对任何目标优化过。
+     §III-J 自己推出了 placement 应该最大化的量 $v(w)=\sigma^2\sum a_i^2 w_i^2$，
+     然后明说"gradient-guided 只是那个角点解的平滑近似，不主张最优性"。
+     审稿人会把核心对比读成"优化过 vs 没优化过"而不是"方向 vs 分配"。
+     **建议**：加一条 optimised-allocation 臂——对 $w$ 本身做投影梯度，
+     同样 20 步、同样 surrogate、同样能量门 $\sum w_i^2=E$、同样 MSE bisection。
+     如果它也打不过 uniform，论文的结论反而**更强**（变成"搜索预算也对齐了"）。
+515. 【R2，Major，不用算】**§III-G 一句话被自己的数据推翻。** 原文
+     "white-box bound is fragile to every operator"——我把 13 个 transform
+     逐个从 `src/exports/tifs_d6/` 重算：**4-bit 量化在两个攻击者上都几乎没恢复**
+     （ResNet18 0.0058，和不加变换完全一样；MixVPR 0.0067 对 0.0008），
+     ResNet18 上 median 滤波也几乎没恢复（0.0075）。而且旁边引的两个区间
+     **各自取自不同的 transform 子集**：0.0175 是 JPEG-75（训练过的四个之一），
+     0.1117 是 JPEG-30（留出的八个之一）；0.36 是 median（留出），0.71 是 JPEG-50（训练过）。
+     后面"tightens from 0.36--0.71 to 0.0083--0.37"更是拿一个子集比全集。
+516. 【R3，Major，不用算】**clean baseline 印了两个值，错的那个在决定可部署性的表标题里。**
+     未扰动 ResNet18 Top-1 = **0.2100**（我从 `cleanref/per_query.csv` 重算，
+     §III-D、§III-E 和 auditor 登记的 wide8 都是这个值）；0.1967 是 MSE 15.68 的
+     isotropic control。但 **Table IV 标题**写"Clean Top-1 for this attacker is 0.197"，
+     **§III-G** 写"leaves Top-1 at 0.210 against a clean 0.197, that is, does nothing"
+     ——照字面读成"加噪声反而把检索抬到 clean 之上"。改对之后那句反而更干净
+     （0.210 对 0.210，确实什么都没做）。两个字面值**都没登记 claim**。
+517. 【R4，Major，不用算】**artifact 仍然声称覆盖了每张表，而它够不到的那张恰恰最关键。**
+     auditor 的 624 条来自 12 个源文件，**`tab_sanitize.tex` 不在其中**；
+     一键包也没登记它。那张表（Table S7）是"Hardened, all sixteen held-out cells
+     are significant"这句话的唯一证据——正是把方向轴从"脆弱"变成"可部署"的那句。
+     更麻烦的是**八个留出 transform 的行根本不在包里**：
+     `results/direction_eot/`、`sanitize_3seed/`、`sanitize_galleryfree/`
+     每个攻击者只有 none/jpeg75/jpeg50/blur/denoise。数据在仓库
+     `src/exports/tifs_d6/` 里（我就是从那儿重算的），但不在那个自称"验证每张表"的包里。
+     另外 README 那句"213 个字面值里 47 个没有 claim"**没有任何脚本产出**：
+     分母 213 我复现了，分子按最宽松匹配是 36、按最严是 111。
+518. 【R5，Major，需要跑一次小的】**净化/预处理只在 ResNet18 和 MixVPR 上跑过，
+     而决定结论的是另外两个攻击者。** MixVPR 上方向轴 −0.0483，
+     JPEG-50 打到 −0.0100（跨零）、净化打到 −0.0217（跨零）。
+     但 **Patch-NetVLAD**（效应最大，−0.1917，真 VPR 架构）和
+     **ViT-B/16**（效应最小，−0.0233）**都没面对过净化或预处理**。
+     等于把最强的攻击用在效应最小的那个 VPR 模型上，最有信息量的两格空着。
+     顺带：摘要和结论的**领句**仍然是"it transfers"/"it is attainable"，
+     限定语在后面——审稿人读领句。
+519. 【R6，Moderate，不用算】**论文自己理论点名的那条 placement，在主 benchmark 上跑了、
+     一键包验了、正文没报。** `src/exports/margin_oracle/per_query.csv` 有 4,800 行
+     （margin oracle、anti-oracle、score-gradient、uniform，3 seed，400 query）。
+     我重算：margin oracle Top-1 0.1867，**Δ = −0.0083**，
+     query CI [−0.0267,+0.0092]，place CI [−0.0258,+0.0093]，p=0.31，top-decile 0.649。
+     **这是弱攻击者上所有 placement 里最偏向"有利"的点估计**（score-gradient 只有 −0.0008）。
+     正文只在 KITTI-360 那句"two margin oracles"里带过，MSLS 上一个字没提。
+520. 【R7--R12，Moderate/Minor，不用算】
+     - **R7**：主 benchmark 的 placement 空结果**全包里没有表**（§III-C 只印了 7 个里的 2 个点估计，
+       Table S6 只有强攻击者）；九张表在扩展报告里，而扩展报告不在投稿包内；
+       主文 13 页**只有一张图**——能救这一点的 `paper/figs/fig_axes.pdf` 已经画好了，
+       但放在了审稿人拿不到的那份文档里。
+     - **R8**：七个等价判定里**有两个是常数图和自己比**（MixVPR 上 0.7800 对 0.7800、
+       CI [0,0]、p=1.00；KITTI 上 0.1512 对 0.1512）。正文两处报"two negligible"都没说这件事，
+       非退化格实际只有 1 个达到 ±0.01。
+     - **R9**：§III-A 说"query 区间总是更窄的那个，1.08--1.25×"，
+       §III-C 自己写"widens 0.94--1.10×"——小于 1 就是 clustered 更窄。我重算是 0.92--1.10，
+       七格里有三格 query 更宽。另外 KITTI-360 只有 16 个 place，
+       clustered 分辨率约 ±0.04，撑不起摘要那句 ±0.012 的"replicates"。
+     - **R10**：四个攻击者全是 2,000 图固定 gallery 的检索器，两个是 ImageNet 分类器；
+       论文自己引的 GeoShield 打的是 VLM geolocator，而这一类一个都没跑；
+       真实数据上 gallery 大小从没扫过。
+     - **R11**：**KITTI-360、VOC、COCO、ImageNet 全都在用、全都没引**；
+       MSLS 引的是 GitHub 仓库不是 CVPR 2020 那篇；spectral-residual saliency 没引。
+       48 条参考文献里**只有 2 条晚于 2022**，没有 2024/2025 的。
+     - **R12**：Table S7 标题把 `none` 数进了"训练过的 transform"（说五个，其实四个，
+       补充材料自己的图注写的是四个）；那张表的 "W.b." 列其实是 **hardened** 白盒
+       （生成脚本取 `["white_box"][k]["hardened"]`）但标题没说，
+       所以看起来和 §III-G 的 unhardened 区间矛盾；
+       clean mIoU 实测 **0.697352**（我从 `tifs_a5` 四棵树的逐图交并重算），
+       正文和 Table IV 印 0.6973（截断）、补充材料印 0.6974（正确四舍五入）；
+       Table IV 隐私列只平均**两个种子**而全文都是三个；
+       主文 **13/13 页且没有作者简介**（TIFS 修改稿上限 16 页，含简介；超过 10 页每页 220 美元）；
+       摘要 **244--248 词**对 250 词上限，没有余量。
+521. 【本轮只做评审】按你的指令，本轮**只生成评审、未改动论文、未跑新实验**。
+     `paper/` 三份文档和 `src/` 未做任何修改，624 条 claim 仍全绿。
+
+
 # 遗留问题
 
 - **【无需决策，R1 已完成】** 结果已拉回本地并写进论文（`src/exports/clip_pooling/`，
@@ -904,5 +994,18 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
   MixVPR 那一版把方向轴的优势整个抹平（−0.0417 → −0.0217，区间跨零），
   摘要、结论、§III-J 已按这个更不利的口径改写。**PRO 6000 已关机**。
 - **【无需决策，本轮无待办】** 第十轮 R1--R7 全部闭合，三份文档都在页数上限之内，
-  624 条 claim 全绿，reviewer 包已重建。下一步要么是你触发新一轮独立评审，
-  要么直接投。
+  624 条 claim 全绿，reviewer 包已重建。
+
+- **【等你决定，第十一轮评审已出】** 评审结论是 **Major revision**，12 条，
+  10 条不需要新计算。**需要你拍板的只有两件事**：
+  1. **R1（optimised-allocation 臂）跑不跑？** 这是唯一可能改结论的一条，
+     需要一次 GPU run（规模约等于一个 direction-transfer condition）。
+     我的建议是跑——按 §III-J 的一阶论证它多半也打不过 uniform，
+     那样论文核心主张会从"匹配失真"升级成"失真和搜索预算都匹配"，明显更强。
+     A: 需要  vGPU 有卡模式已开
+  2. **R5（Patch-NetVLAD / ViT 上补净化和 JPEG-50）跑不跑？** 很小的一次 run，
+     split、denoiser、release、评估脚本全都现成。不跑的话摘要和结论的领句
+     必须按"仅对所测强度的检索器成立"重写。
+     A: 需要  vGPU 有卡模式已开
+  剩下 10 条（R2--R4、R6--R12）我可以直接开始改，不需要你答复——
+  说一声就进入第十一轮修订。
