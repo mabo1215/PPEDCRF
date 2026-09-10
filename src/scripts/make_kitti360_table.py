@@ -258,7 +258,10 @@ def main() -> int:
         r"here is a road stretch, coarser than the 25\,m ball MSLS uses, which",
         r"moves the absolute level and not the paired contrasts.}",
         r"\label{tab:kitti360}", r"\footnotesize",
-        r"\setlength{\tabcolsep}{2pt}",
+        # 2pt puts the tabular at 256.9pt against a 252.0pt column, which is the
+    # overfull box the supplement carried; 1.5pt brings it to 251.9pt. The
+    # widest first-column cell is the clustered-interval label.
+    r"\setlength{\tabcolsep}{1.5pt}",
         r"\begin{tabular}{lcccc}", r"\hline",
         r"Condition & Top-1 & $\Delta$ & 95\% CI & $p$ \\",
         r"\hline",

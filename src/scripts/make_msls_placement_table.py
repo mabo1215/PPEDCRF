@@ -139,7 +139,11 @@ def main() -> int:
         "% Do not edit by hand.",
         r"\begin{table}[t]", r"\centering",
         rf"\caption{{{caption}}}",
-        r"\label{tab:placement_msls}", r"\footnotesize",
+        r"\label{tab:placement_msls}",
+        # Two interval columns put this past the column width at
+        # footnotesize; scriptsize is what the manuscript's own
+        # placement table uses for the same reason.
+        r"\scriptsize",
         r"\setlength{\tabcolsep}{1.2pt}",
         r"\begin{tabular}{lcccccc}", r"\hline",
         r"Placement & Top-1 & $\Delta$ & query 95\% CI & place 95\% CI & $p$ "
