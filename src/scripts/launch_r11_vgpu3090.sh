@@ -43,6 +43,17 @@ launch() {  # name, command...
     echo "[skip] $name already running"
     return
   fi
+  # A screen by that name is not the invariant that matters -- two processes
+  # appending to one output file is. That happened here once: a job relaunched
+  # by hand and a job relaunched by this script both wrote every row, and
+  # because each had read the resume set at startup neither skipped anything.
+  # The result was 64k rows carrying 32k keys, a quarter of which disagreed
+  # with their own duplicate, since the backward pass is not deterministic.
+  # Check the file, not the screen.
+  if pgrep -f "$OUT/${name}.csv" >/dev/null 2>&1; then
+    echo "[skip] $name: a process is already writing $OUT/${name}.csv"
+    return
+  fi
   screen -dmS "$name" bash -c "
     cd $REPO
     while [ \$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits) -lt $WAIT_FREE_MB ]; do sleep 120; done
