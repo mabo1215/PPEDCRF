@@ -130,6 +130,14 @@ def compare(arm, ref, rng, places=None):
             lo, hi, p, len(shared), clustered)
 
 
+
+def p_str(p: float) -> str:
+    """A p-value a reader can act on. A Wilcoxon p is never exactly zero, and
+    printing 0.000 claims a precision the test does not have; below the
+    resolution of three decimals the honest form is the bound."""
+    return "$<$0.001" if p < 5e-4 else f"{p:.3f}"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--placement",
@@ -222,7 +230,7 @@ def main() -> int:
             t1, dl, lo2, hi2, pv, nn, cc = compare(arm, raw, rng, places)
             ci = cc if cc else (lo2, hi2)
             base_lines.append(rf"{label:<18} & {t1:.4f} & ${dl:+.4f}$ & "
-                              rf"$[{ci[0]:+.3f},{ci[1]:+.3f}]$ & {pv:.3f} \\")
+                              rf"$[{ci[0]:+.3f},{ci[1]:+.3f}]$ & {p_str(pv)} \\")
             stats.append({"arm": "reference", "name": key, "top1": t1,
                           "delta": dl, "ci": [lo2, hi2],
                           "clustered_ci": list(cc[:2]) if cc else None,
@@ -242,12 +250,14 @@ def main() -> int:
         rf"over a 2,000-image gallery built from KITTI-360 revisits, {len(seeds)}",
         r"seeds, each query at least 600 frames from any positive. Placement is",
         r"against the uniform reference, direction against the isotropic control",
-        r"at the same delivered distortion. The interval is a query bootstrap;",
-        rf"with only {n_places} places the direction row also carries the",
-        r"place-clustered interval this protocol prescribes, and the two",
-        r"disagree. No placement separates from zero under either unit, while",
-        r"the white-box bound does, which is what shows this benchmark can be",
-        r"moved at all. Reference rows carry the clustered interval. A place",
+        r"at the same delivered distortion. The printed interval is a query",
+        rf"bootstrap; with only {n_places} places the direction row also carries",
+        r"the place-clustered interval this protocol prescribes, and the two",
+        r"disagree. Every placement row was tested on both units and separates",
+        r"from zero on neither, so only the query interval is printed for them;",
+        r"the white-box bound separates on the clustered unit, which is what",
+        r"shows this benchmark can be moved at all. Reference rows carry the",
+        r"clustered interval. A place",
         r"here is a road stretch, coarser than the 25\,m ball MSLS uses, which",
         r"moves the absolute level and not the paired contrasts.}",
         r"\label{tab:kitti360}", r"\footnotesize",
@@ -264,7 +274,7 @@ def main() -> int:
         r"\multicolumn{5}{l}{\textit{Direction: surrogate ensemble, same budget}} \\",
         rf"isotropic (ref.)   & {np.mean(list(iso.values())):.4f} & --- & --- & --- \\",
         rf"3 surrogates       & {dtop1:.4f} & ${ddelta:+.4f}$ & "
-        rf"$[{dlo:+.3f},{dhi:+.3f}]$ & {dp:.3f} \\",
+        rf"$[{dlo:+.3f},{dhi:+.3f}]$ & {p_str(dp)} \\",
         rf"\quad clustered on {n_places} places & & & "
         rf"$[{dcl[0]:+.3f},{dcl[1]:+.3f}]$ & \\" if dcl else "",
         r"\hline", r"\end{tabular}", r"\end{table}", ""]
