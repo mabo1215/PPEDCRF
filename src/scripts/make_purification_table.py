@@ -67,6 +67,10 @@ def main() -> int:
     ap.add_argument("--out", default=str(REPO / "paper" / "generated" /
                                          "tab_purification.tex"))
     ap.add_argument("--n_boot", type=int, default=10000)
+    ap.add_argument("--attacker", default="",
+                    help="Named in the caption and appended to the label; the "
+                         "table is per attacker because the release is "
+                         "optimised against that attacker's surrogates.")
     args = ap.parse_args()
 
     rows = []
@@ -142,13 +146,15 @@ def main() -> int:
         r"\begin{table}[htbp]", r"\centering",
         r"\caption{An attacker that removes the perturbation. A residual",
         r"denoiser is trained on released/clean pairs from a place-disjoint",
-        rf"split and applied to the release before embedding ({n_q} held-out",
-        rf"queries over {n_places} places, 3 draws). $\Delta$ is the purified",
+        rf"split and applied to the release before {args.attacker or 'the'}",
+        rf"attacker embeds it ({n_q} held-out queries over {n_places} places,",
+        r"3 draws). $\Delta$ is the purified",
         r"row against the same release unpurified, so it is what the purifier",
         r"bought; the interval resamples places. The last row applies the",
         r"purifier trained on the unhardened direction to the hardened",
         r"release, which is the attacker that does not know what it faces.}",
-        r"\label{tab:purification}", r"\footnotesize",
+        rf"\label{{tab:purification{'_' + args.attacker.lower() if args.attacker else ''}}}",
+        r"\footnotesize",
         r"\setlength{\tabcolsep}{2.5pt}",
         r"\begin{tabular}{lcccc}",
         r"\hline",
