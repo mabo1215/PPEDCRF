@@ -459,13 +459,59 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 468. 【状态】**审计器 379/379**（新增 KITTI-360 的 27 条）；
      `check_cross_document_refs.py` 报 0 broken。
 
+## 第八轮独立评审（2026-09-10，你触发：按 TIFS 要求完整评审并覆盖 RevisionSuggestions.tex）
+
+469. 【已完成】**第八轮评审已整段覆盖写入 `docs/RevisionSuggestions.tex`
+     （8 页，0 overfull、0 warning）。** 按协议：不用任何旧评审、progress.md
+     或"已完成"判断作输入，直接对 `main.tex`（sha `41e1636f…`，13 页）、
+     `supplementary.tex`（sha `c33efa1b…`，6 页）审，需要验证的地方
+     **直接从导出重算**。**结论：Minor revision。**
+470. 【R1，Critical —— 而且是我上一轮自己写进去的错】
+     **KITTI-360 的 direction 结果用了论文自己否定的推断单位。**
+     正文 protocol 一节白纸黑字写着：query 之间不独立，
+     "所以 direction 对照我们**同时**报告按 place 重抽的 bootstrap"。
+     MSLS 的每个 direction 对照都照做了。
+     **但 KITTI-360 是 227 query / 16 places = 每个 place 14.2 个 query**
+     （MSLS 八城是 1.44），依赖性严重一个数量级，
+     **偏偏只有它没报 place-clustered 区间**。
+     我从 `kitti360_rows/direction.csv` 用论文自己的聚类过程重算：
+     - 点估计 −0.0543，两种口径一样；
+     - **query-level [−0.0954, −0.0132]**（论文印的这个）；
+     - **place-clustered [−0.1352, +0.0234] —— 跨零**，宽 1.93 倍。
+     更糟的是正文那句"under the same protocol, energy gate and
+     **unit of inference**"——前两个成立，**第三个是假的**，
+     而且这句恰好把决定结论的那个差异盖住了。
+471. 【R1 的另一半：null 是稳的】按 place 聚类重算放置臂，
+     **KITTI-360 没有任何一格显著，最大差仍是 +0.0117，仍在 ±0.012 以内**。
+     所以**否定性结论对推断单位不敏感，只有新加的肯定性主张敏感**。
+     这条要说清楚：论文的核心结论没有受影响。
+472. 【R2，Major —— 也是我上轮造成的】**跑了 13 个放置，表里只印了 11 个。**
+     `kitti360_rows/placement.csv` 里有 13 个 condition，
+     我在 `make_kitti360_table.py` 里硬写的 `PLACEMENTS` 名单漏了
+     **`margin_oracle` 和 `anti_margin_oracle`**，正文也跟着写"eleven"。
+     重算：margin_oracle **+0.0117**（和 edge 并列**全臂最大**）、
+     anti_margin_oracle −0.0029，都不显著、都在容差内——**结论不变**，
+     但"在一张论证'没有哪格大'的表里，把并列最大的那格删掉"
+     正是审稿人受训要找的模式。
+     **而且审计器抓不到**：它只验证被登记的值，没登记的行是隐形的，
+     379/379 全绿的同时这两行不存在。
+473. 【R3，Moderate】**16 个 place 这个决定性局限只写在补充材料，没写在下结论的地方。**
+     正文只给"227 query / 2000 gallery / 3 seeds"，没提 place 数。
+     可 16 正是 R1 的成因，也是审稿人判断这次复现值多少钱唯一需要的数字。
+474. 【R4--R7，Minor】摘要**完全没提第二个数据集**（现在是低报而不是高报，
+     但仍是摘要与正文不一致）；放置集合里仍然没有第三方训练的 sanitizer
+     （上轮已在结论里限定范围，不阻塞）；覆盖率措辞（190 个字面量里 73 个没有 claim）；
+     16 条未引用文献，其中 Tokyo 24/7 和 RobotCar 现在确实用不上了。
+475. 【状态】论文本身这轮**没有改动**，仍是 13 页 / 6 页 / 摘要 246 词 /
+     审计器 379/379 / 跨文档引用 0 broken。评审只写评审，不算修改完成。
+
 # 遗留问题
 
-- **暂无阻塞项。** RevisionSuggestions.tex 第七轮的 R1--R10 全部闭合，
-  四条 presentation note 也都落地。
-- **【可以关机】2c 和 vGPU 3090 这轮一次都没用上**（数据在本机），
-  PRO 6000 本来就是关的。
-- **【下一轮的最大缺口，不阻塞投稿】R6 的另一半**：放置集合里仍然没有
-  任何**第三方训练出来的 selective sanitizer**。结论里已经点名了 null 覆盖的
-  类别，所以没有措辞过头；但要把这条补上，需要找一个有公开 checkpoint 的机制
-  跑一遍协议。
+- **【下一轮的第一件事，R1】** 给 KITTI-360 的 direction 对照补上
+  place-clustered 区间并**改措辞**：论文能说的是"否定性结论在两种口径下都复现，
+  direction 方向一致但在第二个数据集上尚未与零分离"。
+  另外把"same unit of inference"那句删掉或改真。**不需要 GPU。**
+- **【R2】** 表里补齐 13 个 condition，正文 eleven 改 thirteen，
+  并加一个检查：导出里出现过的 condition 必须出现在由它生成的表里。**不需要 GPU。**
+- **【R3/R4】** 正文写上 16 个 place；摘要加一句第二数据集（只说 null 那半）。
+- **【仍开着，不阻塞】R5**：没有第三方训练的 selective sanitizer 跑过协议。
