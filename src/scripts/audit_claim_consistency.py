@@ -1267,6 +1267,82 @@ def _placement_macro(tree: str, placement: str):
     return go
 
 
+# The intervals Table I prints are load-bearing -- they are what turns "no
+# pooled difference is significant" into the one-directional claim the paper
+# makes -- so they are registered rather than left as prose. One bootstrap per
+# tree serves all seven placements: the resample is over queries, and every
+# placement is recomputed inside the same resample, which is also the only way
+# the intervals stay mutually comparable.
+_PLACEMENT_CI: Dict[str, Dict[str, tuple]] = {}
+
+
+def _placement_intervals(tree: str) -> Dict[str, tuple]:
+    if tree in _PLACEMENT_CI:
+        return _PLACEMENT_CI[tree]
+    cells: Dict[tuple, Dict[str, Dict[str, List[float]]]] = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(list)))
+    paths: List[str] = []
+    for root in ROOTS:
+        paths = sorted(globmod.glob(str(root / tree / "**" / "per_query.csv"),
+                                    recursive=True))
+        if paths:
+            break
+    if not paths:
+        _PLACEMENT_CI[tree] = {}
+        return {}
+    for path in paths:
+        bench = Path(path).parent.name
+        with open(path, newline="", encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                cells[bench][(bench, r["backbone"])][r["placement"]]  # touch
+                cells[bench][(bench, r["backbone"])][r["placement"]].append(
+                    (r["query_id"], float(int(r["correct_rank"]) == 1)))
+    # query -> mean hit, per (cell, placement), and the query list per benchmark
+    hits: Dict[tuple, Dict[str, Dict[str, float]]] = {}
+    queries: Dict[str, List[str]] = {}
+    for bench, by_cell in cells.items():
+        qs = sorted({q for arms in by_cell.values() for rows in arms.values()
+                     for q, _ in rows})
+        queries[bench] = qs
+        for cell, arms in by_cell.items():
+            hits[cell] = {}
+            for pl, rows in arms.items():
+                acc: Dict[str, List[float]] = defaultdict(list)
+                for q, h in rows:
+                    acc[q].append(h)
+                hits[cell][pl] = {q: float(np.mean(v)) for q, v in acc.items()}
+    places = sorted({pl for arms in hits.values() for pl in arms
+                     if pl != "uniform"})
+    rng = np.random.default_rng(0)
+    draws: Dict[str, List[float]] = {pl: [] for pl in places}
+    for _ in range(10000):
+        pick = {b: list(rng.choice(qs, size=len(qs), replace=True))
+                for b, qs in queries.items()}
+        for pl in places:
+            deltas = []
+            for (bench, _bb), arms in hits.items():
+                if pl not in arms or "uniform" not in arms:
+                    continue
+                sel = pick[bench]
+                a = [arms[pl][q] for q in sel if q in arms[pl]]
+                u = [arms["uniform"][q] for q in sel if q in arms["uniform"]]
+                if a and u:
+                    deltas.append(float(np.mean(a)) - float(np.mean(u)))
+            if deltas:
+                draws[pl].append(float(np.mean(deltas)))
+    out = {pl: tuple(np.percentile(v, [2.5, 97.5])) for pl, v in draws.items()
+           if v}
+    _PLACEMENT_CI[tree] = out
+    return out
+
+
+def _placement_ci(tree: str, placement: str, end: int):
+    def go() -> Optional[float]:
+        ci = _placement_intervals(tree).get(placement)
+        return None if ci is None else float(ci[end])
+    return go
+
+
 for name, constant, selective in [
         ("anti_oracle_grad", -0.001, -0.003),
         ("learned", 0.000, 0.039),
@@ -1281,6 +1357,36 @@ for name, constant, selective in [
         printed = "$\\pm0.000$" if value == 0 else f"${value:+.3f}$"
         claim(f"TabI/{label}/{name}", "Table tab:placement", printed, value,
               6e-4, tree, _placement_macro(tree, name), source=MAIN)
+
+
+# The printed interval endpoints, read back out of the generated column so the
+# registry cannot drift from the table by a rounding.
+for line in (MAIN.read_text(encoding="utf-8").splitlines()):
+    if not line.startswith(("anti-score-grad.", "learned support",
+                            "score-gradient", "saliency", "centre bias",
+                            "fixed random", "edge magnitude")):
+        continue
+    if "95\\% CI" in line or "$[" not in line:
+        continue
+    cols = [c.strip() for c in line.rstrip("\\\\").split("&")]
+    if len(cols) != 5:
+        continue
+    key = {"anti-score-grad.": "anti_oracle_grad",
+           "learned support": "learned", "score-gradient": "oracle_grad",
+           "saliency": "saliency", "centre bias": "center",
+           "fixed random": "random_fixed",
+           "edge magnitude": "edge"}[cols[0]]
+    for label, tree, cell in (("constant", "placement_study", cols[2]),
+                              ("selective", "placement_study_maskbacked",
+                               cols[4])):
+        body = cell.strip().strip("$")
+        if body.endswith("^{\\ast}"):
+            body = body[: -len("^{\\ast}")]
+        lo_s, hi_s = body.strip("[]").split(",")
+        for end, printed_end in ((0, lo_s), (1, hi_s)):
+            claim(f"TabI/{label}/{key}/ci{end}", "Table tab:placement",
+                  cell, float(printed_end), 3e-3, tree,
+                  _placement_ci(tree, key, end), locator=cell, source=MAIN)
 
 
 # --- Table II: operators at matched delivered MSE ---------------------------
