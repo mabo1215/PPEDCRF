@@ -1106,7 +1106,9 @@ for name, top1, delta in [
         ("saliency", 0.1615, 0.0103), ("center", 0.1424, -0.0088),
         ("random_fixed", 0.1571, 0.0059), ("edge", 0.1630, 0.0117),
         ("segmentation", 0.1454, -0.0059), ("segmentation_fcn", 0.1439, -0.0073),
-        ("segmentation_ade", 0.1424, -0.0088)]:
+        ("segmentation_ade", 0.1424, -0.0088),
+        ("margin_oracle", 0.1630, 0.0117),
+        ("anti_margin_oracle", 0.1483, -0.0029)]:
     claim(f"KITTI/place/{name}/top1", "Table tab:kitti360", f"{top1:.4f}", top1,
           5e-5, "kitti360_rows", _kitti("placement", "placement", name, "top1"),
           source=KITTI_TAB)
@@ -1125,6 +1127,60 @@ for cid, printed, value, stat, src in [
     cond = "isotropic" if "isotropic" in cid else "transfer_3"
     claim(cid, "\\S A second dataset", printed, value, 5e-5, "kitti360_rows",
           _kitti("direction", "condition", cond, stat), source=src)
+
+
+
+# --- the clustered interval on the second dataset ---------------------------
+# The manuscript's protocol resamples places, not queries, for direction
+# contrasts. On KITTI-360 that is the binding unit -- 227 queries from 16
+# places -- and it is the endpoint that decides whether the claim is made, so
+# it is checked rather than left to a regenerated table.
+def _kitti_clustered(side: int):
+    def go() -> Optional[float]:
+        rows = load("kitti360_rows/direction.csv")
+        if not rows:
+            return None
+        by: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        place: Dict[str, str] = {}
+        for r in rows:
+            by[r["condition"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+            place[r["query_id"]] = r["place_id"]
+        ref = {q: float(np.mean(v)) for q, v in by["isotropic"].items()}
+        arm = {q: float(np.mean(v)) for q, v in by["transfer_3"].items()}
+        shared = sorted(set(arm) & set(ref))
+        if not shared or not any(place.values()):
+            return None
+        diff = np.array([arm[q] - ref[q] for q in shared])
+        groups: Dict[str, List[int]] = defaultdict(list)
+        for i, q in enumerate(shared):
+            groups[place[q]].append(i)
+        cl = [np.array(v) for v in groups.values()]
+        rng = np.random.default_rng(20260910)
+        draws = np.empty(10000)
+        for k in range(10000):
+            pick = rng.integers(0, len(cl), len(cl))
+            draws[k] = diff[np.concatenate([cl[j] for j in pick])].mean()
+        return float(np.percentile(draws, 2.5 if side == 0 else 97.5))
+    return go
+
+
+for cid, printed, value, side, src in [
+        ("KITTI/dir/clustered_lo", "$[-0.137,+0.021]$", -0.137, 0, KITTI_TAB),
+        ("KITTI/dir/clustered_hi", "$[-0.137,+0.021]$", 0.021, 1, KITTI_TAB),
+        ("KITTI/dir/clustered_lo/main", "$[-0.137,+0.021]$", -0.137, 0, MAIN),
+        ("KITTI/dir/clustered_hi/main", "$[-0.137,+0.021]$", 0.021, 1, MAIN)]:
+    claim(cid, "\\S A second dataset (clustered unit)", printed, value, 1e-3,
+          "kitti360_rows", _kitti_clustered(side), source=src)
+
+# The claim the manuscript now makes rather than the one it made before: the
+# clustered interval covers zero, so the effect is not separated on this
+# benchmark.
+claim("KITTI/dir/clustered_covers_zero", "\\S A second dataset (clustered unit)",
+      "does not, $[-0.137,+0.021]$", 1.0, 0.5, "kitti360_rows",
+      lambda: float(_kitti_clustered(0)() is not None
+                    and _kitti_clustered(0)() < 0 < _kitti_clustered(1)()),
+      locator=None, source=MAIN)
 
 
 

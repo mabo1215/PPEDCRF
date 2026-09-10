@@ -21,7 +21,7 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{10 September 2026 --- IEEE TIFS, seventh independent review cycle.
+\date{10 September 2026 --- IEEE TIFS, eighth independent review cycle.
 This file carries \emph{only} open, running and not-yet-started work;
 completed items are removed once recorded in \texttt{docs/progress.md}.
 Earlier editions are in \texttt{docs/archived/}.}
@@ -31,12 +31,14 @@ Earlier editions are in \texttt{docs/archived/}.}
 
 \section*{Where This Cycle Stands}
 
-The active review is the seventh independent review in
+The active review is the eighth independent review in
 \texttt{docs/RevisionSuggestions.tex} (10 September 2026, IEEE TIFS, verdict
-\emph{minor revision}), findings R1--R10. \textbf{All ten are closed}, together with all four
-presentation notes. R5, the last of them, was closed by measurement rather than
-by narrowing: a second place-labelled dataset was built from KITTI-360 revisits
-and both of the paper's central contrasts replicate on it.
+\emph{minor revision}), findings R1--R7. \textbf{All seven are closed},
+together with all three presentation notes. The cycle's substance was a
+correction: the second dataset added last cycle had its headline positive
+result reported on the query as the unit of inference, which this paper's own
+protocol rejects when queries cluster. Recomputed on the unit the protocol
+prescribes, that interval covers zero, and the manuscript now says so.
 
 \paragraph{Compute state.} \textbf{Nothing is running, and no remote host was
 used.} 2c (2$\times$RTX~4080 SUPER), vGPU~3090 and PRO~6000 were each checked
@@ -59,11 +61,11 @@ report (the budget sweep, whose figure plots the same data, and the mined
 proxy's per-rule and two-city E1 tables, which a real second dataset makes the
 least load-bearing things in a six-page supplement).
 
-\paragraph{Verification state.} \textbf{379 claims verify against raw exports;
+\paragraph{Verification state.} \textbf{388 claims verify against raw exports;
 0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 333.
-The additions are the KITTI-360 replication, the strong-attacker per-placement
-table, and the two numbers of the proxy-versus-real calibration sentence, which
-until this cycle appeared in no table in either document. \emph{A correction to an earlier statement in
+The additions this cycle are the two placement conditions that had been run but
+never reported, and the place-clustered endpoints of the KITTI-360 direction
+contrast --- the numbers that decide whether the claim can be made at all. \emph{A correction to an earlier statement in
 this file:} the auditor does not cover every printed number. It covers every
 table cell in both documents plus the registered prose claims; 74 of the 182
 distinct three- and four-decimal literals in the manuscript still have no
@@ -78,12 +80,12 @@ undefined references while the manuscript pointed at the wrong table. The
 manuscript now carries no literal S-number at all, and the check fails loudly
 if one is reintroduced and goes stale.
 
-\section*{Table 1: Open Work Against the Seventh Review}
+\section*{Table 1: Open Work Against the Eighth Review}
 
-\begin{longtable}{@{}p{0.05\linewidth}p{0.22\linewidth}p{0.11\linewidth}p{0.54\linewidth}@{}}
-\caption{Nothing is open. R1--R10 are all closed; this table records the one
-that needed an experiment rather than an edit.}
-\label{tab:tifs7-open}\\
+\begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.11\linewidth}p{0.56\linewidth}@{}}
+\caption{Nothing is open. R1--R7 are all closed; the three that changed a
+printed claim are recorded here.}
+\label{tab:tifs8-open}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
 \midrule
@@ -93,15 +95,33 @@ that needed an experiment rather than an edit.}
 \midrule
 \endhead
 
-R5 & Second place-labelled retrieval dataset & \done & Built from KITTI-360
-revisits and run through the same protocol, gate and unit of inference: 227
-queries, 2,000-image gallery, 16 places, three seeds. \textbf{Both contrasts
-replicate.} Allocation: eleven energy-matched placements, the three
-published-model priors among them, every difference from uniform inside
-$\pm0.012$ Top-1 and none significant (smallest $p=0.12$), the learned map
-again exactly $0.0000$. Direction: $0.1483\to0.0940$, $-0.0543$
-$[-0.095,-0.015]$, $p=0.006$. The conclusion's narrowing to ``one dataset, one
-capture condition'' was removed as a result. \\
+R1 & Unit of inference on the second dataset & \done & The KITTI-360 direction
+contrast was reported with a query-level interval, $[-0.097,-0.015]$, while the
+protocol prescribes resampling places. With 227 queries from 16 places the
+clustered interval is $[-0.137,+0.021]$ and covers zero. Both are now printed,
+the manuscript no longer claims the effect is confirmed there, and the false
+``same unit of inference'' clause is gone. The point estimate, $-0.0543$, is
+unchanged. \\
+\addlinespace
+
+R2 & Two run conditions unreported & \done & Thirteen placements were run and
+eleven printed; \texttt{margin\_oracle}, which ties for the largest absolute
+difference in the arm at $+0.0117$, was one of the two dropped. All thirteen
+are now in the table, the manuscript says thirteen, and the generator fails
+with a non-zero exit if any exported condition is missing from its table. \\
+\addlinespace
+
+R3 & The 16-place limit was only in the supplement & \done & The manuscript now
+states the place count where it states the query count, which is what makes R1
+legible to a reader. \\
+\addlinespace
+
+R4--R7 & Abstract, sanitizer scope, coverage wording, bibliography & \done &
+The abstract now says the allocation null replicates on a second dataset, and
+claims nothing more. The artifact README states what the checker covers and
+what it does not. Sixteen uncited entries pruned, 47 remain, all cited. R5
+(no third-party sanitizer) needs no text change; the conclusion already names
+the class the null covers. \\
 
 \bottomrule
 \end{longtable}
@@ -109,9 +129,10 @@ capture condition'' was removed as a result. \\
 \section*{Table 2: How the Second Dataset Was Built}
 
 \begin{longtable}{@{}p{0.16\linewidth}p{0.78\linewidth}@{}}
-\caption{The construction, and the two dead ends that shaped it. Recorded
-because the choices are not obvious from the result.}
-\label{tab:tifs7-plan}\\
+\caption{The construction, the two dead ends that shaped it, and the limit that
+decided this cycle's correction. Recorded because none is obvious from the
+result.}
+\label{tab:tifs8-plan}\\
 \toprule
 \textbf{Aspect} & \textbf{Detail} \\
 \midrule
@@ -145,11 +166,13 @@ separate, generate each other's false negatives. That raised label agreement
 from $42\%$ to $100\%$ of the gallery frames within 25\,m. \\
 \addlinespace
 
-Honest limit & 16 distinct places, against MSLS's 277, so the place-clustered
-interval has few clusters and the query-level one carries the inference. A
-place is a road stretch rather than a 25\,m ball, so absolute Top-1 is not
-comparable with the MSLS tables; only the paired contrasts are read, which is
-all either arm needs. \\
+Honest limit & 16 distinct places behind 227 queries, against 277 behind 400 on
+MSLS. This is what R1 turned on: at 14.2 queries per place the clustered
+interval is $1.93\times$ wider than the query one and covers zero, so the
+direction effect is consistent in sign and size but not separated here. The
+allocation null is unaffected --- no placement separates from zero under either
+unit. A place is also a road stretch rather than a 25\,m ball, so absolute
+Top-1 is not comparable with the MSLS tables. \\
 
 \bottomrule
 \end{longtable}
@@ -159,7 +182,7 @@ all either arm needs. \\
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
 \caption{Carried forward from the sixth cycle. None is a manuscript edit, an
 experiment or an analysis.}
-\label{tab:tifs7-authors}\\
+\label{tab:tifs8-authors}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
 \midrule
@@ -200,7 +223,7 @@ S5 & Response letter & \done\ (not required) & Confirmed not being written. \\
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
 \caption{Work that is not required for this submission. Listed so a later cycle
 does not have to rediscover it.}
-\label{tab:tifs7-optional}\\
+\label{tab:tifs8-optional}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Why it is not blocking} \\
 \midrule
@@ -239,9 +262,9 @@ this cycle. \\
 \bottomrule
 \end{longtable}
 
-\section*{Closed in This Cycle}
+\section*{Closed in the Seventh Cycle}
 
-R1--R4 and R6--R10 are closed, with the evidence in \texttt{docs/progress.md}.
+R1--R4 and R6--R10 of the seventh review are closed, with the evidence in \texttt{docs/progress.md}.
 Four were integrity defects found by following a reference: two manuscript
 pointers that promised material the supplement did not contain (the
 learning-rate sweep and the MixVPR adaptive analysis, which are in the extended

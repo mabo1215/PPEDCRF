@@ -1,9 +1,15 @@
 # Reproducibility Artifact
 
 This bundle lets a reviewer confirm, without a GPU and without model weights,
-that every number in the paper's tables was derived from the released raw
-experiment outputs rather than transcribed by hand. It currently verifies 228
-reported values.
+that the paper's reported values were derived from the released raw experiment
+outputs rather than transcribed by hand. It currently verifies 388 of them.
+
+What that does and does not cover: every cell of every table in the manuscript
+and the supplement is checked, along with the prose figures registered
+alongside them. It is a registry, not a sweep -- a number quoted only in the
+running text and never registered is not checked, and roughly a third of the
+manuscript's three- and four-decimal literals are in that class, mostly
+interval endpoints printed beside a point estimate that is checked.
 
 It also carries `extended_evidence_report.pdf`, the extended evidence report
 the manuscript cites wherever a result lives only there.
