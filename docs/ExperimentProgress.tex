@@ -21,7 +21,7 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{10 September 2026 --- IEEE TIFS, ninth independent review cycle.
+\date{10 September 2026 --- IEEE TIFS, tenth independent review cycle.
 This file carries \emph{only} open, running and not-yet-started work;
 completed items are removed once recorded in \texttt{docs/progress.md}.
 Earlier editions are in \texttt{docs/archived/}.}
@@ -31,50 +31,58 @@ Earlier editions are in \texttt{docs/archived/}.}
 
 \section*{Where This Cycle Stands}
 
-The active review is the ninth independent review in
+The active review is the tenth independent review in
 \texttt{docs/RevisionSuggestions.tex} (10 September 2026, IEEE TIFS, verdict
-\emph{minor revision}), findings R1--R6. \textbf{All six are closed.} The
-cycle's substance was giving the second dataset the anchor the first one has
-had all along: a clean baseline and a white-box power check. Clean Top-1 there
-is $0.1498$, the mechanism's own release $0.1512$ --- it moves nothing --- and
-a white-box attacker reaches $0.0000$ with a clustered interval excluding zero.
-The benchmark can be moved, so its null is a null and not a floor. That was the
-one thing a referee could not previously tell.
+\emph{minor revision}), findings R1--R7. \textbf{R2--R7 are closed; R1 is
+running on an RTX PRO~6000.} The cycle's substance is that the paper was
+reporting equivalence verdicts from point estimates while its own tables read
+intervals, and that the one table carrying the central negative claim had no
+intervals at all and was asserted by no checker. Both are now fixed, and
+fixing the second changed what the table says: three pooled placement cells
+exclude zero, all three on the side that costs privacy, where the caption had
+said none was significant.
 
-\paragraph{Compute state.} \textbf{Nothing is running, and no remote host was
-used.} 2c (2$\times$RTX~4080 SUPER), vGPU~3090 and PRO~6000 were each checked
-for the R5 data and none held it; the data was on the local G: drive, so the
-whole cycle ran on the RTX~3070. The R5 arms took about 25 minutes of wall
-clock between them, against a measured 7 minutes of pure compute --- the
-difference is reading 1408$\times$376 PNGs off an external drive, which is why
-moving the job to a faster GPU would have made it slower, not quicker.
+\paragraph{Compute state.} \textbf{R1 is running on an RTX PRO~6000
+(96\,GB).} The clip-pooling attacker releases every frame of a query's clip
+and pools $k$ of them before ranking: 400 queries $\times$ 7 frames $\times$
+three conditions $\times$ three seeds, about 34{,}000 perturbation
+optimisations. It is sharded across 40 concurrent workers because the job is
+neither GPU-memory- nor CPU-bound but limited by how few kernels a single
+worker keeps in flight --- one worker left the card at 30\% of its memory and
+the host at 12\% of its cores. Two lessons were paid for in wall clock: 16
+workers each parsing the 311\,MB manifest and building a 1.5\,GB gallery
+tensor at once thrashed the machine for twelve minutes with no output, which
+per-shard manifests and staggered starts fixed; and the neighbouring frames a
+clip needs were absent from every staged copy of MSLS, because each host holds
+only the images its existing manifests reference.
 
 \paragraph{Document state.} \texttt{main.pdf} \textbf{13 pages} against the
-13-page TIFS ceiling; abstract \textbf{234} words counting each math
+13-page TIFS ceiling; abstract \textbf{243} words counting each math
 expression as one word (window 150--250);
 \texttt{supplementary.pdf} \textbf{6 pages}, the SPS ceiling without
 Editor-in-Chief approval; \texttt{titlepage.pdf} 1 page; the extended evidence
 report, released with the code and not submitted, 12 pages. All four build with
 \textbf{0 undefined references, 0 undefined citations and 0 overfull boxes}.
-The three reference rows and the audit's second direction were added to
-documents already at both ceilings, and paid for: the per-backbone
-redistribution table moved to the extended report, which brings the count of
-tables living there rather than in the supplement to five. That table showed
-five identical columns in every one of six rows --- the sentence that says so
-carries the same information in three lines.
+Table~I gained two interval columns and the manuscript gained a paragraph
+naming purification as the untested attack; both were paid for out of prose ---
+the adaptive-attacker, operator, frontier, mask-guided and preprocessing
+sections lost their restatements, and the paragraph on which queries an
+isotropic budget moves went to the extended report. The page returned to 13
+only on the eighth build, which is what a document at its ceiling costs.
 
-\paragraph{Verification state.} \textbf{395 claims verify against raw exports;
-0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 333.
-The additions this cycle are the second dataset's three reference levels. Two
-claims were also \emph{removed}: the label-audit counts had been registered
-with recompute functions that returned the printed constants, which verifies
-nothing while inflating the total. Recomputing them needs manifest coordinates
-the exports do not carry, so they are reproduced by rerunning the manifest
-builder instead. \emph{A correction to an earlier statement in
-this file:} the auditor does not cover every printed number. It covers every
-table cell in both documents plus the registered prose claims; 74 of the 182
-distinct three- and four-decimal literals in the manuscript still have no
-claim, most of them interval endpoints quoted beside a covered point estimate.
+\paragraph{Verification state.} \textbf{432 claims verify against raw exports;
+0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 395.
+The additions are Table~I and Table~II, which no checker had been asserting
+--- the two tables carrying the paper's central allocation results. Both were
+correct, but registering Table~I fixed its \emph{definition} as well as its
+values: its $\Delta$ is a macro-average over the seven (benchmark, backbone)
+cells, not the pooled row average, which weights the six-backbone proxy six
+times as heavily as the 50-pair one and gives visibly different numbers. The
+placement rows now sit in \texttt{src/exports/} so the claim recomputes from a
+committed tree. 76 of the manuscript's 192 distinct three- and four-decimal
+literals still carry no claim, most of them interval endpoints quoted beside a
+covered point estimate; the artifact README now says so in those words instead
+of asserting complete table coverage.
 
 \paragraph{A new check.} \texttt{check\_cross\_document\_refs.py} resolves
 every literal \texttt{Table~S$n$} / \texttt{Fig.~S$n$} in the manuscript
@@ -85,12 +93,12 @@ undefined references while the manuscript pointed at the wrong table. The
 manuscript now carries no literal S-number at all, and the check fails loudly
 if one is reintroduced and goes stale.
 
-\section*{Table 1: Open Work Against the Ninth Review}
+\section*{Table 1: Open Work Against the Tenth Review}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.11\linewidth}p{0.56\linewidth}@{}}
-\caption{Nothing is open. R1--R6 are all closed; the three that changed what is
-printed are recorded here.}
-\label{tab:tifs9-open}\\
+\caption{R1 is running; R2--R7 are closed. The two that changed what the paper
+claims are R2 and R3.}
+\label{tab:tifs10-open}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
 \midrule
@@ -100,33 +108,47 @@ printed are recorded here.}
 \midrule
 \endhead
 
-R1 & No baseline or power check on the second dataset & \done & One
-unperturbed pass plus a white-box arm over the existing manifest, about half an
-hour locally. Clean Top-1 $0.1498$; mechanism release $0.1512$, moving nothing;
-white-box $0.0000$, $-0.1498$ $[-0.251,-0.065]$ clustered. The table now opens
-with these three reference rows and the manuscript quotes them, so the null has
-both an anchor and a demonstrated ability to detect a large effect. \\
+R1 & A frame-level defense for a video-level threat & \running & The
+clip-pooling attacker the extended report already runs against allocation,
+now run against the direction arm it never covered. Clips come from MSLS's own
+sequence metadata: all 400 queries carry it, 384 reach a full seven frames
+whose neighbours share the query's place label. Releasing every frame and
+pooling $k$ of them is the attack an uploaded video actually permits. On an
+RTX PRO~6000, 40 workers. \\
 \addlinespace
 
-R2 & Label audit reported in one direction & \done & Both counts printed: all
-$605$ positives within $25$\,m carry the query's label, and a further $1{,}211$
-labelled positives lie beyond it, so two thirds of what scores as a hit is
-outside that radius. \\
+R2 & Equivalence verdicts read off point estimates & \done & The declared rule
+reads intervals; the prose read point estimates, and both documents said one
+placement cell was the exception where the table beside them printed five. Two
+of seven cells meet the margin, one of those tautologically, and $\pm0.027$ is
+the smallest margin the data certify --- six times smaller than the direction
+effect, so the comparison survives and the wording changes. Place-clustering
+the allocation family widens intervals $0.90$--$1.09\times$ and changes no
+verdict, which closes for allocation the question the second dataset raised
+for direction. \\
 \addlinespace
 
-R3 & Supplement opening no longer described the supplement & \done & Rewritten
-to name which document holds which table. Five tables now sit in the extended
-report --- the per-rule placement study behind Table~I, the two-city E1 table,
-the white-box per-backbone table, the budget sweep, and the redistribution
-controls by backbone, the last moved this cycle to pay for the reference
-rows. \\
+R3 & Table~I had no intervals, and no checker asserted it & \done & Adding the
+intervals changed the table: three pooled cells exclude zero, all on the side
+that costs privacy, where the caption had said none was significant. Edge
+placement is positive in $7$ of $7$ (benchmark, backbone) cells. Registering
+the table also fixed its definition --- a macro-average over cells, not a
+pooled row average. \\
 \addlinespace
 
-R4--R6 & Clustering lesson, placement counts, registry hygiene & \done & The
-cost of clustering is now stated as a rule where both cases can be seen: it
-scales with queries per place, $1.44$ against $14.2$. The thirteen placements
-are reconciled against the eight. And two claims that verified nothing were
-removed rather than left to pad the count. \\
+R4--R5 & A stale literal and three taxonomies & \done & \S III-G said the
+operating point costs $0.110$ mIoU eight lines after Table~IV said $0.098$; the
+literal was left behind by a superseded frontier run. The direction's utility
+cost is now quoted from one execution in both documents rather than one each.
+The placement taxonomy reads the same in all five places that count it. \\
+\addlinespace
+
+R6--R7 & Purification, and presentation & \done & Purification is named as the
+attack the four fixed transforms do not bound, and the deployability claim is
+scoped to it. A sentence in the protocol section had lost its verb; a $p$ of
+$0.000$ is now a bound; one quantity is rounded one way. The recommended
+figure is \emph{deferred}: at 13 of 13 pages it would have to replace Table~I,
+which this cycle just gave the intervals a referee needs. \\
 
 \bottomrule
 \end{longtable}
@@ -137,7 +159,7 @@ removed rather than left to pad the count. \\
 \caption{The construction, the two dead ends that shaped it, and the limit that
 decided this cycle's correction. Recorded because none is obvious from the
 result.}
-\label{tab:tifs9-plan}\\
+\label{tab:tifs10-plan}\\
 \toprule
 \textbf{Aspect} & \textbf{Detail} \\
 \midrule
@@ -188,7 +210,7 @@ Top-1 is not comparable with the MSLS tables. \\
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
 \caption{Carried forward from the sixth cycle. None is a manuscript edit, an
 experiment or an analysis.}
-\label{tab:tifs9-authors}\\
+\label{tab:tifs10-authors}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
 \midrule
@@ -229,7 +251,7 @@ S5 & Response letter & \done\ (not required) & Confirmed not being written. \\
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
 \caption{Work that is not required for this submission. Listed so a later cycle
 does not have to rediscover it.}
-\label{tab:tifs9-optional}\\
+\label{tab:tifs10-optional}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Why it is not blocking} \\
 \midrule
