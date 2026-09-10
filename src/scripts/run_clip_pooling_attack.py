@@ -104,6 +104,13 @@ def main() -> int:
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--shard", type=int, default=0,
+                    help="This worker's index, for splitting the query list "
+                         "across concurrent processes.")
+    ap.add_argument("--num_shards", type=int, default=1,
+                    help="How many workers the query list is split across. "
+                         "Queries are dealt round-robin so every shard sees "
+                         "all eight cities and finishes in comparable time.")
     ap.add_argument("--gallery_batch", type=int, default=128)
     ap.add_argument("--eot_sanitizers", nargs="*",
                     default=["jpeg75", "jpeg50", "blur", "denoise"],
@@ -125,13 +132,17 @@ def main() -> int:
     queries = [r for r in records if r["query_id"] in clips]
     if args.limit:
         queries = queries[: args.limit]
+    if args.num_shards > 1:
+        queries = [q for i, q in enumerate(queries)
+                   if i % args.num_shards == args.shard]
     missing = len(records) - len([r for r in records if r["query_id"] in clips])
     resize_hw = (args.height, args.width)
     gallery_ids = sorted(gallery)
     place_of = {g: gallery[g]["place_id"] for g in gallery_ids}
     gallery_tensor = torch.stack(
         [load_image(gallery[g]["path"], resize_hw) for g in gallery_ids])
-    print(f"[clip] {len(queries)} queries ({missing} without a clip), "
+    print(f"[clip] shard {args.shard + 1}/{args.num_shards}: "
+          f"{len(queries)} queries ({missing} without a clip), "
           f"{len(gallery_ids)} gallery images", flush=True)
 
     names = [args.eval_backbone] + [b for b in args.surrogates
