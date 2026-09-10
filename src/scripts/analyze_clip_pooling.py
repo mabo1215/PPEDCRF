@@ -94,9 +94,18 @@ def main() -> int:
     poolings = sorted({k[2] for k in cells}, key=lambda p:
                       ["first", "mean", "max", "best_frame"].index(p)
                       if p in ("first", "mean", "max", "best_frame") else 9)
-    n_q = len(cells[(conditions[0], lengths[0], poolings[0])])
-    print(f"[clip] {n_files} shard files, {n_q} queries, "
-          f"conditions {conditions}, clip lengths {lengths}")
+    # A query that cannot reach the longest clip contributes to the short
+    # lengths only, so Top-1 would improve with k partly because the sample
+    # changed. Every cell is restricted to the queries present at every length.
+    common = set.intersection(*[set(cells[(c, k, p)])
+                                for c in conditions for k in lengths
+                                for p in poolings
+                                if (c, k, p) in cells])
+    cells = {key: {q: v for q, v in d.items() if q in common}
+             for key, d in cells.items()}
+    n_q = len(common)
+    print(f"[clip] {n_files} shard files, {n_q} queries reaching every clip "
+          f"length, conditions {conditions}, clip lengths {lengths}")
 
     print("\n== 1. Does clip length 1 reproduce the single-frame study? ==")
     for cond, published in zip((CONTROL, "direction"), args.single_frame):

@@ -83,6 +83,11 @@ def main() -> int:
         return 1
     cells = {k: {q: float(np.mean(v)) for q, v in d.items()}
              for k, d in cells.items()}
+    # Restrict to the queries that reach every clip length, so a Top-1 that
+    # rises with k is the attacker gaining rather than the sample changing.
+    common = set.intersection(*[set(v) for v in cells.values()])
+    cells = {k: {q: v for q, v in d.items() if q in common}
+             for k, d in cells.items()}
 
     ran = {k[0] for k in cells}
     listed = set(ORDER)
