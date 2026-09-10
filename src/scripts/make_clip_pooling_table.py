@@ -69,6 +69,10 @@ def main() -> int:
     ap.add_argument("--out", default=str(REPO / "paper" / "generated" /
                                          "tab_clip_pooling.tex"))
     ap.add_argument("--poolings", nargs="+", default=["mean", "best_frame"])
+    ap.add_argument("--attacker", default="",
+                    help="Named in the caption; the table is per attacker "
+                         "because the release is optimised against that "
+                         "attacker's surrogate ensemble.")
     ap.add_argument("--n_boot", type=int, default=10000)
     args = ap.parse_args()
 
@@ -173,8 +177,9 @@ def main() -> int:
         r"\begin{table}[htbp]", r"\centering",
         r"\caption{An attacker holding the clip. Every frame is released under",
         r"the same condition, optimiser, seed and delivered distortion, and the",
-        r"attacker pools $k$ of them before ranking the same 2,000-image",
-        rf"gallery ({n_q} queries over {n_places} places, 3 seeds). The $k=1$",
+        rf"{args.attacker or 'attacker'} pools $k$ of them before ranking the",
+        rf"same 2,000-image gallery ({n_q} queries over {n_places} places, 3",
+        r"seeds). The $k=1$",
         r"column is the single-frame result. $\Delta$ is against the isotropic",
         r"control at $k=7$ under the same pooling, so it isolates what pooling",
         r"does to a direction rather than what it does to having more frames;",
@@ -182,7 +187,8 @@ def main() -> int:
         r"inside their own place are excluded from every column, so a Top-1",
         r"that rises with $k$ is the attacker gaining and not the sample",
         r"changing.}",
-        r"\label{tab:clip_pooling}", r"\scriptsize",
+        rf"\label{{tab:clip_pooling{'_' + args.attacker.lower() if args.attacker else ''}}}",
+        r"\scriptsize",
         r"\setlength{\tabcolsep}{1.5pt}",
         rf"\begin{{tabular}}{{l{'c' * len(lengths)}cc}}",
         r"\hline",
