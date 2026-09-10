@@ -1796,6 +1796,52 @@ def _purify_psnr(condition: str, purifier: str, stat: str = "mean"):
     return go
 
 
+# The strong attacker's version of the same four numbers, which is where the
+# result turns from "halved" into "gone".
+_PURIFY_MIX: Dict[str, object] = {}
+
+
+def _purify_mix_cells():
+    if _PURIFY_MIX:
+        return _PURIFY_MIX
+    rows = load("purification/per_query_mixvpr.csv")
+    if not rows:
+        return {}
+    cells: Dict[tuple, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list))
+    for r in rows:
+        cells[(r["condition"], r["purifier"])][r["query_id"]].append(
+            float(int(r["correct_rank"]) == 1))
+    _PURIFY_MIX["per"] = {k: {q: float(np.mean(v)) for q, v in d.items()}
+                          for k, d in cells.items()}
+    return _PURIFY_MIX
+
+
+def _purify_mix_cross(cond_a: str, pur_a: str, cond_b: str, pur_b: str):
+    def go() -> Optional[float]:
+        c = _purify_mix_cells()
+        if not c:
+            return None
+        per = c["per"]
+        a, b = per.get((cond_a, pur_a)), per.get((cond_b, pur_b))
+        if not a or not b:
+            return None
+        qs = sorted(set(a) & set(b))
+        return float(np.mean([a[q] - b[q] for q in qs]))
+    return go
+
+
+for cid, printed, value, fn in [
+        ("PurifyMix/adv_raw", "$-0.0417$", -0.0417,
+         _purify_mix_cross("direction", "none", "isotropic", "none")),
+        ("PurifyMix/adv_purified", "$-0.0217$", -0.0217,
+         _purify_mix_cross("direction", "direction", "isotropic", "isotropic")),
+        ("PurifyMix/adv_hardened", "$-0.0233$", -0.0233,
+         _purify_mix_cross("hardened", "hardened", "isotropic", "isotropic"))]:
+    claim(cid, "\\S An attacker that removes the perturbation (MixVPR)",
+          printed, value, 6e-4, "purification", fn, source=MAIN)
+
+
 for cid, printed, value, fn in [
         ("Purify/main/gain", "$+0.132$", 0.132,
          _purify("direction", "direction", "delta")),
