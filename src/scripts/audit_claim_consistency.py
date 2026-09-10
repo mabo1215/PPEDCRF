@@ -1323,6 +1323,56 @@ for placement, top1, delta in [
               _mixvpr_placement(placement, "delta"), source=MIXVPR_TAB)
 
 
+# --- the primary placement table, weak attacker -----------------------------
+# The manuscript's central negative claim. It had no table until this cycle,
+# so five of its seven cells were unregistered as well as unprinted. The
+# margin-gradient rules come from their own run against their own uniform arm,
+# which is why the tree is a parameter here rather than a constant.
+MSLS_PLACE_TAB = REPO / "paper" / "generated" / "tab_placement_msls.tex"
+
+
+def _msls_placement(tree: str, placement: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load(tree)
+        if not rows:
+            return None
+        arms: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            arms[r["placement"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+        ref = {q: float(np.mean(v)) for q, v in arms["uniform"].items()}
+        arm = {q: float(np.mean(v)) for q, v in arms[placement].items()}
+        shared = sorted(set(arm) & set(ref))
+        if not shared:
+            return None
+        if stat == "top1":
+            return float(np.mean([arm[q] for q in shared]))
+        return float(np.mean([arm[q] - ref[q] for q in shared]))
+    return go
+
+
+FINAL = "icme2027_placement_msls/final/per_query.csv"
+MARGIN = "margin_oracle/per_query.csv"
+for tree, placement, top1, delta in [
+        (FINAL, "uniform", 0.1950, None),
+        (FINAL, "learned", 0.1958, 0.0008),
+        (FINAL, "oracle_grad", 0.1942, -0.0008),
+        (FINAL, "anti_oracle_grad", 0.1975, 0.0025),
+        (FINAL, "saliency", 0.1958, 0.0008),
+        (FINAL, "center", 0.2042, 0.0092),
+        (FINAL, "random_fixed", 0.1958, 0.0008),
+        (FINAL, "edge", 0.2000, 0.0050),
+        (MARGIN, "margin_oracle", 0.1867, -0.0083),
+        (MARGIN, "anti_margin_oracle", 0.1942, -0.0008)]:
+    claim(f"MSLSPlace/{placement}/top1", "Table tab:placement_msls",
+          f"{top1:.4f}", top1, 5e-5, tree.split("/")[0],
+          _msls_placement(tree, placement, "top1"), source=MSLS_PLACE_TAB)
+    if delta is not None:
+        claim(f"MSLSPlace/{placement}/delta", "Table tab:placement_msls",
+              f"${delta:+.4f}$", delta, 5e-5, tree.split("/")[0],
+              _msls_placement(tree, placement, "delta"), source=MSLS_PLACE_TAB)
+
+
 # --- the proxy-versus-real calibration sentence -----------------------------
 # Both numbers are quoted in both documents and were, until this cycle, in no
 # table at all. The real-data side is the two-city ResNet18 cell, which is
