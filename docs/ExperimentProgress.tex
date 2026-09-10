@@ -153,14 +153,15 @@ The placement taxonomy reads the same in all five places that count it. \\
 \addlinespace
 
 R6 & Purification, the attack the fixed transforms do not bound & \done &
-Named first, then measured: a residual denoiser trained on released/clean
-pairs from the same place-disjoint split, one per exposure, evaluated on the
-200 held-out queries. The first purifier trained here learned the
-\emph{identity} --- its loss settled at exactly the value copying the input
-gives and its output scored the release's own $36.18$\,dB --- and its
-retrieval null would have been an artifact. Dropping the learning rate
-tenfold fixed it, and the reconstruction check now gates the retrieval
-numbers. \\
+Measured, and it is the one result this cycle that costs the paper something.
+The purifiers clean the frame ($36.18$\,dB $\to$ $39.1$--$42.3$) and recover
+much of the ranking: against a clean $0.2550$ the direction returns from
+$0.0367$ to $0.1683$, the hardened release from $0.0283$ to $0.1217$, and a
+purifier trained on the wrong release still recovers a quarter. The advantage
+over the control survives but more than halves, $-0.2083$ to $-0.0933$. The
+first purifier trained here learned the \emph{identity} --- its loss settled
+at exactly the value copying the input gives --- and its null would have been
+an artifact; the reconstruction check now gates the retrieval numbers. \\
 \addlinespace
 
 R7 & Presentation & \done & A sentence in the protocol section had lost its
