@@ -12,12 +12,12 @@ stated here rather than one:
   "What the one-command check does and does not cover" below names the
   families it does not reach.
 - `src/scripts/audit_claim_consistency.py`, in the source repository,
-  recomputes **432** -- every cell of every table in the manuscript and the
+  recomputes **554** -- every cell of every table in the manuscript and the
   supplement, plus the prose values registered alongside them.
 
 Both are registries, not sweeps. A number quoted only in the running text and
-never registered is not checked: of the manuscript's 192 distinct three- and
-four-decimal literals, 76 have no claim, most of them interval endpoints
+never registered is not checked: of the manuscript's 207 distinct three- and
+four-decimal literals, 39 have no claim, most of them interval endpoints
 printed beside a point estimate that is checked. Neither checker asserts that
 the registry is complete, and this bundle does not claim it is.
 
@@ -158,6 +158,6 @@ location on the authors' machines.
   every number the manuscript draws from them can be recomputed by hand, but
   the automated pass does not assert them and this artifact does not claim it
   does. In the source repository those families are asserted by
-  `src/scripts/audit_claim_consistency.py`, which checks 432 manuscript claims
+  `src/scripts/audit_claim_consistency.py`, which checks 554 manuscript claims
   against the same rows; it is not run here because it resolves trees by their
   repository names rather than the reader-facing names used in `results/`.
