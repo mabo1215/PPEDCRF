@@ -2,10 +2,11 @@
 # Eleventh-cycle review: R1 (optimised allocation) and R5 (the two attackers
 # the strongest attacks were never run against), on the vGPU 3090.
 #
-# Ten jobs share one 48 GB card. Each holds four or five frozen embedders plus
+# Twelve jobs share one 48 GB card. Each holds four or five frozen embedders plus
 # a 2,000-image gallery index; memory is not the ceiling, the CPU-side JPEG and
-# denoise round trips are, so each job is pinned to nine threads (10 x 9 = 90
-# of 96 cores). Patch-NetVLAD runs at 480 px and is the one job whose gallery
+# denoise round trips are, so each job is pinned to nine threads; the total is
+# deliberately over 96 cores, since the jobs alternate GPU and CPU phases.
+# Patch-NetVLAD runs at 480 px and is the one job whose gallery
 # batch has to come down.
 #
 # Every job here is resumable: rows are flushed per completed unit and
@@ -27,13 +28,26 @@ EOT_SAN="jpeg75 jpeg50 blur denoise"
 mkdir -p "$OUT" "$LOGS"
 cd "$REPO"
 
+# Twelve processes racing for one card lose the race during gallery embedding,
+# which is each job's memory peak: the first pass here killed the ViT sweep with
+# an out-of-memory inside a conv the moment eleven neighbours had already
+# claimed 44 GB. So every job waits for a real window before it starts rather
+# than thrashing the allocator, and re-running this script is the recovery
+# path -- a job whose screen is gone is relaunched, and it resumes from its own
+# partly written CSV.
+WAIT_FREE_MB="${WAIT_FREE_MB:-9000}"
+
 launch() {  # name, command...
   local name="$1"; shift
   if screen -list 2>/dev/null | grep -q "\.${name}[[:space:]]"; then
     echo "[skip] $name already running"
     return
   fi
-  screen -dmS "$name" bash -c "cd $REPO && OMP_NUM_THREADS=9 MKL_NUM_THREADS=9 $* > $LOGS/${name}.log 2>&1; echo EXIT=\$? >> $LOGS/${name}.log"
+  screen -dmS "$name" bash -c "
+    cd $REPO
+    while [ \$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits) -lt $WAIT_FREE_MB ]; do sleep 120; done
+    OMP_NUM_THREADS=9 MKL_NUM_THREADS=9 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True $* > $LOGS/${name}.log 2>&1
+    echo EXIT=\$? >> $LOGS/${name}.log"
   echo "[start] $name"
 }
 
@@ -96,8 +110,8 @@ pre() {  # name, backbone, gallery_batch, extra args
 
 pre r5_pre_pnv_plain patchnetvlad 24
 pre r5_pre_pnv_eot   patchnetvlad 24 --eot_sanitizers $EOT_SAN
-pre r5_pre_vit_plain vit_b_16 64
-pre r5_pre_vit_eot   vit_b_16 64 --eot_sanitizers $EOT_SAN
+pre r5_pre_vit_plain vit_b_16 32
+pre r5_pre_vit_eot   vit_b_16 32 --eot_sanitizers $EOT_SAN
 
 sleep 8
 screen -list || true
