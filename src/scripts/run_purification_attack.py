@@ -199,6 +199,17 @@ def main() -> int:
     ap.add_argument("--eot_samples", type=int, default=2)
     ap.add_argument("--n_test", type=int, default=200)
     ap.add_argument("--n_val", type=int, default=80)
+    ap.add_argument("--attacker_gallery_frames", type=int, default=0,
+                    help="Extra clean frames the attacker synthesises pairs "
+                         "from, taken from the reference gallery it owns. The "
+                         "mechanism is public, so an attacker is not limited "
+                         "to the frames someone released to it -- it can run "
+                         "the mechanism on its own images. Gallery images may "
+                         "share a place with an evaluation query, which is "
+                         "not a leak: the gallery is the attacker's database "
+                         "and those images are already in its hands. What it "
+                         "must not see is a released query frame, and it "
+                         "does not.")
     ap.add_argument("--train_draws", type=int, default=2,
                     help="Releases of each attacker-side frame; the attacker "
                          "sees the release distribution, not one realisation.")
@@ -241,6 +252,10 @@ def main() -> int:
     train, val, test = split_queries(records, args.n_test, args.n_val,
                                      args.seed)
     attacker_records = train + val
+    # The check that matters, run on the query-derived frames before any
+    # gallery frames are added below: no evaluation query may share a place
+    # with a frame the attacker trains on. Gallery frames are exempt by
+    # construction and deliberately so -- see --attacker_gallery_frames.
     places = {r["place_id"] for r in attacker_records}
     leak = [r for r in test if r["place_id"] in places]
     if leak:
@@ -252,6 +267,13 @@ def main() -> int:
     resize_hw = (args.height, args.width)
     gallery_ids = sorted(gallery)
     place_of = {g: gallery[g]["place_id"] for g in gallery_ids}
+    if args.attacker_gallery_frames:
+        extra = [{"query_id": f"gal_{g}", "query_path": gallery[g]["path"],
+                  "place_id": gallery[g]["place_id"]}
+                 for g in gallery_ids[: args.attacker_gallery_frames]]
+        attacker_records = attacker_records + extra
+        print(f"[purify] attacker also synthesises pairs from "
+              f"{len(extra)} gallery frames it owns", flush=True)
 
     names = [args.eval_backbone] + [b for b in args.surrogates
                                     if b != args.eval_backbone]
