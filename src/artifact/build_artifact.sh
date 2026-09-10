@@ -192,6 +192,19 @@ for seed in 1234 5678 9012; do
                 "preprocessing_13transform/mixvpr_hardened_s$seed.csv"
 done
 
+# --- the solved placement maps ---------------------------------------------
+# The arm that answers whether the audit's contrast is between two axes or
+# between an optimised variable and an unoptimised one. Each file carries its
+# own uniform control on the same noise draws, so a referee can re-pair the
+# comparison without reaching for a second tree; the crossdraw rows are the
+# control that separates a spatial preference from a selection of signs.
+# Runs still in flight are skipped rather than failing the build.
+for f in "$EXPORTS"/optimised_allocation/*.csv; do
+  [ -e "$f" ] || continue
+  copy_released "optimised_allocation/$(basename "$f")" \
+                "optimised_allocation/$(basename "$f")"
+done
+
 # --- EOT hardening: one file per condition, three seeds concatenated --------
 # The seeds were run as separate jobs, and one of them (ResNet18 seed 5678)
 # ran on a second machine whose output file also carries stray rows from an
