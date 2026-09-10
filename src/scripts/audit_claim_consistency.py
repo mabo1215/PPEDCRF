@@ -743,11 +743,16 @@ def _spread(model: str) -> Callable[[], Optional[float]]:
         rows = load_jsonl("segmenter_spread/per_image.jsonl")
         if not rows:
             return None
-        classes, mine = set(), []
+        # One row per (model, image): a rows file that was appended to twice
+        # double-counts some images and shifts the pooled ratio, which is what
+        # the released native export did until it was deduplicated. The
+        # exporter's own analyse() keeps the last row per key; so does this.
+        classes, latest = set(), {}
         for r in rows:
             classes.update(int(c) for c in r["gt_classes"])
             if r["model"] == model:
-                mine.append(r)
+                latest[r["image_id"]] = r
+        mine = list(latest.values())
         if not mine:
             return None
         inter: Dict[int, int] = defaultdict(int)
@@ -775,6 +780,60 @@ for model, value in [
 claim("Spread/gate", "\\S Downstream Utility (tolerance calibration)",
       "DeepLabV3--ResNet50 $0.6974$", 0.697352, 5e-4, "segmenter_spread",
       _spread("DeepLabV3-ResNet50"), locator=None, source=SUPP)
+
+
+# The tolerance itself rests on the gaps between those six, not on the six, so
+# the gaps are registered too: the declared 0.05 is defended as "about the
+# widest single downgrade" and the strict 0.016 as "about the typical one".
+MODELS = ["DeepLabV3-ResNet101", "DeepLabV3-ResNet50", "DeepLabV3-MobileNetV3",
+          "LR-ASPP-MobileNetV3", "FCN-ResNet101", "FCN-ResNet50"]
+
+
+def _spread_stat(tree: str, stat: str):
+    def go() -> Optional[float]:
+        vals = []
+        for model in MODELS:
+            rows = load_jsonl(f"{tree}/per_image.jsonl")
+            if not rows:
+                return None
+            classes, latest = set(), {}
+            for r in rows:
+                classes.update(int(c) for c in r["gt_classes"])
+                if r["model"] == model:
+                    latest[r["image_id"]] = r
+            mine = list(latest.values())
+            if not mine:
+                return None
+            inter: Dict[int, int] = defaultdict(int)
+            union: Dict[int, int] = defaultdict(int)
+            for r in mine:
+                for key, (i_val, u_val) in r["seg_iu"].items():
+                    inter[int(key)] += int(i_val)
+                    union[int(key)] += int(u_val)
+            vals.append(float(np.mean([inter[c] / union[c]
+                                       for c in sorted(classes) if union[c]])))
+        vals.sort()
+        gaps = np.diff(vals)
+        if stat == "median":
+            return float(np.median(gaps))
+        if stat == "widest":
+            return float(gaps.max())
+        return float(vals[-1] - vals[0])
+    return go
+
+
+for cid, printed, value, tree, stat in [
+        ("Spread/gap/median", "$0.0157$", 0.0157, "segmenter_spread", "median"),
+        ("Spread/gap/widest", "$0.0519$", 0.0519, "segmenter_spread", "widest"),
+        ("Spread/span", "$0.1216$", 0.1216, "segmenter_spread", "span"),
+        ("Spread/native/median", "$0.0257$", 0.0257, "segmenter_spread_native",
+         "median"),
+        ("Spread/native/widest", "$0.0319$", 0.0319, "segmenter_spread_native",
+         "widest"),
+        ("Spread/native/span", "$0.1255$", 0.1255, "segmenter_spread_native",
+         "span")]:
+    claim(cid, "\\S Downstream Utility (tolerance calibration)", printed,
+          value, 6e-4, tree, _spread_stat(tree, stat), source=SUPP)
 
 
 # --- the held-out attackers' rows in Table IV -------------------------------
