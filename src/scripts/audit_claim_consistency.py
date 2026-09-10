@@ -1709,6 +1709,53 @@ if PURIFY_TAB.is_file():
                   source=PURIFY_TAB)
 
 
+# --- what the manuscript quotes from the purification run -------------------
+# The table's cells are registered above; these are the contrasts the prose
+# draws across conditions, which no table cell carries, plus the
+# reconstruction gate that decides whether any of it means anything.
+def _purify_cross(cond_a: str, pur_a: str, cond_b: str, pur_b: str):
+    def go() -> Optional[float]:
+        c = _purify_cells()
+        if not c:
+            return None
+        per = c["per"]
+        a, b = per.get((cond_a, pur_a)), per.get((cond_b, pur_b))
+        if not a or not b:
+            return None
+        qs = sorted(set(a) & set(b))
+        return float(np.mean([a[q] - b[q] for q in qs]))
+    return go
+
+
+def _purify_psnr(condition: str, purifier: str, stat: str = "mean"):
+    def go() -> Optional[float]:
+        rows = load("purification/per_query.csv")
+        vals = [float(r["psnr_to_clean"]) for r in rows
+                if r["condition"] == condition and r["purifier"] == purifier
+                and r.get("psnr_to_clean")]
+        return float(np.mean(vals)) if vals else None
+    return go
+
+
+for cid, printed, value, fn in [
+        ("Purify/main/gain", "$+0.132$", 0.132,
+         _purify("direction", "direction", "delta")),
+        ("Purify/main/adv_purified", "$-0.0933$", -0.0933,
+         _purify_cross("direction", "direction", "isotropic", "isotropic")),
+        ("Purify/main/adv_raw", "$-0.2083$", -0.2083,
+         _purify_cross("direction", "none", "isotropic", "none")),
+        ("Purify/main/adv_hardened", "$-0.1400$", -0.1400,
+         _purify_cross("hardened", "hardened", "isotropic", "isotropic")),
+        ("Purify/main/psnr_release", "$36.18$", 36.18,
+         _purify_psnr("direction", "none")),
+        ("Purify/main/psnr_low", "$39.1$", 39.1,
+         _purify_psnr("hardened", "hardened")),
+        ("Purify/main/psnr_high", "$42.3$", 42.3,
+         _purify_psnr("isotropic", "isotropic"))]:
+    claim(cid, "\\S An attacker that removes the perturbation", printed, value,
+          6e-4 if "psnr" not in cid else 6e-2, "purification", fn, source=MAIN)
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
