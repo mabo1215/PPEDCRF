@@ -1438,6 +1438,75 @@ for tree, uniform, delta, pval in [
               max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=MAIN)
 
 
+# --- what the MSLS placement family certifies, and on which unit ------------
+# Two numbers the manuscript quotes about the allocation null are properties of
+# the whole family rather than of one cell: how much clustering on places
+# widens the intervals, and the smallest margin every cell would satisfy. Both
+# are registered because both are load-bearing -- the first closes for
+# allocation the unit-of-inference question the second dataset raised for
+# direction, and the second is what the paper offers in place of an
+# equivalence it cannot claim at +-0.01.
+_MSLS_PLACEMENT: Dict[str, Dict[str, float]] = {}
+
+
+def _msls_placement_family() -> Dict[str, float]:
+    if _MSLS_PLACEMENT:
+        return _MSLS_PLACEMENT
+    rows = load("icme2027_placement_msls/final/per_query.csv")
+    d6 = load("tifs_d6/*.csv")
+    if not rows or not d6:
+        return {}
+    place = {}
+    for r in d6:
+        if "correct_place" in r:
+            place.setdefault(r["query_id"], r["correct_place"])
+    arms: Dict[str, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list))
+    for r in rows:
+        arms[r["placement"]][r["query_id"]].append(
+            float(int(r["correct_rank"]) == 1))
+    per = {p: {q: float(np.mean(v)) for q, v in d.items()}
+           for p, d in arms.items()}
+    ref = per.get("uniform")
+    if not ref:
+        return {}
+    rng = np.random.default_rng(0)
+    widen, endpoints = [], []
+
+    def ci(diff: np.ndarray, ids: np.ndarray) -> tuple:
+        uniq, inv = np.unique(ids, return_inverse=True)
+        groups = [np.flatnonzero(inv == i) for i in range(len(uniq))]
+        draws = np.empty(10000)
+        for b in range(10000):
+            pick = rng.integers(0, len(groups), len(groups))
+            draws[b] = diff[np.concatenate([groups[i] for i in pick])].mean()
+        return tuple(np.percentile(draws, [2.5, 97.5]))
+
+    for name, arm in per.items():
+        if name == "uniform":
+            continue
+        qs = sorted(set(arm) & set(ref) & set(place))
+        d = np.array([arm[q] - ref[q] for q in qs])
+        qlo, qhi = ci(d, np.array(qs))
+        plo, phi = ci(d, np.array([place[q] for q in qs]))
+        if qhi > qlo:
+            widen.append((phi - plo) / (qhi - qlo))
+        endpoints += [abs(qlo), abs(qhi), abs(plo), abs(phi)]
+    _MSLS_PLACEMENT.update({"widen_lo": min(widen), "widen_hi": max(widen),
+                            "margin": max(endpoints)})
+    return _MSLS_PLACEMENT
+
+
+for cid, printed, value, key in [
+        ("MSLSPlace/widen/lo", "$0.94$--$1.10\\times$", 0.94, "widen_lo"),
+        ("MSLSPlace/widen/hi", "$0.94$--$1.10\\times$", 1.10, "widen_hi"),
+        ("MSLSPlace/margin", "$\\pm0.027$", 0.027, "margin")]:
+    claim(cid, "\\S The Null Holds on Real Geographic Data", printed, value,
+          6e-3, "icme2027_placement_msls",
+          (lambda k: (lambda: _msls_placement_family().get(k)))(key),
+          source=MAIN)
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
