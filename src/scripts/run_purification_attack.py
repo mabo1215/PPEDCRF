@@ -177,7 +177,7 @@ def train_purifier(records, condition: str, draws: int, cache_root: Path,
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
-        if step % 500 == 0:
+        if step % 1000 == 0:
             print(f"[purify]   step {step}/{args.purifier_steps} "
                   f"L1 {loss.item():.5f}", flush=True)
     return model.eval()
@@ -206,9 +206,15 @@ def main() -> int:
     ap.add_argument("--channels", type=int, default=64)
     ap.add_argument("--depth", type=int, default=12)
     ap.add_argument("--crop", type=int, default=128)
-    ap.add_argument("--batch_size", type=int, default=8)
-    ap.add_argument("--purifier_lr", type=float, default=1e-3)
-    ap.add_argument("--purifier_steps", type=int, default=3000)
+    ap.add_argument("--batch_size", type=int, default=16)
+    # 1e-3 with batch normalisation at this batch size trains the purifier to
+    # the identity: its loss settles at exactly the value copying the input
+    # gives, and held-out PSNR to the clean frame comes back at the release's
+    # own 36.18 dB. A null from that purifier would have said nothing about
+    # purification, so the reconstruction check below is run before any
+    # retrieval number is read.
+    ap.add_argument("--purifier_lr", type=float, default=1e-4)
+    ap.add_argument("--purifier_steps", type=int, default=8000)
     ap.add_argument("--seed", type=int, default=1234)
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)

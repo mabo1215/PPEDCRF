@@ -77,10 +77,14 @@ def main() -> int:
         print(f"[FAIL] no rows matched {args.rows}")
         return 1
     cells: Dict[tuple, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    psnr: Dict[tuple, list] = defaultdict(list)
     place: Dict[str, str] = {}
     for r in rows:
         cells[(r["condition"], r["purifier"])][r["query_id"]].append(
             float(int(r["correct_rank"]) == 1))
+        if r.get("psnr_to_clean"):
+            psnr[(r["condition"], r["purifier"])].append(
+                float(r["psnr_to_clean"]))
         place[r["query_id"]] = r["correct_place"]
     per = {k: {q: float(np.mean(v)) for q, v in d.items()}
            for k, d in cells.items()}
@@ -156,6 +160,14 @@ def main() -> int:
                                              r"\end{table}"]) + "\n",
                    encoding="utf-8")
     print(f"[table] {out}")
+    # Whether the purifier is any good at its own job. A purifier that lowers
+    # PSNR is damaging the frame rather than cleaning it, and a null from one
+    # of those says nothing about purification.
+    print("[psnr] distance to the clean frame, held-out queries:")
+    for key in ORDER:
+        if key in psnr and psnr[key]:
+            print(f"[psnr]   {key[0]:10s}/{key[1]:10s} "
+                  f"{float(np.mean(psnr[key])):6.2f} dB")
     for st in stats:
         extra = (f" delta {st['delta']:+.4f} "
                  f"[{st['ci'][0]:+.3f},{st['ci'][1]:+.3f}] p={st['p']:.2g}"
