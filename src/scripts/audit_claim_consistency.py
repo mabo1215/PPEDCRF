@@ -1014,6 +1014,65 @@ claim("E1/two_city/n_significant", "\\S Real-Place Retrieval Benchmark (E1)",
       source=SUPP)
 
 
+# --- the strong attacker's per-placement table ------------------------------
+# The manuscript pointed here for these values before the table existed. They
+# are registered so the pointer and the numbers cannot drift apart again.
+MIXVPR_TAB = REPO / "paper" / "generated" / "tab_placement_mixvpr.tex"
+
+
+def _mixvpr_placement(placement: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load("placement_mixvpr_rows/per_query.csv")
+        if not rows:
+            return None
+        arms: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            arms[r["placement"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+        ref = {q: float(np.mean(v)) for q, v in arms["uniform"].items()}
+        arm = {q: float(np.mean(v)) for q, v in arms[placement].items()}
+        shared = sorted(set(arm) & set(ref))
+        if not shared:
+            return None
+        if stat == "top1":
+            return float(np.mean([arm[q] for q in shared]))
+        return float(np.mean([arm[q] - ref[q] for q in shared]))
+    return go
+
+
+for placement, top1, delta in [
+        ("uniform", 0.7800, None), ("learned", 0.7800, 0.0000),
+        ("oracle_grad", 0.7683, -0.0117), ("anti_oracle_grad", 0.7825, 0.0025),
+        ("saliency", 0.7792, -0.0008), ("center", 0.7817, 0.0017),
+        ("random_fixed", 0.7850, 0.0050), ("edge", 0.7867, 0.0067)]:
+    claim(f"MixVPRPlace/{placement}/top1", "Table tab:placement_mixvpr",
+          f"{top1:.4f}", top1, 5e-5, "placement_mixvpr_rows",
+          _mixvpr_placement(placement, "top1"), source=MIXVPR_TAB)
+    if delta is not None:
+        claim(f"MixVPRPlace/{placement}/delta", "Table tab:placement_mixvpr",
+              f"${delta:+.4f}$", delta, 5e-5, "placement_mixvpr_rows",
+              _mixvpr_placement(placement, "delta"), source=MIXVPR_TAB)
+
+
+# --- the proxy-versus-real calibration sentence -----------------------------
+# Both numbers are quoted in both documents and were, until this cycle, in no
+# table at all. The real-data side is the two-city ResNet18 cell, which is
+# already audited above; the proxy side is registered here from the same
+# export, so neither can be edited without the check noticing.
+for cid, printed, value, fn, src in [
+        ("Calib/real/raw", "0.1700", 0.1700,
+         _e1("two_city", "primary", "resnet18", "raw"), MAIN),
+        ("Calib/real/released", "0.1517", 0.1517,
+         _e1("two_city", "primary", "resnet18", "full"), MAIN),
+        ("Calib/real/raw/supp", "0.1700", 0.1700,
+         _e1("two_city", "primary", "resnet18", "raw"), SUPP),
+        ("Calib/real/released/supp", "0.1517", 0.1517,
+         _e1("two_city", "primary", "resnet18", "full"), SUPP)]:
+    claim(cid, "\\S proxy-versus-real calibration", printed, value, 5e-5,
+          "e1_msls_rows", fn, source=src)
+
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------

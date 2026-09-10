@@ -21,61 +21,68 @@
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{10 September 2026 --- IEEE TIFS, sixth independent review cycle.
+\date{10 September 2026 --- IEEE TIFS, seventh independent review cycle.
 This file carries \emph{only} open, running and not-yet-started work;
 completed items are removed once recorded in \texttt{docs/progress.md}.
-The fifth-cycle edition is \texttt{docs/archived/ExperimentProgress\_round5\_20260909.tex}.}
+Earlier editions are in \texttt{docs/archived/}.}
 
 \begin{document}
 \maketitle
 
 \section*{Where This Cycle Stands}
 
-The active review is the sixth independent review in
-\texttt{docs/RevisionSuggestions.tex} (9 September 2026, IEEE TIFS, verdict
-\emph{major revision, not rejection}), findings R1--R10. \textbf{All ten are
-closed}, together with the review's four presentation notes, its file-level
-revision map and its E1--E6 analysis plan. \textbf{No experiment is
-outstanding and no manuscript edit is outstanding.} What remains is entirely
-author-side and administrative, and is listed in Table~\ref{tab:tifs6-authors}.
+The active review is the seventh independent review in
+\texttt{docs/RevisionSuggestions.tex} (10 September 2026, IEEE TIFS, verdict
+\emph{minor revision}), findings R1--R10. \textbf{Nine of the ten are closed},
+together with all four presentation notes. \textbf{One is open: R5, a second
+place-labelled retrieval dataset.} It is not blocked on a GPU --- it is a
+build, and the data for it has now been located.
 
-\paragraph{Compute state.} \textbf{Nothing is running and nothing is queued.}
-The last GPU work in this cycle was the joint MSLS utility measurement (R9) and
-the three-seed frontier, both finished and pulled back; the hosts that ran them
-are shut down. The two measurements added since --- the segmenter spread that
-calibrates the tolerance, and the E1 export slimming --- ran on the local
-RTX~3070 and on CPU respectively. Nothing below needs a GPU.
+\paragraph{Compute state.} \textbf{Nothing is running.} 2c (2$\times$RTX~4080
+SUPER) and vGPU~3090 were started during this cycle and inspected; neither
+holds the data R5 needs, and neither is required for anything else here, so
+both can be shut down. PRO~6000 was offered for R5 and was found powered off;
+it is also not the right host, for the same reason. The two measurements this
+cycle did need --- the strong-attacker per-placement export and the
+native-resolution segmenter re-score --- ran locally on the RTX~3070 in
+minutes.
 
-\paragraph{Document state, 10 September 2026.} \texttt{main.pdf} \textbf{13
-pages} against the 13-page TIFS initial-submission ceiling, so the body is at
-the limit and any addition must be paid for by a removal. Abstract
-\textbf{249} words (window 150--250). \texttt{supplementary.pdf} \textbf{6
-pages}, the SPS recommended ceiling without Editor-in-Chief approval.
-\texttt{titlepage.pdf} 1 page; the extended evidence report, released with the
-code and not submitted, 12 pages. All four build with \textbf{0 undefined
-references, 0 undefined citations and 0 overfull boxes}.
+\paragraph{Document state.} \texttt{main.pdf} \textbf{13 pages} against the
+13-page TIFS ceiling; abstract \textbf{246} words (window 150--250);
+\texttt{supplementary.pdf} \textbf{6 pages}, the SPS ceiling without
+Editor-in-Chief approval; \texttt{titlepage.pdf} 1 page; the extended evidence
+report, released with the code and not submitted, 12 pages. All four build with
+\textbf{0 undefined references, 0 undefined citations and 0 overfull boxes}.
+This cycle added roughly 40 lines of required material to documents that were
+already at both ceilings and paid for all of it, chiefly by compressing Related
+Work and by dropping a supplementary budget-sweep table whose figure plots the
+same data.
 
-\paragraph{Verification state.} \textbf{333 claims verify against raw exports;
-0 mismatched, 0 unverifiable, 0 missing from their source file.} Every printed
-number in the manuscript and the supplement is now covered --- the last gap,
-the two E1 real-place tables, was closed by exporting the columns needed to
-recompute them into \texttt{src/exports/e1\_msls\_rows} and generating both
-tables from there. No export tree the auditor needs is missing from a fresh
-clone.
+\paragraph{Verification state.} \textbf{352 claims verify against raw exports;
+0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 333.
+The additions are the strong-attacker per-placement table and the two numbers
+of the proxy-versus-real calibration sentence, which until this cycle appeared
+in no table in either document. \emph{A correction to an earlier statement in
+this file:} the auditor does not cover every printed number. It covers every
+table cell in both documents plus the registered prose claims; 74 of the 182
+distinct three- and four-decimal literals in the manuscript still have no
+claim, most of them interval endpoints quoted beside a covered point estimate.
 
-\paragraph{Typography and reproducibility.} No table in either document is set
-below \verb|\footnotesize| and no \verb|\resizebox| survives anywhere in the
-submission; measured on the rendered PDFs, the only glyphs under 8\,pt are
-mathematical scripts and page numbers. The repository the manuscript prints is
-public and returns \texttt{private: false} from the unauthenticated API.
+\paragraph{A new check.} \texttt{check\_cross\_document\_refs.py} resolves
+every literal \texttt{Table~S$n$} / \texttt{Fig.~S$n$} in the manuscript
+against the supplement's actual float order, following \verb|\input| into the
+generated tables. This is the class of defect R2 found: LaTeX cannot see a
+reference into a separately compiled document, so the build reported zero
+undefined references while the manuscript pointed at the wrong table. The
+manuscript now carries no literal S-number at all, and the check fails loudly
+if one is reintroduced and goes stale.
 
-\section*{Table 1: Open Items --- All Author-Side}
+\section*{Table 1: Open Work Against the Seventh Review}
 
-\begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
-\caption{Everything still open before submission. None is a manuscript edit,
-an experiment or an analysis; all ten review findings are closed and no longer
-listed.}
-\label{tab:tifs6-authors}\\
+\begin{longtable}{@{}p{0.05\linewidth}p{0.22\linewidth}p{0.11\linewidth}p{0.54\linewidth}@{}}
+\caption{The one review finding still open, and what it needs. R1--R4 and
+R6--R10 are closed and no longer listed.}
+\label{tab:tifs7-open}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
 \midrule
@@ -85,48 +92,116 @@ listed.}
 \midrule
 \endhead
 
-S1 & ORCIDs, EDICS, submission metadata & \authors & The review's package audit
-flags these as verifiable only in the submission system, not in the files. All
-three authors need ORCIDs registered and the EDICS categories chosen; the
-metadata entered must match the manuscript's title and author list. \\
+R5 & Second place-labelled retrieval dataset & \pending & The manuscript's
+regime claims are, for now, narrowed to ``one dataset, one capture condition''
+in the conclusion, which is the review's own fallback and makes the paper
+accurate today. Lifting the narrowing needs the experiment in
+Table~\ref{tab:tifs7-plan}. \\
+
+\bottomrule
+\end{longtable}
+
+\section*{Table 2: The R5 Experiment --- Design, Data and Host}
+
+\begin{longtable}{@{}p{0.16\linewidth}p{0.78\linewidth}@{}}
+\caption{What R5 needs, now that the data has been located. The GPU is not the
+constraint; the benchmark construction is.}
+\label{tab:tifs7-plan}\\
+\toprule
+\textbf{Aspect} & \textbf{Detail} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Aspect} & \textbf{Detail} \\
+\midrule
+\endhead
+
+Data --- found & \texttt{G:\textbackslash work\textbackslash datasets\textbackslash kitti360}
+holds \texttt{data\_2d\_raw} (imagery), \texttt{data\_poses} (GPS/IMU) and
+\texttt{data\_2d\_semantics}. \texttt{argoverse2\_sensor\_sample} is also
+present. Tokyo~24/7 and Oxford RobotCar, the two the review named, are on no
+machine checked: not local, not on 2c, not on vGPU~3090, not on the shared
+\texttt{autodl-fs} volume. Only Patch-NetVLAD's Tokyo ground-truth index files
+exist, without imagery. \\
+\addlinespace
+
+Why KITTI-360 works & It is a genuine change of dataset, city, camera and
+capture modality (car-mounted, Karlsruhe) rather than another slice of MSLS,
+and its poses support the same place criterion MSLS uses --- a positive within
+25\,m --- so the existing manifest gate and the cluster-versus-geographic audit
+transfer directly. The project already uses it for the mask-backed support-map
+check, so the loader exists. \\
+\addlinespace
+
+What must be built & A place-labelled manifest from poses: query/gallery split
+by drive or epoch, positives by 25\,m radius, held-out gallery of comparable
+size to MSLS's 2,000. Then the two comparisons the thesis rests on --- the
+eight-placement energy-matched study and the direction-versus-isotropic
+contrast at the operating point --- one backbone, one budget, with
+place-clustered intervals and the energy-conservation gate. \\
+\addlinespace
+
+Host & The data is on the local G: drive and the workload is light: the
+placement arm is 8 placements $\times$ 3 seeds $\times$ 400 queries of forward
+passes, and the direction arm about 1,200 sign-gradient optimisations of 20
+steps. The local RTX~3070 can do both. Shipping a KITTI-360 subset to an AutoDL
+host is the alternative and costs a transfer the local run avoids. \\
+\addlinespace
+
+Decision needed & Confirm KITTI-360 as the second dataset in place of the two
+the review named, and confirm local-GPU execution rather than a host. Neither
+2c nor vGPU~3090 nor PRO~6000 is needed for it. \\
+
+\bottomrule
+\end{longtable}
+
+\section*{Table 3: Author-Side Items, Unchanged}
+
+\begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
+\caption{Carried forward from the sixth cycle. None is a manuscript edit, an
+experiment or an analysis.}
+\label{tab:tifs7-authors}\\
+\toprule
+\textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
+\midrule
+\endhead
+
+S1 & ORCIDs, EDICS, submission metadata & \authors & Verifiable only in the
+submission system, not in the files. All three authors need ORCIDs registered
+and the EDICS categories chosen; the metadata must match the manuscript's title
+and author list. \\
 \addlinespace
 
 S2 & Prior-submission disclosure & \authors & The repository holds a response
 letter to an earlier venue. Whether disclosure is required depends on facts
 outside these files; if it is, the statement must be made truthfully at
-submission. Nothing in the manuscript asserts or denies it. \\
+submission. \\
 \addlinespace
 
-S3 & Responsible-use and data-terms wording & \authors & Read once before
-submission. The paragraphs were drafted on the authors' behalf; the sentence
-worth checking is the one that characterises the audit protocol, rather than
-the perturbation, as the contribution. Marked read on 10 September 2026, but
-the text has been re-wrapped since (wording unchanged). \\
+S3 & Responsible-use and data-terms wording & \done\ (read) & Confirmed read on
+10 September 2026. Re-wrapped since for the page budget; wording unchanged. \\
 \addlinespace
 
-S4 & DOIs are in the bibliography source but not in the PDF & \done\ (decided)
-& \texttt{ref.bib} carries 46 verified DOIs; the venue's mandated
-\texttt{IEEEtran.bst} v1.14 has no \texttt{doi} field support at all, so none
-of them is typeset. Decision taken: submit as is, rather than deviate from the
-mandated style. Forcing them in costs 50--90 bibliography lines and the
-13-page limit with them. \\
+S4 & DOIs in the bibliography but not in the PDF & \done\ (decided) &
+\texttt{ref.bib} carries 46 verified DOIs; the mandated \texttt{IEEEtran.bst}
+v1.14 has no \texttt{doi} support, so none is typeset. Decision: submit as is. \\
 \addlinespace
 
-S5 & Response letter & \done\ (not required) & The authors have confirmed no
-response letter is being written. If that changes: the review numbers the
-transfer table IV and the frontier V, but a table was removed during the page
-compression, so in the current document they are III and IV. Refer to them by
-caption. \\
+S5 & Response letter & \done\ (not required) & Confirmed not being written. \\
 
 \bottomrule
 \end{longtable}
 
-\section*{Table 2: What Would Be Next, If Anything}
+\section*{Table 4: Not Scheduled}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
-\caption{Work that is not required for this submission and is not scheduled.
-Listed so that a later cycle does not have to rediscover it.}
-\label{tab:tifs6-optional}\\
+\caption{Work that is not required for this submission. Listed so a later cycle
+does not have to rediscover it.}
+\label{tab:tifs7-optional}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Why it is not blocking} \\
 \midrule
@@ -136,39 +211,50 @@ Listed so that a later cycle does not have to rediscover it.}
 \midrule
 \endhead
 
-N1 & A second cross-architecture attacker & \pending & The ViT-B/16 result is
-one trunk that appears in no surrogate, and the paper says plainly that what
-crosses an architecture family is real, significant and small. A second such
-target would sharpen the claim but no sentence currently overstates it. \\
+N1 & An independently trained selective sanitizer under the protocol &
+\pending & R6's other option. The conclusion now names the placement class the
+null covers --- hand-specified priors, gradient maps, published segmentation
+priors and this paper's own two checkpoints --- so no sentence overstates it.
+Testing a third-party released sanitizer would widen the class. \\
 \addlinespace
 
-N2 & Adaptive attacker at a larger budget & \pending & The manuscript states
-the adaptation budget it could afford and confines its conclusion to it. A
-larger budget could change the finding; the qualification is already in the
-abstract and the conclusion. \\
+N2 & A second cross-architecture attacker & \pending & The ViT-B/16 result is
+one trunk no surrogate shares, and the paper says what crosses a family is
+real, significant and small. \\
 \addlinespace
 
-N3 & Utility on a task other than segmentation and detection & \pending & The
-tolerance is now calibrated against the spread between six published
-segmenters, so the mIoU scale is anchored. A second task family would test
-whether the ordering holds off segmentation. \\
+N3 & Adaptive attacker at a larger budget & \pending & The manuscript states
+the budget it could afford and confines its conclusion to it. \\
+\addlinespace
+
+N4 & Utility on a task family other than segmentation and detection &
+\pending & The tolerance is calibrated against six published segmenters and now
+carries a native-resolution sensitivity check, so the mIoU scale is anchored. \\
+\addlinespace
+
+N5 & Claim coverage for prose-only numbers & \pending & 74 manuscript literals
+have no claim, mostly interval endpoints beside covered point estimates. The
+two that mattered --- the proxy-versus-real calibration --- were registered
+this cycle. \\
 
 \bottomrule
 \end{longtable}
 
 \section*{Closed in This Cycle}
 
-R1--R10 are closed, with the evidence recorded in \texttt{docs/progress.md}
-entries 398--443. The four items that needed real work rather than wording
-were: the utility frontier's uncertainty and third seed (R5); the joint
-measurement on the MSLS query frames the attack is scored on (R9, option~a);
-the cross-architecture attacker (R3's optional arm); and the segmenter-spread
-measurement that gives the declared tolerance a reference scale (R9's second
-half). Three defects were found by the checks rather than by review: two
-statistics errors caught by the joint measurement's clean-frame gate, twelve
-stale frontier claims exposed once the auditor's locator check was fixed to
-load every declared source, and two E1 interval endpoints that no bootstrap
-reproduces, which is why those tables are now generated rather than
-hand-maintained.
+R1--R4 and R6--R10 are closed, with the evidence in \texttt{docs/progress.md}.
+Four were integrity defects found by following a reference: two manuscript
+pointers that promised material the supplement did not contain (the
+learning-rate sweep and the MixVPR adaptive analysis, which are in the extended
+report, and the MixVPR per-placement values, which existed in an uncommitted
+run and are now a supplementary table); one literal table number that had gone
+stale under renumbering; and one significance marker on a pooled cell that was
+never tested. The fifth, the proxy-versus-real calibration, quoted two numbers
+that were in no table --- they are now scoped, printed with their manifest,
+backbone and gallery, and registered as claims. Two measurements were run to
+close findings rather than to add results: the strong-attacker per-placement
+export, and the segmenter spread re-scored at native resolution, which shows
+the six models span $0.1255$ there against $0.1216$ at working resolution but
+redistribute the gaps, so the declared tolerance is generous on either scale.
 
 \end{document}

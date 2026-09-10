@@ -1,0 +1,82 @@
+{
+  "n_images": 200,
+  "n_classes": 21,
+  "n_bootstrap": 2000,
+  "seed": 20260910,
+  "gate": {
+    "model": "DeepLabV3-ResNet50",
+    "expected": 0.697352,
+    "observed": 0.782418,
+    "passed": false
+  },
+  "miou": {
+    "DeepLabV3-ResNet101": 0.814315,
+    "DeepLabV3-ResNet50": 0.782418,
+    "DeepLabV3-MobileNetV3": 0.754144,
+    "FCN-ResNet101": 0.729991,
+    "LR-ASPP-MobileNetV3": 0.714504,
+    "FCN-ResNet50": 0.688804
+  },
+  "adjacent_gaps": [
+    {
+      "better": "DeepLabV3-ResNet101",
+      "worse": "DeepLabV3-ResNet50",
+      "miou_better": 0.814315,
+      "miou_worse": 0.782418,
+      "gap": 0.031897,
+      "ci95": [
+        -0.007713,
+        0.078724
+      ]
+    },
+    {
+      "better": "DeepLabV3-ResNet50",
+      "worse": "DeepLabV3-MobileNetV3",
+      "miou_better": 0.782418,
+      "miou_worse": 0.754144,
+      "gap": 0.028274,
+      "ci95": [
+        -0.011128,
+        0.07082
+      ]
+    },
+    {
+      "better": "DeepLabV3-MobileNetV3",
+      "worse": "FCN-ResNet101",
+      "miou_better": 0.754144,
+      "miou_worse": 0.729991,
+      "gap": 0.024153,
+      "ci95": [
+        -0.026436,
+        0.068888
+      ]
+    },
+    {
+      "better": "FCN-ResNet101",
+      "worse": "LR-ASPP-MobileNetV3",
+      "miou_better": 0.729991,
+      "miou_worse": 0.714504,
+      "gap": 0.015487,
+      "ci95": [
+        -0.027924,
+        0.067934
+      ]
+    },
+    {
+      "better": "LR-ASPP-MobileNetV3",
+      "worse": "FCN-ResNet50",
+      "miou_better": 0.714504,
+      "miou_worse": 0.688804,
+      "gap": 0.0257,
+      "ci95": [
+        -0.020335,
+        0.061152
+      ]
+    }
+  ],
+  "median_adjacent_gap": 0.0257,
+  "max_adjacent_gap": 0.031897,
+  "full_span": 0.125511,
+  "declared_tolerance": 0.05,
+  "note": "mIoU is dataset-level over the ground-truth class set, ignore pixels excluded, pooled before the ratio -- the definition the utility pipeline uses. Intervals are paired image bootstraps on the gap, not marginal intervals on either mIoU."
+}

@@ -1,0 +1,95 @@
+{
+  "source": "src/outputs/placement_mixvpr/per_query.csv",
+  "n_queries": 400,
+  "seeds": [
+    "1234",
+    "1235",
+    "1236"
+  ],
+  "margin": 0.01,
+  "bootstrap_draws": 10000,
+  "bootstrap_seed": 20260910,
+  "rows": [
+    {
+      "placement": "uniform",
+      "top1": 0.78
+    },
+    {
+      "placement": "learned",
+      "top1": 0.78,
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "p": 1.0,
+      "verdict": "negligible"
+    },
+    {
+      "placement": "oracle_grad",
+      "top1": 0.7683333333333333,
+      "delta": -0.011666666666666669,
+      "ci": [
+        -0.025833333333333333,
+        0.0016666666666666663
+      ],
+      "p": 0.056716907651088125,
+      "verdict": "none det."
+    },
+    {
+      "placement": "anti_oracle_grad",
+      "top1": 0.7825,
+      "delta": 0.0025,
+      "ci": [
+        -0.0008333333333333333,
+        0.006666666666666666
+      ],
+      "p": 0.375,
+      "verdict": "negligible"
+    },
+    {
+      "placement": "saliency",
+      "top1": 0.7791666666666666,
+      "delta": -0.0008333333333333332,
+      "ci": [
+        -0.015,
+        0.013333333333333334
+      ],
+      "p": 0.9849957892429451,
+      "verdict": "none det."
+    },
+    {
+      "placement": "center",
+      "top1": 0.7816666666666667,
+      "delta": 0.0016666666666666663,
+      "ci": [
+        -0.014166666666666668,
+        0.0175
+      ],
+      "p": 0.9903475036167971,
+      "verdict": "none det."
+    },
+    {
+      "placement": "random_fixed",
+      "top1": 0.785,
+      "delta": 0.005,
+      "ci": [
+        -0.0025,
+        0.01333333333333333
+      ],
+      "p": 0.359375,
+      "verdict": "none det."
+    },
+    {
+      "placement": "edge",
+      "top1": 0.7866666666666666,
+      "delta": 0.006666666666666666,
+      "ci": [
+        -0.010833333333333335,
+        0.024166666666666666
+      ],
+      "p": 0.7011178776918082,
+      "verdict": "none det."
+    }
+  ]
+}

@@ -50,7 +50,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -92,7 +92,7 @@ def localize(path: str) -> Path:
     return Path(text)
 
 
-def read_frame(path: Path, resize_hw: Tuple[int, int]):
+def read_frame(path: Path, resize_hw: Optional[Tuple[int, int]]):
     """Load and resize a frame through the pipeline's own helpers.
 
     Importing them rather than reimplementing them is what keeps this
@@ -105,7 +105,7 @@ def read_frame(path: Path, resize_hw: Tuple[int, int]):
     return _resize_if_needed(_read_image(str(path)), resize_hw)
 
 
-def read_label(path: Path, resize_hw: Tuple[int, int]) -> np.ndarray:
+def read_label(path: Path, resize_hw: Optional[Tuple[int, int]]) -> np.ndarray:
     """Load a palette-indexed VOC label at the pipeline's working resolution.
 
     The mask must not be decoded as a photo: an RGB conversion maps each
@@ -117,6 +117,8 @@ def read_label(path: Path, resize_hw: Tuple[int, int]) -> np.ndarray:
 
     with Image.open(path) as image:
         mask = np.array(image, dtype=np.int64)
+    if resize_hw is None:
+        return mask
     return cv2.resize(mask, (resize_hw[1], resize_hw[0]),
                       interpolation=cv2.INTER_NEAREST)
 
@@ -202,7 +204,11 @@ def predict_all(args, records, out_path: Path) -> None:
                 print(f"[skip] {label}: weights unavailable ({exc})", flush=True)
                 continue
             print(f"[run ] {label}: {len(pending)} images, weights {weights_id}", flush=True)
-            resize_hw = (int(args.resize_h), int(args.resize_w))
+            # resize_h <= 0 means "leave the frame at its native size", which is
+            # how the sensitivity check against the pipeline's working
+            # resolution is run. The gate only holds at 192x320.
+            resize_hw = ((int(args.resize_h), int(args.resize_w))
+                         if int(args.resize_h) > 0 else None)
             for index, record in enumerate(pending, start=1):
                 image = read_frame(localize(record["image_path"]), resize_hw)
                 target = read_label(localize(record["segmentation_path"]), resize_hw)
@@ -332,6 +338,10 @@ def main() -> int:
     ap.add_argument("--resize-w", dest="resize_w", type=int, default=320)
     ap.add_argument("--models", nargs="*", default=None,
                     help="Restrict to these labels; default is all available.")
+    ap.add_argument("--no-gate", dest="no_gate", action="store_true",
+                    help="Skip the gate. Only for the native-resolution "
+                         "sensitivity check, whose expected value is not known "
+                         "in advance because no pipeline export scores there.")
     ap.add_argument("--gate", type=float, default=0.697352,
                     help="Exported clean mIoU the paper's segmenter must reproduce.")
     ap.add_argument("--tolerance", type=float, default=0.05)
@@ -369,6 +379,9 @@ def main() -> int:
     print(f"[span] median adjacent gap {summary['median_adjacent_gap']}, "
           f"max {summary['max_adjacent_gap']}, full span {summary['full_span']}, "
           f"declared tolerance {summary['declared_tolerance']}")
+    if args.no_gate:
+        print("[gate] skipped by request (native-resolution sensitivity check)")
+        return 0
     if not gate["passed"]:
         print("[gate] FAILED: the pipeline does not reproduce the known cell; "
               "no other row here should be quoted.", file=sys.stderr)
