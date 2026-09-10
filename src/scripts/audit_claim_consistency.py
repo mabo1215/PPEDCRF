@@ -1184,6 +1184,51 @@ claim("KITTI/dir/clustered_covers_zero", "\\S A second dataset (clustered unit)"
 
 
 
+# --- the second dataset's reference levels ----------------------------------
+# A null is worth what the measurement's sensitivity is worth. These three rows
+# are what let a reader tell "allocation does nothing here" from "there was
+# nothing here to detect", so they are checked like any other reported value.
+def _kitti_base(variant: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load("kitti360_rows/baseline.csv")
+        if not rows:
+            return None
+        by: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            by[r["variant"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+        raw = {q: float(np.mean(v)) for q, v in by["raw"].items()}
+        arm = {q: float(np.mean(v)) for q, v in by[variant].items()}
+        shared = sorted(set(arm) & set(raw))
+        if not shared:
+            return None
+        if stat == "top1":
+            return float(np.mean([arm[q] for q in shared]))
+        return float(np.mean([arm[q] - raw[q] for q in shared]))
+    return go
+
+
+for cid, printed, value, variant, stat, src in [
+        ("KITTI/ref/clean", "0.1498", 0.1498, "raw", "top1", KITTI_TAB),
+        ("KITTI/ref/mechanism", "0.1512", 0.1512, "full", "top1", KITTI_TAB),
+        ("KITTI/ref/whitebox", "0.0000", 0.0000, "attacker_aware", "top1", KITTI_TAB),
+        ("KITTI/ref/clean/main", "$0.1498$", 0.1498, "raw", "top1", MAIN),
+        ("KITTI/ref/mechanism/main", "$0.1512$", 0.1512, "full", "top1", MAIN),
+        ("KITTI/ref/whitebox/main", "$0.0000$", 0.0000, "attacker_aware", "top1", MAIN),
+        ("KITTI/ref/whitebox/delta", "$-0.1498$", -0.1498, "attacker_aware",
+         "delta", MAIN)]:
+    claim(cid, "\\S A second dataset (reference levels)", printed, value, 5e-5,
+          "kitti360_rows", _kitti_base(variant, stat), source=src)
+
+# The label-audit counts the supplement prints (605 within the radius, 1,211
+# beyond) are deliberately NOT registered here. Recomputing them needs the
+# manifest's coordinates, which the exports do not carry, and a claim whose
+# recompute function returns the printed constant verifies nothing while
+# inflating the count. They are reproduced by rerunning the manifest builder,
+# which prints both, and that is where they belong.
+
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------

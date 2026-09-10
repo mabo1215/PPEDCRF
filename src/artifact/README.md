@@ -2,7 +2,7 @@
 
 This bundle lets a reviewer confirm, without a GPU and without model weights,
 that the paper's reported values were derived from the released raw experiment
-outputs rather than transcribed by hand. It currently verifies 388 of them.
+outputs rather than transcribed by hand. It currently verifies 395 of them.
 
 What that does and does not cover: every cell of every table in the manuscript
 and the supplement is checked, along with the prose figures registered

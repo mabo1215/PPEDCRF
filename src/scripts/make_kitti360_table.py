@@ -23,6 +23,12 @@ more binding here than there. Both intervals are therefore computed and both
 are printed, because on this benchmark they disagree about the direction arm
 and the reader is entitled to see that rather than be handed the narrower one.
 
+Reference levels. A null is only as good as the demonstrated sensitivity of the
+measurement behind it, so the table opens with three rows fixing the scale: the
+unperturbed query, the mechanism's own release, and a white-box sign-gradient
+bound. Without them a reader cannot tell whether the placements fail to move
+retrieval because placement does nothing or because there was nothing to move.
+
 Completeness. The table is generated from a fixed list of conditions, which is
 how two conditions that had been run once went unreported. The list is now
 checked against the export and a condition present in the data but missing from
@@ -44,6 +50,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 KEEP_PLACE = ["query_id", "place_id", "placement", "seed", "correct_rank"]
 KEEP_DIR = ["query_id", "place_id", "condition", "seed", "correct_rank"]
+KEEP_BASE = ["query_id", "place_id", "variant", "seed", "correct_rank"]
 BOOT_DRAWS = 10000
 BOOT_SEED = 20260910
 MARGIN = 0.01
@@ -131,6 +138,9 @@ def main() -> int:
     ap.add_argument("--direction",
                     default=str(REPO / "src" / "outputs" / "kitti360_direction"
                                 / "per_query.csv"))
+    ap.add_argument("--baseline",
+                    default=str(REPO / "src" / "outputs" / "kitti360_baseline"
+                                / "geotagged_vpr_per_query.csv"))
     ap.add_argument("--manifest",
                     default=str(REPO / "src" / "outputs" / "e1_kitti360"
                                 / "manifest_loop.jsonl"))
@@ -143,7 +153,8 @@ def main() -> int:
     places = load_places(Path(args.manifest))
 
     for src, name, keep in ((args.placement, "placement.csv", KEEP_PLACE),
-                            (args.direction, "direction.csv", KEEP_DIR)):
+                            (args.direction, "direction.csv", KEEP_DIR),
+                            (args.baseline, "baseline.csv", KEEP_BASE)):
         if Path(src).is_file():
             print(f"[export] {slim(Path(src), ex / name, keep, places)} rows "
                   f"-> {ex / name}")
@@ -191,6 +202,32 @@ def main() -> int:
     stats.append({"arm": "direction", "name": "transfer_3", "top1": dtop1,
                   "delta": ddelta, "ci": [dlo, dhi], "p": dp, "n": dn,
                   "clustered_ci": list(dcl[:2]) if dcl else None})
+    # Reference levels: what an unperturbed query scores, what the mechanism
+    # itself does, and what a white-box attacker can do to this benchmark.
+    base_lines = []
+    base_path = ex / "baseline.csv"
+    if base_path.is_file():
+        base_rows = list(csv.DictReader(base_path.open(newline="", encoding="utf-8")))
+        raw = per_query(base_rows, "variant", "raw")
+        for key, label in (("raw", "clean (unperturbed)"),
+                           ("full", "mechanism release"),
+                           ("attacker_aware", "white-box bound")):
+            arm = per_query(base_rows, "variant", key)
+            if not arm:
+                continue
+            if key == "raw":
+                base_lines.append(rf"{label:<18} & {np.mean(list(arm.values())):.4f}"
+                                  rf" & --- & --- & --- \\")
+                continue
+            t1, dl, lo2, hi2, pv, nn, cc = compare(arm, raw, rng, places)
+            ci = cc if cc else (lo2, hi2)
+            base_lines.append(rf"{label:<18} & {t1:.4f} & ${dl:+.4f}$ & "
+                              rf"$[{ci[0]:+.3f},{ci[1]:+.3f}]$ & {pv:.3f} \\")
+            stats.append({"arm": "reference", "name": key, "top1": t1,
+                          "delta": dl, "ci": [lo2, hi2],
+                          "clustered_ci": list(cc[:2]) if cc else None,
+                          "p": pv, "n": nn})
+
     n_places = dcl[2] if dcl else 0
     # Does any placement separate from zero once places are the unit?
     cl_sig = [s_ for s_ in stats if s_["arm"] == "placement" and s_["clustered_ci"]
@@ -208,13 +245,18 @@ def main() -> int:
         r"at the same delivered distortion. The interval is a query bootstrap;",
         rf"with only {n_places} places the direction row also carries the",
         r"place-clustered interval this protocol prescribes, and the two",
-        r"disagree. No placement separates from zero under either unit. A place",
+        r"disagree. No placement separates from zero under either unit, while",
+        r"the white-box bound does, which is what shows this benchmark can be",
+        r"moved at all. Reference rows carry the clustered interval. A place",
         r"here is a road stretch, coarser than the 25\,m ball MSLS uses, which",
         r"moves the absolute level and not the paired contrasts.}",
         r"\label{tab:kitti360}", r"\footnotesize",
         r"\setlength{\tabcolsep}{2pt}",
         r"\begin{tabular}{lcccc}", r"\hline",
         r"Condition & Top-1 & $\Delta$ & 95\% CI & $p$ \\",
+        r"\hline",
+        r"\multicolumn{5}{l}{\textit{Reference levels}} \\",
+    ] + base_lines + [
         r"\hline",
         r"\multicolumn{5}{l}{\textit{Allocation: energy-matched placements}} \\",
     ] + lines + [
