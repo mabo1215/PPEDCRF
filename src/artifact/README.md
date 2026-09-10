@@ -2,14 +2,24 @@
 
 This bundle lets a reviewer confirm, without a GPU and without model weights,
 that the paper's reported values were derived from the released raw experiment
-outputs rather than transcribed by hand. It currently verifies 395 of them.
+outputs rather than transcribed by hand.
 
-What that does and does not cover: every cell of every table in the manuscript
-and the supplement is checked, along with the prose figures registered
-alongside them. It is a registry, not a sweep -- a number quoted only in the
-running text and never registered is not checked, and roughly a third of the
-manuscript's three- and four-decimal literals are in that class, mostly
-interval endpoints printed beside a point estimate that is checked.
+Two checkers exist and they reach different amounts, so both numbers are
+stated here rather than one:
+
+- `verify_claims.py`, shipped here, recomputes **228** claims from the exports
+  in `results/`. That is what `run_verification.sh` runs, and the section
+  "What the one-command check does and does not cover" below names the
+  families it does not reach.
+- `src/scripts/audit_claim_consistency.py`, in the source repository,
+  recomputes **432** -- every cell of every table in the manuscript and the
+  supplement, plus the prose values registered alongside them.
+
+Both are registries, not sweeps. A number quoted only in the running text and
+never registered is not checked: of the manuscript's 192 distinct three- and
+four-decimal literals, 76 have no claim, most of them interval endpoints
+printed beside a point estimate that is checked. Neither checker asserts that
+the registry is complete, and this bundle does not claim it is.
 
 It also carries `extended_evidence_report.pdf`, the extended evidence report
 the manuscript cites wherever a result lives only there.
@@ -148,7 +158,6 @@ location on the authors' machines.
   every number the manuscript draws from them can be recomputed by hand, but
   the automated pass does not assert them and this artifact does not claim it
   does. In the source repository those families are asserted by
-  `src/scripts/audit_claim_consistency.py`, which checks all 153 manuscript
-  claims against the same rows; it is not run here because it resolves trees by
-  their repository names rather than the reader-facing names used in
-  `results/`.
+  `src/scripts/audit_claim_consistency.py`, which checks 432 manuscript claims
+  against the same rows; it is not run here because it resolves trees by their
+  repository names rather than the reader-facing names used in `results/`.

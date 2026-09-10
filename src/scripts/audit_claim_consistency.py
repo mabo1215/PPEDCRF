@@ -1229,6 +1229,105 @@ for cid, printed, value, variant, stat, src in [
 
 
 
+# --- Table I: the manuscript's central allocation result --------------------
+# Registered late, which is itself worth recording: the table that carries the
+# paper's main negative claim was the one table no checker asserted. Its Delta
+# is a macro-average -- the mean over the seven (benchmark, backbone) cells of
+# that cell's Top-1 difference from the uniform control -- and not the pooled
+# row average, which weights the six-backbone proxy six times as heavily as the
+# 50-pair one and gives visibly different numbers. Recomputing it here fixes
+# the definition as well as the values.
+def _placement_macro(tree: str, placement: str):
+    def go() -> Optional[float]:
+        # A cell is one (benchmark, backbone) run, and the benchmark is the
+        # directory: the rows themselves do not name it, so pooling them by
+        # backbone alone silently merges the 12-pair and 50-pair benchmarks.
+        cells: Dict[tuple, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(list))
+        paths: List[str] = []
+        for root in ROOTS:
+            paths = sorted(globmod.glob(str(root / tree / "**" / "per_query.csv"),
+                                        recursive=True))
+            if paths:
+                break
+        if not paths:
+            return None
+        for path in paths:
+            bench = Path(path).parent.name
+            with open(path, newline="", encoding="utf-8") as fh:
+                for r in csv.DictReader(fh):
+                    cells[(bench, r["backbone"])][r["placement"]].append(
+                        float(int(r["correct_rank"]) == 1))
+        deltas = []
+        for arms in cells.values():
+            if placement in arms and "uniform" in arms:
+                deltas.append(float(np.mean(arms[placement]))
+                              - float(np.mean(arms["uniform"])))
+        return float(np.mean(deltas)) if deltas else None
+    return go
+
+
+for name, constant, selective in [
+        ("anti_oracle_grad", -0.001, -0.003),
+        ("learned", 0.000, 0.039),
+        ("oracle_grad", 0.028, 0.008),
+        ("saliency", 0.026, 0.031),
+        ("center", 0.030, 0.030),
+        ("random_fixed", 0.051, 0.039),
+        ("edge", 0.067, 0.052)]:
+    for label, tree, value in [
+            ("constant", "placement_study", constant),
+            ("selective", "placement_study_maskbacked", selective)]:
+        printed = "$\\pm0.000$" if value == 0 else f"${value:+.3f}$"
+        claim(f"TabI/{label}/{name}", "Table tab:placement", printed, value,
+              6e-4, tree, _placement_macro(tree, name), source=MAIN)
+
+
+# --- Table II: operators at matched delivered MSE ---------------------------
+# The p column is a Wilcoxon signed-rank over per-query differences, not the
+# exact McNemar p stored beside it in the same export; registering it says so.
+def _operator(tree: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load(f"{tree}/per_query.csv")
+        if not rows:
+            return None
+        arms: Dict[str, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(list))
+        for r in rows:
+            arms[r["placement"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+        if "uniform" not in arms or "edge" not in arms:
+            return None
+        ref = {q: float(np.mean(v)) for q, v in arms["uniform"].items()}
+        arm = {q: float(np.mean(v)) for q, v in arms["edge"].items()}
+        if stat == "uniform":
+            return float(np.mean(list(ref.values())))
+        st = paired(arm, ref)
+        return st["delta"] if stat == "delta" else st["p"]
+    return go
+
+
+for tree, uniform, delta, pval in [
+        ("operator_study/sigma8_gaussian", 0.1950, 0.0025, 0.69),
+        ("operator_study/sigma8_correlated", 0.1892, -0.0008, 0.83),
+        ("operator_study/sigma8_blur", 0.1975, 0.0100, 0.39),
+        ("operator_study/sigma8_mosaic", 0.2000, -0.0075, 0.51),
+        ("operator_study/sigma32_gaussian", 0.1592, -0.0433, 0.008),
+        ("operator_study/sigma32_correlated", 0.0650, 0.0167, 0.12),
+        ("operator_study/sigma32_blur", 0.1025, 0.0500, 0.003),
+        ("operator_study/sigma32_mosaic", 0.0525, 0.1150, None)]:
+    tag = tree.split("/")[1]
+    claim(f"TabII/{tag}/uniform", "Table tab:operator", f"{uniform:.4f}",
+          uniform, 5e-5, tree, _operator(tree, "uniform"), source=MAIN)
+    printed = f"${delta:+.4f}$" if delta not in (-0.0433, 0.0500, 0.1150) \
+        else f"${delta:+.4f}^{{\\ast}}$"
+    claim(f"TabII/{tag}/delta", "Table tab:operator", printed, delta, 5e-5,
+          tree, _operator(tree, "delta"), source=MAIN)
+    if pval is not None:
+        claim(f"TabII/{tag}/p", "Table tab:operator", f"{pval:g}", pval,
+              max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=MAIN)
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------
