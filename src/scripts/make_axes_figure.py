@@ -131,38 +131,56 @@ def main() -> int:
                              len(label), args.n_boot)
         direction.append((label, d, lo, hi))
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.16, 3.05),
-                             gridspec_kw={"width_ratios": [1.5, 1]})
+    # One column of an IEEE two-column page. Each placement rule carries both
+    # attackers on one row, so the seven rules stay legible where fourteen
+    # separate rows would not.
+    fig, axes = plt.subplots(1, 2, figsize=(3.45, 1.78),
+                             gridspec_kw={"width_ratios": [1.32, 1]})
     ax = axes[0]
     ax.axvspan(-0.01, 0.01, color="0.88", zorder=0)
-    ax.axvline(0, color="0.4", lw=0.8, zorder=1)
-    ys = np.arange(len(rows))
-    for y, (_, d, lo, hi) in zip(ys, rows):
-        colour = "#b03030" if lo > 0 else ("#2a6099" if hi < 0 else "0.25")
-        ax.plot([lo, hi], [y, y], color=colour, lw=1.2, zorder=2)
-        ax.plot([d], [y], "o", ms=3.4, color=colour, zorder=3)
-    ax.set_yticks(ys)
-    ax.set_yticklabels([r[0] for r in rows], fontsize=6.2)
-    ax.invert_yaxis()
-    ax.set_xlabel(r"$\Delta$ Top-1 vs the uniform control", fontsize=7.5)
-    ax.set_title("Allocation: where the budget goes", fontsize=8)
-    ax.tick_params(axis="x", labelsize=7)
-    ax.set_xlim(-0.06, 0.06)
+    ax.axvline(0, color="0.4", lw=0.7, zorder=1)
+    names = [PLACEMENT_LABEL[k] for k in
+             ["learned", "anti_oracle_grad", "oracle_grad", "saliency",
+              "center", "random_fixed", "edge"]]
+    by_rule = {n: [] for n in names}
+    for label, d, lo, hi in rows:
+        rule, attacker = label.rsplit(" (", 1)
+        by_rule[rule].append((attacker.rstrip(")"), d, lo, hi))
+    for y, rule in enumerate(names):
+        for (attacker, d, lo, hi), off, marker in zip(
+                by_rule[rule], (-0.17, 0.17), ("o", "s")):
+            colour = "#2a6099" if attacker == "ResNet18" else "#b03030"
+            ax.plot([lo, hi], [y + off, y + off], color=colour, lw=0.9, zorder=2)
+            ax.plot([d], [y + off], marker, ms=2.6, color=colour, zorder=3)
+    ax.set_yticks(np.arange(len(names)))
+    ax.set_yticklabels(names, fontsize=5.2)
+    ax.set_ylim(len(names) - 0.5, -0.5)
+    ax.set_xlabel(r"$\Delta$ Top-1 vs uniform", fontsize=6.4)
+    ax.set_title("Allocation", fontsize=7)
+    ax.tick_params(axis="x", labelsize=5.8)
+    ax.set_xlim(-0.045, 0.045)
+    ax.set_xticks([-0.04, 0.0, 0.04])
+    # No legend: it collides with the widest interval whichever corner it goes
+    # in, and the caption can carry two words.
 
     ax = axes[1]
     ax.axvspan(-0.01, 0.01, color="0.88", zorder=0)
-    ax.axvline(0, color="0.4", lw=0.8, zorder=1)
+    ax.axvline(0, color="0.4", lw=0.7, zorder=1)
+    short = {"ResNet18, 3 surrogates": "ResNet18",
+             "Patch-NetVLAD, 3": "Patch-NetVLAD",
+             "MixVPR, 4 surrogates": "MixVPR",
+             "ViT-B/16, 3 (no shared trunk)": "ViT-B/16$^{*}$"}
     ys = np.arange(len(direction))
-    for y, (_, d, lo, hi) in zip(ys, direction):
-        ax.plot([lo, hi], [y, y], color="#2a6099", lw=1.4, zorder=2)
-        ax.plot([d], [y], "o", ms=4.0, color="#2a6099", zorder=3)
+    for y, (label, d, lo, hi) in zip(ys, direction):
+        ax.plot([lo, hi], [y, y], color="#2a6099", lw=1.0, zorder=2)
+        ax.plot([d], [y], "o", ms=3.0, color="#2a6099", zorder=3)
     ax.set_yticks(ys)
-    ax.set_yticklabels([r[0] for r in direction], fontsize=6.2)
-    ax.invert_yaxis()
-    ax.set_xlabel(r"$\Delta$ Top-1 vs the isotropic control", fontsize=7.5)
-    ax.set_title("Direction: where it points", fontsize=8)
-    ax.tick_params(axis="x", labelsize=7)
-    ax.set_xlim(-0.25, 0.045)
+    ax.set_yticklabels([short.get(r[0], r[0]) for r in direction], fontsize=5.6)
+    ax.set_ylim(len(direction) - 0.5, -0.5)
+    ax.set_xlabel(r"$\Delta$ Top-1 vs isotropic", fontsize=6.4)
+    ax.set_title("Direction", fontsize=7)
+    ax.tick_params(axis="x", labelsize=5.8)
+    ax.set_xlim(-0.26, 0.05)
     ax.set_xticks([-0.2, -0.1, 0.0])
 
     for ax in axes:
@@ -170,11 +188,27 @@ def main() -> int:
             ax.spines[side].set_visible(False)
     # The two panels differ in scale by a factor of four; the caption says so,
     # and the shared margin band is drawn on both so the reader can see it.
-    fig.tight_layout(pad=0.5, w_pad=1.6)
+    fig.tight_layout(pad=0.35, w_pad=0.9)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, bbox_inches="tight")
     print(f"[figure] {out}")
+
+    # A figure's numbers should be checkable like a table's. This sidecar
+    # carries every plotted point and interval in the form the claim auditor
+    # locates, so what the figure shows is verified against the released rows
+    # rather than trusted because it was drawn by a script.
+    side = out.with_suffix("").with_name("fig_axes_values") .with_suffix(".tex")
+    side = Path(str(REPO / "paper" / "generated" / "fig_axes_values.tex"))
+    lines = ["% Generated by src/scripts/make_axes_figure.py. Not typeset:",
+             "% the values plotted in the two-axis figure, so the claim",
+             "% auditor can verify a figure the way it verifies a table.",
+             "\\begin{comment}"]
+    for name, d, lo, hi in rows + direction:
+        lines.append(f"% {name}: ${d:+.4f}$ $[{lo:+.3f},{hi:+.3f}]$")
+    lines.append("\\end{comment}")
+    side.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[values] {side}")
     for name, d, lo, hi in rows + direction:
         print(f"[data ] {name:34s} {d:+.4f} [{lo:+.4f},{hi:+.4f}]")
     return 0
