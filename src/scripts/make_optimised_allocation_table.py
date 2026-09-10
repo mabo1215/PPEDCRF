@@ -110,7 +110,12 @@ def block(rows, place_of, title: str, conditions: Sequence[str],
         st = stats(rows, cond, "uniform", place_of)
         if st is None:
             continue
-        cross = stats(rows, cond + "_crossdraw", "uniform", place_of)
+        # Pair the held-out draw against the uniform arm on that same draw.
+        # Scoring it against the uniform arm of the *evaluation* draw would
+        # fold the difference between two noise realisations into the
+        # contrast, and two draws of the same uniform map already differ by
+        # about 0.011 Top-1 at this sample size.
+        cross = stats(rows, cond + "_crossdraw", "uniform_crossdraw", place_of)
         cs = f"${cross['delta']:+.4f}$" if cross else "---"
         out.append(
             rf"{LABEL.get(cond, cond)} & {st['top1']:.4f} & ${st['delta']:+.4f}$ "
@@ -154,8 +159,9 @@ def main() -> int:
         r"attacker'' does, and is an upper bound no deployable mechanism has. "
         r"$\Delta$ is paired against the uniform control on identical queries "
         r"and noise draws, with a place-clustered interval. The fifth column "
-        r"scores the same map on a noise draw the optimiser never saw: a "
-        r"spatial preference survives it, a selection of signs does not. "
+        r"scores the same map on a noise draw the optimiser never saw, "
+        r"against the uniform arm of that same draw: a spatial preference "
+        r"survives it, a selection of signs does not. "
         r"``top-decile'' is the squared weight in the largest tenth of the "
         r"map, $0.100$ for uniform and $0.839$ for the edge rule.")
     lines = [
