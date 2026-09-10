@@ -52,6 +52,10 @@ MAIN = REPO / "paper" / "main.tex"
 # The factorial decomposition moved to the supplement to meet the page
 # limit, so the numbers it prints are located there rather than in MAIN.
 SUPP = REPO / "paper" / "supplementary.tex"
+# Tables the page ceiling moved out of the six-page supplement still carry
+# claims; they are located in the extended evidence report instead, which is
+# released with the code.
+EXT = REPO / "paper" / "backup" / "supplementary_extended.tex"
 TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
 # The two E1 tables are generated from the exports as well, so their numbers are
 # located in the generated files rather than in the supplement's own source.
@@ -332,14 +336,14 @@ for bb, tag, masked, full, delta, pv in [
         ("mix", "MixVPR", 0.7650, 0.7292, +0.036, 2e-4)]:
     claim(f"T7/{tag}/masked", "Table VII (gradient, cover 0.25)",
           f"{masked:.4f}", masked, 5e-5, "tifs_a4", _mask(bb, "masked"),
-          source=SUPP)
+          source=EXT)
     claim(f"T7/{tag}/full", "Table VII (gradient, cover 0.25)", f"{full:.4f}",
-          full, 5e-5, "tifs_a4", _mask(bb, "full"), source=SUPP)
+          full, 5e-5, "tifs_a4", _mask(bb, "full"), source=EXT)
     claim(f"T7/{tag}/delta", "Table VII (gradient, cover 0.25)",
           f"${delta:+.3f}$", delta, 5e-4, "tifs_a4", _mask(bb, "delta"),
-          locator=None, source=SUPP)
+          locator=None, source=EXT)
     claim(f"T7/{tag}/p", "Table VII (gradient, cover 0.25)", f"{pv}", pv,
-          rel(pv), "tifs_a4", _mask(bb, "p"), locator=None, source=SUPP)
+          rel(pv), "tifs_a4", _mask(bb, "p"), locator=None, source=EXT)
 
 
 # --- the cross-time replication, from tifs_a7_o2n8 ------------------------
