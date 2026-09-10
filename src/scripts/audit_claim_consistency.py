@@ -1073,6 +1073,61 @@ for cid, printed, value, fn, src in [
 
 
 
+# --- the KITTI-360 replication ----------------------------------------------
+# The second dataset. Registered from its own export so the manuscript's
+# statement that both contrasts survive a change of dataset is checked against
+# the rows that produced it, not against a remembered number.
+KITTI_TAB = REPO / "paper" / "generated" / "tab_kitti360.tex"
+
+
+def _kitti(arm: str, column: str, value: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load(f"kitti360_rows/{arm}.csv")
+        if not rows:
+            return None
+        ref_name = "uniform" if arm == "placement" else "isotropic"
+        by: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            by[r[column]][r["query_id"]].append(float(int(r["correct_rank"]) == 1))
+        ref = {q: float(np.mean(v)) for q, v in by[ref_name].items()}
+        arm_q = {q: float(np.mean(v)) for q, v in by[value].items()}
+        shared = sorted(set(arm_q) & set(ref))
+        if not shared:
+            return None
+        if stat == "top1":
+            return float(np.mean([arm_q[q] for q in shared]))
+        return float(np.mean([arm_q[q] - ref[q] for q in shared]))
+    return go
+
+
+for name, top1, delta in [
+        ("uniform", 0.1512, None), ("learned", 0.1512, 0.0000),
+        ("oracle_grad", 0.1571, 0.0059), ("anti_oracle_grad", 0.1468, -0.0044),
+        ("saliency", 0.1615, 0.0103), ("center", 0.1424, -0.0088),
+        ("random_fixed", 0.1571, 0.0059), ("edge", 0.1630, 0.0117),
+        ("segmentation", 0.1454, -0.0059), ("segmentation_fcn", 0.1439, -0.0073),
+        ("segmentation_ade", 0.1424, -0.0088)]:
+    claim(f"KITTI/place/{name}/top1", "Table tab:kitti360", f"{top1:.4f}", top1,
+          5e-5, "kitti360_rows", _kitti("placement", "placement", name, "top1"),
+          source=KITTI_TAB)
+    if delta is not None:
+        claim(f"KITTI/place/{name}/delta", "Table tab:kitti360",
+              f"${delta:+.4f}$", delta, 5e-5, "kitti360_rows",
+              _kitti("placement", "placement", name, "delta"), source=KITTI_TAB)
+
+for cid, printed, value, stat, src in [
+        ("KITTI/dir/isotropic", "0.1483", 0.1483, "top1", KITTI_TAB),
+        ("KITTI/dir/transfer_3", "0.0940", 0.0940, "top1", KITTI_TAB),
+        ("KITTI/dir/delta", "$-0.0543$", -0.0543, "delta", KITTI_TAB),
+        ("KITTI/dir/isotropic/main", "0.1483", 0.1483, "top1", MAIN),
+        ("KITTI/dir/transfer_3/main", "0.0940", 0.0940, "top1", MAIN),
+        ("KITTI/dir/delta/main", "$-0.0543$", -0.0543, "delta", MAIN)]:
+    cond = "isotropic" if "isotropic" in cid else "transfer_3"
+    claim(cid, "\\S A second dataset", printed, value, 5e-5, "kitti360_rows",
+          _kitti("direction", "condition", cond, stat), source=src)
+
+
+
 # --------------------------------------------------------------------------
 # reporting
 # --------------------------------------------------------------------------

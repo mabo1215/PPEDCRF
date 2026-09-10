@@ -159,7 +159,7 @@ def main() -> int:
         r"Top-1 on the raw query against the mechanism's release, each query",
         r"averaged over three seeds first. Negative $\Delta$ is the protective",
         rf"direction: {negative} of {len(wide_stats)} cells are negative. The",
-        r"earlier two-city run is Table~\ref{tab:e1_multibackbone}.}",
+        r"earlier two-city run is in the extended report.}",
         r"\label{tab:e1_wide8}", r"\footnotesize",
         r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{llccc}", r"\hline",

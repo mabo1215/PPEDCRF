@@ -33,19 +33,18 @@ Earlier editions are in \texttt{docs/archived/}.}
 
 The active review is the seventh independent review in
 \texttt{docs/RevisionSuggestions.tex} (10 September 2026, IEEE TIFS, verdict
-\emph{minor revision}), findings R1--R10. \textbf{Nine of the ten are closed},
-together with all four presentation notes. \textbf{One is open: R5, a second
-place-labelled retrieval dataset.} It is not blocked on a GPU --- it is a
-build, and the data for it has now been located.
+\emph{minor revision}), findings R1--R10. \textbf{All ten are closed}, together with all four
+presentation notes. R5, the last of them, was closed by measurement rather than
+by narrowing: a second place-labelled dataset was built from KITTI-360 revisits
+and both of the paper's central contrasts replicate on it.
 
-\paragraph{Compute state.} \textbf{Nothing is running.} 2c (2$\times$RTX~4080
-SUPER) and vGPU~3090 were started during this cycle and inspected; neither
-holds the data R5 needs, and neither is required for anything else here, so
-both can be shut down. PRO~6000 was offered for R5 and was found powered off;
-it is also not the right host, for the same reason. The two measurements this
-cycle did need --- the strong-attacker per-placement export and the
-native-resolution segmenter re-score --- ran locally on the RTX~3070 in
-minutes.
+\paragraph{Compute state.} \textbf{Nothing is running, and no remote host was
+used.} 2c (2$\times$RTX~4080 SUPER), vGPU~3090 and PRO~6000 were each checked
+for the R5 data and none held it; the data was on the local G: drive, so the
+whole cycle ran on the RTX~3070. The R5 arms took about 25 minutes of wall
+clock between them, against a measured 7 minutes of pure compute --- the
+difference is reading 1408$\times$376 PNGs off an external drive, which is why
+moving the job to a faster GPU would have made it slower, not quicker.
 
 \paragraph{Document state.} \texttt{main.pdf} \textbf{13 pages} against the
 13-page TIFS ceiling; abstract \textbf{246} words (window 150--250);
@@ -53,16 +52,18 @@ minutes.
 Editor-in-Chief approval; \texttt{titlepage.pdf} 1 page; the extended evidence
 report, released with the code and not submitted, 12 pages. All four build with
 \textbf{0 undefined references, 0 undefined citations and 0 overfull boxes}.
-This cycle added roughly 40 lines of required material to documents that were
-already at both ceilings and paid for all of it, chiefly by compressing Related
-Work and by dropping a supplementary budget-sweep table whose figure plots the
-same data.
+This cycle added roughly 90 lines of required material --- the second dataset
+among them --- to documents already at both ceilings, and paid for all of it:
+Related Work compressed, and three supplementary tables moved to the extended
+report (the budget sweep, whose figure plots the same data, and the mined
+proxy's per-rule and two-city E1 tables, which a real second dataset makes the
+least load-bearing things in a six-page supplement).
 
-\paragraph{Verification state.} \textbf{352 claims verify against raw exports;
+\paragraph{Verification state.} \textbf{379 claims verify against raw exports;
 0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 333.
-The additions are the strong-attacker per-placement table and the two numbers
-of the proxy-versus-real calibration sentence, which until this cycle appeared
-in no table in either document. \emph{A correction to an earlier statement in
+The additions are the KITTI-360 replication, the strong-attacker per-placement
+table, and the two numbers of the proxy-versus-real calibration sentence, which
+until this cycle appeared in no table in either document. \emph{A correction to an earlier statement in
 this file:} the auditor does not cover every printed number. It covers every
 table cell in both documents plus the registered prose claims; 74 of the 182
 distinct three- and four-decimal literals in the manuscript still have no
@@ -80,32 +81,36 @@ if one is reintroduced and goes stale.
 \section*{Table 1: Open Work Against the Seventh Review}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.22\linewidth}p{0.11\linewidth}p{0.54\linewidth}@{}}
-\caption{The one review finding still open, and what it needs. R1--R4 and
-R6--R10 are closed and no longer listed.}
+\caption{Nothing is open. R1--R10 are all closed; this table records the one
+that needed an experiment rather than an edit.}
 \label{tab:tifs7-open}\\
 \toprule
-\textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
+\textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
 \midrule
 \endfirsthead
 \toprule
-\textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
+\textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
 \midrule
 \endhead
 
-R5 & Second place-labelled retrieval dataset & \pending & The manuscript's
-regime claims are, for now, narrowed to ``one dataset, one capture condition''
-in the conclusion, which is the review's own fallback and makes the paper
-accurate today. Lifting the narrowing needs the experiment in
-Table~\ref{tab:tifs7-plan}. \\
+R5 & Second place-labelled retrieval dataset & \done & Built from KITTI-360
+revisits and run through the same protocol, gate and unit of inference: 227
+queries, 2,000-image gallery, 16 places, three seeds. \textbf{Both contrasts
+replicate.} Allocation: eleven energy-matched placements, the three
+published-model priors among them, every difference from uniform inside
+$\pm0.012$ Top-1 and none significant (smallest $p=0.12$), the learned map
+again exactly $0.0000$. Direction: $0.1483\to0.0940$, $-0.0543$
+$[-0.095,-0.015]$, $p=0.006$. The conclusion's narrowing to ``one dataset, one
+capture condition'' was removed as a result. \\
 
 \bottomrule
 \end{longtable}
 
-\section*{Table 2: The R5 Experiment --- Design, Data and Host}
+\section*{Table 2: How the Second Dataset Was Built}
 
 \begin{longtable}{@{}p{0.16\linewidth}p{0.78\linewidth}@{}}
-\caption{What R5 needs, now that the data has been located. The GPU is not the
-constraint; the benchmark construction is.}
+\caption{The construction, and the two dead ends that shaped it. Recorded
+because the choices are not obvious from the result.}
 \label{tab:tifs7-plan}\\
 \toprule
 \textbf{Aspect} & \textbf{Detail} \\
@@ -116,41 +121,35 @@ constraint; the benchmark construction is.}
 \midrule
 \endhead
 
-Data --- found & \texttt{G:\textbackslash work\textbackslash datasets\textbackslash kitti360}
-holds \texttt{data\_2d\_raw} (imagery), \texttt{data\_poses} (GPS/IMU) and
-\texttt{data\_2d\_semantics}. \texttt{argoverse2\_sensor\_sample} is also
-present. Tokyo~24/7 and Oxford RobotCar, the two the review named, are on no
-machine checked: not local, not on 2c, not on vGPU~3090, not on the shared
-\texttt{autodl-fs} volume. Only Patch-NetVLAD's Tokyo ground-truth index files
-exist, without imagery. \\
+Data & \texttt{G:\textbackslash work\textbackslash datasets\textbackslash kitti360}.
+Tokyo~24/7 and Oxford RobotCar, the two the review named, are on no machine
+checked --- not local, not 2c, not vGPU~3090, not the shared volume. Only
+Patch-NetVLAD's Tokyo index files exist, without imagery. \\
 \addlinespace
 
-Why KITTI-360 works & It is a genuine change of dataset, city, camera and
-capture modality (car-mounted, Karlsruhe) rather than another slice of MSLS,
-and its poses support the same place criterion MSLS uses --- a positive within
-25\,m --- so the existing manifest gate and the cluster-versus-geographic audit
-transfer directly. The project already uses it for the mask-backed support-map
-check, so the loader exists. \\
+Dead end 1 & Cross-traversal split, the clean MSLS analogue. Of eleven drives
+only 0000 and 0002 have imagery, and those two are spatially disjoint; every
+cross-drive overlap the poses show involves a drive that was never downloaded. \\
 \addlinespace
 
-What must be built & A place-labelled manifest from poses: query/gallery split
-by drive or epoch, positives by 25\,m radius, held-out gallery of comparable
-size to MSLS's 2,000. Then the two comparisons the thesis rests on --- the
-eight-placement energy-matched study and the direction-versus-isotropic
-contrast at the operating point --- one backbone, one budget, with
-place-clustered intervals and the energy-conservation gate. \\
+Dead end 2 & A single global time cut --- early block as gallery, late block as
+queries. It keeps only revisits straddling the cut: five or six places out of
+the 274 the data contains. \\
 \addlinespace
 
-Host & The data is on the local G: drive and the workload is light: the
-placement arm is 8 placements $\times$ 3 seeds $\times$ 400 queries of forward
-passes, and the direction arm about 1,200 sign-gradient optimisations of 20
-steps. The local RTX~3070 can do both. Shipping a KITTI-360 subset to an AutoDL
-host is the alternative and costs a transfer the local run avoids. \\
+What worked & Pair by revisit, not by clock. A place is a ground cell the drive
+enters twice; the later visit gives the query, the earlier one the positives,
+every pair at least 600 frames (about a minute) apart. Adjacent revisited cells
+are merged first --- two cells metres apart are one street corner and, left
+separate, generate each other's false negatives. That raised label agreement
+from $42\%$ to $100\%$ of the gallery frames within 25\,m. \\
 \addlinespace
 
-Decision needed & Confirm KITTI-360 as the second dataset in place of the two
-the review named, and confirm local-GPU execution rather than a host. Neither
-2c nor vGPU~3090 nor PRO~6000 is needed for it. \\
+Honest limit & 16 distinct places, against MSLS's 277, so the place-clustered
+interval has few clusters and the query-level one carries the inference. A
+place is a road stretch rather than a 25\,m ball, so absolute Top-1 is not
+comparable with the MSLS tables; only the paired contrasts are read, which is
+all either arm needs. \\
 
 \bottomrule
 \end{longtable}
@@ -212,7 +211,7 @@ does not have to rediscover it.}
 \endhead
 
 N1 & An independently trained selective sanitizer under the protocol &
-\pending & R6's other option. The conclusion now names the placement class the
+\pending & R6's other option, now the largest remaining gap. The conclusion now names the placement class the
 null covers --- hand-specified priors, gradient maps, published segmentation
 priors and this paper's own two checkpoints --- so no sentence overstates it.
 Testing a third-party released sanitizer would widen the class. \\
