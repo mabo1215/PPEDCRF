@@ -124,7 +124,20 @@ def report(title, hits, sanitizers, condition, into=None):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", default="src/outputs/tifs_d6")
-    ap.add_argument("--backbone", choices=("resnet18", "mixvpr"), required=True)
+    ap.add_argument("--backbone",
+                    choices=("resnet18", "mixvpr", "patchnetvlad", "vit_b_16"),
+                    required=True)
+    ap.add_argument("--tag", default="",
+                    help="filename stem the exports use, if it is not this "
+                         "backbone's default. The two attackers added in the "
+                         "eleventh cycle were run under their own job names "
+                         "rather than the d6 naming, and re-exporting them "
+                         "under a second name would put two copies of the "
+                         "same rows in the repository.")
+    ap.add_argument("--deployable", default="",
+                    help="the transfer condition to report as the deployable "
+                         "one; defaults to the surrogate count each attacker "
+                         "was actually run with.")
     ap.add_argument("--json", default="",
                     help="also write every cell to this path, so the figure "
                          "and the LaTeX tables are generated from the same "
@@ -133,11 +146,25 @@ def main() -> None:
     collected = {"backbone": args.backbone, "transfer": {},
                  "unhardened": {}, "hardened": {}, "white_box": {}}
 
-    tag = "r18" if args.backbone == "resnet18" else "mix"
-    deployable = "transfer_3" if args.backbone == "resnet18" else "transfer_4"
-    plain = glob.glob(os.path.join(args.out_dir, "d6_%s_plain*.csv" % tag))
-    eot = glob.glob(os.path.join(args.out_dir, "d6_%s_eot_s*.csv" % tag))
-    abl = glob.glob(os.path.join(args.out_dir, "d6_%s_ablation*.csv" % tag))
+    # MixVPR is the one attacker run with four surrogates; the rest have
+    # three, because ResNet18 is a surrogate for MixVPR and an attacker
+    # everywhere else.
+    default_tag = {"resnet18": "r18", "mixvpr": "mix",
+                   "patchnetvlad": "pnv", "vit_b_16": "vit"}[args.backbone]
+    tag = args.tag or default_tag
+    deployable = args.deployable or (
+        "transfer_4" if args.backbone == "mixvpr" else "transfer_3")
+    def find(kind: str):
+        # Accept both the d6 naming and the eleventh cycle's job naming, so
+        # neither set of exports has to be duplicated under the other's name.
+        pats = ["d6_%s_%s*.csv" % (tag, kind), "r5_pre_%s_%s*.csv" % (tag, kind)]
+        out = []
+        for pat in pats:
+            out.extend(glob.glob(os.path.join(args.out_dir, pat)))
+        return sorted(set(out))
+    plain = find("plain")
+    eot = find("eot")
+    abl = find("ablation")
     print("%s: %d plain, %d eot, %d ablation file(s)"
           % (args.backbone, len(plain), len(eot), len(abl)))
 
