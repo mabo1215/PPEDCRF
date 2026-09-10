@@ -21,18 +21,34 @@ bisection so the released frame delivers exactly the target MSE. The noise
 field is shared between the optimised arm and the uniform control, so the only
 thing that differs between them is where the budget sits.
 
-Three points about the formulation, each chosen to be generous to allocation:
+Two noise modes, and the difference between them is the whole point.
 
-  * The optimiser sees the *realised* noise draw, not its distribution. A
-    deployed sanitizer draws that noise itself, so this is not an unfair
-    advantage -- it is the strongest allocation the mechanism could actually
-    ship.
-  * `opt_whitebox` optimises `w` against the evaluation backbone itself. No
-    deployable mechanism has that, and it is included precisely because a null
-    under it is decisive in a way a transfer null is not.
-  * The optimiser is Adam on an unconstrained parameterisation, run for at
-    least the direction arm's step budget and reported again at double it, so
-    "you did not search hard enough" can be checked rather than argued.
+  * `expectation` resamples `eps` at every optimisation step, so `w` is
+    optimised against the noise *distribution* and cannot depend on any
+    realisation. This is allocation in the sense the paper's margin analysis
+    uses: `w` and `eps` stay independent, the perturbation stays zero-mean,
+    and the map can only choose where noise hurts the embedding on average.
+    It is the arm that answers the review's question.
+  * `realised` optimises `w` against the exact draw that will be released.
+    That sounds generous and is in fact a different experiment: with the sign
+    pattern fixed by `eps` and `w` free to be near-zero wherever those signs
+    are unhelpful, the optimiser selects a subset of signs, and selecting
+    signs is the direction axis under another name. A first pass at 16 queries
+    took Top-1 to 0.000 this way, which is why the mode is kept, labelled, and
+    reported as evidence about the sign pattern rather than about placement.
+
+Every optimised map is evaluated twice: on the draw the uniform control uses,
+and on an independent draw the optimiser never saw (`_crossdraw`). That is the
+decisive control. A map that is a genuine spatial preference transfers to a
+fresh draw; one that has merely selected signs does not, and the gap between
+the two rows measures exactly how much of the effect was draw-specific.
+
+`opt_whitebox` optimises `w` against the evaluation backbone itself. No
+deployable mechanism has that, and it is included because a null under it is
+decisive in a way a transfer null is not. The optimiser is Adam on an
+unconstrained parameterisation, run for the direction arm's step budget and
+reported again at double it, so "you did not search hard enough" can be
+checked rather than argued.
 
 The objective's value is recorded before and after optimisation for every row.
 That is the control that matters: if the surrogate similarity falls sharply
@@ -160,14 +176,26 @@ def optimise_weights(frames: torch.Tensor, eps: torch.Tensor,
                      sizes: Sequence[Tuple[int, int]],
                      targets: Sequence[torch.Tensor],
                      target_mse: float, steps: int, lr: float,
-                     checkpoints: Sequence[int]
+                     checkpoints: Sequence[int],
+                     step_noise=None
                      ) -> Tuple[Dict[int, torch.Tensor], Dict[int, torch.Tensor]]:
     """Adam on softplus(theta), projected to the energy gate after every step.
 
+    `step_noise(step)` supplies the field the objective is evaluated against at
+    that step. Returning the same tensor every time optimises against a single
+    realisation; returning a fresh draw optimises against the distribution,
+    which is what keeps `w` independent of `eps` and therefore keeps the arm on
+    the allocation axis.
+
     Returns the normalised weight map and the objective value at each requested
     step count, so a run reports the matched-budget answer and the
-    double-budget answer from one optimisation rather than two.
+    double-budget answer from one optimisation rather than two. Reported
+    objective values always use the fixed evaluation draw, so they are
+    comparable across modes.
     """
+    if step_noise is None:
+        def step_noise(_step: int):
+            return (eps,)
     b = frames.size(0)
     # softplus(theta) is positive by construction, so the non-negativity
     # constraint never needs a projection that could stall the optimiser at
@@ -191,11 +219,20 @@ def optimise_weights(frames: torch.Tensor, eps: torch.Tensor,
 
     for step in range(1, max(want) + 1):
         w = current()
-        with torch.no_grad():
-            gain = batched_gain_for_mse(frames, (w * eps).detach(), target_mse)
-        released, _ = release_with_weights(frames, w, eps, target_mse, gain=gain)
-        sim = surrogate_similarity(released, embedders, sizes, targets)
-        loss = sim.sum()
+        fields = step_noise(step)
+        # Independent draws contribute independent terms to the objective.
+        # Averaging the fields themselves would just build one lower-variance
+        # field, which is a different and much weaker experiment.
+        loss = None
+        for noise in fields:
+            with torch.no_grad():
+                gain = batched_gain_for_mse(frames, (w * noise).detach(),
+                                            target_mse)
+            released, _ = release_with_weights(frames, w, noise, target_mse,
+                                               gain=gain)
+            sim = surrogate_similarity(released, embedders, sizes, targets)
+            loss = sim.sum() if loss is None else loss + sim.sum()
+        loss = loss / len(fields)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
@@ -243,6 +280,20 @@ def main() -> int:
                     help="reported alongside so 'the search was too short' is "
                          "checkable; 0 disables the second checkpoint")
     ap.add_argument("--lr", type=float, default=0.2)
+    ap.add_argument("--noise_mode", default="expectation",
+                    choices=("expectation", "realised"),
+                    help="expectation resamples the noise field at every "
+                         "optimisation step, so the map is optimised against "
+                         "the distribution and stays independent of any "
+                         "realisation -- this is allocation in the sense the "
+                         "margin analysis uses. realised optimises against "
+                         "the exact draw that will be released, which lets "
+                         "the map select signs and therefore measures the "
+                         "direction axis wearing a placement's clothes.")
+    ap.add_argument("--expectation_draws", type=int, default=2,
+                    help="noise fields averaged per optimisation step in "
+                         "expectation mode; the cheap unbiased estimator, "
+                         "matching the EOT convention used elsewhere.")
     ap.add_argument("--seeds", type=int, nargs="+", default=[1234, 5678, 9012])
     ap.add_argument("--batch", type=int, default=8,
                     help="queries optimised together; the card, not the "
@@ -311,11 +362,22 @@ def main() -> int:
     if new:
         writer.writeheader()
 
-    def condition_rows(cond: str) -> List[str]:
-        """Row labels a condition writes: one per optimisation checkpoint."""
+    def condition_rows(cond: str) -> List[Tuple[str, int, bool]]:
+        """(label, optimisation steps, evaluate on the held-out draw?).
+
+        Every optimised map is scored twice: on the draw the uniform control
+        uses, and on an independent draw the optimiser never saw. The second
+        is what separates a spatial preference from sign selection.
+        """
         if cond == "uniform":
-            return ["uniform"]
-        return [cond if s == args.steps else f"{cond}_x2" for s in checkpoints]
+            return [("uniform", args.steps, False),
+                    ("uniform_crossdraw", args.steps, True)]
+        out: List[Tuple[str, int, bool]] = []
+        for n in checkpoints:
+            base = cond if n == args.steps else f"{cond}_x2"
+            out.append((base, n, False))
+            out.append((f"{base}_crossdraw", n, True))
+        return out
 
     # A query with no gallery item of its own place has no rank to report, so
     # it is dropped once here rather than checked inside the batch loop.
@@ -335,55 +397,70 @@ def main() -> int:
         frames = torch.stack([load_image(r["query_path"], resize_hw)
                               for r in keep]).to(device)
         for seed in args.seeds:
-            eps = torch.stack([
-                torch.randn(frames.shape[1:], generator=torch.Generator(
-                    device="cpu").manual_seed(
-                        zlib.crc32(f"{r['query_id']}|{seed}".encode())
-                        & 0x7FFFFFFF))
-                for r in keep]).to(device)
+            def draw(tag: str) -> torch.Tensor:
+                """Reproducible standard normal field, one per (query, tag)."""
+                return torch.stack([
+                    torch.randn(frames.shape[1:], generator=torch.Generator(
+                        device="cpu").manual_seed(
+                            zlib.crc32(f"{r['query_id']}|{seed}|{tag}".encode())
+                            & 0x7FFFFFFF))
+                    for r in keep]).to(device)
+
+            # The draw the uniform control is released with, and an
+            # independent one no optimiser sees.
+            eps = draw("eval")
+            eps_cross = draw("cross")
             for cond in args.conditions:
                 labels = condition_rows(cond)
-                pending = [lab for lab in labels
+                pending = [lab for lab, _, _ in labels
                            if any((r["query_id"], lab, str(seed)) not in done
                                   for r in keep)]
                 if not pending:
                     continue
                 if cond == "uniform":
                     w = normalise_weights(torch.ones_like(frames[:, :1]))
-                    maps = {args.steps: w}
-                    losses = {}
+                    maps = {n: w for n in checkpoints}
                     with torch.no_grad():
                         rel, _ = release_with_weights(frames, w, eps,
                                                       args.target_mse)
-                        s = surrogate_similarity(
+                        base = surrogate_similarity(
                             rel, [embedders[b] for b in surr],
                             [sizes[b] for b in surr],
                             [normalised_embedding(embedders[b], frames,
                                                   sizes[b]).detach()
                              for b in surr])
-                    losses = {0: s, args.steps: s}
+                    losses = {0: base}
+                    losses.update({n: base for n in checkpoints})
                     against = "none"
-                    step_of = {"uniform": args.steps}
                 else:
                     use = surr if cond == "opt_transfer" else [args.eval_backbone]
-                    against = "+".join(use)
+                    against = f"{args.noise_mode}:" + "+".join(use)
                     with torch.no_grad():
                         targets = [normalised_embedding(embedders[b], frames,
                                                         sizes[b]).detach()
                                    for b in use]
+                    if args.noise_mode == "realised":
+                        step_noise = None
+                    else:
+                        def step_noise(step: int):
+                            # Fresh fields every step keep w independent of any
+                            # realisation, which is what holds this arm on the
+                            # allocation axis. Each is a separate term in the
+                            # objective, not a component of an averaged field.
+                            return tuple(
+                                draw(f"opt{step}.{d}")
+                                for d in range(max(1, args.expectation_draws)))
                     maps, losses = optimise_weights(
                         frames, eps, [embedders[b] for b in use],
                         [sizes[b] for b in use], targets, args.target_mse,
-                        args.steps, args.lr, checkpoints)
-                    step_of = {lab: (args.steps if not lab.endswith("_x2")
-                                     else args.double_steps)
-                               for lab in labels}
+                        args.steps, args.lr, checkpoints,
+                        step_noise=step_noise)
 
-                for lab in labels:
-                    nsteps = step_of[lab]
+                for lab, nsteps, cross in labels:
                     w = maps[nsteps]
+                    field = eps_cross if cross else eps
                     with torch.no_grad():
-                        released, _ = release_with_weights(frames, w, eps,
+                        released, _ = release_with_weights(frames, w, field,
                                                            args.target_mse)
                         mse = (released - frames).square().flatten(1).mean(dim=1)
                         share = top_decile_share(w)
