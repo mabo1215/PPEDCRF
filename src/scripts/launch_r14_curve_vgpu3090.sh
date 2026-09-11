@@ -52,7 +52,12 @@ WORKERS="${WORKERS:-5}"
 # A job waits for this much free memory before it starts. Five jobs seeing an
 # empty card would all start at once and the estimate below would be wrong for
 # all of them, so the workers are also staggered on launch.
-WAIT_FREE_MB="${WAIT_FREE_MB:-7000}"
+# 7000 was too low: a job that sees seven gigabytes free starts, and by the
+# time it has built its gallery index the neighbours it started alongside have
+# grown into the rest. Ten concurrent jobs at the batches below peaked at 47.2
+# of 47.4 GiB and the tenth died in a conv. The gate now asks for a window big
+# enough to hold a whole job.
+WAIT_FREE_MB="${WAIT_FREE_MB:-11000}"
 STAGGER="${STAGGER:-75}"
 
 mkdir -p "$OUT" "$LOGS"
@@ -73,17 +78,23 @@ fi
 # Patch-NetVLAD at batch 4 and 4 GB for the ViT at batch 8. Five concurrent
 # jobs at these settings should sit near 40 GB of the 48, and the gate above
 # catches the case where the estimate is wrong.
+# Measured, not estimated: at the batches this array first carried, the ten
+# jobs sat at 3.99, 7.34, 6.89, 9.41, 3.99, 7.34, 6.89 and 1.40 GiB with the
+# card at 47.2 of 47.4. That is not headroom, it is the edge, and the job that
+# arrived last died in a conv allocating 294 MiB. These are about three
+# quarters of those, which leaves a job's worth of slack on a full card.
+# CLIP is listed first because it is the long pole once it finally starts.
 JOBS=(
-  "r14_pnv_s80  patchnetvlad  8  48 20 80"
-  "r14_clip_s80 clip_vitl14   8  64 20 80"
-  "r14_mix_s80  mixvpr       16  96 20 80"
-  "r14_vit_s80  vit_b_16     16  96 20 80"
-  "r14_r18_s80  resnet18     24 128 20 80"
-  "r14_pnv_s10  patchnetvlad  8  48  5 10"
-  "r14_clip_s10 clip_vitl14   8  64  5 10"
-  "r14_mix_s10  mixvpr       16  96  5 10"
-  "r14_vit_s10  vit_b_16     16  96  5 10"
-  "r14_r18_s10  resnet18     24 128  5 10"
+  "r14_clip_s80 clip_vitl14   6  48 20 80"
+  "r14_pnv_s80  patchnetvlad  6  32 20 80"
+  "r14_mix_s80  mixvpr       12  64 20 80"
+  "r14_vit_s80  vit_b_16     12  64 20 80"
+  "r14_r18_s80  resnet18     16  96 20 80"
+  "r14_clip_s10 clip_vitl14   6  48  5 10"
+  "r14_pnv_s10  patchnetvlad  6  32  5 10"
+  "r14_mix_s10  mixvpr       12  64  5 10"
+  "r14_vit_s10  vit_b_16     12  64  5 10"
+  "r14_r18_s10  resnet18     16  96  5 10"
 )
 
 # MixVPR is the one attacker whose surrogate ensemble differs: it is the
