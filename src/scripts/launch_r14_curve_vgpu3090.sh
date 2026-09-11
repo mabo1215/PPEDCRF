@@ -42,7 +42,18 @@ ROOT="$REPO/data/msls"
 OUT="$REPO/src/outputs/r14"
 LOGS="$REPO/logs_r14"
 SEEDS="1234 5678 9012"
-WORKERS="${WORKERS:-3}"
+# One worker per backbone, so five jobs hold the card at once and each worker
+# loads its embedders once and then runs its second job. The card is 48 GB and
+# the r13 pair used 10 GB between them at half these batches, so the budget
+# below is deliberately generous: the constraint that matters here is the
+# eighty-step Patch-NetVLAD run on the critical path, and the way to shorten it
+# is to give it queries per step rather than to hold memory in reserve.
+WORKERS="${WORKERS:-5}"
+# A job waits for this much free memory before it starts. Five jobs seeing an
+# empty card would all start at once and the estimate below would be wrong for
+# all of them, so the workers are also staggered on launch.
+WAIT_FREE_MB="${WAIT_FREE_MB:-7000}"
+STAGGER="${STAGGER:-75}"
 
 mkdir -p "$OUT" "$LOGS"
 cd "$REPO"
@@ -58,17 +69,21 @@ fi
 # name backbone query_batch gallery_batch steps double_steps
 # Longest first: the 80-step runs before the 10-step ones, and within each the
 # heavier trunks first.
+# Batches are roughly twice what r13 used, which measured 6 GB for
+# Patch-NetVLAD at batch 4 and 4 GB for the ViT at batch 8. Five concurrent
+# jobs at these settings should sit near 40 GB of the 48, and the gate above
+# catches the case where the estimate is wrong.
 JOBS=(
-  "r14_pnv_s80  patchnetvlad 4 24 20 80"
-  "r14_clip_s80 clip_vitl14  4 48 20 80"
-  "r14_mix_s80  mixvpr       8 64 20 80"
-  "r14_vit_s80  vit_b_16     8 32 20 80"
-  "r14_r18_s80  resnet18     8 96 20 80"
-  "r14_pnv_s10  patchnetvlad 4 24  5 10"
-  "r14_clip_s10 clip_vitl14  4 48  5 10"
-  "r14_mix_s10  mixvpr       8 64  5 10"
-  "r14_vit_s10  vit_b_16     8 32  5 10"
-  "r14_r18_s10  resnet18     8 96  5 10"
+  "r14_pnv_s80  patchnetvlad  8  48 20 80"
+  "r14_clip_s80 clip_vitl14   8  64 20 80"
+  "r14_mix_s80  mixvpr       16  96 20 80"
+  "r14_vit_s80  vit_b_16     16  96 20 80"
+  "r14_r18_s80  resnet18     24 128 20 80"
+  "r14_pnv_s10  patchnetvlad  8  48  5 10"
+  "r14_clip_s10 clip_vitl14   8  64  5 10"
+  "r14_mix_s10  mixvpr       16  96  5 10"
+  "r14_vit_s10  vit_b_16     16  96  5 10"
+  "r14_r18_s10  resnet18     24 128  5 10"
 )
 
 # MixVPR is the one attacker whose surrogate ensemble differs: it is the
@@ -100,6 +115,8 @@ for w in $(seq 0 $((WORKERS - 1))); do
 if pgrep -f "$OUT/${jn}.csv" >/dev/null 2>&1; then
   echo "[skip] ${jn}: a process is already writing its output" >> $LOGS/${name}.log
 else
+  while [ \$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits) -lt $WAIT_FREE_MB ]; do sleep 60; done
+  echo "[start] ${jn} \$(date +%H:%M:%S)" >> $LOGS/${name}.log
   $PY src/scripts/run_optimised_allocation_study.py \\
     --manifest $MANIFEST --root $ROOT \\
     --eval_backbone $bb --surrogates $(surrogates_for "$bb") \\
@@ -118,6 +135,9 @@ EOF
   echo "echo ALLDONE >> $LOGS/${name}.log" >> "$script"
   screen -dmS "$name" bash "$script"
   echo "[start] $name ($n jobs)"
+  # Five workers launched together would each read an empty card and size
+  # themselves for it. Staggering lets each see what the previous one took.
+  [ "$w" -lt $((WORKERS - 1)) ] && sleep "$STAGGER"
 done
 
 sleep 6
