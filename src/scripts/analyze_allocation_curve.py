@@ -37,11 +37,23 @@ import numpy as np
 
 
 def load(patterns: List[str]) -> List[dict]:
+    """Every row, tagged with the file it came from.
+
+    The tag is what makes the trajectory gate possible. Twenty steps is
+    measured by two different runs -- the original 20/40 one and the new 20/80
+    one -- and without knowing which file a row came from those two
+    measurements are averaged together into one number, which is precisely the
+    comparison the gate is supposed to make. An earlier version of this script
+    did exactly that and the gate could never have fired.
+    """
     rows: List[dict] = []
     for pat in patterns:
         for path in sorted(glob.glob(pat)):
+            stem = Path(path).stem
             with open(path, newline="", encoding="utf-8") as fh:
-                rows.extend(csv.DictReader(fh))
+                for r in csv.DictReader(fh):
+                    r["_source"] = stem
+                    rows.append(r)
     return rows
 
 
@@ -108,34 +120,42 @@ def main() -> int:
         if not rows:
             print(f"{tag:<15} (no rows yet)")
             continue
-        ref = per_query(rows, lambda r: r["condition"] == "uniform_crossdraw")
+        # Paired within a run: each file carries its own uniform_crossdraw arm
+        # on its own noise draws, and crossing them would compare two
+        # different controls.
+        refs = {src: per_query(rows, lambda r, src=src: (
+                    r["condition"] == "uniform_crossdraw"
+                    and r["_source"] == src))
+                for src in {r["_source"] for r in rows}}
         # Every solved checkpoint present, keyed by the step count it records.
-        budgets = sorted({int(r["opt_steps"]) for r in rows
-                          if r["condition"].startswith("opt_transfer")})
+        # (budget, source file) rather than budget alone, so a step count two
+        # runs both measured yields two numbers to compare instead of one
+        # average that hides whether they agree.
+        cells = sorted({(int(r["opt_steps"]), r["_source"]) for r in rows
+                        if r["condition"].startswith("opt_transfer")})
         seen: Dict[int, list] = collections.defaultdict(list)
-        for n in budgets:
-            arm = per_query(rows, lambda r, n=n: (
+        for n, src in cells:
+            arm = per_query(rows, lambda r, n=n, src=src: (
                 r["condition"].startswith("opt_transfer")
                 and r["condition"].endswith("_crossdraw")
-                and int(r["opt_steps"]) == n))
+                and int(r["opt_steps"]) == n and r["_source"] == src))
+            ref = refs[src]
             ks = sorted(set(arm) & set(ref))
             if not ks:
                 continue
             d = np.array([arm[q] - ref[q] for q in ks])
             lo, hi = clustered_ci(d, [place_of.get(q, q) for q in ks],
                                   args.n_boot, 4242 + n)
-            dec = float(np.mean([float(r["weight_top10pct_share"]) for r in rows
-                                 if r["condition"].startswith("opt_transfer")
-                                 and r["condition"].endswith("_crossdraw")
-                                 and int(r["opt_steps"]) == n]))
-            obj = float(np.mean([float(r["surrogate_sim_end"]) for r in rows
-                                 if r["condition"].startswith("opt_transfer")
-                                 and r["condition"].endswith("_crossdraw")
-                                 and int(r["opt_steps"]) == n]))
+            sel = [r for r in rows
+                   if r["condition"].startswith("opt_transfer")
+                   and r["condition"].endswith("_crossdraw")
+                   and int(r["opt_steps"]) == n and r["_source"] == src]
+            dec = float(np.mean([float(r["weight_top10pct_share"]) for r in sel]))
+            obj = float(np.mean([float(r["surrogate_sim_end"]) for r in sel]))
             seen[n].append(d.mean())
             print(f"{tag:<15} {n:>5} {np.mean([ref[q] for q in ks]):>8.4f} "
                   f"{np.mean([arm[q] for q in ks]):>8.4f} {d.mean():>+9.4f}  "
-                  f"[{lo:+.4f},{hi:+.4f}] {dec:>7.3f} {obj:>9.4f}")
+                  f"[{lo:+.4f},{hi:+.4f}] {dec:>7.3f} {obj:>9.4f}  {src}")
             curves.setdefault(tag, []).append((n, d.mean(), lo, hi, dec, obj))
         # The gate: a step count measured by two runs must agree.
         for n, vals in seen.items():
@@ -169,7 +189,7 @@ def main() -> int:
             r"\hline",
         ]
         for tag, rows_ in curves.items():
-            by = {b: d for b, d, *_ in rows_}
+            by = {b: d for b, d, *_ in rows_}  # a re-measured budget: last wins
             cells = [f"${by[b]:+.4f}$" if b in by else "---" for b in budgets]
             lines.append(f"{tag:<15} & " + " & ".join(cells) + r" \\")
         lines += [r"\hline", r"\end{tabular}", r"\end{table}"]
