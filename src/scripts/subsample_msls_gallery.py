@@ -24,12 +24,66 @@ from collections import OrderedDict
 from pathlib import Path
 
 
+def city_of(gallery_id: str) -> str:
+    return gallery_id.split("_")[0]
+
+
+def nested(args) -> int:
+    """Hold the query set fixed and grow the gallery by adding whole cities.
+
+    The gallery of this benchmark contains no pure distractors: every image is
+    the answer to some query, so it cannot be shrunk without taking a query's
+    answer away. It can be grown safely in one direction only -- by other
+    cities, because a place never spans two.
+    """
+    records = [json.loads(l) for l in open(args.manifest, encoding="utf-8") if l.strip()]
+    shared = OrderedDict()
+    for r in records:
+        for g in r["gallery"]:
+            shared.setdefault(g["gallery_id"], g)
+    by_city = OrderedDict()
+    for gid, g in shared.items():
+        by_city.setdefault(city_of(gid), []).append(g)
+    order = sorted(by_city)
+    print(f"cities: " + ", ".join(f"{c}={len(by_city[c])}" for c in order))
+
+    for qcity in args.nested_cities:
+        queries = [r for r in records if r["query_id"].split("_")[0] == qcity]
+        if not queries:
+            print(f"[skip] {qcity}: no queries")
+            continue
+        others = [c for c in order if c != qcity]
+        for level in args.levels:
+            cities = [qcity] + others[: max(0, level - 1)]
+            keep = {g["gallery_id"] for c in cities for g in by_city[c]}
+            out = Path(f"{args.out_prefix}{qcity}_L{level}.jsonl")
+            with out.open("w", encoding="utf-8") as fh:
+                for r in queries:
+                    sub = [g for g in r["gallery"] if g["gallery_id"] in keep]
+                    assert any(g["place_id"] == r["place_id"] for g in sub), r["query_id"]
+                    rec = dict(r); rec["gallery"] = sub
+                    fh.write(json.dumps(rec, sort_keys=True) + "\n")
+            print(f"[done] {out.name}: {len(queries)} queries, gallery {len(keep)}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--sizes", type=int, nargs="+", required=True)
     ap.add_argument("--out_prefix", required=True)
+    ap.add_argument("--nested_cities", nargs="*", default=[],
+                    help="Query cities for the nested sweep. Place labels are "
+                         "scoped to a city and no place spans two, so images "
+                         "from other cities are distractors that cannot be "
+                         "the answer -- which is what makes a larger gallery "
+                         "larger without making it wrong.")
+    ap.add_argument("--levels", type=int, nargs="+", default=[1, 2, 4, 8],
+                    help="Cities in the gallery at each level, the query's own "
+                         "city first.")
     args = ap.parse_args()
+    if args.nested_cities:
+        return nested(args)
 
     records = [json.loads(l) for l in open(args.manifest, encoding="utf-8") if l.strip()]
     # One shared gallery across queries, which is how the benchmark reads it.
