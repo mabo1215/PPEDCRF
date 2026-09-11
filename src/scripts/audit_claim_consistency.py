@@ -1753,6 +1753,75 @@ for tree, uniform, delta, pval in [
               max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=EXT)
 
 
+# --- R10: the attacker class and the gallery size the review could only scope -
+# A foundation-model retriever sharing no trunk with any surrogate, and a
+# gallery swept over the range this corpus allows. Both were limitations stated
+# in words until they were measured, so every number the prose quotes from them
+# is registered.
+def _clip(condition: str, reference: str, stat: str, k: int = 1):
+    def go() -> Optional[float]:
+        rows = load("r10_clip/r10_clip_dir.csv")
+        if not rows:
+            return None
+        arms: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            arms[r["condition"]][r["query_id"]].append(float(int(r["correct_rank"]) <= k))
+        if condition not in arms or reference not in arms:
+            return None
+        arm = {q: float(np.mean(v)) for q, v in arms[condition].items()}
+        ref = {q: float(np.mean(v)) for q, v in arms[reference].items()}
+        shared = sorted(set(arm) & set(ref))
+        if not shared:
+            return None
+        if stat == "top1":
+            return float(np.mean([arm[q] for q in shared]))
+        return float(np.mean([arm[q] - ref[q] for q in shared]))
+    return go
+
+
+for cid, cond, stat, k, printed, value in [
+        ("R10/clip/transfer/delta", "transfer_3", "delta", 1, "$-0.0867$", -0.0867),
+        ("R10/clip/transfer/top5", "transfer_3", "delta", 5, "-0.113", -0.1125)]:
+    claim(cid, "CLIP ViT-L/14 attacker", printed, value, 6e-4, "r10_clip",
+          _clip(cond, "isotropic", stat, k), source=MAIN)
+
+
+def _sweep(backbone: str, level: int, cond: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load(f"r10_gallery_sweep/r10_sw_{backbone}_*_L{level}.csv")
+        if not rows:
+            return None
+        arms: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            arms[r["condition"]][r["query_id"]].append(float(int(r["correct_rank"]) == 1))
+        arm = {q: float(np.mean(v)) for q, v in arms[cond].items()}
+        ref = {q: float(np.mean(v)) for q, v in arms["isotropic"].items()}
+        shared = sorted(set(arm) & set(ref))
+        if not shared:
+            return None
+        if stat == "control":
+            return float(np.mean([ref[q] for q in shared]))
+        return float(np.mean([arm[q] - ref[q] for q in shared]))
+    return go
+
+
+for bb, cond, deltas in [
+        ("resnet18", "transfer_3", [(1, -0.198), (2, -0.180), (4, -0.177), (8, -0.173)]),
+        ("mixvpr", "transfer_4", [(1, -0.030), (2, -0.042), (4, -0.038), (8, -0.038)])]:
+    for level, d in deltas:
+        claim(f"R10/sweep/{bb}/L{level}", "Gallery-size sweep", f"{d:+.3f}", d,
+              6e-4, "r10_gallery_sweep", _sweep(bb, level, cond, "delta"),
+              locator=f"{d:+.3f}", source=MAIN)
+# The controls, which are what show the task genuinely gets harder.
+for bb, cond, lo_hi in [("resnet18", "transfer_3", [(1, 0.278), (8, 0.212)]),
+                        ("mixvpr", "transfer_4", [(1, 0.848), (8, 0.808)])]:
+    for level, v in lo_hi:
+        claim(f"R10/sweep/{bb}/L{level}/control", "Gallery-size sweep",
+              f"{v:.3f}", v, 6e-4, "r10_gallery_sweep",
+              _sweep(bb, level, cond, "control"), locator=f"{v:.3f}",
+              source=MAIN)
+
+
 # --- the solved placement maps, and the two controls they rest on -----------
 # The arm that revised the paper's allocation claim, so every number the prose
 # quotes from it is registered. The pairing matters as much as the value: a
