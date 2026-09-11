@@ -1072,4 +1072,21 @@ about axes or about effort, and I expect it to come out the paper's way --- in
 which case the central claim gets materially stronger, and the paper should be
 the one to say so.
 
+\emph{Correction, entered after the authors ran it.} That expectation was
+wrong, and the finding is better than the one I predicted. A map solved against
+the attacker \emph{does} beat uniform --- $-0.039$ and $-0.094$ Top-1 on the two
+attackers, on a noise field the optimiser never saw --- so ``allocation buys
+nothing we can detect'' was false as written and the axis is not inert. What
+survives, and survives on stronger footing, is the claim about reachability:
+solved against surrogates alone the same optimiser buys $-0.006$ and $+0.006$,
+nothing, at the budget that buys the direction $-0.165$ and $-0.048$. Both axes
+hold leverage that needs the attacker; direction keeps most of its when that
+access is withdrawn and allocation keeps none. That rests on matched search
+budget as well as matched delivered distortion, which is what this finding
+asked for. A third arm is worth the paper's space on its own: a map permitted
+to see the noise realisation it will be released with reproduces the white-box
+\emph{direction} attack to within $0.001$ and buys no privacy at all on an
+independent draw, so an audit of this mechanism class has to state whether its
+map may depend on the perturbation it weights.
+
 \end{document}
