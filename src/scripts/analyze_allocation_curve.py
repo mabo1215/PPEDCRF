@@ -172,25 +172,35 @@ def main() -> int:
             "% Do not edit by hand.",
             r"\begin{table}[t]", r"\centering",
             r"\caption{What a solved allocation map buys as the search budget "
-            r"grows. $\Delta$ Top-1 against the uniform control on a noise "
-            r"field the optimiser never saw, five held-out attackers, 400 "
-            r"query clusters and three seeds at every budget. Twenty and "
-            r"eighty come from one run and five and ten from another, so the "
-            r"twenty-step column is measured twice and the two agree: the "
-            r"optimiser's trajectory depends on the seed and the step index "
-            r"alone, which is what puts the five points on one curve. Every "
-            r"arm but MixVPR's is solved against the same three surrogates "
-            r"and is therefore the same map.}",
+            r"grows, on five held-out attackers. $\Delta$ Top-1 against the "
+            r"uniform control on a noise field the optimiser never saw, 400 "
+            r"query clusters and three seeds at every budget; bold is a "
+            r"place-clustered interval excluding zero. Twenty and eighty come "
+            r"from one run and five and ten from another, so twenty is "
+            r"measured twice and the two agree --- the optimiser's trajectory "
+            r"depends on the seed and the step index alone, which is what puts "
+            r"the five points on one curve. Every arm but MixVPR's is solved "
+            r"against the same three surrogates and is therefore the same map; "
+            r"MixVPR is the evaluation target in its own arm, so ResNet18 "
+            r"joins its ensemble.}",
             r"\label{tab:alloc_curve}",
-            r"\footnotesize",
-            r"\setlength{\tabcolsep}{4pt}",
+            r"\scriptsize",
+            r"\setlength{\tabcolsep}{2.2pt}",
             r"\begin{tabular}{l" + "c" * len(budgets) + "}", r"\hline",
-            "Attacker & " + " & ".join(f"{b}" for b in budgets) + r" \\",
+            "Attacker & " + " & ".join(f"{b}" for b in budgets)
+            + r" \\",
             r"\hline",
         ]
         for tag, rows_ in curves.items():
-            by = {b: d for b, d, *_ in rows_}  # a re-measured budget: last wins
-            cells = [f"${by[b]:+.4f}$" if b in by else "---" for b in budgets]
+            by = {b: (d, lo, hi) for b, d, lo, hi, *_ in rows_}
+            cells = []
+            for b in budgets:
+                if b not in by:
+                    cells.append("---"); continue
+                d, lo, hi = by[b]
+                sig = (lo < 0 and hi < 0) or (lo > 0 and hi > 0)
+                cells.append((r"$\mathbf{%+.4f}$" % d) if sig
+                             else ("$%+.4f$" % d))
             lines.append(f"{tag:<15} & " + " & ".join(cells) + r" \\")
         lines += [r"\hline", r"\end{tabular}", r"\end{table}"]
         Path(args.latex).parent.mkdir(parents=True, exist_ok=True)
