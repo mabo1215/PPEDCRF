@@ -1941,6 +1941,48 @@ for cid, cond, ref, stat, printed, value in [
           "r10_clip", _alloc(CLIP_ALLOC, cond, ref, stat), source=MAIN)
 
 
+# --- the same map, read by the two attackers that had no allocation arm -----
+# Patch-NetVLAD and the ViT close the set at five. They are solved against the
+# same three surrogates as the ResNet18 and CLIP arms, so all four are one
+# object: the objective trace and the top-decile share are the gate, and both
+# read 2.841 -> 2.465 and 0.547 here as well. MixVPR's arm stays a second map,
+# since it is the evaluation target there and ResNet18 joins its ensemble.
+for cid, stem, cond, printed, value in [
+        ("Alloc/pnv/tr/fresh", "r13_pnv_exp", "opt_transfer_crossdraw",
+         "$-0.0242$", -0.0242),
+        ("Alloc/vit/tr/fresh", "r13_vit_exp", "opt_transfer_crossdraw",
+         "$+0.0000$", 0.0000),
+        ("Alloc2x/pnv/tr", "r13_pnv_exp", "opt_transfer_x2_crossdraw",
+         "$-0.0408$", -0.0408),
+        ("Alloc2x/vit/tr", "r13_vit_exp", "opt_transfer_x2_crossdraw",
+         "$-0.0025$", -0.0025)]:
+    claim(cid, "Solved placement maps", printed, value, 5e-5,
+          "optimised_allocation",
+          _alloc(stem, cond, "uniform_crossdraw", "delta"), source=MAIN)
+
+
+# The gate that makes "one map" a statement rather than an assertion: the same
+# objective trace and the same concentration under every attacker that reads it.
+def _alloc_trace(stem: str, field: str):
+    pattern = stem if "/" in stem else f"optimised_allocation/{stem}*.csv"
+
+    def go() -> Optional[float]:
+        rows = load(pattern)
+        rows = [r for r in rows if r["condition"] == "opt_transfer_crossdraw"]
+        return statistics.fmean(float(r[field]) for r in rows) if rows else None
+    return go
+
+
+for tag, stem in [("r18", "r1_r18_exp"), ("pnv", "r13_pnv_exp"),
+                  ("vit", "r13_vit_exp"), ("clip", CLIP_ALLOC)]:
+    tree = "r10_clip" if "/" in stem else "optimised_allocation"
+    claim(f"OneMap/{tag}/end", "Solved placement maps",
+          "$2.841\\to2.465$", 2.465,
+          6e-4, tree, _alloc_trace(stem, "surrogate_sim_end"), source=MAIN)
+    claim(f"OneMap/{tag}/decile", "Solved placement maps", "$0.547$", 0.547,
+          6e-4, tree, _alloc_trace(stem, "weight_top10pct_share"), source=MAIN)
+
+
 # --- concentration, and the preprocessing range on the third attacker -------
 # R8: the sentence "concentration was never the variable" compares a top-decile
 # share against the margin rule's, and both literals were unregistered, so the
@@ -2042,6 +2084,10 @@ for cid, printed, value, tree, fn in [
          _alloc("r1_mix_exp", "opt_whitebox_crossdraw", "uniform_crossdraw", "delta")),
         ("Fig2/solved/clip/tr", "$-0.0508$", -0.0508, "r10_clip",
          _alloc(CLIP_ALLOC, "opt_transfer_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/pnv/tr", "$-0.0242$", -0.0242, "optimised_allocation",
+         _alloc("r13_pnv_exp", "opt_transfer_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/vit/tr", "$+0.0000$", 0.0000, "optimised_allocation",
+         _alloc("r13_vit_exp", "opt_transfer_crossdraw", "uniform_crossdraw", "delta")),
         ("Fig2/solved/clip/wb", "$-0.1342$", -0.1342, "r10_clip",
          _alloc(CLIP_ALLOC, "opt_whitebox_crossdraw", "uniform_crossdraw", "delta")),
         # the five direction contrasts of the right panel
@@ -2295,18 +2341,23 @@ def _register_clip_table(tab, make, prefix: str, label: str, tree: str):
 _register_clip_table(CLIP_TAB, _clip, "Clip", "tab:clip_pooling",
                      "clip_pooling")
 
-# The four numbers the manuscript quotes from that table.
-for cid, printed, value, cond, k, pooling, stat in [
+# The numbers the manuscript quotes from that table, located where each is
+# actually printed: the mean-pooled contrast is in the running text, while the
+# best-frame pair is only in the table now that the sentence quoting it has
+# been compressed. Sourcing all four at the table -- which one edit here did --
+# leaves the two in the manuscript unlocated and the check silently weaker.
+CLIP_TAB = REPO / "paper" / "generated" / "tab_clip_pooling.tex"
+for cid, printed, value, cond, k, pooling, stat, src in [
         ("Clip/main/mean/delta", "$-0.177$", -0.177, "direction", 7, "mean",
-         "delta"),
+         "delta", MAIN),
         ("Clip/main/mean/ci", "$[-0.234,-0.122]$", -0.234, "direction", 7,
-         "mean", "ci0"),
-        ("Clip/main/best/top1", "$0.063$", 0.063, "direction", 7,
-         "best_frame", "top1"),
-        ("Clip/main/best/control", "$0.222$", 0.222, "isotropic", 7,
-         "best_frame", "top1")]:
+         "mean", "ci0", MAIN),
+        ("Clip/main/best/top1", "0.0625", 0.0625, "direction", 7,
+         "best_frame", "top1", CLIP_TAB),
+        ("Clip/main/best/control", "0.2222", 0.2222, "isotropic", 7,
+         "best_frame", "top1", CLIP_TAB)]:
     claim(cid, "\\S An attacker holding the clip", printed, value, 6e-4,
-          "clip_pooling", _clip(cond, k, pooling, stat), source=MAIN)
+          "clip_pooling", _clip(cond, k, pooling, stat), source=src)
 
 
 # The same study against the strong retriever. These rows carry their own

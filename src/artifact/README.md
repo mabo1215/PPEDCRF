@@ -12,7 +12,7 @@ stated here rather than one:
   "What the one-command check does and does not cover" below names the
   families it does not reach.
 - `src/scripts/audit_claim_consistency.py`, in the source repository,
-  recomputes **856** claims, drawn from the manuscript, the supplement, the
+  recomputes **870** claims, drawn from the manuscript, the supplement, the
   extended evidence report, eleven of the generated tables and the sidecar
   carrying every point the two-axis figure plots -- among them every cell of
   the thirteen-transform preprocessing table, which is the sole support for
@@ -40,12 +40,12 @@ python3 src/scripts/audit_claim_consistency.py --coverage
 last printed
 
 ```
-coverage over main.tex and supplementary.tex: 271 distinct three- and four-decimal literals, 246 registered, 25 not.
+coverage over main.tex and supplementary.tex: 272 distinct three- and four-decimal literals, 249 registered, 23 not.
 ```
 
 which matches each literal against every claim's locator, its printed form
 and its registered value rounded to the literal's own precision, and then
-lists the twenty-five by value. They are interval endpoints, p-values quoted
+lists the twenty-three by value. They are interval endpoints, p-values quoted
 inline, and running-text restatements of studies whose tables are themselves
 registered. Neither checker asserts that the registry is complete, and this
 bundle does not claim it is. The block above is a transcript, not a hand
@@ -205,6 +205,6 @@ location on the authors' machines.
   the manuscript draws from them can be recomputed by hand, but the automated
   pass does not assert them and this artifact does not claim it does. In the
   source repository those families are asserted by
-  `src/scripts/audit_claim_consistency.py`, which checks 856 manuscript claims
+  `src/scripts/audit_claim_consistency.py`, which checks 870 manuscript claims
   against the same rows; it is not run here because it resolves trees by their
   repository names rather than the reader-facing names used in `results/`.

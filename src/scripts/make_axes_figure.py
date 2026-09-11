@@ -134,12 +134,20 @@ def main() -> int:
     # here -- which an earlier version of this script did -- put an interval
     # excluding zero on the surrogate-solved ResNet18 row and contradicted the
     # text beside the figure.
+    # Four of these five share one map: solved against {ResNet50, VGG16,
+    # CosPlace}, which contains none of them, so the released frames are the
+    # same object and only the reader changes. MixVPR's arm is a second map --
+    # it is the evaluation target there, so ResNet18 joins its ensemble. The
+    # objective trace and the top-decile share are the check: 2.841 -> 2.465
+    # and 0.547 in all four.
     alloc_dir = ex / "optimised_allocation"
     for label, stem, cond in [
             ("ResNet18", "r1_r18_exp", "opt_transfer"),
             ("ResNet18", "r1_r18_exp", "opt_whitebox"),
             ("MixVPR", "r1_mix_exp", "opt_transfer"),
             ("MixVPR", "r1_mix_exp", "opt_whitebox"),
+            ("Patch-NetVLAD", "r13_pnv_exp", "opt_transfer"),
+            ("ViT-B/16", "r13_vit_exp", "opt_transfer"),
             ("CLIP ViT-L/14", "r10_clip_alloc", "opt_transfer"),
             ("CLIP ViT-L/14", "r10_clip_alloc", "opt_whitebox")]:
         if stem.startswith("r10_"):
@@ -210,12 +218,14 @@ def main() -> int:
     # rather than over a fixed pair.
     STYLE = {"ResNet18": ("#2a6099", "o"),
              "MixVPR": ("#b03030", "s"),
+             "Patch-NetVLAD": ("#c07000", "D"),
+             "ViT-B/16": ("#6a4ca0", "v"),
              "CLIP ViT-L/14": ("#1b7f5a", "^")}
     for y, rule in enumerate(names):
         entries = by_rule.get(rule, [])
         if not entries:
             continue
-        span = 0.34 if len(entries) > 1 else 0.0
+        span = 0.10 * (len(entries) - 1) if len(entries) > 1 else 0.0
         offs = np.linspace(-span / 2, span / 2, len(entries)) if span else [0.0]
         for (attacker, d, lo, hi), off in zip(entries, offs):
             colour, marker = STYLE.get(attacker, ("#555555", "D"))
