@@ -70,7 +70,10 @@ def nested(args) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--manifest", required=True)
-    ap.add_argument("--sizes", type=int, nargs="+", required=True)
+    ap.add_argument("--sizes", type=int, nargs="+", default=[],
+                    help="Subsample mode: target gallery sizes. "
+                         "Unusable on a manifest whose gallery is "
+                         "all positives; use --nested_cities there.")
     ap.add_argument("--out_prefix", required=True)
     ap.add_argument("--nested_cities", nargs="*", default=[],
                     help="Query cities for the nested sweep. Place labels are "
@@ -84,6 +87,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.nested_cities:
         return nested(args)
+    if not args.sizes:
+        raise SystemExit("give either --sizes or --nested_cities")
 
     records = [json.loads(l) for l in open(args.manifest, encoding="utf-8") if l.strip()]
     # One shared gallery across queries, which is how the benchmark reads it.
