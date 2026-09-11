@@ -1753,6 +1753,98 @@ for tree, uniform, delta, pval in [
               max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=EXT)
 
 
+# --- the solved placement maps, and the two controls they rest on -----------
+# The arm that revised the paper's allocation claim, so every number the prose
+# quotes from it is registered. The pairing matters as much as the value: a
+# held-out draw is scored against the uniform arm of that same draw, because
+# pairing it against the evaluation draw's control would fold the difference
+# between two noise realisations into the contrast.
+def _alloc(stem: str, condition: str, reference: str, stat: str):
+    def go() -> Optional[float]:
+        rows = load(f"optimised_allocation/{stem}*.csv")
+        if not rows:
+            return None
+        arms: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            arms[r["condition"]][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+        if condition not in arms or reference not in arms:
+            return None
+        arm = {q: float(np.mean(v)) for q, v in arms[condition].items()}
+        ref = {q: float(np.mean(v)) for q, v in arms[reference].items()}
+        shared = sorted(set(arm) & set(ref))
+        if not shared:
+            return None
+        if stat == "top1":
+            return float(np.mean([arm[q] for q in shared]))
+        return float(np.mean([arm[q] - ref[q] for q in shared]))
+    return go
+
+
+for cid, stem, cond, ref, stat, printed, value in [
+        # the two headline contrasts, each on the draw its optimiser never saw
+        ("Alloc/r18/wb/fresh", "r1_r18_exp", "opt_whitebox_crossdraw",
+         "uniform_crossdraw", "delta", "$-0.0392$", -0.0392),
+        ("Alloc/mix/wb/fresh", "r1_mix_exp", "opt_whitebox_crossdraw",
+         "uniform_crossdraw", "delta", "$-0.0942$", -0.0942),
+        # the deployable arm, which is the null
+        ("Alloc/r18/tr/fresh", "r1_r18_exp", "opt_transfer_crossdraw",
+         "uniform_crossdraw", "delta", "$-0.0058$", -0.0058),
+        ("Alloc/mix/tr/fresh", "r1_mix_exp", "opt_transfer_crossdraw",
+         "uniform_crossdraw", "delta", "$+0.0058$", 0.0058),
+        # the white-box contrast on its own draw, quoted against the heuristic
+        ("Alloc/r18/wb/same", "r1_r18_exp", "opt_whitebox", "uniform",
+         "delta", "$-0.0550$", -0.0550),
+        # the sign-selection control: huge on its own draw, nothing on a fresh one
+        ("Alloc/r18/real/top1", "r1_r18_real", "opt_whitebox", "uniform",
+         "top1", "$0.0025$", 0.0025),
+        ("Alloc/mix/real/top1", "r1_mix_real", "opt_whitebox", "uniform",
+         "top1", "$0.0083$", 0.0083),
+        ("Alloc/r18/real/fresh", "r1_r18_real", "opt_whitebox_crossdraw",
+         "uniform_crossdraw", "delta", "$+0.0025$", 0.0025),
+        ("Alloc/mix/real/fresh", "r1_mix_real", "opt_whitebox_crossdraw",
+         "uniform_crossdraw", "delta", "$-0.0050$", -0.0050)]:
+    claim(cid, "Solved placement maps", printed, value, 5e-5,
+          "optimised_allocation", _alloc(stem, cond, ref, stat), source=MAIN)
+
+
+# --- purification against the two attackers it had never faced --------------
+# R5: the strongest attack in the paper had been run against the attacker with
+# the smallest directional effect among the VPR models and not the largest.
+def _purify(stem: str, condition: str, cpur: str, rpur: str):
+    def go() -> Optional[float]:
+        rows = load(f"purification/per_query_{stem}.csv")
+        if not rows:
+            return None
+        arms: Dict[tuple, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        for r in rows:
+            arms[(r["condition"], r["purifier"])][r["query_id"]].append(
+                float(int(r["correct_rank"]) == 1))
+        a = arms.get((condition, cpur)); b = arms.get(("isotropic", rpur))
+        if not a or not b:
+            return None
+        am = {q: float(np.mean(v)) for q, v in a.items()}
+        bm = {q: float(np.mean(v)) for q, v in b.items()}
+        shared = sorted(set(am) & set(bm))
+        return float(np.mean([am[q] - bm[q] for q in shared])) if shared else None
+    return go
+
+
+for cid, stem, cond, cpur, rpur, printed, value in [
+        ("Purify/pnv/direction/plain", "patchnetvlad", "direction", "none",
+         "none", "$-0.1650$", -0.1650),
+        ("Purify/pnv/direction/purified", "patchnetvlad", "direction",
+         "direction", "isotropic", "$-0.0717$", -0.0717),
+        ("Purify/pnv/hardened/purified", "patchnetvlad", "hardened",
+         "hardened", "isotropic", "$-0.0750$", -0.0750),
+        ("Purify/vit/direction/plain", "vit", "direction", "none", "none",
+         "$-0.0150$", -0.0150),
+        ("Purify/vit/direction/purified", "vit", "direction", "direction",
+         "isotropic", "$+0.0033$", 0.0033)]:
+    claim(cid, "Purification, new attackers", printed, value, 5e-5,
+          "purification", _purify(stem, cond, cpur, rpur), source=MAIN)
+
+
 # --- what the MSLS placement family certifies, and on which unit ------------
 # Two numbers the manuscript quotes about the allocation null are properties of
 # the whole family rather than of one cell: how much clustering on places

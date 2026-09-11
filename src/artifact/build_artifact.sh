@@ -157,6 +157,19 @@ copy_released purification/per_query.csv \
               purification/resnet18.csv
 copy_released purification/per_query_mixvpr.csv \
               purification/mixvpr.csv
+# The two attackers the purifier had never faced: the one this axis moves
+# furthest and the one whose trunk no surrogate shares. Skipped if a run is
+# still in flight rather than failing the build.
+for att in patchnetvlad vit; do
+  [ -e "$EXPORTS/purification/per_query_$att.csv" ] || continue
+  copy_released "purification/per_query_$att.csv" "purification/$att.csv"
+done
+# The thirteen-transform sweep against those same two attackers.
+for f in "$EXPORTS"/preprocessing_r11/*.csv; do
+  [ -e "$f" ] || continue
+  copy_released "preprocessing_r11/$(basename "$f")" \
+                "preprocessing_13transform/$(basename "$f")"
+done
 copy_tree msls_clips              clip_manifest
 copy_tree segmenter_spread        segmenter_spread
 copy_tree segmenter_spread_native segmenter_spread_native
