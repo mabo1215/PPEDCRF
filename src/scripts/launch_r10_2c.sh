@@ -52,20 +52,47 @@ launch 0 r10_clip_alloc "$PY src/scripts/run_optimised_allocation_study.py \
 # --- GPU 1: the gallery-size sweep -----------------------------------------
 # Identical queries at every level; the gallery grows by whole cities, which is
 # the only direction that stays correctly labelled on this benchmark.
+#
+# Thirty-two runs on one card, but not thirty-two at once: each holds four or
+# five embedders and a gallery index, and starting them together would thrash
+# a 32 GB card for no throughput. They are dealt into WORKERS shells that each
+# work through their share in sequence.
+WORKERS="${WORKERS:-4}"
+JOBS=()
 for city in boston manila cph toronto; do
   for lvl in 1 2 4 8; do
     for bb in resnet18 mixvpr; do
-      sur="resnet50 vgg16 cosplace"
-      [ "$bb" = mixvpr ] && sur="resnet18 resnet50 vgg16 cosplace"
-      cond="transfer_3"; [ "$bb" = mixvpr ] && cond="transfer_4"
-      launch 1 "r10_sw_${bb}_${city}_L${lvl}" "$PY src/scripts/run_direction_transfer_study.py \
-        --manifest $ROOT/sweep_${city}_L${lvl}.jsonl --root $ROOT \
-        --eval_backbone $bb --surrogates $sur \
-        --objective self --seeds $SEEDS --gallery_batch 96 \
-        --conditions isotropic $cond \
-        --output $OUT/r10_sw_${bb}_${city}_L${lvl}.csv"
+      JOBS+=("$bb:$city:$lvl")
     done
   done
+done
+
+for w in $(seq 0 $((WORKERS - 1))); do
+  name="r10_sweep_w$w"
+  if screen -list 2>/dev/null | grep -q "\.${name}[[:space:]]"; then
+    echo "[skip] $name already running"; continue
+  fi
+  script="$LOGS/${name}.sh"
+  { echo "cd $REPO"; echo "export CUDA_VISIBLE_DEVICES=1 OMP_NUM_THREADS=8 MKL_NUM_THREADS=8"; } > "$script"
+  i=0
+  for job in "${JOBS[@]}"; do
+    if [ $((i % WORKERS)) -eq "$w" ]; then
+      bb="${job%%:*}"; rest="${job#*:}"; city="${rest%%:*}"; lvl="${rest##*:}"
+      sur="resnet50 vgg16 cosplace"; cond="transfer_3"
+      if [ "$bb" = mixvpr ]; then sur="resnet18 resnet50 vgg16 cosplace"; cond="transfer_4"; fi
+      tag="r10_sw_${bb}_${city}_L${lvl}"
+      echo "$PY src/scripts/run_direction_transfer_study.py \\
+        --manifest $ROOT/sweep_${city}_L${lvl}.jsonl --root $ROOT \\
+        --eval_backbone $bb --surrogates $sur \\
+        --objective self --seeds $SEEDS --gallery_batch 96 \\
+        --conditions isotropic $cond \\
+        --output $OUT/${tag}.csv >> $LOGS/${name}.log 2>&1" >> "$script"
+    fi
+    i=$((i + 1))
+  done
+  echo "echo ALLDONE >> $LOGS/${name}.log" >> "$script"
+  screen -dmS "$name" bash "$script"
+  echo "[start] gpu1 $name ($(grep -c run_direction "$script") runs)"
 done
 
 sleep 6
