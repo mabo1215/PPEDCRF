@@ -106,7 +106,16 @@ def main() -> int:
                     help="any export carrying query_id and correct_place; the "
                          "place labels are a property of the manifest, not of "
                          "the run that happens to supply them")
-    ap.add_argument("--reference", default="uniform")
+    # The crossdraw uniform arm, not the same-field one. A map solved against
+    # a noise realisation and scored on that same realisation is choosing
+    # signs, which is the direction axis under another name, so the manuscript
+    # reports the held-out draw -- and pairing a crossdraw arm against the
+    # same-field control reintroduces the confound from the other side by
+    # folding the difference between two noise draws into the contrast. This
+    # default used to be "uniform", and the figure that took it plotted an
+    # interval excluding zero beside text saying no benefit was detected. Pass
+    # --reference uniform only when reading a same-field arm on purpose.
+    ap.add_argument("--reference", default="uniform_crossdraw")
     args = ap.parse_args()
 
     place_of: Dict[str, str] = {}
