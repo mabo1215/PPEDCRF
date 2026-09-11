@@ -124,22 +124,38 @@ def main() -> int:
     # whole point of the comparison is that they are the same axis given a
     # different amount of search. Absent trees are skipped so the figure can be
     # regenerated on a checkout that does not carry the run.
+    #
+    # Both arms are the "crossdraw" ones: a map solved against the exact noise
+    # realisation it will be released with is choosing signs, not places, and
+    # the manuscript is explicit that such a map must be scored on a field the
+    # optimiser never saw. Pairing a crossdraw arm against the same-field
+    # uniform arm reintroduces the confound from the other side, so the
+    # reference is the crossdraw uniform too. Drawing the same-field pairing
+    # here -- which an earlier version of this script did -- put an interval
+    # excluding zero on the surrogate-solved ResNet18 row and contradicted the
+    # text beside the figure.
     alloc_dir = ex / "optimised_allocation"
     for label, stem, cond in [
             ("ResNet18", "r1_r18_exp", "opt_transfer"),
             ("ResNet18", "r1_r18_exp", "opt_whitebox"),
             ("MixVPR", "r1_mix_exp", "opt_transfer"),
-            ("MixVPR", "r1_mix_exp", "opt_whitebox")]:
-        paths = sorted(alloc_dir.glob(f"{stem}*.csv"))
+            ("MixVPR", "r1_mix_exp", "opt_whitebox"),
+            ("CLIP ViT-L/14", "r10_clip_alloc", "opt_transfer"),
+            ("CLIP ViT-L/14", "r10_clip_alloc", "opt_whitebox")]:
+        if stem.startswith("r10_"):
+            paths = sorted((ex / "r10_clip").glob(f"{stem}.csv"))
+        else:
+            paths = sorted(alloc_dir.glob(f"{stem}*.csv"))
         if not paths:
             continue
         arms = {}
         for path in paths:
             for key, val in per_query(str(path), "condition").items():
                 arms.setdefault(key, {}).update(val)
-        if cond not in arms or "uniform" not in arms:
+        arm_key, ref_key = f"{cond}_crossdraw", "uniform_crossdraw"
+        if arm_key not in arms or ref_key not in arms:
             continue
-        d, lo, hi = contrast(arms[cond], arms["uniform"], places,
+        d, lo, hi = contrast(arms[arm_key], arms[ref_key], places,
                              zlib.crc32(f"{stem}{cond}".encode()) % 9999,
                              args.n_boot)
         rows.append((f"{OPTIMISED_LABEL[cond]} ({label})", d, lo, hi))
@@ -153,6 +169,8 @@ def main() -> int:
             ("MixVPR, 4 surrogates", ex / "tifs_d6" / "d6_mix_plain.csv",
              "transfer_4"),
             ("ViT-B/16, 3 (no shared trunk)", ex / "tifs6_vit" / "vit_plain.csv",
+             "transfer_3"),
+            ("CLIP ViT-L/14, 3", ex / "r10_clip" / "r10_clip_dir.csv",
              "transfer_3")]:
         if not Path(path).is_file():
             print(f"[skip ] {label}: {path} absent")
@@ -171,7 +189,7 @@ def main() -> int:
     # Equal widths and one shared x-range. The figure exists to put the two
     # axes on the same scale, and two panels at different scales would invite
     # exactly the comparison error it is meant to prevent.
-    fig, axes = plt.subplots(1, 2, figsize=(3.45, 1.78), sharex=True,
+    fig, axes = plt.subplots(1, 2, figsize=(3.45, 1.62), sharex=True,
                              gridspec_kw={"width_ratios": [1, 1]})
     ax = axes[0]
     ax.axvspan(-0.01, 0.01, color="0.88", zorder=0)
@@ -187,10 +205,20 @@ def main() -> int:
     for label, d, lo, hi in rows:
         rule, attacker = label.rsplit(" (", 1)
         by_rule.setdefault(rule, []).append((attacker.rstrip(")"), d, lo, hi))
+    # Three attackers now appear on the solved rows and two on the prescribed
+    # ones, so the vertical offsets are spread over however many a row carries
+    # rather than over a fixed pair.
+    STYLE = {"ResNet18": ("#2a6099", "o"),
+             "MixVPR": ("#b03030", "s"),
+             "CLIP ViT-L/14": ("#1b7f5a", "^")}
     for y, rule in enumerate(names):
-        for (attacker, d, lo, hi), off, marker in zip(
-                by_rule.get(rule, []), (-0.17, 0.17), ("o", "s")):
-            colour = "#2a6099" if attacker == "ResNet18" else "#b03030"
+        entries = by_rule.get(rule, [])
+        if not entries:
+            continue
+        span = 0.34 if len(entries) > 1 else 0.0
+        offs = np.linspace(-span / 2, span / 2, len(entries)) if span else [0.0]
+        for (attacker, d, lo, hi), off in zip(entries, offs):
+            colour, marker = STYLE.get(attacker, ("#555555", "D"))
             ax.plot([lo, hi], [y + off, y + off], color=colour, lw=0.9, zorder=2)
             ax.plot([d], [y + off], marker, ms=2.6, color=colour, zorder=3)
     ax.set_yticks(np.arange(len(names)))
@@ -213,7 +241,8 @@ def main() -> int:
     short = {"ResNet18, 3 surrogates": "ResNet18",
              "Patch-NetVLAD, 3": "Patch-NetVLAD",
              "MixVPR, 4 surrogates": "MixVPR",
-             "ViT-B/16, 3 (no shared trunk)": "ViT-B/16$^{*}$"}
+             "ViT-B/16, 3 (no shared trunk)": "ViT-B/16$^{*}$",
+             "CLIP ViT-L/14, 3": "CLIP ViT-L/14$^{*}$"}
     ys = np.arange(len(direction))
     for y, (label, d, lo, hi) in zip(ys, direction):
         ax.plot([lo, hi], [y, y], color="#2a6099", lw=1.0, zorder=2)

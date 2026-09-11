@@ -12,10 +12,21 @@ stated here rather than one:
   "What the one-command check does and does not cover" below names the
   families it does not reach.
 - `src/scripts/audit_claim_consistency.py`, in the source repository,
-  recomputes **780** claims, drawn from the manuscript, the supplement, the
-  extended evidence report and ten of the generated tables -- among them
-  every cell of the thirteen-transform preprocessing table, which is the sole
-  support for the manuscript's held-out-transform sentence.
+  recomputes **856** claims, drawn from the manuscript, the supplement, the
+  extended evidence report, eleven of the generated tables and the sidecar
+  carrying every point the two-axis figure plots -- among them every cell of
+  the thirteen-transform preprocessing table, which is the sole support for
+  the manuscript's held-out-transform sentence.
+
+That second count is reached **from a clean clone**, which it was not until
+this revision. The auditor searches `src/outputs/` before `src/exports/`, and
+`src/outputs/` is gitignored, so five trees resolved only on the machine that
+produced them: a fresh clone reported 753 verified and 74 unverifiable, and the
+74 included every cell of the factorial decomposition the paper lists as a
+contribution. The rows were never missing -- they ship here under
+reader-facing names -- so this bundle is now a third search root and
+`BUNDLE_ALIASES` maps the run tags onto those names. Re-run with
+`src/outputs/` absent if you want to confirm it.
 
 Both are registries, not sweeps. Neither enumerates the manuscript and then
 demands a claim for every number it finds; each asserts the numbers someone
@@ -29,12 +40,12 @@ python3 src/scripts/audit_claim_consistency.py --coverage
 last printed
 
 ```
-coverage over main.tex and supplementary.tex: 260 distinct three- and four-decimal literals, 231 registered, 29 not.
+coverage over main.tex and supplementary.tex: 271 distinct three- and four-decimal literals, 246 registered, 25 not.
 ```
 
 which matches each literal against every claim's locator, its printed form
 and its registered value rounded to the literal's own precision, and then
-lists the twenty-nine by value. They are interval endpoints, p-values quoted
+lists the twenty-five by value. They are interval endpoints, p-values quoted
 inline, and running-text restatements of studies whose tables are themselves
 registered. Neither checker asserts that the registry is complete, and this
 bundle does not claim it is. The block above is a transcript, not a hand
@@ -194,6 +205,6 @@ location on the authors' machines.
   the manuscript draws from them can be recomputed by hand, but the automated
   pass does not assert them and this artifact does not claim it does. In the
   source repository those families are asserted by
-  `src/scripts/audit_claim_consistency.py`, which checks 780 manuscript claims
+  `src/scripts/audit_claim_consistency.py`, which checks 856 manuscript claims
   against the same rows; it is not run here because it resolves trees by their
   repository names rather than the reader-facing names used in `results/`.

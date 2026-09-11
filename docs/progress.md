@@ -330,6 +330,126 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 94. 已通过 `hf-mirror.com` 完成 CLIP-inclusive vGPU 3090 复核实验。
 修改说明：通过 `hf-mirror.com` 下载并在远端标准 Hugging Face cache 中准备 `openai/clip-vit-base-patch32` 与 `openai/clip-vit-large-patch14`，两个模型均以严格离线模式成功加载并参与 CUDA 推理。完整 8-backbone `proxy12` 运行生成 7,236 条 per-query 和 219 条 summary，`proxy50` 生成 30,150 条 per-query 和 219 条 summary；两次运行均包含 CLIP ViT-B/32 与 ViT-L/14，全部 numeric 字段通过 finite 检查，checkpoint 与本机 SHA-256 一致。由于这仍是固定 paired-scene proxy 的工程复核且导出标记为 `scientific_evidence=false`，结果不替换论文已有 validated export，也不新增论文主张；旧的“CLIP 未完成”状态已关闭。
 
+
+## 第十三轮修订（2026-09-11/12，按 TIFS 独立评审 R1--R12 推进）
+
+本轮先做了一次完整独立评审（覆盖写入 `docs/RevisionSuggestions.tex`，12 条意见、
+多维评分 76/100、结论 major revision），随后按该评审逐条落地。评审的四条 Major
+里有三条不需要任何算力，第四条也不需要——所需数据全部已在仓库里。
+
+550. 【已完成】**R1：摘要和结论的核心句被作者自己跑过、发布过但没报告的实验推翻了。**
+     - `src/exports/r10_clip/r10_clip_alloc.csv` 12,000 行，400 query、3 seed、
+       delivered MSE 15.68、能量门 mean(w^2)=1.0、`optimised_against =
+       expectation:resnet50+vgg16+cosplace`、20 步——与 ResNet18 那条臂
+       **完全同一个协议、同一张 map**（目标函数轨迹同为 2.841→2.465）。
+     - 该 map 在 ResNet18 上买到 −0.0058、MixVPR 上 +0.0058（"什么都不买"），
+       在 CLIP ViT-L/14 上买到 **−0.0508，place-clustered [−0.082,−0.021]，
+       p=1.6e−3**，是该 attacker 上 direction 效果（−0.0867）的 59%。
+     - 摘要原句 "given only surrogates it buys nothing" 因此为假。已改写摘要、
+       §III-C 和结论：分配轴的不对称性是程度问题，"direction 在测过的每个
+       attacker 上都迁移，allocation 在三个里迁移一个"。
+     - Fig. 2 左栏新增 CLIP 的两条 solved 臂，右栏新增 CLIP 的 direction 臂
+       （现为 5 个 attacker）。两条 CLIP allocation claim 已登记进 auditor。
+
+551. 【已完成】**R2：同一段里 solved-map 的四个数用了两套参照配对，图用的是正文
+     明确否定的那一套。**
+     - 正文 §III-C 明说 solved map 必须在"优化器没见过的噪声场"上评分，但
+       `-0.0550`（同场配对）与 `-0.0392`（held-out 场）在同一段相隔两句同时出现，
+       Top-5/10 那句（−0.078/−0.071/−0.055）整句都是同场配对。
+     - `paper/generated/fig_axes_values.tex` 显示 Fig. 2 画的也是同场配对，其中
+       `solved, surrogates (ResNet18) = −0.0167 [−0.033,−0.001]` **区间不含零**，
+       与旁边"no benefit detected"直接冲突。
+     - 已把 `src/scripts/make_axes_figure.py` 改为 crossdraw-vs-crossdraw，正文
+       统一到 held-out 场（Top-5/10 改为 −0.070/−0.076/−0.039 与
+       −0.072/−0.055/−0.094），并在段首写明配对口径。
+     - `fig_axes_values.tex` 自称"供 auditor 校验"却从未被 auditor 读取；已把它
+       注册为 registry 来源，Fig. 2 的 18 个点全部登记。
+
+552. 【已完成】**R3：两条优化臂都没收敛，而"步数翻倍"只在支持论点的地方被引用。**
+     - 释出文件里本来就有 40 步的臂：attacker-given 从 −0.0392/−0.0942 翻到
+       −0.0833/−0.1942，surrogate-solved 从 −0.0058/+0.0058 移到
+       −0.0200（p=0.040）/−0.0108，CLIP 从 −0.0508 到 −0.0567；top-decile
+       集中度从 0.555 升到 0.772，说明 20 步远非平台。
+     - 正文现在把三条 surrogate-solved 的 40 步值和两条 attacker-given 的一起报，
+       并把 null 限定在"20 步预算下"。五条 2x claim 已登记。
+
+553. 【已完成】**R4：干净 clone 只能验证 827 条里的 753 条。**
+     - auditor 先找 gitignore 的 `src/outputs/`，5 棵树（tifs_a3、tifs_a3hi、
+       tifs_a4、tifs_a7_o2n8、tifs_a7_n2o8）只存在于那里，丢失的 74 条里包含
+       Table S7 全部（论文列的第四项贡献）和唯一的 mask-guided 对比。
+     - 这 5 棵树的**完全相同副本**（文件数、行数逐一核对一致）已提交在
+       `src/artifact/results/` 下，只是名字不同。已把 bundle 加为第三个 root 并
+       加 `BUNDLE_ALIASES` 名称映射，同时修掉 `tree_present()` 的同类遗漏。
+       现在干净 clone 报 **0 unverifiable**。
+     - bundle verifier 的 "Gallery-free direction transfer (headline table)" 块
+       把另一次执行的值标成 `paper=0.1508`，而 Table I 印的是 0.1608（9 处不一致）。
+       已改标题为 "independent re-execution; not Table I's run"、列名改为
+       `expected=`，并在代码注释里写明两次执行为何差最多 0.010。
+     - README 的 780 条与旧 coverage transcript 已按当前工具输出更新。
+
+554. 【已完成】**R5：TIFS 深度学习投稿清单要求的三个训练网络规格，原先只在未提交的
+     extended report 里。**
+     - TIFS 明确写明"负面结果论文适用更高的可复现标准"，本文正是这类。
+     - 已在补充材料 §XV 新增《The networks we trained》：unary predictor 的逐层
+       拓扑、激活、参数量（87,441，已按 `src/run_train.py` 逐层复算核对）、输入
+       归一化、初始化、优化器、batch、epoch、有无 early stopping/验证集/超参搜索，
+       以及 mask-supervised checkpoint 和 purifying denoiser 的同类信息。
+     - 所有数值均按代码核对，未凭印象书写。
+
+555. 【已完成】**R6：Patch-NetVLAD 的区间上端点写错了。**
+     - 正文写 "−0.0133（σ=2 blur）到 −0.1350（median）"，但十二个 transform 里
+       最大的是 4-bit 量化的 −0.1375，十三个里最大的是未变换的 −0.2142。
+     - 已改为 "−0.0133 到 −0.1375（4-bit），未变换 −0.2142"，并把
+       "hardening roughly doubles each" 改为实测比值范围 1.1--3.1、中位数 1.8。
+       三个端点已登记。
+
+556. 【已完成】**R7：三套 Wilcoxon 口径并存，同一格读出 0.18 或 0.38。**
+     - auditor 用 `method="approx"`，MixVPR 表生成器用非零差的精确检验，
+       MSLS 表生成器又用 approx。已统一为"丢零、可枚举时用精确检验"，写进
+       §III-A 协议段，三处代码一致。
+     - Table S4/S5 的 p 列现在带 discordant pair 数（例如 MixVPR learned 行
+       `1.00 (0)`，一眼可见那是自比较；MSLS learned 行 `1.00 (1)`），caption
+       说明该计数是检验功效的上界。
+
+557. 【已完成】**R8：集中度论证引的是两个数里较有利的那个。**
+     - "0.649 against 0.555" 中的 0.555 是 ResNet18 的 attacker-solved map；
+       MixVPR 的同一量是 0.6215，与 margin rule 的 0.6487 几乎相同。
+     - 正文改为 "than either solved map does, 0.649 against 0.555 and 0.622"，
+       三个集中度值已登记（此前全在 coverage 的未登记列表里）。
+
+558. 【已完成】**R9：补充材料三处跨文档硬编码引用全部失效。**
+     - `\S III-G` 实际应为 §III-F；两处 "the manuscript's Table~I" 指的是
+       13 页压缩时已删掉的那张 placement 表，而现在的 Table I 是 direction
+       transfer 表。
+     - 已加载 `xr` + `\externaldocument[M-]{main}`，三处改为 `\ref`，编译后
+       分别解析为 §III-B、§III-B、§III-F，0 undefined reference。
+
+559. 【已完成】**R10：responsible use 只在补充材料里。**
+     - 正文新增 `\textbf{Responsible use.}` 段（§III 末）：释出什么、不释出什么、
+       四条限制、以及数据集按各自条款使用且不再分发影像、manifest 只带标识符。
+     - 补充材料的版本相应收缩为两条正文未覆盖的细节，避免重复占版面。
+
+560. 【已完成】**R12：打包与排版。**
+     - `paper/main.pdf` 原先落后 main.tex 一次编译（缺摘要的 utility 结论和两条新
+       引用）；现已重建，三份 PDF 均为当前源码。
+     - 六处 `T1/ptm/m/scit` 字体警告来自 caption 内的 `\emph`（IEEEtran 的表
+       caption 是小型大写，T1 Times 没有小型大写斜体）；两个表生成器改用引号后
+       **警告归零**。
+     - clustered/query 区间宽度比原印 0.94--1.10x，重采样噪声可达第二位小数
+       （三次独立运行分别为 0.89、0.92、0.94），已改为一位小数 0.9--1.1x，
+       注册容差同步放宽并在代码注释写明原因。
+     - 正文 13/13 页、补充 6/6 页、摘要 249/250 词，overfull 0、undefined 0。
+
+**本轮页数预算说明。** 上述新增（CLIP 结果、40 步臂、responsible use、网络规格、
+discordant 计数）净增约一页半，而正文和补充都已在上限。已通过约二十处散文压缩
+（related work、protocol、§III-B/C/D/E/F/H/I、conclusion、两张表的 caption、
+补充的 §I/II/III/VII/VIII/IX/X/XII/XIII/XIV/XV，合并两个只起指路作用的补充小节，
+Table S6/S7 改 scriptsize，Fig. 2 与 Fig. S1 略缩）在不删结论、不删数据的前提下
+收回。**没有为了版面删掉任何一个实验结果或限制声明。**
+
+验证状态：auditor **856 条全绿**（干净 clone 亦 0 unverifiable），bundle
+**228 条 0 mismatch**，MANIFEST 743 文件全匹配。
+
 # 未修改或部分修改
 
 - 【本次评审待修订】正文与生成表格的数值版本、空间分配与排序的理论论证及直接相关工作的定位仍存在实质问题，原因是本次任务仅要求评审而非修改论文，下一步应先按新评审第一至第五项统一证据、修正论证并明确统计口径。
@@ -1281,6 +1401,24 @@ E1/E5 的公开数据与独立 unary 验证仍受注册、checkpoint 和远程�
 
 
 # 遗留问题
+
+- **【需要你决策，R11】补充材料要不要向 EiC 申请超过 6 页？**
+  TIFS 的规则是"建议不超过 6 个双栏页，**该限度内无需 EiC 批准**"——也就是说超页
+  是可申请的，不是硬上限。现状是：论文有九张表（Table I 背后的 per-rule placement
+  研究、two-city E1 表、white-box per-backbone 表、budget sweep、按 backbone 的
+  redistribution 控制、mask-guided 对比、两张 utility 表、自适应攻击者的
+  per-condition 分解）只存在于 15 页的 extended evidence report 里，而那份报告
+  **不属于投稿材料**，审稿人看不到。其中 mask-guided 对比是本文唯一一次与已发表
+  方法的正面对比，per-rule placement 研究是 Table I 的证据来源。
+  本轮我把补充材料压回了 6 页（新增的 TIFS 网络规格也放进去了），所以**现在是合规的**，
+  不阻塞投稿。但如果你愿意向 EiC 申请，建议把那四张最关键的表移进补充材料。
+  需要你决策：`A:` （填"申请"或"不申请"即可）
+
+- **【无需决策】R1/R2/R3 三条 Major 都用仓库里已有的数据闭合了，没有新跑任何实验，
+  也没有需要开卡。** 唯一可选的后续算力项是 R3 提到的收敛曲线：现在只有 20 步和
+  40 步两个点，再跑两三个步数就能把"分配轴在 20 步预算下买不到东西"变成一条曲线。
+  这是锦上添花，不是评审要求的必需项。
+
 
 - **【无需决策，R1 已完成】** 结果已拉回本地并写进论文（`src/exports/clip_pooling/`，
   57,024 行，auditor 已登记每一格）。**PRO 6000 已按你的要求关机**（ssh 已拒绝连接）。

@@ -49,7 +49,22 @@ OUT = REPO / "src" / "outputs"
 # src/exports/ instead, and are searched second: a fresh clone can verify the
 # claims they back without anyone remembering to copy anything first.
 EXPORTS = REPO / "src" / "exports"
-ROOTS = (OUT, EXPORTS)
+# Five trees were never copied into src/exports/ because they had already been
+# committed to the reproducibility bundle under reader-facing names, so on this
+# machine they resolved out of src/outputs/ and nobody noticed. On a fresh
+# clone they resolved nowhere and 74 claims went unverifiable -- among them
+# every cell of the factorial decomposition, which is a listed contribution.
+# The bundle is a third root, and BUNDLE_ALIASES maps the run names the
+# registry uses onto the names the bundle ships them under.
+BUNDLE = REPO / "src" / "artifact" / "results"
+BUNDLE_ALIASES = {
+    "tifs_a3": "factorial_mse15",
+    "tifs_a3hi": "factorial_mse241",
+    "tifs_a4": "maskguided_cam25",
+    "tifs_a7_o2n8": "crosstime_old2new",
+    "tifs_a7_n2o8": "crosstime_new2old",
+}
+ROOTS = (OUT, EXPORTS, BUNDLE)
 MAIN = REPO / "paper" / "main.tex"
 # The factorial decomposition moved to the supplement to meet the page
 # limit, so the numbers it prints are located there rather than in MAIN.
@@ -62,6 +77,11 @@ TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
 # The preprocessing table is generated as well, and it is the sole
 # support for the manuscript's held-out-transform sentence.
 TAB_SANITIZE = REPO / "paper" / "generated" / "tab_sanitize.tex"
+# The two-axis figure emits a sidecar carrying every point it plots, so a
+# figure can be checked the way a table is. The sidecar said as much from the
+# day it was written and nothing read it, which is how the figure came to plot
+# a different reference pairing from the text beside it for a whole cycle.
+FIG_AXES = REPO / "paper" / "generated" / "fig_axes_values.tex"
 # The two E1 tables are generated from the exports as well, so their numbers are
 # located in the generated files rather than in the supplement's own source.
 E1_SOURCE = {
@@ -74,15 +94,25 @@ E1_SOURCE = {
 # loading and the shared unit of inference
 # --------------------------------------------------------------------------
 
+def _alias(pattern: str) -> str:
+    """Rewrite a pattern's leading tree name to the bundle's name for it."""
+    head, sep, tail = pattern.partition("/")
+    alias = BUNDLE_ALIASES.get(head)
+    return alias + sep + tail if alias else pattern
+
+
 def load(pattern: str) -> List[dict]:
     """Every row under a glob relative to an export root, or [] if none match.
 
     The roots are tried in order and the first one that matches anything wins,
-    so a tree present in both places is read from src/outputs/ and never
-    silently concatenated with its committed copy.
+    so a tree present in two places is read from the first and never silently
+    concatenated with its copy. Under the bundle root the tree name is
+    translated through BUNDLE_ALIASES first, because the bundle ships these
+    runs under names a referee can read rather than under their run tags.
     """
     for root in ROOTS:
-        paths = sorted(globmod.glob(str(root / pattern)))
+        pat = _alias(pattern) if root is BUNDLE else pattern
+        paths = sorted(globmod.glob(str(root / pat)))
         if not paths:
             continue
         rows: List[dict] = []
@@ -103,7 +133,8 @@ def load_jsonl(pattern: str) -> List[dict]:
     import json
 
     for root in ROOTS:
-        paths = sorted(globmod.glob(str(root / pattern)))
+        pat = _alias(pattern) if root is BUNDLE else pattern
+        paths = sorted(globmod.glob(str(root / pat)))
         if not paths:
             continue
         rows: List[dict] = []
@@ -130,12 +161,25 @@ def per_query(rows: Sequence[dict], select: Callable[[dict], bool],
 
 
 def paired(cond: Dict[str, float], ref: Dict[str, float]) -> dict:
-    """Paired delta and Wilcoxon p over the queries the two arms share."""
+    """Paired delta and Wilcoxon p over the queries the two arms share.
+
+    One convention for the whole paper, stated in the protocol section: zeros
+    are dropped and the test runs on the discordant pairs, exactly when SciPy
+    can enumerate them and by the normal approximation when it cannot. The
+    table generators already did this; this function used to force the normal
+    approximation, so the same cell read 0.18 here and 0.38 in the table it was
+    meant to check. Which one is right matters only where the discordant count
+    is tiny -- five pairs in four hundred for the cell that exposed it -- and
+    that is exactly where the approximation should not be used. Those rows now
+    print their discordant count beside p so a reader can see the test has no
+    power rather than inferring it from a large p.
+    """
     queries = sorted(set(cond) & set(ref))
     diff = np.array([cond[q] - ref[q] for q in queries])
-    p = (float(wilcoxon(diff, zero_method="wilcox", method="approx").pvalue)
-         if np.any(diff != 0) else 1.0)
-    return {"n": len(queries), "delta": float(diff.mean()), "p": p}
+    nonzero = diff[diff != 0]
+    p = float(wilcoxon(nonzero).pvalue) if nonzero.size else 1.0
+    return {"n": len(queries), "n_discordant": int(nonzero.size),
+            "delta": float(diff.mean()), "p": p}
 
 
 def mean_of(rows: Sequence[dict], select: Callable[[dict], bool],
@@ -281,12 +325,15 @@ def _reproduction_gap(backbone: str, cond: str) -> Callable[[], float]:
     return go
 
 
+# The supplement prints the gap as a bound ("to 0.005 on MixVPR") rather than
+# as the two cell pairs it came from, so the bound is what is located; both
+# cells are still recomputed against it.
 claim("Repro/mix/isotropic", "\\S Which Part of the Perturbation",
-      "$0.7850$ against $0.7800$", 0.0050, 5e-4, "tifs_a3",
-      _reproduction_gap("mix", "isotropic"), source=SUPP)
+      "$0.005$ on", 0.0050, 5e-4, "tifs_a3",
+      _reproduction_gap("mix", "isotropic"), kind=BOUND, source=SUPP)
 claim("Repro/mix/direction", "\\S Which Part of the Perturbation",
-      "$0.7342$ against $0.7317$", 0.0025, 5e-4, "tifs_a3",
-      _reproduction_gap("mix", "direction"), source=SUPP)
+      "$0.005$ on", 0.0050, 0.0, "tifs_a3",
+      _reproduction_gap("mix", "direction"), kind=BOUND, source=SUPP)
 claim("Repro/r18/gate", "\\S Which Part of the Perturbation",
       "$0.008$ on", 0.008, 0.0, "tifs_a3",
       lambda: (max(_reproduction_gap("r18", "isotropic")() or 0,
@@ -1829,8 +1876,14 @@ for bb, cond, lo_hi in [("resnet18", "transfer_3", [(1, 0.278), (8, 0.212)]),
 # pairing it against the evaluation draw's control would fold the difference
 # between two noise realisations into the contrast.
 def _alloc(stem: str, condition: str, reference: str, stat: str):
+    """One solved-allocation contrast. A stem containing a slash is taken as a
+    glob in its own right, so the CLIP run -- which lives beside the CLIP
+    direction rows rather than under optimised_allocation/ -- registers through
+    the same helper as the other two attackers."""
+    pattern = stem if "/" in stem else f"optimised_allocation/{stem}*.csv"
+
     def go() -> Optional[float]:
-        rows = load(f"optimised_allocation/{stem}*.csv")
+        rows = load(pattern)
         if not rows:
             return None
         arms: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
@@ -1861,9 +1914,6 @@ for cid, stem, cond, ref, stat, printed, value in [
          "uniform_crossdraw", "delta", "$-0.0058$", -0.0058),
         ("Alloc/mix/tr/fresh", "r1_mix_exp", "opt_transfer_crossdraw",
          "uniform_crossdraw", "delta", "$+0.0058$", 0.0058),
-        # the white-box contrast on its own draw, quoted against the heuristic
-        ("Alloc/r18/wb/same", "r1_r18_exp", "opt_whitebox", "uniform",
-         "delta", "$-0.0550$", -0.0550),
         # the sign-selection control: huge on its own draw, nothing on a fresh one
         ("Alloc/r18/real/top1", "r1_r18_real", "opt_whitebox", "uniform",
          "top1", "$0.0025$", 0.0025),
@@ -1875,6 +1925,159 @@ for cid, stem, cond, ref, stat, printed, value in [
          "uniform_crossdraw", "delta", "$-0.0050$", -0.0050)]:
     claim(cid, "Solved placement maps", printed, value, 5e-5,
           "optimised_allocation", _alloc(stem, cond, ref, stat), source=MAIN)
+
+
+# --- the same solved maps read by a third held-out attacker -----------------
+# The surrogate-solved map is one object: it never sees the attacker it is
+# evaluated against, so the map released against CLIP is the map released
+# against ResNet18. It buys nothing on ResNet18 and MixVPR and buys $-0.0508$
+# here, which is why the manuscript can no longer say the axis closes when the
+# attacker is withdrawn. Registered so that claim cannot drift again.
+CLIP_ALLOC = "r10_clip/r10_clip_alloc.csv"
+for cid, cond, ref, stat, printed, value in [
+        ("Alloc/clip/tr/fresh", "opt_transfer_crossdraw",
+         "uniform_crossdraw", "delta", "$-0.0508$", -0.0508)]:
+    claim(cid, "Solved placement maps", printed, value, 5e-5,
+          "r10_clip", _alloc(CLIP_ALLOC, cond, ref, stat), source=MAIN)
+
+
+# --- concentration, and the preprocessing range on the third attacker -------
+# R8: the sentence "concentration was never the variable" compares a top-decile
+# share against the margin rule's, and both literals were unregistered, so the
+# manuscript could quote the more favourable of the two solved maps without
+# anything noticing. Each share is now a claim naming the tree it comes from.
+def _decile(pattern: str, condition: str, key: str = "condition"):
+    def go() -> Optional[float]:
+        rows = load(pattern)
+        if not rows:
+            return None
+        vals = [float(r["weight_top10pct_share"]) for r in rows
+                if r.get(key) == condition and r.get("weight_top10pct_share")]
+        return statistics.fmean(vals) if vals else None
+    return go
+
+
+for cid, printed, value, tree, fn in [
+        ("Conc/margin-oracle", "$0.649$", 0.6487, "margin_oracle",
+         _decile("margin_oracle/per_query.csv", "margin_oracle", "placement")),
+        ("Conc/solved/r18", "$0.555$", 0.5552, "optimised_allocation",
+         _decile("optimised_allocation/r1_r18_exp_wb.csv", "opt_whitebox")),
+        ("Conc/solved/mix", "$0.622$", 0.6215, "optimised_allocation",
+         _decile("optimised_allocation/r1_mix_exp_wb.csv", "opt_whitebox"))]:
+    claim(cid, "\\S The Null Holds on Real Geographic Data", printed, value,
+          5e-4, tree, fn, source=MAIN)
+
+
+# R6: the Patch-NetVLAD range named the median filter as its upper endpoint
+# where 4-bit quantisation is larger. Both endpoints and the untransformed
+# cell are registered so the range cannot drift off its own extremes again.
+def _pnv_delta(sanitizer: str):
+    def go() -> Optional[float]:
+        rows = load("preprocessing_r11/r5_pre_pnv_plain.csv")
+        if not rows:
+            return None
+        sel = lambda c: (lambda r: r["condition"] == c
+                         and r["sanitizer"] == sanitizer)
+        arm = per_query(rows, sel("transfer_3"))
+        ref = per_query(rows, sel("isotropic"))
+        if not arm or not ref:
+            return None
+        return paired(arm, ref)["delta"]
+    return go
+
+
+for cid, printed, value, san in [
+        ("PNV/range/lo", "$-0.0133$", -0.0133, "blur2"),
+        ("PNV/range/hi", "$-0.1375$", -0.1375, "bitdepth4"),
+        ("PNV/untransformed", "$-0.2142$", -0.2142, "none")]:
+    claim(cid, "\\S Robustness to Non-Adaptive Preprocessing", printed, value,
+          5e-5, "preprocessing_r11", _pnv_delta(san), source=MAIN)
+
+
+# --- the two-axis figure, checked the way a table is ------------------------
+# Fig. 2 is the only place in the paper where both axes appear on one scale, so
+# a reader compares them there before reading either section. Its generator
+# emits every plotted point into fig_axes_values.tex; this block asserts those
+# points against the released rows, which is what catches the figure and the
+# text disagreeing about which reference arm a contrast is paired against.
+def _fig_direction(pattern: str, cond: str):
+    def go() -> Optional[float]:
+        rows = load(pattern)
+        if not rows:
+            return None
+        sel = lambda c: (lambda r: r["condition"] == c
+                         and r.get("sanitizer", "none") == "none")
+        arm = per_query(rows, sel(cond))
+        ref = per_query(rows, sel("isotropic"))
+        if not arm or not ref:
+            return None
+        return paired(arm, ref)["delta"]
+    return go
+
+
+for cid, printed, value, tree, fn in [
+        # the prescribed placements, both attackers
+        ("Fig2/place/r18/learned", "$+0.0008$", 0.0008,
+         "icme2027_placement_msls", _msls_placement(FINAL, "learned", "delta")),
+        ("Fig2/place/r18/anti", "$+0.0025$", 0.0025,
+         "icme2027_placement_msls", _msls_placement(FINAL, "anti_oracle_grad", "delta")),
+        ("Fig2/place/r18/score", "$-0.0008$", -0.0008,
+         "icme2027_placement_msls", _msls_placement(FINAL, "oracle_grad", "delta")),
+        ("Fig2/place/r18/centre", "$+0.0092$", 0.0092,
+         "icme2027_placement_msls", _msls_placement(FINAL, "center", "delta")),
+        ("Fig2/place/r18/edge", "$+0.0050$", 0.0050,
+         "icme2027_placement_msls", _msls_placement(FINAL, "edge", "delta")),
+        ("Fig2/place/mix/score", "$-0.0117$", -0.0117,
+         "placement_mixvpr_rows", _mixvpr_placement("oracle_grad", "delta")),
+        ("Fig2/place/mix/edge", "$+0.0067$", 0.0067,
+         "placement_mixvpr_rows", _mixvpr_placement("edge", "delta")),
+        # the three solved maps, each on the field its optimiser never saw
+        ("Fig2/solved/r18/tr", "$-0.0058$", -0.0058, "optimised_allocation",
+         _alloc("r1_r18_exp", "opt_transfer_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/r18/wb", "$-0.0392$", -0.0392, "optimised_allocation",
+         _alloc("r1_r18_exp", "opt_whitebox_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/mix/tr", "$+0.0058$", 0.0058, "optimised_allocation",
+         _alloc("r1_mix_exp", "opt_transfer_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/mix/wb", "$-0.0942$", -0.0942, "optimised_allocation",
+         _alloc("r1_mix_exp", "opt_whitebox_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/clip/tr", "$-0.0508$", -0.0508, "r10_clip",
+         _alloc(CLIP_ALLOC, "opt_transfer_crossdraw", "uniform_crossdraw", "delta")),
+        ("Fig2/solved/clip/wb", "$-0.1342$", -0.1342, "r10_clip",
+         _alloc(CLIP_ALLOC, "opt_whitebox_crossdraw", "uniform_crossdraw", "delta")),
+        # the five direction contrasts of the right panel
+        ("Fig2/dir/r18", "$-0.1650$", -0.1650, "tifs_d6",
+         _fig_direction("tifs_d6/d6_r18_plain.csv", "transfer_3")),
+        ("Fig2/dir/pnv", "$-0.1917$", -0.1917, "tifs_a7b",
+         _fig_direction("tifs_a7b/a7b_pnv_plain.csv", "transfer_3")),
+        ("Fig2/dir/mix", "$-0.0483$", -0.0483, "tifs_d6",
+         _fig_direction("tifs_d6/d6_mix_plain.csv", "transfer_4")),
+        ("Fig2/dir/vit", "$-0.0233$", -0.0233, "tifs6_vit",
+         _fig_direction("tifs6_vit/vit_plain.csv", "transfer_3")),
+        ("Fig2/dir/clip", "$-0.0867$", -0.0867, "r10_clip",
+         _fig_direction("r10_clip/r10_clip_dir.csv", "transfer_3"))]:
+    claim(cid, "Fig. 2, the two-axis figure", printed, value, 5e-5, tree, fn,
+          source=FIG_AXES)
+
+
+# --- what a doubled search budget buys on every solved arm ------------------
+# Reporting the doubling only where it strengthened the claim was the reading
+# a referee objected to. Every arm's 40-step contrast is registered, including
+# the two where doubling moves the surrogate-solved estimate outside the
+# equivalence margin.
+for cid, stem, cond, printed, value in [
+        ("Alloc2x/r18/wb", "r1_r18_exp", "opt_whitebox_x2_crossdraw",
+         "$-0.0833$", -0.0833),
+        ("Alloc2x/mix/wb", "r1_mix_exp", "opt_whitebox_x2_crossdraw",
+         "$-0.1942$", -0.1942),
+        ("Alloc2x/r18/tr", "r1_r18_exp", "opt_transfer_x2_crossdraw",
+         "$-0.0200$", -0.0200),
+        ("Alloc2x/mix/tr", "r1_mix_exp", "opt_transfer_x2_crossdraw",
+         "$-0.0108$", -0.0108),
+        ("Alloc2x/clip/tr", CLIP_ALLOC, "opt_transfer_x2_crossdraw",
+         "$-0.0567$", -0.0567)]:
+    tree = "r10_clip" if "/" in stem else "optimised_allocation"
+    claim(cid, "Solved placement maps, doubled budget", printed, value, 5e-5,
+          tree, _alloc(stem, cond, "uniform_crossdraw", "delta"), source=MAIN)
 
 
 # --- purification against the two attackers it had never faced --------------
@@ -1973,12 +2176,17 @@ def _msls_placement_family() -> Dict[str, float]:
     return _MSLS_PLACEMENT
 
 
-for cid, printed, value, key in [
-        ("MSLSPlace/widen/lo", "$0.94$--$1.10\\times$", 0.94, "widen_lo"),
-        ("MSLSPlace/widen/hi", "$0.94$--$1.10\\times$", 1.10, "widen_hi"),
-        ("MSLSPlace/margin", "$\\pm0.027$", 0.027, "margin")]:
+# The widening ratio is a ratio of two bootstrap interval widths, so its own
+# resampling noise reaches the second decimal: three independent runs of this
+# family put the low end at 0.89, 0.92 and 0.94. It is quoted to one decimal
+# for that reason, and the tolerance here is wide enough to admit the spread
+# rather than pinning a figure the estimator does not support.
+for cid, printed, value, tol, key in [
+        ("MSLSPlace/widen/lo", "$0.9$--$1.1\\times$", 0.9, 6e-2, "widen_lo"),
+        ("MSLSPlace/widen/hi", "$0.9$--$1.1\\times$", 1.1, 6e-2, "widen_hi"),
+        ("MSLSPlace/margin", "$\\pm0.027$", 0.027, 6e-3, "margin")]:
     claim(cid, "\\S The Null Holds on Real Geographic Data", printed, value,
-          6e-3, "icme2027_placement_msls",
+          tol, "icme2027_placement_msls",
           (lambda k: (lambda: _msls_placement_family().get(k)))(key),
           source=MAIN)
 
@@ -2396,7 +2604,10 @@ def coverage() -> None:
 
 
 def tree_present(tree: str) -> bool:
-    return not tree or any((root / tree).is_dir() for root in ROOTS)
+    if not tree:
+        return True
+    return any((root / (_alias(tree) if root is BUNDLE else tree)).is_dir()
+               for root in ROOTS)
 
 
 def main() -> int:

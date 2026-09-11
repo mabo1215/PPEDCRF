@@ -109,12 +109,14 @@ def main() -> int:
         rf"(MixVPR) on the real place-labelled manifest, {len(ref)} query",
         rf"clusters per placement over {len(seeds)} seeds. $\Delta$ is paired",
         r"against the uniform reference with the query as the unit, so",
-        r"\emph{positive means worse privacy}; the interval is a query",
+        r"``positive means worse privacy''; the interval is a query",
         r"bootstrap and $p$ a Wilcoxon signed-rank test. ``Verdict'' is",
-        r"\emph{negligible} when the whole interval lies inside the",
+        r"``negligible'' when the whole interval lies inside the",
         rf"$\pm{MARGIN:.2f}$ Top-1 margin fixed before testing, and",
-        r"\emph{none det.} when it does not but the difference is not",
-        r"significant.}",
+        r"``none det.'' when it does not but the difference is not",
+        r"significant. The figure in parentheses beside $p$ is the number of",
+        r"discordant pairs the signed-rank test runs on, which is what bounds",
+        r"its power.}",
         r"\label{tab:placement_mixvpr}", r"\footnotesize",
         r"\setlength{\tabcolsep}{1.2pt}",
         r"\begin{tabular}{lccccc}", r"\hline",
@@ -142,7 +144,8 @@ def main() -> int:
                    else ("none det." if pval >= 0.05 else "significant"))
         lines.append(
             rf"{label:<20} & {top1:.4f} & ${diff.mean():+.4f}$ & "
-            rf"$[{lo:+.3f},{hi:+.3f}]$ & {fmt_p(pval)} & {verdict} \\")
+            rf"$[{lo:+.3f},{hi:+.3f}]$ & {fmt_p(pval)}~({len(nonzero)}) & "
+            rf"{verdict} \\")
         stats.append({"placement": key, "top1": top1, "delta": float(diff.mean()),
                       "ci": [lo, hi], "p": pval, "verdict": verdict})
     lines += [r"\hline", r"\end{tabular}", r"\end{table}", ""]

@@ -106,8 +106,13 @@ def main() -> int:
                 continue
             qs = sorted(set(cur) & set(ref))
             d = np.array([cur[q] - ref[q] for q in qs])
-            p = float(wilcoxon(d, zero_method="wilcox", method="approx").pvalue) \
-                if np.any(d != 0) else 1.0
+            # One signed-rank convention for the whole paper: zeros dropped
+            # and the discordant pairs enumerated exactly where SciPy can.
+            # This used to force the normal approximation while the strong
+            # attacker's table did not, so the same cell read two different
+            # p-values depending on which script printed it.
+            nz = d[d != 0]
+            p = float(wilcoxon(nz).pvalue) if nz.size else 1.0
             cq = boot(d, qs)
             cp = boot(d, [place_of.get(q, q) for q in qs])
             inside = max(abs(cq[0]), abs(cq[1]), abs(cp[0]), abs(cp[1])) <= args.margin
@@ -115,7 +120,8 @@ def main() -> int:
             body.append(
                 rf"{LABEL[name]} & {np.mean([cur[q] for q in qs]):.4f} & "
                 rf"${d.mean():+.4f}$ & [{cq[0]:+.3f},{cq[1]:+.3f}] & "
-                rf"[{cp[0]:+.3f},{cp[1]:+.3f}] & {fmt_p(p)} & {verdict} \\")
+                rf"[{cp[0]:+.3f},{cp[1]:+.3f}] & {fmt_p(p)}\,({nz.size}) & "
+                rf"{verdict} \\")
 
     if not body:
         raise SystemExit("no placement rows found")
@@ -124,13 +130,16 @@ def main() -> int:
         rf"Energy-matched placements against the weak attacker on the primary "
         rf"place-labelled manifest: {n_q} query clusters over {n_p} places, "
         rf"three seeds. $\Delta$ is paired against the uniform reference on "
-        rf"identical queries, so \emph{{positive means worse privacy}}. Both "
+        rf"identical queries, so ``positive means worse privacy''. Both "
         rf"units of inference are printed because the protocol prescribes the "
         rf"clustered one and the two barely differ here, $206$ of the places "
-        rf"carrying a single query. ``Verdict'' is \emph{{negligible}} when "
+        rf"carrying a single query. ``Verdict'' is ``negligible'' when "
         rf"both intervals lie inside the $\pm{args.margin:.2f}$ margin fixed "
-        rf"before testing and \emph{{none det.}} when they do not and the "
-        rf"difference is not significant. The learned row is the mechanism's "
+        rf"before testing and ``none det.'' when they do not and the "
+        rf"difference is not significant. The figure in parentheses beside $p$ "
+        rf"is the number of discordant pairs the signed-rank test runs on, "
+        rf"which is what bounds its power: a row with a handful is reporting "
+        rf"an absent effect rather than a tested one. The learned row is the mechanism's "
         rf"own map, which at this checkpoint is the uniform reference, so it "
         rf"is a self-comparison rather than a finding. The last two rows are "
         rf"the placement the margin analysis nominates and its inverse.")
@@ -144,7 +153,7 @@ def main() -> int:
         # footnotesize; scriptsize is what the manuscript's own
         # placement table uses for the same reason.
         r"\scriptsize",
-        r"\setlength{\tabcolsep}{1.2pt}",
+        r"\setlength{\tabcolsep}{0.6pt}",
         r"\begin{tabular}{lcccccc}", r"\hline",
         r"Placement & Top-1 & $\Delta$ & query 95\% CI & place 95\% CI & $p$ "
         r"& Verdict \\",

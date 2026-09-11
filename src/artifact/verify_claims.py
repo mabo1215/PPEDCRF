@@ -213,9 +213,20 @@ TRANSFER_CLAIMS = [
     ("white box",         "white_box",  0.0000),
 ]
 
-# The paper's headline transfer table: the direction is optimised away from the
-# frame's own clean embedding, so no reference database is assumed. Three seeds,
-# n=1200 per condition. (file, label, condition, Top-1 printed in the paper)
+# An independent re-execution of the manuscript's transfer conditions: the
+# direction is optimised away from the frame's own clean embedding, so no
+# reference database is assumed. Three seeds, n=1200 per condition.
+#
+# These are NOT the values printed in Table I. That table is generated from a
+# different execution (src/exports/tifs_d6/), and because the perturbation is
+# re-optimised in every run and the backward pass through the surrogates is not
+# deterministic, the two disagree by up to 0.010 Top-1 -- 0.1508 here against
+# 0.1608 there on one surrogate, 0.0358 against 0.0317 on three. Labelling
+# these "paper=" was itself a defect: a referee comparing this block to Table I
+# found nine disagreements and no explanation. The column is headed "expected"
+# and the block titled for what it is, and the spread between the two runs is
+# the reproducibility statement the manuscript makes in its utility section.
+# (file, label, condition, Top-1 expected from THIS tree)
 GALLERY_FREE_CLAIMS = [
     ("resnet18.csv", "r18/isotropic",   "isotropic",  0.1967),
     ("resnet18.csv", "r18/1 surrogate", "transfer_1", 0.1508),
@@ -594,7 +605,8 @@ def main() -> int:
                 failures.append(f"transfer/{label}: paper={expected:.4f} "
                                 f"recomputed={got:.4f}")
 
-    print("\n== Gallery-free direction transfer (headline table) ==")
+    print("\n== Gallery-free direction transfer "
+          "(independent re-execution; not Table I's run) ==")
     gf_root = root / "direction_transfer_galleryfree"
     gf_cache = {}
     for fname, label, cond, expected in GALLERY_FREE_CLAIMS:
@@ -617,10 +629,12 @@ def main() -> int:
         checked += 1
         got = float(sel.mean())
         ok = abs(got - expected) <= 0.002
+        # "expected", not "paper": these come from this tree, and Table I is
+        # generated from a different execution that disagrees by up to 0.010.
         print(f"  {'OK  ' if ok else 'FAIL'}  {label:28s} "
-              f"paper={expected:.4f} recomputed={got:.4f} (n={len(sel)})")
+              f"expected={expected:.4f} recomputed={got:.4f} (n={len(sel)})")
         if not ok:
-            failures.append(f"gallery-free/{label}: paper={expected:.4f} "
+            failures.append(f"gallery-free/{label}: expected={expected:.4f} "
                             f"recomputed={got:.4f}")
     for fname in sorted({c[0] for c in GALLERY_FREE_CLAIMS}):
         df = gf_cache.get(fname)
