@@ -10,7 +10,7 @@ F3  what the attacker's preprocessing costs the deployable direction and how
 
 Every number is transcribed from the .tex tables so the figure and the table
 cannot disagree; the transcription is asserted against a few anchor values.
-Output: paper/figs/fig_budget_dependence.pdf, paper/figs/fig_preprocessing_eot.pdf
+Output: paper/figs/fig_budget_dependence.png, paper/figs/fig_preprocessing_eot.png
 """
 from __future__ import annotations
 
@@ -53,6 +53,7 @@ def _save(fig, out) -> None:
     elif suffix == "png":
         kwargs.update(dpi=DPI_RASTER)
     fig.savefig(out, **kwargs)
+    _flatten_png(out)
 
 
 def _style() -> None:
@@ -173,8 +174,12 @@ def _parse_sanitize(path: Path = TAB_SANITIZE):
     not_sig: set = set()
     attacker = None
     for line in text.splitlines():
-        if "multirow" in line:
-            m = re.search(r"\{(ResNet18|MixVPR)\}", line)
+        # The attacker header used to be a \multirow spanning its block and is
+        # now a \multicolumn banner above it ("Weak attacker: ResNet18"). This
+        # matched only the old form, so every row fell through and the parse
+        # raised on an empty table rather than on a changed one.
+        if "multirow" in line or "multicolumn" in line:
+            m = re.search(r"(ResNet18|MixVPR)", line)
             if m:
                 attacker = m.group(1)
             continue
@@ -208,10 +213,19 @@ def _parse_sanitize(path: Path = TAB_SANITIZE):
     return deltas, not_sig
 
 
-SANITIZE, NOT_SIGNIFICANT = _parse_sanitize()
+# Parsed at import, which meant a stale parse took the whole module down --
+# including fig_budget, which does not use this data at all. Deferred to the
+# figure that needs it so one broken figure cannot cost the other.
+try:
+    SANITIZE, NOT_SIGNIFICANT = _parse_sanitize()
+except RuntimeError as _exc:
+    SANITIZE, NOT_SIGNIFICANT = None, None
+    _SANITIZE_ERROR = _exc
 
 
 def fig_sanitize(out: Path) -> None:
+    if SANITIZE is None:
+        raise _SANITIZE_ERROR
     fig, axes = plt.subplots(1, 2, figsize=(COLUMN_IN, 1.9))
     width = 0.36
     for ax, (attacker, (unh, hard)) in zip(axes, SANITIZE.items()):
@@ -248,7 +262,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", type=Path,
                     default=Path(__file__).resolve().parents[2] / "paper" / "figs")
-    ap.add_argument("--format", default="jpg", choices=("jpg", "pdf", "png"),
+    # PNG, not PDF and not JPEG: the submission carries raster figures only,
+    # and on line art with 5.5pt annotations a lossless raster at 600 dpi
+    # costs a few hundred kilobytes and avoids arguing about ringing.
+    ap.add_argument("--format", default="png", choices=("jpg", "pdf", "png"),
                     help="Raster formats are written at DPI_RASTER. These are "
                          "line plots with 5.5pt annotations, so a lossy format "
                          "needs the high DPI to keep the labels clean.")
@@ -256,9 +273,42 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     _style()
     fig_budget(args.out_dir / f"fig_budget_dependence.{args.format}")
-    fig_sanitize(args.out_dir / f"fig_preprocessing_eot.{args.format}")
+    # fig_preprocessing_eot has two generators and only one of them is live.
+    # make_tifs_tables.py builds it from the run summaries it already holds;
+    # this one rebuilds it by parsing the generated LaTeX, and that parse is
+    # two table-layouts stale -- it wants a five-transform table with the
+    # transform in the second column, and the table has carried thirteen
+    # transforms in the first column for some cycles. Rather than resurrect a
+    # duplicate path, this one warns and defers to the generator that owns the
+    # figure. Delete it here if nobody misses it.
+    try:
+        fig_sanitize(args.out_dir / f"fig_preprocessing_eot.{args.format}")
+    except RuntimeError as exc:
+        print(f"[skip] fig_preprocessing_eot: {exc}")
+        print("[skip] make_tifs_tables.py owns that figure and builds it from "
+              "the summaries rather than from the table.")
     print(f"figures written to {args.out_dir} as .{args.format}")
 
+
+
+def _flatten_png(path) -> None:
+    """Write the PNG back as opaque RGB on white.
+
+    Matplotlib writes RGBA whatever the figure's facecolor, and an alpha
+    channel is something print pipelines are entitled to handle differently
+    from each other. Nothing in these figures is transparent, so the channel
+    carries no information and is dropped here rather than left to a converter.
+    """
+    p = str(path)
+    if not p.lower().endswith(".png"):
+        return
+    from PIL import Image
+    im = Image.open(p)
+    if im.mode != "RGBA":
+        return
+    flat = Image.new("RGB", im.size, (255, 255, 255))
+    flat.paste(im, mask=im.split()[3])
+    flat.save(p)
 
 if __name__ == "__main__":
     main()

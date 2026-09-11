@@ -146,7 +146,8 @@ def figure(summaries, out):
     fig.text(0.5, -0.02, "negative is better privacy; n.s. marks a cell whose "
              "95% interval spans zero", ha="center", fontsize=5.5, color=MUTED)
     fig.tight_layout(h_pad=0.5)
-    fig.savefig(out, bbox_inches="tight", pad_inches=0.03)
+    fig.savefig(out, bbox_inches="tight", pad_inches=0.03, dpi=600)
+    _flatten_png(out)
     plt.close(fig)
     print("figure -> %s" % out)
 
@@ -308,7 +309,7 @@ def main() -> None:
     os.makedirs(os.path.join(args.paper, "figs"), exist_ok=True)
     if not args.no_figure:
         figure(summaries, os.path.join(args.paper, "figs",
-                                       "fig_preprocessing_eot.pdf"))
+                                       "fig_preprocessing_eot.png"))
     transfer_table(summaries, held_out, os.path.join(gen, "tab_transfer.tex"))
     sanitize_table(summaries, os.path.join(gen, "tab_sanitize.tex"))
 
@@ -319,6 +320,26 @@ def main() -> None:
         print("%-9s held-out: unhardened fails %d/8 %s; hardened fails %d/8 %s"
               % (label, len(u_fail), u_fail or "", len(h_fail), h_fail or ""))
 
+
+
+def _flatten_png(path) -> None:
+    """Write the PNG back as opaque RGB on white.
+
+    Matplotlib writes RGBA whatever the figure's facecolor, and an alpha
+    channel is something print pipelines are entitled to handle differently
+    from each other. Nothing in these figures is transparent, so the channel
+    carries no information and is dropped here rather than left to a converter.
+    """
+    p = str(path)
+    if not p.lower().endswith(".png"):
+        return
+    from PIL import Image
+    im = Image.open(p)
+    if im.mode != "RGBA":
+        return
+    flat = Image.new("RGB", im.size, (255, 255, 255))
+    flat.paste(im, mask=im.split()[3])
+    flat.save(p)
 
 if __name__ == "__main__":
     main()

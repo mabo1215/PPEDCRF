@@ -98,7 +98,7 @@ OPTIMISED_LABEL = {
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--exports", default=str(REPO / "src" / "exports"))
-    ap.add_argument("--out", default=str(REPO / "paper" / "figs" / "fig_axes.pdf"))
+    ap.add_argument("--out", default=str(REPO / "paper" / "figs" / "fig_axes.png"))
     ap.add_argument("--n_boot", type=int, default=4000)
     args = ap.parse_args()
     ex = Path(args.exports)
@@ -275,7 +275,11 @@ def main() -> int:
     fig.tight_layout(pad=0.35, w_pad=0.9)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, bbox_inches="tight")
+    # 600 dpi: this is a 3.45in panel carrying 5.2pt tick labels, and the
+    # submission is raster-only, so the density has to carry the smallest
+    # glyph rather than the figure's nominal size.
+    fig.savefig(out, bbox_inches="tight", dpi=600)
+    _flatten_png(out)
     print(f"[figure] {out}")
 
     # A figure's numbers should be checkable like a table's. This sidecar
@@ -297,6 +301,26 @@ def main() -> int:
         print(f"[data ] {name:34s} {d:+.4f} [{lo:+.4f},{hi:+.4f}]")
     return 0
 
+
+
+def _flatten_png(path) -> None:
+    """Write the PNG back as opaque RGB on white.
+
+    Matplotlib writes RGBA whatever the figure's facecolor, and an alpha
+    channel is something print pipelines are entitled to handle differently
+    from each other. Nothing in these figures is transparent, so the channel
+    carries no information and is dropped here rather than left to a converter.
+    """
+    p = str(path)
+    if not p.lower().endswith(".png"):
+        return
+    from PIL import Image
+    im = Image.open(p)
+    if im.mode != "RGBA":
+        return
+    flat = Image.new("RGB", im.size, (255, 255, 255))
+    flat.paste(im, mask=im.split()[3])
+    flat.save(p)
 
 if __name__ == "__main__":
     raise SystemExit(main())
