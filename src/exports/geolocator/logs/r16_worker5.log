@@ -1,0 +1,26 @@
+[start] r16_dir_s1236 19:34:00
+[geo] device=cuda
+[geo] 400 queries
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/590 [00:00<?, ?it/s]Loading weights:  63%|██████▎   | 369/590 [00:00<00:00, 3654.94it/s]Loading weights: 100%|██████████| 590/590 [00:00<00:00, 3751.70it/s]
+[geo] GeoCLIP loaded, 100000 gallery points
+[geo] 25/400 queries
+[geo] 50/400 queries
+[geo] 75/400 queries
+[geo] 100/400 queries
+[geo] 125/400 queries
+[geo] 150/400 queries
+[geo] 175/400 queries
+[geo] 200/400 queries
+[geo] 225/400 queries
+[geo] 250/400 queries
+[geo] 275/400 queries
+[geo] 300/400 queries
+[geo] 325/400 queries
+[geo] 350/400 queries
+[geo] 375/400 queries
+[geo] 400/400 queries
+[geo] done -> /root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF/src/outputs/r16/r16_dir_s1236.csv
+DONE r16_dir_s1236 exit=0 19:46:12
+ALLDONE

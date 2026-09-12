@@ -1,0 +1,24 @@
+[geo] device=cuda
+[geo] 400 queries
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/590 [00:00<?, ?it/s]Loading weights:  72%|███████▏  | 427/590 [00:00<00:00, 4264.16it/s]Loading weights: 100%|██████████| 590/590 [00:00<00:00, 4459.60it/s]
+[geo] GeoCLIP loaded, 100000 gallery points
+[geo] 25/400 queries
+[geo] 50/400 queries
+[geo] 75/400 queries
+[geo] 100/400 queries
+[geo] 125/400 queries
+[geo] 150/400 queries
+[geo] 175/400 queries
+[geo] 200/400 queries
+[geo] 225/400 queries
+[geo] 250/400 queries
+[geo] 275/400 queries
+[geo] 300/400 queries
+[geo] 325/400 queries
+[geo] 350/400 queries
+[geo] 375/400 queries
+[geo] 400/400 queries
+[geo] done -> src/outputs/r16_gate/geo_clean.csv
+GATE_EXIT=0

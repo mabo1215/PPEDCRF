@@ -176,12 +176,22 @@ def main() -> int:
             lat, lon = float(rec["latitude"]), float(rec["longitude"])
             targets = None
             for seed in args.seeds:
-                gen = torch.Generator().manual_seed(
-                    seed + (zlib.crc32(rec["query_id"].encode()) % 100000))
                 for cond in args.conditions:
                     key = (rec["query_id"], cond, str(seed))
                     if key in done:
                         continue
+                    # Seed per (query, condition, seed) rather than per
+                    # (query, seed). A generator advanced through the
+                    # condition list is only reproducible when every
+                    # condition is drawn: the resume path skips completed
+                    # ones without advancing it, so a resumed process drew a
+                    # different field for every later condition than a fresh
+                    # one. That is invisible until two writers race the same
+                    # file and disagree, which is how it was found.
+                    gen = torch.Generator().manual_seed(
+                        seed
+                        + (zlib.crc32(rec["query_id"].encode()) % 100000)
+                        + (zlib.crc32(cond.encode()) % 100000))
                     if cond == "clean":
                         rel = frame
                     elif cond in ("isotropic", "uniform"):
