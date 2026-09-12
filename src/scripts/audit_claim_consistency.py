@@ -388,14 +388,14 @@ for bb, tag, masked, full, delta, pv in [
         ("mix", "MixVPR", 0.7650, 0.7292, +0.036, 2e-4)]:
     claim(f"T7/{tag}/masked", "Table VII (gradient, cover 0.25)",
           f"{masked:.4f}", masked, 5e-5, "tifs_a4", _mask(bb, "masked"),
-          source=EXT)
+          source=SUPP)
     claim(f"T7/{tag}/full", "Table VII (gradient, cover 0.25)", f"{full:.4f}",
-          full, 5e-5, "tifs_a4", _mask(bb, "full"), source=EXT)
+          full, 5e-5, "tifs_a4", _mask(bb, "full"), source=SUPP)
     claim(f"T7/{tag}/delta", "Table VII (gradient, cover 0.25)",
           f"${delta:+.3f}$", delta, 5e-4, "tifs_a4", _mask(bb, "delta"),
-          locator=None, source=EXT)
+          locator=None, source=SUPP)
     claim(f"T7/{tag}/p", "Table VII (gradient, cover 0.25)", f"{pv}", pv,
-          rel(pv), "tifs_a4", _mask(bb, "p"), locator=None, source=EXT)
+          rel(pv), "tifs_a4", _mask(bb, "p"), locator=None, source=SUPP)
 
 
 # --- the cross-time replication, from tifs_a7_o2n8 ------------------------

@@ -573,6 +573,45 @@ CLIP Top-5、MSE 60 的 gain/amplitude）都**又加回来了**——因为 audi
 补充 6/6 页、摘要 249/250 词，overfull 0、undefined 0、字体警告 0。
 **vGPU 3090 已在数据校验并拉回后关机。**
 
+
+## 第十六轮：补充材料申请超页，把四张表搬进投稿材料（2026-09-12）
+
+572. 【已完成】**按你的决定，补充材料从 6 页扩到 7 页，并向 EiC 提出申请。**
+     - SPS 的规则是"建议不超过 6 个双栏页，**该限度内无需 EiC 批准**"——
+       超页是可申请的，不是硬上限。
+     - 搬进来的五张表（评审 R11 点名最关键的四项）：
+       1. **per-rule placement 研究**（两个 checkpoint × 六个 backbone × 三 seed ×
+          两个 benchmark）——正文中心 null 是从这些格子里 pool 出来的
+       2. **mask-guided 对比**——本文唯一一次与已发表方法的正面对比
+       3. **两张 utility 表**（allocation 轴与 direction 轴的逐图配对测量）
+       4. **自适应攻击者的 per-condition 分解**——支撑一整个小节的证据
+     - 每张都放在**本来就指着它的那段文字旁边**，措辞从"in the extended report"
+       改成"Table S…"。补充材料现在是 S1--S12，第 7 页 60% 满。
+     - 仍留在 extended report 的四张：two-city E1、white-box per-backbone、
+       placement budget sweep、按 backbone 的 redistribution 控制。
+       开头的清单已从"Nine more"改成这四张。
+
+573. 【已完成】**cover letter 里写明申请理由，而不是靠沉默蒙混。**
+     - 理由是针对这类论文的：本文报的是与领域设计假设相反的负面结果，而
+       **TIFS 的深度学习投稿指南明写"负面结果适用更高的可复现标准"**。
+       审稿人要验一个负面结果，需要看到它是从哪些格子 pool 出来的，而不是摘要。
+     - 并明确表态：**如果 EiC 坚持 6 页，我们把四张表搬回去并在正文写明**——
+       不在一篇主题是"审计"的论文上默默做这个取舍。
+
+574. 【顺手修的两件事】
+     - 搬进来的表 caption 里有 `\emph`，又触发了三处 `T1/ptm/m/scit`
+       字体警告（IEEEtran 表 caption 是小型大写，T1 Times 没有小型大写斜体）。
+       已按同样办法改成引号，**警告归零**。
+     - auditor 里 mask-guided 表的 claim 原本定位在 extended report。表搬进
+       补充材料后，**被检查的应当是审稿人真正读的那份**——已改 source 为 SUPP。
+       （另一张"两个 checkpoint 的 energy-matched placement rules"表没搬，
+       它的 claim 仍定位在 extended report——我一开始一起改了，auditor 报出
+       28 处定位失败，才发现那是两张不同的表。）
+
+**验证**：auditor **888 条全绿**（干净 clone 同样 0 unverifiable），
+正文 13/13 页、补充 **7 页（已申请）**、摘要 249/250 词，
+overfull 0、undefined 0、字体警告 0。
+
 # 未修改或部分修改
 
 - 【本次评审待修订】正文与生成表格的数值版本、空间分配与排序的理论论证及直接相关工作的定位仍存在实质问题，原因是本次任务仅要求评审而非修改论文，下一步应先按新评审第一至第五项统一证据、修正论证并明确统计口径。
@@ -1525,7 +1564,11 @@ CLIP Top-5、MSE 60 的 gain/amplitude）都**又加回来了**——因为 audi
 
 # 遗留问题
 
-- **【需要你决策，R11】补充材料要不要向 EiC 申请超过 6 页？**
+- **【已决策并执行，R11】补充材料超页申请——你答"要"，已办**（第 572--573 条）：
+  四张最关键的表已搬进补充材料（现 7 页，S1--S12），cover letter 写明申请理由，
+  并写明如果 EiC 坚持 6 页就搬回去。以下为原始问题记录：
+
+- ~~**【需要你决策，R11】补充材料要不要向 EiC 申请超过 6 页？**~~
   TIFS 的规则是"建议不超过 6 个双栏页，**该限度内无需 EiC 批准**"——也就是说超页
   是可申请的，不是硬上限。现状是：论文有九张表（Table I 背后的 per-rule placement
   研究、two-city E1 表、white-box per-backbone 表、budget sweep、按 backbone 的
