@@ -1952,10 +1952,7 @@ for cid, stem, cond, printed, value in [
          "$-0.0242$", -0.0242),
         ("Alloc/vit/tr/fresh", "r13_vit_exp", "opt_transfer_crossdraw",
          "$+0.0000$", 0.0000),
-        ("Alloc2x/pnv/tr", "r13_pnv_exp", "opt_transfer_x2_crossdraw",
-         "$-0.0408$", -0.0408),
-        ("Alloc2x/vit/tr", "r13_vit_exp", "opt_transfer_x2_crossdraw",
-         "$-0.0025$", -0.0025)]:
+        ]:
     claim(cid, "Solved placement maps", printed, value, 5e-5,
           "optimised_allocation",
           _alloc(stem, cond, "uniform_crossdraw", "delta"), source=MAIN)
@@ -2036,6 +2033,60 @@ for cid, printed, value, san in [
           5e-5, "preprocessing_r11", _pnv_delta(san), source=MAIN)
 
 
+# --- the budget curve: five points per attacker -----------------------------
+# The manuscript bounded the allocation axis at twenty steps because twenty and
+# forty were the only points it had. Five, ten and eighty close it, and the
+# eighty-step column is the one that changes a claim: ResNet18, one of the two
+# arms the "buys nothing" sentence rested on, separates there. Every cell of
+# Table tab:alloc_curve is registered, plus the trajectory gate -- twenty is
+# measured by both runs and the two must agree, or the five points are not on
+# one curve and the table should not exist.
+CURVE_TAB = REPO / "paper" / "generated" / "tab_alloc_curve.tex"
+for cid, stem, cond, printed, value in [
+        ("Curve/r18/5", "r14_r18_s10", "opt_transfer_crossdraw", "+0.0000", 0.0000),
+        ("Curve/r18/10", "r14_r18_s10", "opt_transfer_x2_crossdraw", "-0.0025", -0.0025),
+        ("Curve/r18/80", "r14_r18_s80", "opt_transfer_x2_crossdraw", "-0.0317", -0.0317),
+        ("Curve/mix/5", "r14_mix_s10", "opt_transfer_crossdraw", "+0.0017", 0.0017),
+        ("Curve/mix/10", "r14_mix_s10", "opt_transfer_x2_crossdraw", "+0.0042", 0.0042),
+        ("Curve/mix/80", "r14_mix_s80", "opt_transfer_x2_crossdraw", "-0.0167", -0.0167),
+        ("Curve/pnv/5", "r14_pnv_s10", "opt_transfer_crossdraw", "-0.0050", -0.0050),
+        ("Curve/pnv/10", "r14_pnv_s10", "opt_transfer_x2_crossdraw", "-0.0183", -0.0183),
+        ("Curve/pnv/80", "r14_pnv_s80", "opt_transfer_x2_crossdraw", "-0.0483", -0.0483),
+        ("Curve/vit/5", "r14_vit_s10", "opt_transfer_crossdraw", "+0.0000", 0.0000),
+        ("Curve/vit/10", "r14_vit_s10", "opt_transfer_x2_crossdraw", "+0.0017", 0.0017),
+        ("Curve/vit/80", "r14_vit_s80", "opt_transfer_x2_crossdraw", "-0.0042", -0.0042),
+        ("Curve/clip/5", "r14_clip_s10", "opt_transfer_crossdraw", "-0.0100", -0.0100),
+        ("Curve/clip/10", "r14_clip_s10", "opt_transfer_x2_crossdraw", "-0.0300", -0.0300),
+        ("Curve/clip/80", "r14_clip_s80", "opt_transfer_x2_crossdraw", "-0.0583", -0.0583)]:
+    claim(cid, "Table tab:alloc_curve", printed, value, 5e-5,
+          "optimised_allocation",
+          _alloc(stem, cond, "uniform_crossdraw", "delta"), source=CURVE_TAB)
+
+
+# The trajectory gate. A run that stops at eighty passes through the same
+# twenty steps as the run that stopped at forty -- the per-step noise field is
+# drawn from (query, seed, step) and the checkpoint list never enters the loop
+# -- so the re-measured value must land on the original. The tolerance is the
+# run-to-run spread the manuscript already reports, not zero: the backward pass
+# through the surrogates is not bitwise deterministic.
+def _gate(stem_a: str, stem_b: str):
+    def go() -> Optional[float]:
+        a = _alloc(stem_a, "opt_transfer_crossdraw", "uniform_crossdraw", "delta")()
+        b = _alloc(stem_b, "opt_transfer_crossdraw", "uniform_crossdraw", "delta")()
+        return None if a is None or b is None else abs(a - b)
+    return go
+
+
+for tag, orig, remeasure in [("r18", "r1_r18_exp", "r14_r18_s80"),
+                             ("mix", "r1_mix_exp_tr", "r14_mix_s80"),
+                             ("pnv", "r13_pnv_exp", "r14_pnv_s80"),
+                             ("vit", "r13_vit_exp", "r14_vit_s80"),
+                             ("clip", CLIP_ALLOC, "r14_clip_s80")]:
+    claim(f"CurveGate/{tag}", "Table tab:alloc_curve", "0.0059", 0.0059, 0.0,
+          "optimised_allocation", _gate(orig, remeasure), kind=BOUND,
+          source=CURVE_TAB)
+
+
 # --- the two-axis figure, checked the way a table is ------------------------
 # Fig. 2 is the only place in the paper where both axes appear on one scale, so
 # a reader compares them there before reading either section. Its generator
@@ -2110,20 +2161,28 @@ for cid, printed, value, tree, fn in [
 # a referee objected to. Every arm's 40-step contrast is registered, including
 # the two where doubling moves the surrogate-solved estimate outside the
 # equivalence margin.
+# The forty-step cells moved out of a sentence and into the curve table when
+# the five-point run landed, so they are located there now. The two
+# attacker-given doubled contrasts are no longer printed anywhere -- the
+# paragraph that carried them was replaced by the curve, which is about the
+# surrogate-solved arm -- and a registry asserts what the manuscript prints,
+# so they are dropped rather than pointed at a sentence that no longer exists.
+# The rows remain in the export and the analysis script still reports them.
 for cid, stem, cond, printed, value in [
-        ("Alloc2x/r18/wb", "r1_r18_exp", "opt_whitebox_x2_crossdraw",
-         "$-0.0833$", -0.0833),
-        ("Alloc2x/mix/wb", "r1_mix_exp", "opt_whitebox_x2_crossdraw",
-         "$-0.1942$", -0.1942),
         ("Alloc2x/r18/tr", "r1_r18_exp", "opt_transfer_x2_crossdraw",
-         "$-0.0200$", -0.0200),
+         "-0.0200", -0.0200),
         ("Alloc2x/mix/tr", "r1_mix_exp", "opt_transfer_x2_crossdraw",
-         "$-0.0108$", -0.0108),
+         "-0.0108", -0.0108),
+        ("Alloc2x/pnv/tr", "r13_pnv_exp", "opt_transfer_x2_crossdraw",
+         "-0.0408", -0.0408),
+        ("Alloc2x/vit/tr", "r13_vit_exp", "opt_transfer_x2_crossdraw",
+         "-0.0025", -0.0025),
         ("Alloc2x/clip/tr", CLIP_ALLOC, "opt_transfer_x2_crossdraw",
-         "$-0.0567$", -0.0567)]:
+         "-0.0567", -0.0567)]:
     tree = "r10_clip" if "/" in stem else "optimised_allocation"
-    claim(cid, "Solved placement maps, doubled budget", printed, value, 5e-5,
-          tree, _alloc(stem, cond, "uniform_crossdraw", "delta"), source=MAIN)
+    claim(cid, "Table tab:alloc_curve", printed, value, 5e-5,
+          tree, _alloc(stem, cond, "uniform_crossdraw", "delta"),
+          source=CURVE_TAB)
 
 
 # --- purification against the two attackers it had never faced --------------
