@@ -873,6 +873,70 @@ claim("Joint/15.68/clean-gate", "\\S The Other Axis (joint on MSLS frames)",
       _joint("15.68", "clean"), locator=None)
 
 
+# --- the geolocator arm: a model that emits a coordinate, not a neighbour ---
+# Registered on the same footing as every other number in the manuscript. The
+# indicator is "predicted point within km of the query's own coordinate", the
+# unit of inference is the query with seeds averaged inside it, and the
+# localisable subset is the queries the unperturbed attacker already places
+# inside the primary threshold -- a defense cannot be credited on a query the
+# attacker fails, and must not be charged when it accidentally helps.
+def _geo(cond: str, km: float, localisable: bool) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        import collections
+        rows = []
+        for root in ROOTS:
+            base = root / "geolocator"
+            if not base.is_dir():
+                continue
+            for f in sorted(base.glob("r16*.csv")):
+                rows.extend(load(f"geolocator/{f.name}") or [])
+            break
+        if not rows:
+            return None
+        def hits(c: str) -> Dict[str, float]:
+            acc = collections.defaultdict(list)
+            for r in rows:
+                if r["condition"] == c:
+                    acc[r["query_id"]].append(
+                        1.0 if float(r["error_km"]) <= km else 0.0)
+            return {q: sum(v) / len(v) for q, v in acc.items()}
+        cur = hits(cond)
+        if not cur:
+            return None
+        keep = set(cur)
+        if localisable:
+            clean25 = hits_primary = None
+            acc = collections.defaultdict(list)
+            for r in rows:
+                if r["condition"] == "clean":
+                    acc[r["query_id"]].append(
+                        1.0 if float(r["error_km"]) <= 25.0 else 0.0)
+            keep = {q for q, v in acc.items() if sum(v) / len(v) >= 0.5}
+            keep &= set(cur)
+        if not keep:
+            return None
+        return sum(cur[q] for q in keep) / len(keep)
+    return go
+
+
+for cond, printed, value in [
+        ("clean", "0.545", 0.545), ("isotropic", "0.453", 0.453),
+        ("direction", "0.362", 0.362), ("hardened", "0.337", 0.337)]:
+    claim(f"Geo/all/{cond}", "\\S The Other Axis (geolocator)", printed, value,
+          0.01, "geolocator", _geo(cond, 25.0, False), locator=None)
+for cond, printed, value in [
+        ("isotropic", "0.713", 0.713), ("direction", "0.546", 0.546),
+        ("hardened", "0.514", 0.514), ("edge", "0.752", 0.752),
+        ("saliency", "0.735", 0.735)]:
+    claim(f"Geo/localisable/{cond}", "\\S The Other Axis (geolocator)",
+          printed, value, 0.01, "geolocator", _geo(cond, 25.0, True),
+          locator=None)
+claim("Geo/clean/25km", "\\S The Other Axis (geolocator)", "54.5", 0.545,
+      0.01, "geolocator", _geo("clean", 25.0, False), locator=None)
+claim("Geo/clean/1km", "\\S The Other Axis (geolocator)", "6.0", 0.060,
+      0.01, "geolocator", _geo("clean", 1.0, False), locator=None)
+
+
 # --- the ViT attacker, whose trunk appears in no surrogate ------------------
 def _vit(tag: str, cond: str, stat: str) -> Callable[[], Optional[float]]:
     def go() -> Optional[float]:

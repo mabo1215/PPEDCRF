@@ -83,7 +83,7 @@ untested.
 One request about length, which we would rather put to you explicitly than
 resolve by omission. The SPS guidance recommends that supplementary
 material not exceed six double-column pages without Editor-in-Chief approval,
-and ours is nine. We are asking for that approval. The reason is specific to a
+and ours is ten. We are asking for that approval. The reason is specific to a
 paper of this kind: the submission reports a negative result against an
 assumption the field designs around, and the TIFS guidance for deep-learning
 submissions holds such a paper to a higher standard of reproducibility than an
@@ -93,8 +93,9 @@ inside the submission the per-rule placement study the central null is pooled
 from, the solved-allocation arm the manuscript's positive allocation result
 rests on, the purification result across all four attackers, the head-to-head
 against the closest published method, the two paired per-image utility tables,
-the adaptive attacker's per-condition breakdown, and a table enumerating every
-placement rule with its provenance. Each sits beside the text that reads it,
+the adaptive attacker's per-condition breakdown, a table enumerating every
+placement rule with its provenance, and the geolocator arm --- the one attacker
+class that does not rank a gallery at all. Each sits beside the text that reads it,
 and each recomputes from the released per-query rows without a GPU.
 
 The main text is within the thirteen-page limit for an initial regular-paper

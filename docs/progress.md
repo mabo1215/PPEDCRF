@@ -1,5 +1,21 @@
 # 已全部修改
 
+- 【R4 完成：方向轴迁移到了地理定位器，2026年9月13日】GeoCLIP 臂已跑完、拉回、成表、写进论文。正文 13 页、补充材料 10 页、888 条断言全绿。
+
+**结论：方向轴迁移，分配轴不迁移。** 在 clean 攻击者能定位的 218 条 query 上（25 km 内）：
+isotropic 控制 $0.713$ → direction $0.546$（$-0.167$ $[-0.224,-0.107]$）、hardened $0.514$（$-0.199$ $[-0.260,-0.137]$），族内 Holm 校正后均分离；
+edge $+0.040$、saliency $+0.023$，都不分离。全部 400 条上方向同样分离（$-0.091$ / $-0.116$）。
+1 km 阈值上什么都不动，但 clean 只有 $6.0\%$，那是地板而不是发现。
+
+**这个结果论文原本预测不出来。** §IV-H 的力学解释是针对 correct-versus-hardest-negative 的**排序** margin 写的——而直接回归坐标的模型没有 gallery、没有最难负样本、也没有可翻转的排序，论文明说「两半论证都不迁移」。现在测出来：解释不迁移，效应却迁移。论文已改为如实陈述这一点，并写明这是「关于发现的事实，同时是对解释的限制」。摘要、结论第一条限制均已改写（原文「image-to-location models are untested」已删除）。
+
+**先跑了基线闸门再信数据。** GeoCLIP 在 400 帧上 25 km 内 54.5%、200 km 内 69.0%、中位误差 18.4 km——攻击者有真实能力、benchmark 可推动。分析在「全部 query」与「clean 能定位子集」两个口径上分别报告：在攻击者本来就失败的 query 上，防御既挣不到功劳也不该被记过（smoke 阶段 GeoCLIP 把 Boston 定位到巴拉圭，edge placement 反而把它「改善」到 1.09 km）。
+
+**过程中发现并修好了我自己写的一个 bug。** 我把三个 cheap 作业手动塞进空闲 worker 时撞上了 launcher 的 pgrep 竞态，同一个文件被两个进程写，产出 8541 行而非 6400 行。去重后 2141 个重复 key 里 2140 个逐位一致、1 个冲突——冲突暴露的才是真问题：runner 原先按 (query, seed) 播种随机数并在 condition 间顺序推进，而 resume 路径用裸 `continue` 跳过已完成 condition 却不推进生成器，于是「断点续跑」与「一次跑完」会画出不同的噪声场。这违反了本仓库对可续跑脚本的要求。已改为按 (query, condition, seed) 播种，并用修好的 runner 把 cheap 臂整个重跑了一遍（4000 行，全新目录，单写者）。最终导出 6400 行 / 6400 唯一 key / 0 重复 / 每个扰动条件 delivered MSE 恰为 15.68。
+
+为容纳新结果，protocol 示意图移入补充材料（正文保留指针），并退役 `guo2018countering`（athalye2018obfuscated 才是该段真正依赖的引用），参考文献 40 → 39。
+
+
 - 【R3 结论：公开代码无法端到端复现，2026年9月12日】把 GeoShield 仓库（`thinwayliu/Geoshield`，AAAI 2026）clone 到 `src/third_party/` 后逐行核对，**其公开版本把 VLM 组件留成了空实现**：`describe_image_placeholder()` 的函数体是 `TODO: Implement your VLM API call here`，注释建议用户自行接入 GPT-4V / Claude / Gemini / LLaVA。
 
 这不是可以绕过的边角。该描述经 `ensemble_loss.set_geotext_truth(description)` 进入 `geo_loss`，而目标函数里这一项是**被减掉**的（`loss -= (text_loss + text_local_loss)`）——它正是让扰动在破坏地理线索的同时保住语义的那一项，也是论文三个命名模块之一「exposure element identification」所依赖的输入。没有 VLM 就不是在跑 GeoShield，而是在跑另一个目标函数。

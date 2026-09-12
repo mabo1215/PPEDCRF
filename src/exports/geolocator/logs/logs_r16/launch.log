@@ -1,0 +1,15 @@
+[space] 581064 MB and 831402365 inodes free under /root/autodl-tmp/ppedcrf_tomm_20260830/PPEDCRF/src/outputs/r16
+[start] r16_worker0 (2 jobs)
+[start] r16_worker1 (2 jobs)
+[start] r16_worker2 (2 jobs)
+[start] r16_worker3 (1 jobs)
+[start] r16_worker4 (1 jobs)
+[start] r16_worker5 (1 jobs)
+There are screens on:
+	12737.r16_worker5	(09/12/26 19:33:59)	(Detached)
+	12634.r16_worker4	(09/12/26 19:33:24)	(Detached)
+	12541.r16_worker3	(09/12/26 19:32:49)	(Detached)
+	12466.r16_worker2	(09/12/26 19:32:14)	(Detached)
+	12390.r16_worker1	(09/12/26 19:31:39)	(Detached)
+	12326.r16_worker0	(09/12/26 19:31:04)	(Detached)
+6 Sockets in /run/screen/S-root.
