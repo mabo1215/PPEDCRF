@@ -1,5 +1,50 @@
 # 已全部修改
 
+- 【第十四轮独立评审 + 修订已完成，2026年9月12日】按 IEEE TIFS 投稿要求重新独立评审并将英文 LaTeX 评审整段覆盖写入 `docs/RevisionSuggestions.tex`（21 页，5 项 Major、7 项 Moderate、2 项 Minor），随后按该评审推进修订。本轮 11/14 项已完成，3 项因 GPU 主机不可达且本机无 MSLS 影像而阻挡。修订后 `src/scripts/audit_claim_consistency.py` 报告 888 条断言全部通过、0 条不符。
+
+R6（已完成）主基准的 placement 对比是九组而非七组。
+修改说明：摘要、§IV-B、结论的计数统一改为九；`tab_placement_msls` 本就含 margin gradient 与其逆两行，正文原先把它们排除在计数外并单列一段。同时修正 §IV-B 引用的最宽区间——原文 `[-0.008,+0.026]` 在表中任一列都不存在（centre bias 为 query 级 `[-0.007,+0.026]`、place 级 `[-0.008,+0.027]`），改为按列如实引用 edge magnitude 的 `[-0.014,+0.025]` 并标明单位。认证全部九组所需的 margin 仍为 ±0.027，未变。
+
+R7（已完成）释放扰动幅度的两处数字互相矛盾。
+修改说明：正文 §IV-G 报 delivered MSE 241.5 时 max|δ|=49.30，补充材料 §S-factorial 在同一预算、同一 ℓ∞=16 投影下报 76，两者无法并存。从 `src/artifact/results/factorial_mse*` 重算后改写补充材料：operating point 下 uniform 放置的 direction 为 12.2（与正文 12.36 一致）、edge 放置为 84.0；大预算下 uniform 为 48.7（与正文 49.30 一致）、edge 为 241.4（触及 255 截断）。原 76 在导出树中无对应，已删除并按条件具名重写。
+
+R10（已完成）TIFS 深度学习可复现性清单与退化成因。
+修改说明：这一项在核查中查出一个实质性发现。released checkpoint 的训练配置为 `mask_root: None`，而 `src/run_train.py` 在无 mask 时以全零张量作为目标，即该 checkpoint 是在**完全没有空间信息的目标**上训练的；实测第 1 与第 5 轮权重相对变化仅 6.8e-3、输出层 bias 由 1.2e-3 走到 8.1e-4，复现的 sigmoid 范围 [0.4991, 0.5015]、空间变异系数 5.31e-4 与论文所报完全一致。因此论文原先“trained against pixel-level support masks where these exist”的表述具有误导性，已在 §II-A 与 §IV-A 改写为如实描述并给出退化的因果解释——这反而强化了论文自己的论点：该 checkpoint 的 privacy–utility 曲线只认证了幅度、完全没有认证 map。补充材料 §S-repro 另补齐 weight decay（AdamW 库默认 0.01）、学习率恒定无 scheduler、unary 网络无任何归一化层、mask-supervised checkpoint 的语料（KITTI-360 序列 0000、1033 对、正样本比例 0.937）与其类别平衡 BCE 权重（0.25 / 0.937），并新增一段逐条对应 TIFS 清单的说明。另修正原文“fixed order, no shuffling”——两个训练脚本的 DataLoader 均为 `shuffle=True`。
+
+R2 + R5（已完成）统计推断：等效性检验、多重比较与推断单位。
+修改说明：新增 `src/scripts/analyze_placement_equivalence.py`，在已发布的 per-query 导出上计算 place-clustered bootstrap TOST、Holm 校正与 place-clustered sign-flip 置换检验，并给出认证 ±0.01 所需的 cluster 数。结果：把 placement 族按 confirmatory 处理并做 Holm 校正后，弱攻击者九组校正后 p 全为 1.000，强攻击者上唯一名义显著的 score-gradient 由 0.057 变为 0.397（置换检验 0.124 / 校正后 0.871），即多重比较从来不是问题；TOST 在弱攻击者上认证 4/9（去掉退化自比较后为 3 组，而原区间规则只认证 1 组），强攻击者 2/7（去退化后 1 组）；认证 ±0.01 需要弱攻击者 1,261、强攻击者 917 个 query cluster，是本语料的二到三倍。两张 placement 表新增 $p_{TOST}$ 列；§III 改写推断协议（两个 confirmatory 族、置换检验、TOST、所需样本量），并修正 §IV-B “1,200 paired observations” 与 §III “三个种子先在 query 内平均”的矛盾——实际进入检验的是 400 个差值。
+
+R2（已完成）摘要、贡献、结论的 null 表述超出区间所能认证的强度。
+修改说明：摘要重写为 242 词、无任何数学模式（同时满足 IEEE SPS 的 150–250 词与“不含公式”要求），把“no proposed allocation rule buys anything”改为 bounded non-detection 并写明“三组认证、其余未决”；贡献列表与结论首段同样改写，结论另补出所需样本量与族校正不改变任何判定。摘要同时按 R14 明确写出“no budget we tested is both admissible and effective, so the contribution is the protocol and the measurement”。
+
+R12（已完成）admissibility 判定所用语料与隐私度量语料不一致。
+修改说明：新增 `src/scripts/analyze_msls_agreement_frontier.py`，在 `src/exports/tifs6_joint` 的 400 张 MSLS query 帧上按与 frontier 相同的方式算出 12 个 cell 的 class-mean agreement drop 与配对 bootstrap 区间。结论两面：**顺序**与 VOC 完全一致（四个预算上 isotropic < direction < hardened），所以“哪条轴更贵”不依赖语料；**量级**不可比（街景上的 class-mean agreement 远比 VOC 掩码上的 mIoU 严苛，1.7% 像素改动对应 0.197 的 drop，direction/isotropic 的倍数由 VOC 的 2.6–3.9× 压缩到 1.4–1.9×）。因此明确不把 VOC 标定的容差搬到这一列，并写明要为这些帧标定容差需要把六个分割模型重新在其上评分，本轮未做。frontier 表标题同步注明容差的标定来源。
+
+R8（已完成）支撑摘要级论断的表格不在投稿包内。
+修改说明：原本 17 张生成表中有 8 张两个文档都未 `\input`，其中 `tab_optimised_allocation` 承载摘要引用的 −0.0392 / −0.0942，四张 purification 表承载摘要的“half to all”。新增 `src/scripts/make_purification_summary_table.py`，把四个攻击者合并成一张表，且直接给出论证真正依赖的量——释放相对 isotropic control 的优势在“双方都不净化”与“攻击者净化双方”下的对比，以及保留比例。该表与 `tab_optimised_allocation` 均已进入补充材料。顺带把正文“takes back between half and all”改为按表精确的 48/55/57/100 与 35–100 百分比。
+
+R11（已完成）缺少直接预示本文结论的文献。
+修改说明：`paper/ref.bib` 新增 4 条并在相关工作中各自成段落定位：Radiya-Dixit 等（ICLR 2022）与 Hönig 等（2024）构成“保护性扰动在自适应对手面前失效”这条线，本文 §IV-I 属于该线且补充的是逐架构的定量测量而非存在性结果；Carlini 等（2019）与 Croce & Hein（2020）是评测方法学文献，本文明确说明二者约束的是**攻击者**一侧，而本文补的是**防御者**一侧缺失的空间自由度控制。同时清理 11 条从未被引用的 bib 条目（66 → 59）。
+
+R1（部分完成：结论性陈述已写入，实验被阻挡）两条轴不是由同一组攻击者读出的。
+修改说明：这是本轮评审的首要意见。规定性 placement 规则在主基准上只对 ResNet18 与 MixVPR 有逐规则结果，而 direction 与 solved map 有五个攻击者；**solved map 真正分离的两个攻击者（Patch-NetVLAD 与 CLIP）恰好是没有任何规定性规则跑过的两个**，CLIP 更是从未进入任何 placement 研究。已在 §IV-B 新增专门一段如实陈述这一不对称、说明它可能部分是“攻击者面板的不对称”而非“轴的不对称”、给出两条边界（在同时跑过的攻击者上比较是精确的；没有任何已测属性能预测哪个攻击者会被 allocation 触及），并指出补齐它只是对既有帧重新嵌入而非新的搜索。结论的 limitations 同步加入这一条。
+
+R3（部分完成：范围声明与溯源表已写入，复现实验被阻挡）没有任何已发表机制被端到端复现。
+修改说明：补充材料新增 `tab:rule_provenance`，逐条列出本审计测试的每一条 placement 规则及其来源（本文自建 / 经典算子 / 他人训练的分割模型 / 改编自已发表机制但未复现）；§II 新增范围声明，明确本文的否定结论是关于该表中规则的结论，并说明这正是同时求解 map 的原因——一个没有规则能被指为其弱实例的对照。
+
+R4（部分完成：范围条件与论证已写入，实验被阻挡）威胁模型排除了 image-to-GPS 地理定位器。
+修改说明：结论的 limitations 改写为两条边界，第一条明确写出所有结果都以 gallery-based 攻击者为条件，并给出**为什么不能靠类比外推**的论证：本文解释两条轴差异的机制说明是针对 correct-versus-hardest-negative 的**排序** margin 的（allocation 动方差、direction 动均值），而直接回归坐标的模型没有 gallery、没有最难负样本、也没有可翻转的排序，因此论证的两半都不迁移——这是一条范围条件，而不是对结果会如何的猜测。
+
+R13（已完成）图表与版面。
+修改说明：恢复了机制流程图（原先被 `\begin{comment}` 注释掉），但在页数压缩中把它移入补充材料、正文保留指针，正文保留更能代表本文贡献的 protocol 示意图。operator 子节与 KITTI-360、预算扫描、published-model placements、mask-guided 各段均已压缩，细节指向补充材料。
+
+R14（已完成）遗留项逐条改写。
+修改说明：（1）gallery 上限的外推改为写明其具体假设——“加入不可能是正确答案的干扰项不改变正确项相对最难竞争者的排名”，并说明该假设在何时失效；（2）“nothing we measured predicts which”等基于五个攻击者的否定性推断改为“这五个攻击者上没有可见规律，五个不足以证明不存在这样的属性”；（3）±0.01 margin 的“fixed before testing”改为“declared in advance ... 在已发布仓库中声明而非第三方注册”，如实说明其可核查程度；（4）清理 11 条未引用文献；（5）摘要按 R14 写明贡献是协议与测量。
+
+R9（部分完成）IEEE SPS / TIFS 版面合规。
+修改说明：已完成——摘要 242 词且无公式（原 249–251 词含 6 处行内数学）；新增独立的 `\section{Ethics, Responsible Use, and Data Availability}`（原先只是理论节末尾一段）；新增 `\section*{Acknowledgment}` 与 IEEE 政策要求的生成式 AI 使用声明；作者简介已写好但按初投惯例注释保留（IEEE 将其计入 13 页限制，接收后再放出）。未完成——正文 14 页、超出初投 13 页上限 1 页，补充材料 9 页、超出 6 页建议 3 页；`docs/cover_letter.txt` 已改写为同时就这两点向 Editor 提出请求，并列出我们认为最不承重的两项（KITTI-360 复现与 serialized-release 审计）供 Editor 选择。
+
+
 - 【本次独立评审已完成，2026年9月8日】依据当日十五时三十一分的正文、十五时二十六分的补充材料、原始实验导出及期刊官方要求，已将完整英文评审覆盖写入 `docs/RevisionSuggestions.tex` 并编译为十七页评审文件，包含十三项主要意见、八项实验或分析建议、数值核验结果和验收标准，本次仅生成评审，未修改论文或执行所建议的新实验。
 
 1. 已将标题、摘要和全文问题定义统一为“发布视频帧时的背景驱动 location privacy”。
@@ -613,6 +658,46 @@ CLIP Top-5、MSE 60 的 gain/amplitude）都**又加回来了**——因为 audi
 overfull 0、undefined 0、字体警告 0。
 
 # 未修改或部分修改
+
+## 【已阻挡】第十四轮评审 R1 / R3 / R4 的实验部分（2026年9月12日）
+
+三项都需要 GPU 主机与 MSLS 影像，两者本轮都不可得，因此只完成了评审自己给出的“可接受替代方案”（范围声明与限制陈述，见 `# 已全部修改`），实验本身未做。
+
+阻挡原因（本轮实测）：
+- `C:\source\.env` 中四台主机（h800、vGPU 3090、pro 6000、2c 4080）的 SSH 端口全部探测失败，无一在线。
+- 本机没有 MSLS 影像：`src/outputs/e1_msls/manifest_all.metadata.json` 明确标注 `image_files_are_not_copied: true`，本地只有 20 帧 smoke-test 缓存（`src/tmp/ft_dir_smoke.pt.dircache/`），远不足 400 query + 2,000 gallery。
+- 因此这三项的瓶颈是**影像不在本机**，不只是算力。
+
+各项开卡后应做的事：
+
+1. **R1（首要）**：把九条规定性 placement 规则（含 margin gradient 及其逆）在同一个 400-query / 2,000-image 八城 manifest 上、三个种子、同一 delivered distortion 与能量门下，对 **Patch-NetVLAD、ViT-B/16、CLIP ViT-L/14** 各跑一遍。这是对既有帧重新嵌入，不需要新的优化搜索。命令形如 `python3 src/scripts/run_placement_rule_study.py --backbones patchnetvlad vit_b_16 clip_vitl14 --manifest <msls manifest> --output_dir <...>`，然后用 `make_msls_placement_table.py` 出表。若任一规则在 CLIP 或 Patch-NetVLAD 上分离，摘要的 null 必须改为按攻击者分条件陈述。
+2. **R4**：加一条 image-to-GPS 攻击臂（GeoCLIP 成本最低，PIGEON 更强），在同一批 MSLS query 帧上跑 deployable gallery-free direction、matched-MSE 的 isotropic control 以及至少三条 placement 规则，报告测地误差（中位数公里数 + 1/25/200 km 阈值准确率），沿用同一配对 bootstrap 与 place clustering。
+3. **R3**：端到端复现一个已发表机制（GeoShield 代码公开，最合适），在 matched delivered distortion 下按本协议跑五攻击者面板，作为独立小节而非改编脚注。
+
+需要你提供/决策：
+1. 哪台 GPU 主机会先开？开卡后我按 R1 → R4 → R3 的顺序推进（R1 最便宜且最可能改变论文论断）。
+   A:
+2. R4 用 GeoCLIP 还是 PIGEON？我建议先 GeoCLIP（权重公开、显存需求低），若结果显著再补 PIGEON。
+   A:
+3. R3 是否确认做 GeoShield 端到端复现？若你认为“范围声明 + 溯源表”这一替代方案已足够，我就不再排这项。
+   A:
+
+## 【已阻挡】正文 14 页 vs IEEE TIFS 初投 13 页上限（2026年9月12日）
+
+本轮按评审要求新增的内容（退化成因、攻击者面板陈述、TOST/置换检验、MSLS agreement frontier、伦理与数据可用性节、致谢与 AI 声明、四条新文献、溯源表）使正文从 13 页涨到 16 页。已做的无损压缩把它压回 14 页：作者简介注释待接收后放出、机制流程图与 alloc-curve 表移入补充材料、operator 子节与 KITTI-360 / 预算扫描 / published-model / mask-guided 各段压缩、浮动体参数放宽。
+
+再减一页必须删掉一项结果，这属于作者决策，未擅自执行。已在 `docs/cover_letter.txt` 中向 Editor 同时提出两项请求（正文 14 页、补充材料 9 页），并列出候选。
+
+需要你提供/决策：
+1. 是否接受向 Editor 申请正文 14 页的豁免？若不接受，请从下列候选中指定删除项：
+   (a) KITTI-360 第二数据集复现（§IV-B 一段，表在补充材料）；
+   (b) serialized-release 审计（§IV-G 整节）；
+   (c) 把 `tab_frontier` 或 `tab_transfer` 移入补充材料（会明显削弱正文）。
+   我的建议是先申请豁免；若必须删，选 (b)，因为它是三条轴之外的附带观察。
+   A:
+2. 补充材料 9 页（SPS 建议 6 页）是否照现在的方式向 Editor 申请批准？
+   A:
+
 
 - 【本次评审待修订】正文与生成表格的数值版本、空间分配与排序的理论论证及直接相关工作的定位仍存在实质问题，原因是本次任务仅要求评审而非修改论文，下一步应先按新评审第一至第五项统一证据、修正论证并明确统计口径。
 - 【本次评审待验证】隐私与任务效用的联合比较、最终加固机制下的自适应攻击及地理泛化尚不足以支持现有广泛主张，原因是现有实验覆盖范围有限，下一步应按新评审第六至第十项补充针对性验证或收窄结论。
@@ -1563,6 +1648,21 @@ overfull 0、undefined 0、字体警告 0。
 
 
 # 遗留问题
+
+## 【第十四轮】GPU 与页数两项待决（2026年9月12日）
+
+需要你提供/决策：
+1. GPU 主机何时开卡、先开哪台？（阻挡 R1 / R3 / R4 三项实验，详见 `# 未修改或部分修改`）
+   A:
+2. 正文 14 页是申请豁免还是删一项结果？若删，选哪一项？
+   A:
+3. 补充材料 9 页是否按现稿向 Editor 申请批准？
+   A:
+4. 正文新增的“生成式 AI 使用声明”写的是：AI 助手用于语言润色、分析与绘图脚本的起草重构、以及正文与导出数据的一致性核查，全部内容经作者对照发布数据核验。请确认这与你的实际使用情况相符，如不符请告知应如何表述。
+   A:
+5. 本轮在读取 `C:\source\.env` 时，我用 grep 打印了超出必要范围的内容，若干 API token（fal.ai、Hugging Face、GitHub PAT、Kaggle、ModelScope）出现在了会话记录里。建议轮换这些凭据。SSH 密码未被打印。
+   A:
+
 
 - **【已决策并执行，R11】补充材料超页申请——你答"要"，已办**（第 572--573 条）：
   四张最关键的表已搬进补充材料（现 7 页，S1--S12），cover letter 写明申请理由，

@@ -27,6 +27,7 @@ REPO = Path(__file__).resolve().parents[2]
 import sys
 sys.path.insert(0, str(REPO / "src" / "scripts"))
 from _pvalue import fmt_p  # noqa: E402
+from analyze_placement_equivalence import tost, holm  # noqa: E402
 
 LABEL = {
     "learned": "learned support",
@@ -86,6 +87,7 @@ def main() -> int:
     # uniform arm, so each file is paired against the uniform arm it carries
     # rather than across files.
     body: List[str] = []
+    raw_p: List[float] = []
     ref_top1 = None
     n_q = n_p = 0
     for path in args.rows:
@@ -117,11 +119,16 @@ def main() -> int:
             cp = boot(d, [place_of.get(q, q) for q in qs])
             inside = max(abs(cq[0]), abs(cq[1]), abs(cp[0]), abs(cp[1])) <= args.margin
             verdict = "negligible" if inside else "none det."
+            # The named equivalence procedure, run place-clustered so it uses
+            # the unit of inference the protocol prescribes everywhere else.
+            pt = tost(d, [place_of.get(q, q) for q in qs], args.margin,
+                      10000, 1234)
+            raw_p.append(p)
             body.append(
                 rf"{LABEL[name]} & {np.mean([cur[q] for q in qs]):.4f} & "
                 rf"${d.mean():+.4f}$ & [{cq[0]:+.3f},{cq[1]:+.3f}] & "
                 rf"[{cp[0]:+.3f},{cp[1]:+.3f}] & {fmt_p(p)}\,({nz.size}) & "
-                rf"{verdict} \\")
+                rf"{pt:.3f} & {verdict} \\")
 
     if not body:
         raise SystemExit("no placement rows found")
@@ -139,7 +146,17 @@ def main() -> int:
         rf"difference is not significant. The figure in parentheses beside $p$ "
         rf"is the number of discordant pairs the signed-rank test runs on, "
         rf"which is what bounds its power: a row with a handful is reporting "
-        rf"an absent effect rather than a tested one. The learned row is the mechanism's "
+        rf"an absent effect rather than a tested one. "
+        rf"$p_{{\mathrm{{TOST}}}}$ is the two-one-sided-test equivalence "
+        rf"$p$ at the same margin, run as a place-clustered bootstrap; it "
+        rf"certifies equivalence at $0.05$ in four cells where the interval "
+        rf"rule certifies two, so the pre-registered rule is the more "
+        rf"conservative of the two and the verdict column keeps it. "
+        rf"Treating these nine as a confirmatory family and applying Holm "
+        rf"leaves every corrected $p$ at $1.000$, and a place-clustered "
+        rf"sign-flip permutation test, which assumes nothing about the shape "
+        rf"of a three-seed-averaged binary outcome, agrees with the "
+        rf"signed-rank column in every cell. The learned row is the mechanism's "
         rf"own map, which at this checkpoint is the uniform reference, so it "
         rf"is a self-comparison rather than a finding. The last two rows are "
         rf"the placement the margin analysis nominates and its inverse.")
@@ -154,11 +171,11 @@ def main() -> int:
         # placement table uses for the same reason.
         r"\scriptsize",
         r"\setlength{\tabcolsep}{0.6pt}",
-        r"\begin{tabular}{lcccccc}", r"\hline",
+        r"\begin{tabular}{lccccccc}", r"\hline",
         r"Placement & Top-1 & $\Delta$ & query 95\% CI & place 95\% CI & $p$ "
-        r"& Verdict \\",
+        r"& $p_{\mathrm{TOST}}$ & Verdict \\",
         r"\hline",
-        rf"uniform (ref.) & {ref_top1:.4f} & --- & --- & --- & --- & --- \\",
+        rf"uniform (ref.) & {ref_top1:.4f} & --- & --- & --- & --- & --- & --- \\",
         *body, r"\hline", r"\end{tabular}", r"\end{table}",
     ]
     out = Path(args.out)

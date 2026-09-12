@@ -1,0 +1,177 @@
+{
+  "n_frames": 400,
+  "tolerances": [
+    0.05,
+    0.016
+  ],
+  "cells": [
+    {
+      "target_mse": 5.0,
+      "condition": "isotropic",
+      "agreement": 0.869122439441645,
+      "drop": 0.13087756055835512,
+      "ci": [
+        0.11787181865683281,
+        0.14427984901419638
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 5.0,
+      "condition": "direction",
+      "agreement": 0.7611164900598665,
+      "drop": 0.23888350994013352,
+      "ci": [
+        0.22054464483836006,
+        0.25692361472098907
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 5.0,
+      "condition": "hardened_direction",
+      "agreement": 0.7155049897236856,
+      "drop": 0.28449501027631435,
+      "ci": [
+        0.26520949508645264,
+        0.3036146947925996
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 15.68,
+      "condition": "isotropic",
+      "agreement": 0.8029469255443382,
+      "drop": 0.19705307445566178,
+      "ci": [
+        0.18102679185540396,
+        0.2134133429015463
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 15.68,
+      "condition": "direction",
+      "agreement": 0.6350857736878965,
+      "drop": 0.36491422631210346,
+      "ci": [
+        0.34468414753643656,
+        0.38480888365725135
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 15.68,
+      "condition": "hardened_direction",
+      "agreement": 0.5335085353100867,
+      "drop": 0.4664914646899133,
+      "ci": [
+        0.444659693451864,
+        0.4883534906233919
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 60.0,
+      "condition": "isotropic",
+      "agreement": 0.7058370176129329,
+      "drop": 0.2941629823870672,
+      "ci": [
+        0.2752051718222276,
+        0.3134468995315199
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 60.0,
+      "condition": "direction",
+      "agreement": 0.48088011531841135,
+      "drop": 0.5191198846815887,
+      "ci": [
+        0.5008222918656782,
+        0.5370093609494301
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 60.0,
+      "condition": "hardened_direction",
+      "agreement": 0.3412548050414754,
+      "drop": 0.6587451949585247,
+      "ci": [
+        0.6430882298922845,
+        0.6735151632413082
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 241.5,
+      "condition": "isotropic",
+      "agreement": 0.5695192853867712,
+      "drop": 0.4304807146132288,
+      "ci": [
+        0.41027704948482874,
+        0.45064494174492836
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 241.5,
+      "condition": "direction",
+      "agreement": 0.39171583150734895,
+      "drop": 0.608284168492651,
+      "ci": [
+        0.5917677131553906,
+        0.6240655909695951
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    },
+    {
+      "target_mse": 241.5,
+      "condition": "hardened_direction",
+      "agreement": 0.29929089549933985,
+      "drop": 0.70070910450066,
+      "ci": [
+        0.6850030346057713,
+        0.7155148156001854
+      ],
+      "verdicts": {
+        "0.05": "beyond",
+        "0.016": "beyond"
+      }
+    }
+  ]
+}

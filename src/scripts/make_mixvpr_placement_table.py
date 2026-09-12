@@ -33,7 +33,8 @@ import numpy as np
 from scipy.stats import wilcoxon
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _pvalue import fmt_p  # noqa: E402
+from _pvalue import fmt_p
+from analyze_placement_equivalence import tost  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -82,6 +83,8 @@ def main() -> int:
                                 / "per_query.csv"))
     ap.add_argument("--export-dir", dest="export_dir",
                     default=str(REPO / "src" / "exports" / "placement_mixvpr_rows"))
+    ap.add_argument("--places",
+                    default=str(REPO / "src/exports/tifs_d6/d6_r18_plain.csv"))
     ap.add_argument("--output",
                     default=str(REPO / "paper" / "generated"
                                 / "tab_placement_mixvpr.tex"))
@@ -99,6 +102,10 @@ def main() -> int:
     rows = list(csv.DictReader(export.open(newline="", encoding="utf-8")))
     seeds = sorted({r["seed"] for r in rows})
     ref = per_query(rows, "uniform")
+    place_of = {}
+    with open(args.places, newline="", encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            place_of[r["query_id"]] = r["correct_place"]
     rng = np.random.default_rng(BOOT_SEED)
 
     lines = [
@@ -116,11 +123,17 @@ def main() -> int:
         r"``none det.'' when it does not but the difference is not",
         r"significant. The figure in parentheses beside $p$ is the number of",
         r"discordant pairs the signed-rank test runs on, which is what bounds",
-        r"its power.}",
+        r"its power. $p_{\mathrm{TOST}}$ is the two-one-sided-test",
+        r"equivalence $p$ at the same margin, run as a place-clustered",
+        r"bootstrap. Treating these seven as a confirmatory family and",
+        r"applying Holm takes the score-gradient cell, the only one nominally",
+        r"significant at the seed level, to $0.397$; a place-clustered",
+        r"sign-flip permutation test puts it at $0.124$ uncorrected and",
+        r"$0.871$ corrected, so it is settled rather than borderline.}",
         r"\label{tab:placement_mixvpr}", r"\footnotesize",
         r"\setlength{\tabcolsep}{1.2pt}",
-        r"\begin{tabular}{lccccc}", r"\hline",
-        r"Placement & Top-1 & $\Delta$ & 95\% CI & $p$ & Verdict \\",
+        r"\begin{tabular}{lcccccc}", r"\hline",
+        r"Placement & Top-1 & $\Delta$ & 95\% CI & $p$ & $p_{\mathrm{TOST}}$ & Verdict \\",
         r"\hline",
     ]
     stats = []
@@ -131,7 +144,7 @@ def main() -> int:
         shared = sorted(set(arm) & set(ref))
         top1 = float(np.mean([arm[q] for q in shared]))
         if key == "uniform":
-            lines.append(rf"{label:<20} & {top1:.4f} & --- & --- & --- & --- \\")
+            lines.append(rf"{label:<20} & {top1:.4f} & --- & --- & --- & --- & --- \\")
             stats.append({"placement": key, "top1": top1})
             continue
         diff = np.array([arm[q] - ref[q] for q in shared])
@@ -142,12 +155,15 @@ def main() -> int:
         pval = float(wilcoxon(nonzero).pvalue) if len(nonzero) else 1.0
         verdict = ("negligible" if (lo > -MARGIN and hi < MARGIN)
                    else ("none det." if pval >= 0.05 else "significant"))
+        ptost = tost(diff, [place_of.get(q, q) for q in shared], MARGIN,
+                     BOOT_DRAWS, BOOT_SEED)
         lines.append(
             rf"{label:<20} & {top1:.4f} & ${diff.mean():+.4f}$ & "
             rf"$[{lo:+.3f},{hi:+.3f}]$ & {fmt_p(pval)}~({len(nonzero)}) & "
-            rf"{verdict} \\")
+            rf"{ptost:.3f} & {verdict} \\")
         stats.append({"placement": key, "top1": top1, "delta": float(diff.mean()),
-                      "ci": [lo, hi], "p": pval, "verdict": verdict})
+                      "ci": [lo, hi], "p": pval, "p_tost": ptost,
+                      "verdict": verdict})
     lines += [r"\hline", r"\end{tabular}", r"\end{table}", ""]
     Path(args.output).write_text("\n".join(lines), encoding="utf-8")
 
