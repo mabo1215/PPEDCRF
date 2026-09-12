@@ -1,5 +1,26 @@
 # 已全部修改
 
+- 【R1 实验已完成，结论已改写，2026年9月12日】vGPU 3090 上九个作业全部跑完（36,009 行、九个作业 exit=0、无告警），结果已拉回、成表、写进论文，**卡已关机**（端口 22766 已关闭，18:35 NZST）。正文仍为 13 页，888 条断言全绿。
+
+**这次实验推翻了论文原先的核心表述。** R1 的问题是：规定性 placement 规则只在 ResNet18 与 MixVPR 上量过，而 solved map 真正分离的两个攻击者（Patch-NetVLAD、CLIP）恰好一条规定性规则都没跑过。把九条规则原样扩到 Patch-NetVLAD、ViT-B/16、CLIP ViT-L/14（同 manifest、同 gallery、三个种子、同 delivered distortion 与能量门，只换读取帧的攻击者，属重新嵌入而非新搜索）之后：
+
+- **ViT-B/16：九条全不分离。CLIP ViT-L/14：九条全不分离。**
+- **Patch-NetVLAD：九条里四条分离**（族内 Holm 校正后 p<0.05）——
+  edge magnitude $-0.0550$ $[-0.085,-0.025]$、score gradient $-0.0492$ $[-0.072,-0.026]$、
+  margin gradient $-0.0308$ $[-0.055,-0.009]$，以及反方向的 anti-margin gradient $+0.0208$ $[+0.006,+0.036]$。
+
+所以「没有任何被提出的规则能买到东西」这句话只在**五个攻击者里的四个**上成立，第五个上有三条规则买到 0.031–0.055 Top-1。摘要、贡献列表、§IV-B、结论已全部按这个更准确也更不利的口径改写；§IV-B 的小节标题由「The Null Holds on Real Geographic Data」改为「Where the Null Holds, and Where It Does Not」，因为原标题现在是错的。
+
+两点比计数更重要，也已写进论文：
+（1）赢得最多的是 **edge magnitude**，而它也正是在另一个 benchmark 上预算超过操作点后唯一能击败 uniform 的规则——即「与图像边缘对齐」是唯一在两处都奏效的规定性策略，而它并不是敏感度图。
+（2）**margin gradient**（§IV-H 自己推导而非借来的那条）在这里分离，而它的逆显著更差——避开该分析所指认的像素反而损失隐私。这是该力学解释第一次拿到正面证据；此前它在两个攻击者上「最接近边界但没跨过」，现在读作效应真实但那两个攻击者分辨不出，而不是没有效应。
+（3）**说不清为什么是 Patch-NetVLAD**：它既非最强也非最弱，与 surrogate 共享 VGG16 trunk 而 CLIP 什么都不共享，可 solved map 走得最远的偏偏是 CLIP。攻击者强度、trunk 共享、solved-map 可达性三者都无法给这五个排序，论文如实报告这个依赖关系而不编造规律。
+
+新增 `src/scripts/make_placement_panel_table.py` 与 `paper/generated/tab_placement_panel.tex`（27 格，place-clustered 区间、族内 Holm、TOST），已 `\input` 进补充材料。
+
+为把新增内容塞回 13 页，又退役了 `croce2020reliable`（AutoAttack 标准化的是本文并未运行的攻击，Carlini 一条已承担评测方法学的定位），参考文献 42 → 41，并压缩了 KITTI-360、published-model placements、gallery sweep、clip pooling、伦理节等段落。
+
+
 - 【第十四轮补充：页数与参考文献已收敛，2026年9月12日】正文 **13 页**、补充材料 9 页，888 条断言全绿。
 
 R9 页数（已完成，原为【已阻挡】）：正文由 14 页压回 13 页，**未删除任何一项结果**。做法分三部分。
