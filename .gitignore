@@ -46,3 +46,7 @@ src/data/driving/test/
 synthetic_monitoring/
 
 src/third_party/*
+
+# Partial experiment pulls: the panel export is only complete when all nine
+# jobs have written 4,000 rows. A partial tree must never reach a table.
+src/exports/placement_panel/
