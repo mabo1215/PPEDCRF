@@ -1,5 +1,20 @@
 # 已全部修改
 
+- 【R3 结论：公开代码无法端到端复现，2026年9月12日】把 GeoShield 仓库（`thinwayliu/Geoshield`，AAAI 2026）clone 到 `src/third_party/` 后逐行核对，**其公开版本把 VLM 组件留成了空实现**：`describe_image_placeholder()` 的函数体是 `TODO: Implement your VLM API call here`，注释建议用户自行接入 GPT-4V / Claude / Gemini / LLaVA。
+
+这不是可以绕过的边角。该描述经 `ensemble_loss.set_geotext_truth(description)` 进入 `geo_loss`，而目标函数里这一项是**被减掉**的（`loss -= (text_loss + text_local_loss)`）——它正是让扰动在破坏地理线索的同时保住语义的那一项，也是论文三个命名模块之一「exposure element identification」所依赖的输入。没有 VLM 就不是在跑 GeoShield，而是在跑另一个目标函数。
+
+因此 R3 的「端到端复现一个已发表机制」在不自备 VLM API 预算的前提下**对任何人都不可得**，这本身是一条可报告的可复现性观察，且正落在本文（一篇审计该家族的论文）的射程内。论文 §IV-B 的措辞已相应改写：原先写成「我们选择改编而非复现」，现在写明公开实现 stub 掉了其目标函数所依赖的 VLM 项，所以改编是被迫的而非偏好。已保留原有的 mask-guided 改编臂不变。
+
+未采取的替代方案与理由：接一个本地 VLM（BLIP/LLaVA）填补 stub 会改变目标函数，跑出来的东西不能诚实地标注为 GeoShield，所以没有做。
+
+- 【R4 进行中】GeoCLIP 地理定位臂已在 vGPU 3090 上起跑（9 个作业 = 3 seed × 3 成本档，`src/scripts/launch_r16_geolocator_vgpu3090.sh`）。
+
+**先跑了基线闸门**：GeoCLIP 在 400 张 MSLS query 帧（192×320）上 25 km 内 54.5%、200 km 内 69.0%、中位误差 18.4 km，1 km 内仅 6.0%。攻击者有真实能力、benchmark 可被推动，所以这里出现 null 会是 null 而不是 floor（与 KITTI-360 用的是同一条闸门）。主阈值取 **25 km**，1 km 因接近地板只报不承重。
+
+闸门值得跑：三条 smoke 数据里 GeoCLIP 把一张 Boston 帧定位到了巴拉圭（误差 7654 km），而 edge placement 在那条 query 上把误差「改善」到 1.09 km——在攻击者本来就失败的 query 上，防御会拿到它没挣到的功劳，也会被扣上莫须有的损害。因此分析将分别报告全部 query 与 clean 定位正确子集上的配对对比。
+
+
 - 【R1 结果的下游一致性清查已完成，2026年9月12日】结果变了之后把整篇论文里依赖旧结论的地方逐条查了一遍，查出一处**实质性错误**并改正。
 
 **错误：§IV-A 的 98 组比较写成覆盖「both benchmarks」，实际只在 mined proxy 上跑过。** 核对 `src/exports/placement_study/` 与 `..._maskbacked/` 的 run_id，两个 checkpoint 的 49 组全部是 `proxy12/*`（六个 backbone，12 对）与 `proxy50_resnet18`（50 对），没有任何一组在 MSLS 上。原文声称的 MSLS 覆盖不存在。这一处特别值得记录，因为**正是这句话让 R1 的缺口看不见**：如果原文写的是「只在 proxy 上」，那么「MSLS × Patch-NetVLAD 这一格没跑过」本来一眼就能看出来。已改为如实描述两个 proxy 规模。
