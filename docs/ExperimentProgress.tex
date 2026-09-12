@@ -17,11 +17,12 @@
 \newcommand{\running}{\textcolor{RunOrange}{\textbf{Running}}}
 \newcommand{\pending}{\textcolor{PendRed}{\textbf{Pending}}}
 \newcommand{\blocked}{\textcolor{PendRed}{\textbf{Blocked}}}
+\newcommand{\bounded}{\textcolor{RunOrange}{\textbf{Bounded}}}
 \newcommand{\authors}{\textcolor{RunOrange}{\textbf{Authors}}}
 
 \title{\textbf{Experiment Progress and Next-Step Plan}}
 \author{}
-\date{10 September 2026 --- IEEE TIFS, tenth independent review cycle.
+\date{13 September 2026 --- IEEE TIFS, fourteenth independent review cycle.
 This file carries \emph{only} open, running and not-yet-started work;
 completed items are removed once recorded in \texttt{docs/progress.md}.
 Earlier editions are in \texttt{docs/archived/}.}
@@ -31,109 +32,83 @@ Earlier editions are in \texttt{docs/archived/}.}
 
 \section*{Where This Cycle Stands}
 
-The active review is the tenth independent review in
-\texttt{docs/RevisionSuggestions.tex} (10 September 2026, IEEE TIFS, verdict
-\emph{minor revision}), findings R1--R7. \textbf{All seven are closed.} The cycle's substance is that the paper was
-reporting equivalence verdicts from point estimates while its own tables read
-intervals, and that the one table carrying the central negative claim had no
-intervals at all and was asserted by no checker. Both are now fixed, and
-fixing the second changed what the table says: three pooled placement cells
-exclude zero, all three on the side that costs privacy, where the caption had
-said none was significant.
+The active review is the fourteenth independent review in
+\texttt{docs/RevisionSuggestions.tex} (12 September 2026, IEEE TIFS, verdict
+\emph{major revision}), findings R1--R14: five Major, seven Moderate, two
+Minor. \textbf{Thirteen are closed and one --- R3 --- is closed only in the
+bounded form the review itself offers}, because the published mechanism it
+asks for cannot be run end to end by anyone. The cycle's substance is that two
+of the review's Major findings changed what the paper claims rather than how
+it says it, and both changed it against the authors: closing the attacker
+panel broke the central null on one attacker of five, and the geolocator arm
+produced a result the paper's own mechanistic account does not predict.
 
-\paragraph{Compute state.} \textbf{Nothing is running; the PRO~6000 was shut
-down as soon as its rows were home, and its SSH port refuses connections.}
-R1 took about an hour of card time on each attacker: 57{,}024 rows over 384
-queries, three conditions, four clip lengths and four poolings, against
-ResNet18 and again against MixVPR, across 40 concurrent workers. Forty rather than one because the job
-is neither GPU-memory- nor CPU-bound but limited by how few kernels a single
-worker keeps in flight --- one worker left the card at 30\% of its memory and
-the host at 12\% of its cores. Three things cost wall clock and are worth
-recording: 16 workers each parsing the 311\,MB manifest and building a
-1.5\,GB gallery tensor at once thrashed the machine for twelve minutes with no
-output, which per-shard manifests and staggered starts fixed; the neighbouring
-frames a clip needs were absent from every staged copy of MSLS, because each
-host holds only the images its existing manifests reference; and ten of the
-forty workers died during startup and had to be relaunched, which the runner's
-resume made cheap.
+\paragraph{Compute state.} \textbf{Nothing is running; the vGPU~3090 was shut
+down once the geolocator rows were home and verified.} The two arms that
+needed a card are both finished. R1 was a re-embedding rather than a search
+--- nine prescribed rules against three attackers that had never read them,
+three seeds, same manifest, gallery, delivered distortion and energy gate ---
+\textbf{36{,}000 rows over nine jobs}, all exiting zero. R4 was the geolocator
+arm, \textbf{6{,}400 rows} after a defect described in Table~\ref{tab:tifs14-built}
+forced the cheap arm to be rerun from scratch. The work done \emph{this}
+sitting needed no GPU at all: the operator table R8 and R13 both ask for
+recomputes from export trees already committed to the repository.
 
 \paragraph{Document state.} \texttt{main.pdf} \textbf{13 pages} against the
-13-page TIFS ceiling; abstract \textbf{243} words counting each math
-expression as one word (window 150--250);
-\texttt{supplementary.pdf} \textbf{6 pages}, the SPS ceiling without
-Editor-in-Chief approval; \texttt{titlepage.pdf} 1 page; the extended evidence
-report, released with the code and not submitted, 14 pages. All four build with
-\textbf{0 undefined references, 0 undefined citations and 0 overfull boxes}.
-Table~I gained two interval columns and the manuscript gained a paragraph
-naming purification as the untested attack; both were paid for out of prose ---
-the adaptive-attacker, operator, frontier, mask-guided and preprocessing
-sections lost their restatements, and the paragraph on which queries an
-isotropic budget moves went to the extended report. The page returned to 13
-only on the eighth build, which is what a document at its ceiling costs.
+13-page TIFS ceiling; abstract \textbf{245} words with \textbf{no math mode},
+inside the SPS 150--250 window and its prohibition on equations;
+\texttt{supplementary.pdf} \textbf{10 pages} against a 6-page guidance that is
+a recommendation rather than a limit, with the Editor-in-Chief request and its
+reasoning written into \texttt{docs/cover\_letter.txt};
+\texttt{titlepage.pdf} 1 page; the extended evidence report, released with the
+code and not submitted, 15 pages. All four build with \textbf{0 undefined
+references, 0 undefined citations, 0 overfull boxes and 0 font-shape
+warnings}. The abstract had drifted to \textbf{256} words when the geolocator
+sentence went in --- over a hard venue cap, in a document nobody rebuilds the
+word count for --- and six generated tables were running past the column by 9
+to 44\,pt. Both classes are now checked by
+\texttt{src/scripts/check\_build\_health.py} rather than by eye.
 
-\paragraph{Verification state.} \textbf{780 claims verify against raw exports;
-0 mismatched, 0 unverifiable, 0 missing from their source file}, up from 395.
-The additions are Table~I and Table~II, which no checker had been asserting
---- the two tables carrying the paper's central allocation results. Both were
-correct, but registering Table~I fixed its \emph{definition} as well as its
-values: its $\Delta$ is a macro-average over the seven (benchmark, backbone)
-cells, not the pooled row average, which weights the six-backbone proxy six
-times as heavily as the 50-pair one and gives visibly different numbers. The
-placement rows now sit in \texttt{src/exports/} so the claim recomputes from a
-committed tree, and every cell of the clip-pooling table is registered too.
-Both tables' intervals now draw from a stream seeded by the cell's own name, so
-an interval reproduces on its own rather than only as part of the sequence of
-draws that produced its table --- the first version of each disagreed with its
-recomputation in the third decimal for exactly that reason.
+\paragraph{Verification state.} \textbf{902 claims verify against raw exports;
+0 mismatched, 0 unverifiable.} The three added this cycle are the operator
+arm's, re-anchored from the extended report to the supplement, plus the four
+released-amplitude figures R7's own fix introduced --- which had replaced one
+wrong number with four unregistered ones, so the sentence written to reconcile
+a cross-document contradiction was itself unchecked for a cycle. All four are
+correct: they are means over both attackers' rows, which is why they differ in
+the first decimal from the per-attacker figures the manuscript quotes beside
+them. \textbf{24 registered values are no longer printed anywhere.} That count
+is not a defect and not noise to be silenced: every one verifies, and each was
+compressed out of prose in an earlier cycle while its table twin still prints
+it. It is kept visible because the alternative --- deleting a true measurement
+from the registry when the page budget squeezes it out of a sentence --- is
+the wrong direction.
 
-\paragraph{Two released exports had been appended to twice.} Registering the
-tolerance calibration's derived statistics --- the gaps between six published
-segmenters, which is what defends the declared $0.05$ --- failed on the first
-run: recomputing from the released rows gave $0.0283/0.0339/0.1337$ where the
-supplement says $0.0257/0.0319/0.1255$. The paper was right and the file was
-wrong. The native-resolution rows carried \textbf{2{,}282 rows for 1{,}200
-(model, image) keys}: a re-run had appended rather than replaced, and one
-model's second pass stopped at 82 of 200 images, so its pooled ratio was skewed
-by partial double counting. The exporter's own analysis keeps the last row per
-key, which is why the summary it shipped was unaffected and the defect stayed
-invisible to every check. A scan of every released export under its full key
-found the same in the frontier's MSE-5.0 segmentation rows, and in the
-artifact's copy of them. All three are now one row per record, the artifact's
-manifest is regenerated, and the auditor deduplicates the way the exporter
-does. \emph{The lesson is narrow and worth keeping:} a summary computed by the
-same script that wrote the rows cannot detect that the rows were written
-twice. 76 of the manuscript's 192 distinct three- and four-decimal
-literals still carry no claim, most of them interval endpoints quoted beside a
-covered point estimate; the artifact README now says so in those words instead
-of asserting complete table coverage.
+\paragraph{A checker that could not tell a drop from a table.} The claim
+auditor asks whether a claim's printed string still appears in the document
+meant to print it, and it read that document literally, without following
+\verb|\input|. Every value reaching the page through a generated table
+therefore answered ``no''. The genuine drops were indistinguishable from the
+false ones, which is the single thing this check exists to prevent. It now
+splices one level of \verb|\input| before looking.
 
-\paragraph{A new check.} \texttt{check\_cross\_document\_refs.py} resolves
-every literal \texttt{Table~S$n$} / \texttt{Fig.~S$n$} in the manuscript
-against the supplement's actual float order, following \verb|\input| into the
-generated tables. This is the class of defect R2 found: LaTeX cannot see a
-reference into a separately compiled document, so the build reported zero
-undefined references while the manuscript pointed at the wrong table. The
-manuscript now carries no literal S-number at all, and the check fails loudly
-if one is reintroduced and goes stale.
+\paragraph{A pointer to a table that did not exist.} \S III-E of the
+manuscript said its three operator results were ``tabulated per operator in
+the Supplementary Material''. The supplement carried the operator
+\emph{definitions} and no results table: the sentence had been true of the
+extended report, which is not submitted, and stayed on the page when the
+tables moved. A referee checking the claim that the null survives every
+operator would have found a sentence and nowhere to check it. The table now
+exists, built from the committed operator exports, and it
+reproduces every cell the claim registry already held --- which is how a
+missing table went eight cycles without being noticed as missing.
 
-\paragraph{The reviewer bundle was a round behind.} It shipped rows for none of
-the families added in the last two cycles, while its own README promised that
-every unscripted family's raw rows travel with it. Sixteen export trees were
-added --- both clip runs, both purification runs, the clip manifest, the ViT
-transfer, the KITTI-360 replication, the segmenter spread, the MixVPR
-placement rows and the second-seed frontier and release-boundary trees ---
-taking the manifest from 644 files to \textbf{743}. The clip and purification
-trees are copied from the committed exports rather than the raw run
-directories on purpose: the raw clip shards carry rows a relaunched shard
-recomputed, and the raw purification file carries an internal column the
-export drops, so the released form is the one the tables and the auditor read.
+\section*{Table 1: Open Work Against the Fourteenth Review}
 
-\section*{Table 1: Open Work Against the Tenth Review}
-
-\begin{longtable}{@{}p{0.05\linewidth}p{0.20\linewidth}p{0.11\linewidth}p{0.56\linewidth}@{}}
-\caption{All seven are closed. The three that changed what the paper claims
-are R1, R2 and R3.}
-\label{tab:tifs10-open}\\
+\begin{longtable}{@{}p{0.05\linewidth}p{0.19\linewidth}p{0.11\linewidth}p{0.57\linewidth}@{}}
+\caption{All fourteen findings. R1 and R4 changed what the paper claims; R3 is
+closed in the bounded form the review offers, not the strong one.}
+\label{tab:tifs14-open}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
 \midrule
@@ -143,79 +118,160 @@ are R1, R2 and R3.}
 \midrule
 \endhead
 
-R1 & A frame-level defense for a video-level threat & \done & The
-clip-pooling attacker the extended report already ran against allocation, now
-run against the direction arm it never covered. Pooling helps the attacker on
-every arm and recovers none of the frame-level result: mean pooling takes the
-direction from Top-1 $0.037$ to $0.057$ while its control goes
-$0.206\to0.234$, so the contrast \emph{widens} to $-0.177$ $[-0.234,-0.122]$
-place-clustered; the strongest pooling leaves the direction at $0.063$ against
-a control at $0.222$. Twenty-seven cells, every one significant on the
-clustered unit. Clips come from MSLS's own sequence metadata, so no new
-imagery was needed --- but the neighbouring frames themselves had to be
-shipped, since every staged copy of the dataset holds only what its manifests
-already reference. Repeated against MixVPR on the same manifests, budgets and
-seeds: the direction still separates from zero under every pooling, $-0.035$
-to $-0.086$, so a clip does not undo this axis on either attacker. \\
+R1 & Two axes read by different attacker panels & \done & The finding the
+review called its strongest counter-argument, and it was right. The two
+attackers a solved map separates on --- Patch-NetVLAD and CLIP --- were
+exactly the two no prescribed rule had ever faced. Extending the same nine
+rules to Patch-NetVLAD, ViT-B/16 and CLIP ViT-L/14 broke the null on one of
+them: \textbf{four of nine separate on Patch-NetVLAD} (edge magnitude
+$-0.0550$, score gradient $-0.0492$, margin gradient $-0.0308$, and the other
+way, anti-margin gradient $+0.0208$), none on the ViT or CLIP. Two facts
+outrank the count and are in the paper: the largest winner is \emph{edge
+magnitude}, the same rule that beats uniform once the budget passes the
+operating point, so edge alignment is the one prescribed strategy that appears
+wherever allocation works and it is not a sensitivity map; and the
+\emph{margin gradient}, the rule this paper derives rather than borrows,
+separates while its inverse is significantly worse --- the account's first
+confirming case. Why Patch-NetVLAD we cannot say, and the paper says so.
+The five-attacker placement panel is now a supplementary table; Fig.~2 redrawn at five attackers; abstract, contributions,
+\S III-C and conclusion rewritten. \\
 \addlinespace
 
-R2 & Equivalence verdicts read off point estimates & \done & The declared rule
-reads intervals; the prose read point estimates, and both documents said one
-placement cell was the exception where the table beside them printed five. Two
-of seven cells meet the margin, one of those tautologically, and $\pm0.027$ is
-the smallest margin the data certify --- six times smaller than the direction
-effect, so the comparison survives and the wording changes. Place-clustering
-the allocation family widens intervals $0.90$--$1.09\times$ and changes no
-verdict, which closes for allocation the question the second dataset raised
-for direction. \\
+R2 & Abstract stated the null above what the intervals certify & \done &
+Rewritten as a bounded non-detection: three of nine non-degenerate cells
+certified at the declared margin, the rest undecided, and the certifying
+margin for all nine printed as $\pm0.027$. TOST columns added to both
+placement tables; the number of query clusters certifying $\pm0.01$ would take
+--- $1{,}261$ weak, $917$ strong, two to three times this corpus --- is
+printed, which turns a limitation into a design specification. \\
 \addlinespace
 
-R3 & Table~I had no intervals, and no checker asserted it & \done & Adding the
-intervals changed the table: three pooled cells exclude zero, all on the side
-that costs privacy, where the caption had said none was significant. Edge
-placement is positive in $7$ of $7$ (benchmark, backbone) cells. Registering
-the table also fixed its definition --- a macro-average over cells, not a
-pooled row average. \\
+R3 & No published mechanism run end to end & \bounded & Closed in the review's
+own bounded form, and the reason is itself reportable. GeoShield was cloned
+and read line by line: \textbf{its public release stubs the vision--language
+call its objective depends on}, leaving a \texttt{TODO} where the frame
+description is produced. That term is \emph{subtracted} in the loss, so it is
+what keeps the perturbation semantically faithful while it destroys geographic
+cues, and it feeds one of the method's three named modules. Without a VLM
+budget nobody reproduces GeoShield; they reproduce a different objective. So
+\S III-F now says the adaptation was \emph{forced} rather than preferred,
+where it used to read as a preference. A supplementary provenance table lists
+every rule with its origin, and \S II carries the scope statement. Not done:
+the reimplementation. Not attempted with a local VLM, because substituting one
+changes the objective and the result could not honestly be labelled GeoShield. \\
 \addlinespace
 
-R4--R5 & A stale literal and three taxonomies & \done & \S III-G said the
-operating point costs $0.110$ mIoU eight lines after Table~IV said $0.098$; the
-literal was left behind by a superseded frontier run. The direction's utility
-cost is now quoted from one execution in both documents rather than one each.
-The placement taxonomy reads the same in all five places that count it. \\
+R4 & Geolocators excluded from the threat model & \done & The arm ran, and it
+produced the one result this paper could not have predicted. \emph{Direction
+transfers; allocation does not.} On the 218 queries the clean attacker
+localises within 25\,km: isotropic $0.713$, direction $0.546$ ($-0.167$
+$[-0.224,-0.107]$), hardened $0.514$ ($-0.199$ $[-0.260,-0.137]$), Holm
+corrected; edge $+0.040$ and saliency $+0.023$, neither separating. The paper
+explains the axis asymmetry through a correct-versus-hardest-negative
+\emph{ranking} margin --- and a model emitting a coordinate has no gallery, no
+hardest negative and no rank to flip, so the manuscript had said in as many
+words that neither half of the argument transfers. The explanation does not
+transfer and the effect does. That is now stated as a fact about the finding
+and a limit on the explanation, not smoothed over. The geolocator table is in the supplement; the
+abstract's and conclusion's ``untested'' sentences are gone. \\
 \addlinespace
 
-R6 & Purification, the attack the fixed transforms do not bound & \done &
-Measured, and it is the one result this cycle that costs the paper something.
-The purifiers clean the frame ($36.18$\,dB $\to$ $39.1$--$42.3$) and recover
-much of the ranking: against a clean $0.2550$ the direction returns from
-$0.0367$ to $0.1683$, the hardened release from $0.0283$ to $0.1217$, and a
-purifier trained on the wrong release still recovers a quarter. The advantage
-over the control survives but more than halves, $-0.2083$ to $-0.0933$. The
-first purifier trained here learned the \emph{identity} --- its loss settled
-at exactly the value copying the input gives --- and its null would have been
-an artifact; the reconstruction check now gates the retrieval numbers. Against
-MixVPR the same attacker erases rather than halves: an advantage of $-0.0417$
-$[-0.083,-0.003]$ unpurified becomes $-0.0217$ $[-0.057,+0.012]$, an interval
-spanning zero. \\
+R5 & Uncorrected exploratory family, no equivalence test, unjustified test &
+\done & All four parts. The placement family is now confirmatory and Holm
+corrected within itself --- correction changes no verdict, which is worth more
+than if it had. TOST at the declared margin runs on every placement contrast.
+A place-clustered sign-flip permutation test, which assumes nothing about the
+shape of a three-seed-averaged binary outcome, agrees with the signed-rank
+column in every cell. And ``1,200 paired observations'' is corrected to the
+400 differences the declared unit actually produces, with the seed averaging
+stated in the same sentence so the two sections cannot be read apart. \\
 \addlinespace
 
-R7 & Presentation & \done & A sentence in the protocol section had lost its
-verb; a $p$ of $0.000$ is now a bound; one quantity is rounded one way; both
-supplement figures are vector. The recommended figure is \emph{deferred}: at
-13 of 13 pages it would have to replace Table~I, which this cycle just gave
-the intervals a referee needs. \\
+R6--R7 & A miscount, a mis-transcribed interval, two irreconcilable
+amplitudes & \done & Nine contrasts are reported as nine everywhere; the
+quoted interval is edge magnitude's $[-0.014,+0.025]$ with its unit named,
+where the old one took a lower bound from one column and an upper from
+another. The $49.30$-versus-$76$ contradiction was resolved by recomputing:
+the $76$ matched no row, and the four figures that replaced it are named by
+condition --- $12.2$ and $84.0$ at the operating point for uniform and edge
+placement, $48.7$ and $241.4$ at the large budget. Those four were unregistered
+until this sitting. \\
+\addlinespace
+
+R8 & Evidence deferred outside the submission & \done & The last dangling
+pointer is closed, and it was the worst kind: a claim of a table that did not
+exist (see above). The operator arm is now a supplementary table. Thirteen ``extended
+report'' pointers are down to eight, each naming what it defers; four tables
+remain outside and are listed once at the head of the supplement. \textbf{No
+claim in the abstract or the conclusion now rests on a table absent from the
+submitted package}, which is the review's acceptance criterion verbatim. \\
+\addlinespace
+
+R9 & IEEE SPS and TIFS format compliance & \done & Abstract 245 words, no math
+mode --- it was 256 and over a hard cap when this cycle started, having drifted
+there one sentence at a time. Main 13 of 13. Supplement 10 pages with the
+request and its reasoning in the cover letter, which is what SPS guidance
+permits rather than a violation to be hidden. Acknowledgment, IEEE
+generative-AI disclosure and a titled ethics and data-availability section all
+present. Biographies are written and commented out until acceptance, since
+IEEE counts them against the 13-page limit and the space is spent on evidence. \\
+\addlinespace
+
+R10 & TIFS deep-learning reproducibility checklist & \done & All five gaps, and
+one of them was a finding rather than an omission: the released checkpoint was
+trained with \emph{no mask source}, and the training path substitutes a
+constant zero field when none is given, so that run optimised against a target
+carrying no spatial information at all. That is the cause of the degeneracy the
+paper leads with, and it is recoverable from the checkpoint --- weights moving
+$6.8\times10^{-3}$ across five epochs. Weight decay, constant learning rate,
+absence of normalisation layers, the mask-supervised corpus and its class
+balance are all now stated, with a paragraph mapping the checklist item by
+item. \\
+\addlinespace
+
+R11--R12 & Missing literature; cross-corpus admissibility & \done & The
+protective-perturbation-fails line and the adversarial-evaluation methodology
+line are both cited, each with what this paper adds rather than a bare
+citation. Admissibility was recomputed on the 400 MSLS query frames the attack
+actually sees: the \emph{ordering} is the VOC ordering at every one of twelve
+cells, so which axis costs more does not depend on the corpus, while the
+\emph{level} is not comparable. The VOC-calibrated tolerance is therefore not
+carried across, and Table~IV's caption says where it was calibrated and what
+that assumes. \\
+\addlinespace
+
+R13 & Presentation for a TIFS readership & \done & Conventional signposts added
+as an opening paragraph of \S III-A naming the setup, controls, baselines and
+ablations --- which also carries R1's requirement that the attacker panel be
+stated once per axis instead of reconstructed from three sections. The settled
+position on allocation is now stated at the head of \S III-C \emph{before} the
+evidence that produced it, with the discovery order marked as such. The
+operator arm is tabulated (R8); KITTI-360 already was. The mechanism diagram is
+restored but sits in the supplement: at 13 of 13 pages the main body keeps the
+protocol schematic instead, which draws this paper's own contribution rather
+than its testbed. \\
+\addlinespace
+
+R14 & Residual items & \done & All six. The gallery-ceiling extrapolation now
+states its specific assumption and when it fails, rather than calling web
+scale ``an extrapolation''. The negative inferences drawn from five attackers
+are restated as what they are --- no pattern apparent across five, and five too
+few to support a claim either way. The $\pm0.01$ margin is described as
+declared in advance in the released repository rather than in a third-party
+registry, and this cycle that honesty was propagated into the figure caption
+and both table captions, which still read ``fixed before testing''. The
+bibliography is 39 entries with 0 uncited and 0 cited-but-missing. The question
+title is kept deliberately. \\
 
 \bottomrule
 \end{longtable}
 
-\section*{Table 2: How the Second Dataset Was Built}
+\section*{Table 2: How This Cycle's Arms Were Built, and What Went Wrong}
 
 \begin{longtable}{@{}p{0.16\linewidth}p{0.78\linewidth}@{}}
-\caption{The construction, the two dead ends that shaped it, and the limit that
-decided this cycle's correction. Recorded because none is obvious from the
-result.}
-\label{tab:tifs10-plan}\\
+\caption{Construction decisions and defects, recorded because none is
+recoverable from the result. Two of the four are self-inflicted bugs.}
+\label{tab:tifs14-built}\\
 \toprule
 \textbf{Aspect} & \textbf{Detail} \\
 \midrule
@@ -225,48 +281,76 @@ result.}
 \midrule
 \endhead
 
-Data & \texttt{G:\textbackslash work\textbackslash datasets\textbackslash kitti360}.
-Tokyo~24/7 and Oxford RobotCar, the two the review named, are on no machine
-checked --- not local, not 2c, not vGPU~3090, not the shared volume. Only
-Patch-NetVLAD's Tokyo index files exist, without imagery. \\
+R1, the gate that
+makes it a re-embedding &
+Extending nine rules to three new attackers is only a re-embedding if it is
+the \emph{same} released frames being read by a different model, and that has
+to be shown rather than asserted. It is: the objective trajectory is
+$2.8412\to2.4645$ on every arm, bit for bit, and the top-decile concentration
+is $0.547$ on all four sharing a map. Delivered MSE is $15.6800$ on every
+perturbed condition and the energy gate reads $1.000000$ throughout. Without
+those checks the panel would be a new search wearing the old one's name. \\
 \addlinespace
 
-Dead end 1 & Cross-traversal split, the clean MSLS analogue. Of eleven drives
-only 0000 and 0002 have imagery, and those two are spatially disjoint; every
-cross-drive overlap the poses show involves a drive that was never downloaded. \\
+R4, why the
+contrast is read on a subset &
+The geolocator is scored on the 218 of 400 queries the \emph{clean} attacker
+already localises within 25\,km, and the reason is concrete rather than
+statistical. In the smoke run GeoCLIP placed a Boston frame in Paraguay, 7{,}654\,km
+out --- and edge placement ``improved'' it to 1.09\,km. On a query the attacker
+fails unaided, a defense collects credit it did not earn and damage it did not
+cause. Both readings are reported; the subset is the one the claim rests on.
+The 1\,km threshold moves for nothing, but at $6.0\%$ clean accuracy that is a
+floor, not a finding, and is reported as such. \\
 \addlinespace
 
-Dead end 2 & A single global time cut --- early block as gallery, late block as
-queries. It keeps only revisits straddling the cut: five or six places out of
-the 274 the data contains. \\
+R4, a race that
+exposed a real bug &
+Hand-packing three cheap jobs into idle workers hit the launcher's
+\texttt{pgrep} race: two processes wrote one file, 8{,}541 rows where 6{,}400
+were expected. Of 2{,}141 duplicate keys, 2{,}140 agreed bit for bit --- and
+the single conflict was the one that mattered. The runner seeded its generator
+per \texttt{(query, seed)} and advanced it across conditions, while the resume
+path skipped completed conditions with a bare \texttt{continue} \emph{without}
+advancing the generator. A resumed run and a fresh run therefore drew
+different noise fields, which violates this repository's own rule that a
+long-running script must resume to the same state it would have reached
+uninterrupted. Reseeded per \texttt{(query, condition, seed)} and the whole
+cheap arm rerun into a fresh directory under a single writer: 6{,}400 rows,
+6{,}400 unique keys, delivered MSE exactly $15.68$ per condition. \emph{The
+duplicate was noise; what it uncovered was not.} \\
 \addlinespace
 
-What worked & Pair by revisit, not by clock. A place is a ground cell the drive
-enters twice; the later visit gives the query, the earlier one the positives,
-every pair at least 600 frames (about a minute) apart. Adjacent revisited cells
-are merged first --- two cells metres apart are one street corner and, left
-separate, generate each other's false negatives. That raised label agreement
-from $42\%$ to $100\%$ of the gallery frames within 25\,m. \\
+R8/R13, the operator
+table &
+No GPU and no new run: the operator study's per-query rows have been committed
+since the ninth cycle, so the missing table was only ever missing. It is built
+at the protocol's own unit --- three seeds averaged within a query, 400 paired
+differences, intervals bootstrapped over the 277 place clusters --- rather
+than at the 1{,}200-row unit the archived analysis CSVs use. Every cell
+reproduces the values already in the claim registry, which is the check that
+the new generator reads the data the same way the old analysis did. \\
 \addlinespace
 
-Honest limit & 16 distinct places behind 227 queries, against 277 behind 400 on
-MSLS, and a clean Top-1 of only $0.1498$ to begin with --- the white-box arm is
-what shows that is still enough to detect a large effect. This is what R1 turned on: at 14.2 queries per place the clustered
-interval is $1.93\times$ wider than the query one and covers zero, so the
-direction effect is consistent in sign and size but not separated here. The
-allocation null is unaffected --- no placement separates from zero under either
-unit. A place is also a road stretch rather than a 25\,m ball, so absolute
-Top-1 is not comparable with the MSLS tables. \\
+The KITTI-360 pairing,
+carried forward &
+Still the construction behind the second-dataset claim. A place is a ground
+cell the drive enters twice, the later visit giving the query and the earlier
+the positives, every pair at least 600 frames apart, with adjacent revisited
+cells merged first --- two cells metres apart are one street corner and, left
+separate, generate each other's false negatives. Honest limit, unchanged: 16
+places behind 227 queries, so the clustered interval is $1.93\times$ the query
+one and covers zero for direction. The allocation null is unaffected. \\
 
 \bottomrule
 \end{longtable}
 
-\section*{Table 3: Author-Side Items, Unchanged}
+\section*{Table 3: Author-Side Items}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
-\caption{Carried forward from the sixth cycle. None is a manuscript edit, an
-experiment or an analysis.}
-\label{tab:tifs10-authors}\\
+\caption{Not manuscript edits, experiments or analyses. Carried forward; S6 is
+new this cycle.}
+\label{tab:tifs14-authors}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{What is needed} \\
 \midrule
@@ -278,8 +362,8 @@ experiment or an analysis.}
 
 S1 & ORCIDs, EDICS, submission metadata & \authors & Verifiable only in the
 submission system, not in the files. All three authors need ORCIDs registered
-and the EDICS categories chosen; the metadata must match the manuscript's title
-and author list. \\
+and the EDICS categories chosen; the metadata must match the manuscript's
+title and author list. \\
 \addlinespace
 
 S2 & Prior-submission disclosure & \authors & The repository holds a response
@@ -288,16 +372,28 @@ outside these files; if it is, the statement must be made truthfully at
 submission. \\
 \addlinespace
 
-S3 & Responsible-use and data-terms wording & \done\ (read) & Confirmed read on
-10 September 2026. Re-wrapped since for the page budget; wording unchanged. \\
+S3 & Responsible-use and data-terms wording & \done\ (read) & Now a titled
+section of the manuscript rather than the closing paragraph of a theory
+section (R9). Wording confirmed read; re-wrapped since for the page budget. \\
 \addlinespace
 
 S4 & DOIs in the bibliography but not in the PDF & \done\ (decided) &
-\texttt{ref.bib} carries 46 verified DOIs; the mandated \texttt{IEEEtran.bst}
+\texttt{ref.bib} carries verified DOIs; the mandated \texttt{IEEEtran.bst}
 v1.14 has no \texttt{doi} support, so none is typeset. Decision: submit as is. \\
 \addlinespace
 
 S5 & Response letter & \done\ (not required) & Confirmed not being written. \\
+\addlinespace
+
+S6 & Supplement over the six-page guidance & \authors & \textbf{Needs the
+author's sign-off before submission, not more work.} The supplement is 10
+pages against a 6-page recommendation, and the request plus its reasoning are
+written into \texttt{docs/cover\_letter.txt}: a negative result against an
+assumption the field designs around is held by TIFS's own deep-learning
+guidance to a higher reproducibility standard, and a referee testing one needs
+the cells it was pooled from. The letter also states what happens if the
+Editor-in-Chief declines --- the four tables go back to the extended report and
+the manuscript says so. Confirm you are content to ask. \\
 
 \bottomrule
 \end{longtable}
@@ -305,9 +401,9 @@ S5 & Response letter & \done\ (not required) & Confirmed not being written. \\
 \section*{Table 4: Not Scheduled}
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.26\linewidth}p{0.10\linewidth}p{0.51\linewidth}@{}}
-\caption{Work that is not required for this submission. Listed so a later cycle
-does not have to rediscover it.}
-\label{tab:tifs10-optional}\\
+\caption{Not required for this submission. Listed so a later cycle does not
+rediscover it. N1 is the largest remaining scientific gap.}
+\label{tab:tifs14-optional}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Why it is not blocking} \\
 \midrule
@@ -317,50 +413,57 @@ does not have to rediscover it.}
 \midrule
 \endhead
 
-N1 & An independently trained selective sanitizer under the protocol &
-\pending & R6's other option, now the largest remaining gap. The conclusion now names the placement class the
-null covers --- hand-specified priors, gradient maps, published segmentation
-priors and this paper's own two checkpoints --- so no sentence overstates it.
-Testing a third-party released sanitizer would widen the class. \\
+N1 & A published mechanism reproduced end to end & \blocked & R3's strong
+form, and the largest remaining gap. \textbf{Blocked on the mechanism, not on
+us}: GeoShield's public release stubs the vision--language call its objective
+subtracts, so an end-to-end run needs a VLM API budget and would still be
+reproducing the authors' method only up to that substitution. The manuscript
+bounds its negative claim to the enumerated rules and prints their provenance,
+which is the review's stated alternative. Reopen if a public release with that
+component lands. \\
 \addlinespace
 
-N2 & A second cross-architecture attacker & \pending & The ViT-B/16 result is
-one trunk no surrogate shares, and the paper says what crosses a family is
-real, significant and small. \\
+N2 & A stronger geolocator than GeoCLIP & \pending & A PIGEON-class model
+would test whether the direction result survives a better image-to-GPS
+attacker. GeoCLIP was chosen for public weights and modest memory, and it
+passes the capability gate ($54.5\%$ within 25\,km, median $18.4$\,km), so the
+arm measures a movable benchmark rather than a floor. The finding is stated
+for the model tested. \\
 \addlinespace
 
-N3 & Adaptive attacker at a larger budget & \pending & The manuscript states
-the budget it could afford and confines its conclusion to it. \\
+N3 & Adaptive attacker at a larger budget & \pending & A fully unfrozen
+encoder, data beyond this benchmark, or re-indexing at every step. The
+manuscript states the budget it could afford and confines its conclusion to
+it. \\
 \addlinespace
 
-N4 & Utility on a task family other than segmentation and detection &
-\pending & The tolerance is calibrated against six published segmenters and now
-carries a native-resolution sensitivity check, so the mIoU scale is anchored. \\
+N4 & Six segmenters re-scored on MSLS query frames & \pending & What it would
+take to carry a calibrated admissibility tolerance onto the frames the attack
+sees, rather than only the ordering (R12). The manuscript says exactly this is
+what is missing and declines to carry the VOC tolerance across. \\
 \addlinespace
 
-N5 & Claim coverage for prose-only numbers & \pending & 74 manuscript literals
-have no claim, mostly interval endpoints beside covered point estimates. The
-two that mattered --- the proxy-versus-real calibration --- were registered
-this cycle. \\
+N5 & Registry entries with no printed counterpart & \pending & 24 verified
+values are no longer quoted in either document, having been compressed out of
+prose while their table twins still print them. Nothing is wrong with any of
+them; the open question is only whether the auditor should name this class
+separately from a genuine drop. Kept visible rather than deleted. \\
 
 \bottomrule
 \end{longtable}
 
 \section*{Closed in Earlier Cycles}
 
-R1--R4 and R6--R10 of the seventh review are closed, with the evidence in \texttt{docs/progress.md}.
-Four were integrity defects found by following a reference: two manuscript
-pointers that promised material the supplement did not contain (the
-learning-rate sweep and the MixVPR adaptive analysis, which are in the extended
-report, and the MixVPR per-placement values, which existed in an uncommitted
-run and are now a supplementary table); one literal table number that had gone
-stale under renumbering; and one significance marker on a pooled cell that was
-never tested. The fifth, the proxy-versus-real calibration, quoted two numbers
-that were in no table --- they are now scoped, printed with their manifest,
-backbone and gallery, and registered as claims. Two measurements were run to
-close findings rather than to add results: the strong-attacker per-placement
-export, and the segmenter spread re-scored at native resolution, which shows
-the six models span $0.1255$ there against $0.1216$ at working resolution but
-redistribute the gaps, so the declared tolerance is generous on either scale.
+The tenth review's R1--R7 and the thirteenth's R1--R12 are closed, with the
+evidence in \texttt{docs/progress.md}. The two worth carrying forward as
+cautionary notes are both about checks that passed while the thing they
+checked was wrong: a released export that had been appended to twice, whose
+summary was computed by the same script that wrote the rows and so could not
+detect the duplication; and three cross-document pointers that went stale
+because \LaTeX{} cannot see a reference into a separately compiled document,
+so the build reported zero undefined references while the manuscript pointed
+at the wrong table. This cycle adds a third of the same kind: a claim registry
+that verified 899 numbers while the sentence introducing four of them had
+never been registered at all.
 
 \end{document}

@@ -177,14 +177,19 @@ def main() -> int:
         r"\label{tab:geolocator}",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{2.5pt}",
+        # The threshold header and the interval column together run past the
+        # column width; scaled to fit, as the other wide tables are.
+        r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{lccccc}", r"\hline",
         rf"Condition & within {args.primary_km:g}\,km & $\Delta$ & "
         r"95\% CI & $p$ & Verdict \\",
-        r"\hline", *body, r"\hline", r"\end{tabular}", r"\end{table}",
+        r"\hline", *body, r"\hline", r"\end{tabular}%", r"}", r"\end{table}",
     ]
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # newline="\n": write_text otherwise uses the platform separator, so
+    # regenerating on Windows rewrites every line of a committed LF table.
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     dest = Path(args.summary)
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")

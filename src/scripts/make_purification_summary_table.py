@@ -127,15 +127,20 @@ def main() -> int:
         r"\label{tab:purification_summary}",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{2.5pt}",
+        # Two interval columns side by side exceed the column width; scaled
+        # to fit rather than dropping one, since the comparison is the point.
+        r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{lccccc}", r"\hline",
         r" & \multicolumn{2}{c}{neither purified} & "
         r"\multicolumn{2}{c}{both purified} & \\",
         r"Arm & $\Delta$ & 95\% CI & $\Delta$ & 95\% CI & Kept ($p$) \\",
-        r"\hline", *body, r"\hline", r"\end{tabular}", r"\end{table}",
+        r"\hline", *body, r"\hline", r"\end{tabular}%", r"}", r"\end{table}",
     ]
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # newline="\n": write_text otherwise uses the platform separator, so
+    # regenerating on Windows rewrites every line of a committed LF table.
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     print(f"[done] wrote {out}")
     for b in body:
         print("  " + b.replace(r"\\", "").replace("&", " ").strip())

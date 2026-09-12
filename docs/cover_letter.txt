@@ -24,21 +24,35 @@ all. We demonstrate the latter concretely: the learned support map of the
 CRF-inspired mechanism we implement as a testbed is numerically constant.
 
 Our principal findings on a real place-labelled Mapillary Street-Level
-Sequences benchmark, against both a weak classification backbone and a
-dedicated place-recognition model, are:
+Sequences benchmark, read by five held-out attackers and by a gallery-free
+image-to-GPS model, are:
 
-- Allocation shows no detected benefit at the operating point. None of eight
-  placement rules, three published-segmentation-model placements, two
-  gradient-guided placements or four perturbation operators beats spreading
-  the budget uniformly; every difference lies within +/-0.012 Top-1 against a
-  pre-registered equivalence margin.
+- What an allocation rule buys depends on which attacker reads the frame. On
+  four of the five, none of nine energy-matched placement rules, three
+  published-segmentation-model placements or four perturbation operators beats
+  spreading the budget uniformly; every difference lies within +/-0.012 Top-1.
+  On the fifth, three rules beat uniform by 0.031 to 0.055 Top-1, among them
+  the rule our own margin analysis derives, whose inverse is correspondingly
+  worse. We state that null as a bounded non-detection rather than as an
+  absence: equivalence at our declared margin is certified in three of nine
+  non-degenerate cells and left undecided in the rest at the resolution 400
+  query clusters afford, and we print the number of clusters certifying it
+  would take.
 
 - Direction behaves differently. A perturbation steered away from the released
   frame's own clean embedding under a surrogate ensemble -- requiring neither
-  white-box access nor the attacker's gallery -- transfers to held-out
-  attackers, moving Top-1 from 0.1967 to 0.0317 on the weak attacker and from
-  0.7800 to 0.7317 on the strong one, with place-clustered intervals excluding
-  zero.
+  white-box access nor the attacker's gallery -- transfers to all five
+  held-out attackers, moving Top-1 from 0.197 to 0.032 on the weak attacker
+  and from 0.780 to 0.732 on the strong one, with place-clustered intervals
+  excluding zero.
+
+- The asymmetry survives a change of attacker class that our explanation of it
+  does not. Against a model that emits a coordinate rather than ranking a
+  gallery, the same direction cuts city-level localisation from 0.713 to 0.546
+  while neither placement rule we tried moves it. Our mechanistic account is
+  stated for a correct-versus-hardest-negative ranking margin, and such a
+  model has no gallery and no rank to flip, so we report this as a fact about
+  the finding and a limit on the explanation rather than as a confirmation.
 
 - A decomposition identifies which part of the perturbation carries the
   effect. Shuffling its signs while preserving per-pixel magnitudes removes
@@ -46,17 +60,22 @@ dedicated place-recognition model, are:
   retains 49-99% of it.
 
 We have taken care to state these results at the strength the evidence
-supports, and we draw the Editor's attention to four deliberate
-qualifications. First, we claim no formal differential-privacy guarantee, and
-say so explicitly. Second, against the strong retriever, Top-5 and Top-10 fall
-far less than Top-1, so we describe the effect as ranking suppression rather
-than as location privacy. Third, the directional perturbation spends more
-downstream segmentation utility than isotropic noise at equal distortion, and
-attacker-side preprocessing recovers much of the effect unless the direction
-is optimised over those transforms. Fourth, an attacker that fine-tunes on the
-release moves the correct place up its ranking without changing what comes
-first, under the adaptation budget we could afford. We report these costs
-rather than confining them to a limitations paragraph.
+supports, and we draw the Editor's attention to the qualifications the
+abstract itself carries. We claim no formal differential-privacy guarantee,
+and say so explicitly. Against the strong retriever, Top-5 and Top-10 fall far
+less than Top-1, so we describe the effect as ranking suppression rather than
+as location privacy. Attacker-side preprocessing recovers much of the effect
+unless the direction is optimised over those transforms. An attacker that
+trains an inverse -- the most damaging of the four, and the one we run against
+all four retrieval attackers rather than the two it was cheapest to run
+against -- takes back between half and all of what the direction buys, by an
+amount its architecture and not its accuracy decides. And at matched
+distortion the direction spends more detector and segmenter accuracy than
+isotropic noise, so that on our own admissibility analysis no budget we tested
+is both admissible and effective. We report these costs rather than confining
+them to a limitations paragraph, and the abstract says in its last sentence
+that the contribution is the protocol and the measurement rather than a
+deployable mechanism.
 
 On the utility side we also give the tolerance a reference scale rather than
 asserting one: the mIoU tolerance against which we judge admissibility is
@@ -90,13 +109,15 @@ submissions holds such a paper to a higher standard of reproducibility than an
 ordinary one. A referee testing a negative result needs to see the cells it was
 pooled from, not a summary of them. Those extra pages are what let us bring
 inside the submission the per-rule placement study the central null is pooled
-from, the solved-allocation arm the manuscript's positive allocation result
-rests on, the purification result across all four attackers, the head-to-head
-against the closest published method, the two paired per-image utility tables,
-the adaptive attacker's per-condition breakdown, a table enumerating every
-placement rule with its provenance, and the geolocator arm --- the one attacker
-class that does not rank a gallery at all. Each sits beside the text that reads it,
-and each recomputes from the released per-query rows without a GPU.
+from, the same nine rules extended to the three attackers that break the null,
+the solved-allocation arm the manuscript's positive allocation result rests
+on, the operator arm, the purification result across all four attackers, the
+head-to-head against the closest published method, the two paired per-image
+utility tables, the adaptive attacker's per-condition breakdown, a table
+enumerating every placement rule with its provenance, and the geolocator arm
+--- the one attacker class that does not rank a gallery at all. Each sits
+beside the text that reads it, and each recomputes from the released per-query
+rows without a GPU.
 
 The main text is within the thirteen-page limit for an initial regular-paper
 submission. Reaching it cost no result: the author biographies will be

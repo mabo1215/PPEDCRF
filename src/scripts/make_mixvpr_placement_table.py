@@ -119,7 +119,7 @@ def main() -> int:
         r"``positive means worse privacy''; the interval is a query",
         r"bootstrap and $p$ a Wilcoxon signed-rank test. ``Verdict'' is",
         r"``negligible'' when the whole interval lies inside the",
-        rf"$\pm{MARGIN:.2f}$ Top-1 margin fixed before testing, and",
+        rf"$\pm{MARGIN:.2f}$ Top-1 margin declared in advance, and",
         r"``none det.'' when it does not but the difference is not",
         r"significant. The figure in parentheses beside $p$ is the number of",
         r"discordant pairs the signed-rank test runs on, which is what bounds",
@@ -132,6 +132,9 @@ def main() -> int:
         r"$0.871$ corrected, so it is settled rather than borderline.}",
         r"\label{tab:placement_mixvpr}", r"\footnotesize",
         r"\setlength{\tabcolsep}{1.2pt}",
+        # Scaled to the column: the TOST column put this past it, and the
+        # column separation was already as tight as it reads.
+        r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{lcccccc}", r"\hline",
         r"Placement & Top-1 & $\Delta$ & 95\% CI & $p$ & $p_{\mathrm{TOST}}$ & Verdict \\",
         r"\hline",
@@ -164,11 +167,17 @@ def main() -> int:
         stats.append({"placement": key, "top1": top1, "delta": float(diff.mean()),
                       "ci": [lo, hi], "p": pval, "p_tost": ptost,
                       "verdict": verdict})
-    lines += [r"\hline", r"\end{tabular}", r"\end{table}", ""]
-    Path(args.output).write_text("\n".join(lines), encoding="utf-8")
+    lines += [r"\hline", r"\end{tabular}%", r"}", r"\end{table}", ""]
+    # newline="\n": write_text otherwise uses the platform separator, so
+    # regenerating on Windows rewrites every line of a committed LF table.
+    Path(args.output).write_text("\n".join(lines), encoding="utf-8",
+                                 newline="\n")
 
     (Path(args.export_dir) / "placement_mixvpr_summary.json").write_text(
-        json.dumps({"source": str(source.relative_to(REPO)) if source.is_file() else None,
+        # as_posix(), not str(): on Windows str() writes backslashes into a
+        # committed provenance field, so the file churns by platform rather
+        # than by content.
+        json.dumps({"source": source.relative_to(REPO).as_posix() if source.is_file() else None,
                     "n_queries": len(ref), "seeds": seeds,
                     "margin": MARGIN, "bootstrap_draws": BOOT_DRAWS,
                     "bootstrap_seed": BOOT_SEED, "rows": stats},

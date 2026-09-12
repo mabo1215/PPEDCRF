@@ -1,5 +1,26 @@
 # 已全部修改
 
+- 【第十四轮 R1–R14 全面核对与收口，2026年9月13日】把 `paper/` 的当前状态逐条对着 `docs/RevisionSuggestions.tex` 的 14 条意见核了一遍，**13 条已闭合，R3 按评审自己给出的 bounded 方案闭合**（强方案不可得，理由见下）。核对过程中查出四处此前没被任何检查覆盖的真问题，全部已修好。
+
+**（1）正文 §III-E 指着一张不存在的表。** 原文写「Three results follow, tabulated per operator in the Supplementary Material」，但补充材料里只有 operator 的**定义**，没有结果表——那句话曾经对 extended report 成立，表搬走之后句子留在了页面上。审稿人去核「null 在每个 operator 下都成立」这条论断，会发现只有一句话、无处可查，这正是 R8 点名的那一类缺陷。新增 `src/scripts/make_operator_table.py`，从**早已提交**的 `src/exports/operator_study/` 重算成表（不需要 GPU、不需要重跑），已 `\input` 进补充材料。按协议自己的推断单位建表（三个 seed 在 query 内先平均 → 400 个配对差值、区间按 277 个 place 自助），而不是归档 CSV 用的 1,200 行口径。每一格都复现了 claim registry 里既有的值——也正因为如此，这张表缺了八轮都没被发现。
+
+**（2）摘要涨到 256 词，超出 IEEE SPS 的 250 词硬上限。** 是 R4 的 geolocator 句子加进去时一句一句漂上去的，而没人会为一次措辞改动重数词。已压回 **245 词**、零数学模式（同时满足「不含公式」要求），未删除任何一条结论。
+
+**（3）六张生成表跑出栏宽 9–44pt，两处字体警告回潮。** 其中五张的溢出和一处警告是前几轮新增表带进来的，早先记录的「overfull 0、字体警告 0」已不成立。已在**生成器**层面修（改生成文件会被下次重算覆盖）：六个 `make_*_table.py` 统一加 `\resizebox{\columnwidth}`，`tab:placement_full` 图注里的 `\emph` 改引号（IEEEtran 表图注是小型大写，T1 Times 没有小型大写斜体）。新增 `src/scripts/check_build_health.py`，把页数、undefined、overfull、字体警告四项变成一条命令，不再靠眼睛看。
+
+**（4）R7 自己的修复引入了四个没登记的数。** 第十四轮把自相矛盾的 `76` 换成了按条件具名的四个幅度值，但这四个从未进 claim registry——也就是说，那句**专门用来消除跨文档矛盾的话，自己有一轮没被检查过**。逐一重算后确认四个都对（12.2 / 84.0 / 48.7 / 241.4，是**两个攻击者合并**后的均值，这也是它们与正文并排引用的单攻击者数字在第一位小数上不同的原因），现已登记。
+
+**顺带修好 claim auditor 的一个盲点。** 它检查「某条 claim 印出来的字符串是否还在该印它的文档里」，但读文档时不跟 `\input`——于是每一个通过生成表上页的数字都被判为「已不在文中」，真正被删掉的和没被删掉的混在一起无法区分，而这恰恰是这项检查存在的唯一目的。现在读之前先展开一层 `\input`。
+
+**其余按评审要求补齐的写作项：** §III-A 新增「Setup, controls, baselines and ablations」段（R13 要求的常规路标），同一段一次性写明**每条轴由哪些攻击者读**（R1 的第 4 条行动项，此前要从三个小节里拼出来）；§III-C 段首**先陈述 allocation 的定论、再给产生它的证据**，并注明后文是发现顺序而非论证顺序（R13）；`\pm0.01` margin 的「fixed before testing」在 §III 已按 R14 改为「declared in advance … 在已发布仓库中声明而非第三方注册」，但图注和两张表的图注还留着旧说法，本轮一并统一（改的是生成器，不是生成文件）；补充材料开头的「Nine more sit in the extended evidence report」与实际只剩四张不符，已改为四张并逐一具名，同时写明摘要与结论不依赖其中任何一张（R8 的验收标准原文）。
+
+**`docs/cover_letter.txt` 的首条发现与论文当前结论相反，已改写。** 原文对 Editor 写的是「None of eight placement rules … beats spreading the budget uniformly」——而 R1 跑完之后，Patch-NetVLAD 上有三条规则以 0.031–0.055 Top-1 击败 uniform。这是会写进投稿信送到编辑手上的错误陈述。已按当前结论重写发现列表（五个攻击者 + geolocator、bounded non-detection 的措辞、geolocator 那条「效应迁移而解释不迁移」），并把 qualifications 段与摘要对齐（原先漏掉净化攻击者与「没有任何预算同时 admissible 且 effective」这两条，而它们都在摘要里）。补充材料超页申请理由里也补上了本轮搬进去的 operator 表。
+
+**本轮不需要 GPU**，两条需要卡的臂（R1 面板、R4 geolocator）在 9月12–13 日已跑完并关机。
+
+**最终状态**：正文 **13/13 页**、补充材料 **10 页**（已在投稿信中向 EiC 提出申请）、titlepage 1 页；**0 undefined、0 overfull、0 字体警告**；auditor **902 条断言全绿、0 不符、0 无法验证**；跨文档引用检查 0 处失效；参考文献 39 条、0 条未引用、0 条引而未录。
+
+
 - 【R4 完成：方向轴迁移到了地理定位器，2026年9月13日】GeoCLIP 臂已跑完、拉回、成表、写进论文。正文 13 页、补充材料 10 页、888 条断言全绿。
 
 **结论：方向轴迁移，分配轴不迁移。** 在 clean 攻击者能定位的 218 条 query 上（25 km 内）：
@@ -739,32 +760,7 @@ CLIP Top-5、MSE 60 的 gain/amplitude）都**又加回来了**——因为 audi
 正文 13/13 页、补充 **7 页（已申请）**、摘要 249/250 词，
 overfull 0、undefined 0、字体警告 0。
 
-# 未修改或部分修改
-
-## 【已阻挡】第十四轮评审 R1 / R3 / R4 的实验部分（2026年9月12日）
-
-三项都需要 GPU 主机与 MSLS 影像，两者本轮都不可得，因此只完成了评审自己给出的“可接受替代方案”（范围声明与限制陈述，见 `# 已全部修改`），实验本身未做。
-
-阻挡原因（本轮实测）：
-- `C:\source\.env` 中四台主机（h800、vGPU 3090、pro 6000、2c 4080）的 SSH 端口全部探测失败，无一在线。
-- 本机没有 MSLS 影像：`src/outputs/e1_msls/manifest_all.metadata.json` 明确标注 `image_files_are_not_copied: true`，本地只有 20 帧 smoke-test 缓存（`src/tmp/ft_dir_smoke.pt.dircache/`），远不足 400 query + 2,000 gallery。
-- 因此这三项的瓶颈是**影像不在本机**，不只是算力。
-
-各项开卡后应做的事：
-
-1. **R1（首要）**：把九条规定性 placement 规则（含 margin gradient 及其逆）在同一个 400-query / 2,000-image 八城 manifest 上、三个种子、同一 delivered distortion 与能量门下，对 **Patch-NetVLAD、ViT-B/16、CLIP ViT-L/14** 各跑一遍。这是对既有帧重新嵌入，不需要新的优化搜索。命令形如 `python3 src/scripts/run_placement_rule_study.py --backbones patchnetvlad vit_b_16 clip_vitl14 --manifest <msls manifest> --output_dir <...>`，然后用 `make_msls_placement_table.py` 出表。若任一规则在 CLIP 或 Patch-NetVLAD 上分离，摘要的 null 必须改为按攻击者分条件陈述。
-2. **R4**：加一条 image-to-GPS 攻击臂（GeoCLIP 成本最低，PIGEON 更强），在同一批 MSLS query 帧上跑 deployable gallery-free direction、matched-MSE 的 isotropic control 以及至少三条 placement 规则，报告测地误差（中位数公里数 + 1/25/200 km 阈值准确率），沿用同一配对 bootstrap 与 place clustering。
-3. **R3**：端到端复现一个已发表机制（GeoShield 代码公开，最合适），在 matched delivered distortion 下按本协议跑五攻击者面板，作为独立小节而非改编脚注。
-
-需要你提供/决策：
-1. 哪台 GPU 主机会先开？开卡后我按 R1 → R4 → R3 的顺序推进（R1 最便宜且最可能改变论文论断）。
-   A:
-2. R4 用 GeoCLIP 还是 PIGEON？我建议先 GeoCLIP（权重公开、显存需求低），若结果显著再补 PIGEON。
-   A:
-3. R3 是否确认做 GeoShield 端到端复现？若你认为“范围声明 + 溯源表”这一替代方案已足够，我就不再排这项。
-   A:
-
-# 遗留问题
+---
 
 ## 【第十四轮】五问已全部回答并落实（2026年9月12日）
 
@@ -833,3 +829,60 @@ Patch-NetVLAD 上分离），会回填论文并在此处新增记录。
 - **【已全部做完】** 结果已拉回、写进论文、auditor 重跑（827/827 全绿）、
   重编译核过页数（13 / 6 页）；**vGPU 3090 和 2c 3080 都已关机**；
   12 条评审意见已逐条对照确认。
+
+
+# 未修改或部分修改
+
+（上一版这里列的 R1 / R3 / R4「已阻挡」条目已全部作废：R1 与 R4 的实验在 9月12–13 日于 vGPU 3090 跑完并已写进论文，R3 的阻挡原因也已查明并改变了性质。详见 `# 已全部修改`。）
+
+## 【按评审的 bounded 方案闭合，强方案不可得】R3：没有已发表机制被端到端复现
+
+**这一条我没有做到评审要求的强方案，原因不在算力。** 把 GeoShield（`thinwayliu/Geoshield`，AAAI 2026）clone 下来逐行核对后发现，**其公开版本把 VLM 组件留成了空实现**：`describe_image_placeholder()` 的函数体是 `TODO: Implement your VLM API call here`，注释让用户自行接入 GPT-4V / Claude / Gemini / LLaVA。
+
+这不是可以绕过的边角：该描述经 `ensemble_loss.set_geotext_truth(description)` 进入 `geo_loss`，而目标函数里这一项是**被减掉**的（`loss -= (text_loss + text_local_loss)`）——它正是让扰动在破坏地理线索的同时保住语义的那一项，也是论文三个命名模块之一「exposure element identification」所依赖的输入。没有 VLM 就不是在跑 GeoShield，而是在跑另一个目标函数。
+
+因此「端到端复现一个已发表机制」在不自备 VLM API 预算的前提下**对任何人都不可得**，这本身是一条可报告的可复现性观察，且正落在本文（一篇审计该家族的论文）的射程内。
+
+已落地的 bounded 方案（评审第 2、3、4 条行动项，原文允许）：
+- §III-F 措辞改写：原先写成「我们选择改编而非复现」，现写明公开实现 stub 掉了其目标函数所依赖的 VLM 项，所以改编是**被迫**而非偏好；
+- 补充材料新增 `tab:rule_provenance`，逐条列出本审计测试的每一条 placement 规则及其来源（本文自建 / 经典算子 / 他人训练的分割模型 / 改编自已发表机制但未复现）；
+- §II 新增范围声明，明确本文的否定结论是**关于该表中规则**的结论，并说明这正是同时求解 map 的原因——一个没有规则能被指为其弱实例的对照；
+- mask-guided 改编臂的对比表已搬进补充材料（它是本文唯一一次与已发表公式的正面对比）。
+
+**未采取的替代方案与理由**：接一个本地 VLM（BLIP/LLaVA）填补 stub 会改变目标函数，跑出来的东西不能诚实地标注为 GeoShield，所以没有做。
+
+- 需要你决策：是否接受这个 bounded 方案作为 R3 的最终答复？
+  A: 接受 
+- 如果你愿意出 VLM API 预算（GPT-4V / Gemini 任一即可），我可以补做端到端复现，但仍必须在论文里写明「我们替其补上了公开版本缺失的组件」——因为那不是作者发布的那份实现。
+  A:  GPT 5.6
+
+# 遗留问题
+
+## 当前待你决策（2026年9月13日，共 3 条）
+
+投稿前只剩三件事需要你，没有一件是实验或论文修改；其余 14 条评审意见都已闭合。
+
+1. **补充材料 10 页，是否确认向 EiC 提出超页申请？**
+   SPS 的规则是"建议不超过 6 个双栏页，该限度内无需 EiC 批准"——超页是**可申请**的，不是硬上限。
+   `docs/cover_letter.txt` 里已经写好申请及其理由（本文报的是与领域设计假设相反的负面结果，而
+   TIFS 的深度学习投稿指南明写"负面结果适用更高的可复现标准"；审稿人要验一个负面结果，
+   需要看到它是从哪些格子 pool 出来的），并写明**若 EiC 坚持 6 页，我们把四张表搬回 extended
+   report 并在正文写明**。你之前对 9 页的版本答过"要申请"，这一轮涨到 10 页（新增 operator
+   表与 placement panel 表），所以再确认一次。
+   A: 要申请
+
+2. **R3 的 bounded 方案是否作为最终答复？**（详见 `# 未修改或部分修改`）
+   GeoShield 公开版把它目标函数依赖的 VLM 调用留成了 stub，所以"端到端复现"对任何人都不可得。
+   我按评审自己给出的替代方案做了范围声明 + 溯源表 + mask-guided 对比进包。
+   若你愿意出 VLM API 预算我可以补做，但论文里必须写明"我们替其补上了公开版本缺失的组件"。
+   A: 有GPT 5.6 可以开subagent
+
+3. **ORCID / EDICS / 前次投稿披露**（`ExperimentProgress.tex` 的 S1、S2）。
+   这三项只能在投稿系统里完成，仓库文件无法核验：三位作者的 ORCID 需注册、EDICS 类别需选定、
+   元数据须与论文标题作者一致；仓库里存有给另一会议的 response letter，是否需要披露取决于
+   文件之外的事实，若需要则须在投稿时如实声明。
+   A: 我自己完成
+
+**无需你决策的两点，供知悉**：本轮不需要 GPU，两条需要卡的臂（R1 面板、R4 geolocator）
+已于 9月12–13 日跑完并关机；auditor 902 条全绿，正文 13/13 页、0 undefined、0 overfull、
+0 字体警告。

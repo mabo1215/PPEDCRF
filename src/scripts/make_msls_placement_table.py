@@ -141,8 +141,8 @@ def main() -> int:
         rf"units of inference are printed because the protocol prescribes the "
         rf"clustered one and the two barely differ here, $206$ of the places "
         rf"carrying a single query. ``Verdict'' is ``negligible'' when "
-        rf"both intervals lie inside the $\pm{args.margin:.2f}$ margin fixed "
-        rf"before testing and ``none det.'' when they do not and the "
+        rf"both intervals lie inside the $\pm{args.margin:.2f}$ margin declared "
+        rf"in advance and ``none det.'' when they do not and the "
         rf"difference is not significant. The figure in parentheses beside $p$ "
         rf"is the number of discordant pairs the signed-rank test runs on, "
         rf"which is what bounds its power: a row with a handful is reporting "
@@ -171,16 +171,22 @@ def main() -> int:
         # placement table uses for the same reason.
         r"\scriptsize",
         r"\setlength{\tabcolsep}{0.6pt}",
+        # The TOST column took this past the column width; scriptsize and a
+        # 0.6pt separation were already at their limit, so it is scaled to
+        # fit the way the document's other wide tables are.
+        r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{lccccccc}", r"\hline",
         r"Placement & Top-1 & $\Delta$ & query 95\% CI & place 95\% CI & $p$ "
         r"& $p_{\mathrm{TOST}}$ & Verdict \\",
         r"\hline",
         rf"uniform (ref.) & {ref_top1:.4f} & --- & --- & --- & --- & --- & --- \\",
-        *body, r"\hline", r"\end{tabular}", r"\end{table}",
+        *body, r"\hline", r"\end{tabular}%", r"}", r"\end{table}",
     ]
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # newline="\n": write_text otherwise uses the platform separator, so
+    # regenerating on Windows rewrites every line of a committed LF table.
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     print(f"[done] wrote {out}")
     for line in body:
         print("  " + line.replace(r"\\", "").replace("&", " ").strip())

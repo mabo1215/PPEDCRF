@@ -359,11 +359,32 @@ claim("Clamp/edge", "\\S Which Part of the Perturbation", "$4.7\\%$", 4.7,
       0.05, "tifs_a3", _clamp_loss("edge"), source=SUPP)
 claim("Clamp/uniform", "\\S Which Part of the Perturbation", "$1.1\\%$", 1.1,
       0.05, "tifs_a3", _clamp_loss("uniform"), source=SUPP)
-claim("Clamp/maxdelta", "\\S Which Part of the Perturbation", "$76$", 76.0,
-      0.5, "tifs_a3",
-      lambda: (mean_of(load("tifs_a3/*_r18_*.csv"),
-                       lambda r: r["placement"] == "edge", "max_abs_delta")
-               if load("tifs_a3/*_r18_*.csv") else None), source=SUPP)
+# The released amplitude, which used to be one unconditioned figure of $76$
+# that contradicted the manuscript's own serialized-release audit. The fix
+# named the condition each figure belongs to and printed four; none of the
+# four was registered, so the sentence that reconciled a cross-document
+# contradiction was itself unchecked for a cycle. Each is the mean over both
+# attackers' rows -- which is the subset that reproduces the printed values,
+# the per-attacker means differing in the first decimal.
+def _max_delta(tree: str, place: str) -> Callable[[], float]:
+    def go():
+        rows = load(f"{tree}/*.csv")
+        if not rows:
+            return None
+        sel = (lambda r: r["placement"] == place
+               and r["condition"] == "direction")
+        return mean_of(rows, sel, "max_abs_delta")
+    return go
+
+
+for _tree, _place, _printed, _value in [
+        ("tifs_a3", "uniform", "$12.2$", 12.2),
+        ("tifs_a3", "edge", "$84.0$", 84.0),
+        ("tifs_a3hi", "uniform", "$48.7$", 48.7),
+        ("tifs_a3hi", "edge", "$241.4$", 241.4)]:
+    claim(f"Clamp/maxdelta/{_tree}/{_place}",
+          "\\S Which Part of the Perturbation", _printed, _value, 0.05,
+          _tree, _max_delta(_tree, _place), source=SUPP)
 
 
 # --- Table VII, mask-guided PGD, from tifs_a4 (gradient mask, cover 0.25) --
@@ -498,9 +519,12 @@ for bb, tag, cond, metric, value in [
 
 
 # --- the summary contrast in the same section ----------------------------
-claim("Summary/allocation-bound", "\\S The Other Axis", "$0.012$", 0.012,
+# Printed without math mode since the abstract was rewritten to satisfy the
+# venue's no-equations rule, so a locator of "$0.012$" stopped finding a
+# number that had not moved.
+claim("Summary/allocation-bound", "\\S The Other Axis", "0.012", 0.012,
       1e-9, "", lambda: 0.012,
-      locator="$0.012$")
+      locator="0.012")
 
 
 # --- Table tab:sanitize, every attacker-side transform, from tifs_d6 -------
@@ -1852,16 +1876,21 @@ for tree, uniform, delta, pval in [
         ("operator_study/sigma32_correlated", 0.0650, 0.0167, 0.12),
         ("operator_study/sigma32_blur", 0.1025, 0.0500, 0.003),
         ("operator_study/sigma32_mosaic", 0.0525, 0.1150, None)]:
+    # These were anchored in the extended report, which is released with the
+    # code and not submitted, while the manuscript asserted the operator arm
+    # was "tabulated per operator in the Supplementary Material" and the
+    # supplement carried only the operator definitions. The table now exists
+    # in the submission, so the checked copy is the one a referee reads; it
+    # prints the plain signed form rather than the extended report's starred
+    # one, which is why the locators lost their stars.
     tag = tree.split("/")[1]
-    claim(f"TabII/{tag}/uniform", "Table tab:operator_full", f"{uniform:.4f}",
-          uniform, 5e-5, tree, _operator(tree, "uniform"), source=EXT)
-    printed = f"${delta:+.4f}$" if delta not in (-0.0433, 0.0500, 0.1150) \
-        else f"${delta:+.4f}^{{\\ast}}$"
-    claim(f"TabII/{tag}/delta", "Table tab:operator_full", printed, delta, 5e-5,
-          tree, _operator(tree, "delta"), source=EXT)
+    claim(f"TabII/{tag}/uniform", "Table tab:operators", f"{uniform:.4f}",
+          uniform, 5e-5, tree, _operator(tree, "uniform"), source=SUPP)
+    claim(f"TabII/{tag}/delta", "Table tab:operators", f"${delta:+.4f}$",
+          delta, 5e-5, tree, _operator(tree, "delta"), source=SUPP)
     if pval is not None:
-        claim(f"TabII/{tag}/p", "Table tab:operator_full", f"{pval:g}", pval,
-              max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=EXT)
+        claim(f"TabII/{tag}/p", "Table tab:operators", f"{pval:g}", pval,
+              max(rel(pval), 5e-3), tree, _operator(tree, "p"), source=SUPP)
 
 
 # --- R10: the attacker class and the gallery size the review could only scope -
@@ -2784,6 +2813,32 @@ def tree_present(tree: str) -> bool:
                for root in ROOTS)
 
 
+_INPUT = re.compile(r"\\input\{([^}]+)\}")
+
+
+def _with_inputs(path: Path) -> str:
+    """A document's text with its one-level \\input targets spliced in.
+
+    The locator asks whether a claim's printed string still appears in the
+    document that is supposed to print it. Read literally, a document that
+    reaches a number through a generated table answers no, so every value
+    printed only inside \\input{generated/...} was reported as dropped --- 26
+    of them at the last count, none actually missing. That buried the handful
+    of genuine drops among false positives, which is the failure mode this
+    check exists to prevent. One level is enough: the generated tables are
+    leaves.
+    """
+    text = path.read_text(encoding="utf-8")
+    parts = [text]
+    for target in _INPUT.findall(text):
+        child = (path.parent / target)
+        if child.suffix != ".tex":
+            child = child.with_suffix(".tex")
+        if child.is_file():
+            parts.append(child.read_text(encoding="utf-8"))
+    return "\n".join(parts)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--verbose", action="store_true",
@@ -2797,7 +2852,7 @@ def main() -> int:
     # sourced to the supplement or a generated table used to skip the
     # locator check silently, because sources.get() returned None and a
     # missing text counted as "located".
-    sources = {p: p.read_text(encoding="utf-8")
+    sources = {p: _with_inputs(p)
                for p in {c.source for c in CLAIMS}
                if p.is_file()}
 

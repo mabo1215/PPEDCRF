@@ -175,14 +175,19 @@ def main() -> int:
         r"\label{tab:placement_panel}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{1.6pt}",
+        # Scaled to the column rather than tightened further: at 1.6pt the
+        # separation is already the narrowest the interval column reads at.
+        r"\resizebox{\columnwidth}{!}{%",
         r"\begin{tabular}{lcccccc}", r"\hline",
         r"Placement & Top-1 & $\Delta$ & place 95\% CI & $p$ & "
         r"$p_{\mathrm{TOST}}$ & Verdict \\",
-        r"\hline", *body, r"\hline", r"\end{tabular}", r"\end{table}",
+        r"\hline", *body, r"\hline", r"\end{tabular}%", r"}", r"\end{table}",
     ]
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # newline="\n": write_text otherwise uses the platform separator, so
+    # regenerating on Windows rewrites every line of a committed LF table.
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
     dest = Path(args.summary)
     dest.parent.mkdir(parents=True, exist_ok=True)
