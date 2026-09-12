@@ -585,6 +585,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--energy_tolerance", type=float, default=1e-4)
     p.add_argument("--sigma", type=float, default=None,
                    help="override the perturbation budget sigma_0")
+    # The gallery chunk was a hardcoded 128, which is fine for a light
+    # backbone and is not for Patch-NetVLAD at 480 px or CLIP ViT-L/14 when
+    # several jobs share one card. Exposing it changes no default and so
+    # leaves every previously published number reproducible from the same
+    # command; under eval/no_grad the chunked result is the same matrix
+    # whatever the chunk.
+    p.add_argument("--gallery_batch", type=int, default=128,
+                   help="gallery images embedded per forward pass")
     return p.parse_args()
 
 
@@ -677,7 +685,8 @@ def main() -> None:
                 gallery_tensor, gallery_ids = build_gallery_tensor(
                     gallery_frame_by_id=gallery_by_id, query_ids=query_ids,
                     distractor_ids=distractors, gallery_size=int(gallery_size))
-            gallery_emb = embed_gallery_batched(rcfg, embedder, gallery_tensor)
+            gallery_emb = embed_gallery_batched(rcfg, embedder, gallery_tensor,
+                                                batch=args.gallery_batch)
 
             for seed in args.seeds:
                 # --- build every placement's weight maps, energy-matched ---
