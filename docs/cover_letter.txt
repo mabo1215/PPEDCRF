@@ -80,10 +80,8 @@ controls. We believe the negative result is the useful part, and that
 publishing it is preferable to leaving the field's central design assumption
 untested.
 
-Two requests about length, which we would rather put to you explicitly than
-resolve by omission.
-
-The first is the supplement. The SPS guidance recommends that supplementary
+One request about length, which we would rather put to you explicitly than
+resolve by omission. The SPS guidance recommends that supplementary
 material not exceed six double-column pages without Editor-in-Chief approval,
 and ours is nine. We are asking for that approval. The reason is specific to a
 paper of this kind: the submission reports a negative result against an
@@ -99,17 +97,11 @@ the adaptive attacker's per-condition breakdown, and a table enumerating every
 placement rule with its provenance. Each sits beside the text that reads it,
 and each recomputes from the released per-query rows without a GPU.
 
-The second is the main text, which runs to fourteen pages against the
-thirteen-page limit for an initial regular-paper submission. We have already
-moved out everything we could without removing a result: the author
-biographies, which we will supply at acceptance; the pipeline diagram, the
-search-budget curve and the operator detail, all now in the supplement; and
-roughly a page of exposition. What remains is evidence. If you would prefer us
-to reach thirteen by removing a result rather than by an exemption, we would
-value being told which: the candidates we consider least load-bearing are the
-KITTI-360 replication and the serialized-release audit, and we would rather
-you chose than have us decide it silently on a paper whose subject is
-auditing.
+The main text is within the thirteen-page limit for an initial regular-paper
+submission. Reaching it cost no result: the author biographies will be
+supplied at acceptance, the pipeline diagram and the search-budget curve are
+in the supplement, and the rest came from compression and from retiring
+references that belonged to an earlier framing of this work.
 
 This manuscript has not been published previously and is not under
 consideration elsewhere. All authors have approved the submission. The code,
