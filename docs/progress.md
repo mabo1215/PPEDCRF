@@ -1,5 +1,18 @@
 # 已全部修改
 
+- 【R1 结果的下游一致性清查已完成，2026年9月12日】结果变了之后把整篇论文里依赖旧结论的地方逐条查了一遍，查出一处**实质性错误**并改正。
+
+**错误：§IV-A 的 98 组比较写成覆盖「both benchmarks」，实际只在 mined proxy 上跑过。** 核对 `src/exports/placement_study/` 与 `..._maskbacked/` 的 run_id，两个 checkpoint 的 49 组全部是 `proxy12/*`（六个 backbone，12 对）与 `proxy50_resnet18`（50 对），没有任何一组在 MSLS 上。原文声称的 MSLS 覆盖不存在。这一处特别值得记录，因为**正是这句话让 R1 的缺口看不见**：如果原文写的是「只在 proxy 上」，那么「MSLS × Patch-NetVLAD 这一格没跑过」本来一眼就能看出来。已改为如实描述两个 proxy 规模。
+
+**并补上了该研究的分辨率说明。** proxy 的一格是 36 个配对观测，bootstrap 区间中位宽 $0.083$，discordant 对中位数为 1，42 格里有 16 格一个都没有——也就是说这 98 组比较里大多数是「没测到」而不是「测过没有」，它对 §IV-B 在真实 benchmark 上发现的那个量级的差异是盲的。Patch-NetVLAD 在 proxy 上七格全不显著、点估计甚至反向（edge $+0.0278$），而在 MSLS 400 个 cluster 上 edge 是 $-0.0550$，正是分辨率差异的体现。论文现在明说这一点，并说明该研究只是「唯一同时比较两个 checkpoint 的地方」，论文的主张不依赖它。
+
+**图 2 已用新数据重绘。** `make_axes_figure.py` 的左栏原先只有 ResNet18 与 MixVPR 两个攻击者，现已扩到五个。重绘后图本身就显示了新结论：在 score-gradient 与 edge magnitude 两行，Patch-NetVLAD 的菱形落在 $-0.05$ 附近、明显在 $\pm0.01$ 灰带之外，而其余四个攻击者都在带内。图注同步改写（原图注还在说「规定性规则只跑了前两个」，已过时）。
+
+其余同步改正：§IV-B「The null survives intact」已限定为 ResNet18 臂并指向三段后的扩展；「the null above is a statement about the rules that have been proposed, not about the axis」改为「…and about the attackers reading them…」；补充材料 proxy 表的图注补上 36 个配对观测的功效说明与「on this benchmark」限定。
+
+为把这些塞回 13 页，又压缩了 §IV-A 分辨率段、mask-guided、clip pooling、gallery sweep、budget sweep、"Taking the attacker away" 等段。正文 13 页、补充材料 9 页、参考文献 41 条、888 条断言全绿、无未定义引用。
+
+
 - 【R1 实验已完成，结论已改写，2026年9月12日】vGPU 3090 上九个作业全部跑完（36,009 行、九个作业 exit=0、无告警），结果已拉回、成表、写进论文，**卡已关机**（端口 22766 已关闭，18:35 NZST）。正文仍为 13 页，888 条断言全绿。
 
 **这次实验推翻了论文原先的核心表述。** R1 的问题是：规定性 placement 规则只在 ResNet18 与 MixVPR 上量过，而 solved map 真正分离的两个攻击者（Patch-NetVLAD、CLIP）恰好一条规定性规则都没跑过。把九条规则原样扩到 Patch-NetVLAD、ViT-B/16、CLIP ViT-L/14（同 manifest、同 gallery、三个种子、同 delivered distortion 与能量门，只换读取帧的攻击者，属重新嵌入而非新搜索）之后：

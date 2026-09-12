@@ -105,10 +105,20 @@ def main() -> int:
     places = place_map(ex / "tifs_d6")
 
     rows = []
+    # Five attackers, not two. The prescribed rules were extended to
+    # Patch-NetVLAD, the ViT and CLIP after the fourteenth review pointed out
+    # that the two attackers a solved map separates on were exactly the two no
+    # prescribed rule had faced; on Patch-NetVLAD four of nine separate, which
+    # is why this panel can no longer be drawn from ResNet18 and MixVPR alone.
     for label, path, backbone in [
             ("ResNet18", str(ex / "icme2027_placement_msls/final/per_query.csv"),
              "resnet18"),
-            ("MixVPR", str(ex / "placement_mixvpr_rows/per_query.csv"), "")]:
+            ("MixVPR", str(ex / "placement_mixvpr_rows/per_query.csv"), ""),
+            ("Patch-NetVLAD", str(ex / "placement_panel/merged_pnv.csv"), ""),
+            ("ViT-B/16", str(ex / "placement_panel/merged_vit.csv"), ""),
+            ("CLIP ViT-L/14", str(ex / "placement_panel/merged_clip.csv"), "")]:
+        if not Path(path).exists():
+            continue
         arms = per_query(path, "placement", backbone)
         ref = arms["uniform"]
         for name in ["learned", "anti_oracle_grad", "oracle_grad", "saliency",
