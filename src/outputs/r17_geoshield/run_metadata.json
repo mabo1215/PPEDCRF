@@ -1,0 +1,24 @@
+{
+  "released_caption": "A scenic outdoor photograph.",
+  "caption_source": "published",
+  "caption_model": null,
+  "caption_is_constant_across_corpus": true,
+  "region_mode": "fullframe",
+  "steps": 100,
+  "epsilon": 8.0,
+  "clip_ensemble": [
+    "B16",
+    "B32",
+    "Laion"
+  ],
+  "target_mse": 15.68,
+  "third_party_commit": "5001a82ea41a1e066e5d0fcfd8f626ce45934048",
+  "attack_resolution": 640,
+  "release_geometry": [
+    192,
+    320
+  ],
+  "geometry_note": "attack runs at the release's square input_res; the perturbation is resampled to the protocol geometry before the delivered-MSE bisection",
+  "clip_feature_api_shim": "get_image_features/get_text_features unwrapped to .pooler_output for transformers>=5",
+  "label": "public release as published; geo-semantic term degenerate"
+}
