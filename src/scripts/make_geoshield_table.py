@@ -134,7 +134,7 @@ def main() -> int:
         top1, top5 = np.mean(list(cur1.values())), np.mean(list(cur5.values()))
         if cond == REFERENCE:
             lines.append(f"{label} & {top1:.4f} & {top5:.4f} & "
-                         r"\multicolumn{4}{c}{\textit{reference}} \\")
+                         r"\multicolumn{4}{c}{reference} \\")
             continue
         qs = sorted(set(cur1) & set(ref1))
         d = np.array([cur1[q] - ref1[q] for q in qs])
@@ -158,8 +158,8 @@ def main() -> int:
     # invisible to everyone else.
     seeds = sorted({r["seed"] for r in rows})
     if len(seeds) == 1:
-        seed_note = (r"a single seed (\emph{not} the three used by the "
-                     r"placement and operator arms in this supplement; the "
+        seed_note = (r"a single seed (not the three used by the "
+                     r"placement and operator arms in this supplement, so the "
                      r"contrast below is a bounded result at one seed)")
     else:
         seed_note = f"{len(seeds)} seeds averaged within a query before pairing"
@@ -173,7 +173,7 @@ def main() -> int:
         r"pixel clamp), on the primary place-labelled manifest --- "
         f"{len(ref1)} query clusters over {n_places} places, "
         f"{seed_note}. $\\Delta$ is taken "
-        r"against the \emph{isotropic} control rather than against clean "
+        r"against the isotropic control rather than against clean "
         r"imagery, because lowering retrieval below clean only shows that "
         r"energy was added; the question this paper asks is whether spending "
         r"that energy as the mechanism directs beats spending it at random. "

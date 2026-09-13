@@ -35,9 +35,10 @@ Earlier editions are in \texttt{docs/archived/}.}
 The active review is the fourteenth independent review in
 \texttt{docs/RevisionSuggestions.tex} (12 September 2026, IEEE TIFS, verdict
 \emph{major revision}), findings R1--R14: five Major, seven Moderate, two
-Minor. \textbf{Thirteen are closed and one --- R3 --- is closed only in the
-bounded form the review itself offers}, because the published mechanism it
-asks for cannot be run end to end by anyone. The cycle's substance is that two
+Minor. \textbf{All fourteen are closed, R3 in the review's strong form}: the
+published mechanism it asks for was run end to end from its public release,
+at matched delivered distortion, and does not separate from an isotropic
+control of the same delivered energy. The cycle's substance is that two
 of the review's Major findings changed what the paper claims rather than how
 it says it, and both changed it against the authors: closing the attacker
 panel broke the central null on one attacker of five, and the geolocator arm
@@ -107,7 +108,8 @@ missing table went eight cycles without being noticed as missing.
 
 \begin{longtable}{@{}p{0.05\linewidth}p{0.19\linewidth}p{0.11\linewidth}p{0.57\linewidth}@{}}
 \caption{All fourteen findings. R1 and R4 changed what the paper claims; R3 is
-closed in the bounded form the review offers, not the strong one.}
+closed in the strong form, by running the published mechanism end to end from
+its public release.}
 \label{tab:tifs14-open}\\
 \toprule
 \textbf{ID} & \textbf{Item} & \textbf{Status} & \textbf{Outcome} \\
@@ -146,19 +148,23 @@ placement tables; the number of query clusters certifying $\pm0.01$ would take
 printed, which turns a limitation into a design specification. \\
 \addlinespace
 
-R3 & No published mechanism run end to end & \bounded & Closed in the review's
-own bounded form, and the reason is itself reportable. GeoShield was cloned
-and read line by line: \textbf{its public release stubs the vision--language
-call its objective depends on}, leaving a \texttt{TODO} where the frame
-description is produced. That term is \emph{subtracted} in the loss, so it is
-what keeps the perturbation semantically faithful while it destroys geographic
-cues, and it feeds one of the method's three named modules. Without a VLM
-budget nobody reproduces GeoShield; they reproduce a different objective. So
-\S III-F now says the adaptation was \emph{forced} rather than preferred,
-where it used to read as a preference. A supplementary provenance table lists
-every rule with its origin, and \S II carries the scope statement. Not done:
-the reimplementation. Not attempted with a local VLM, because substituting one
-changes the objective and the result could not honestly be labelled GeoShield. \\
+R3 & No published mechanism run end to end & \done & Closed in the review's
+strong form. GeoShield's public release was run end to end under this paper's
+protocol --- same attacker, same gallery, same delivered distortion --- over
+400 query clusters at one seed, against two controls: no perturbation, and an
+isotropic perturbation of identical delivered energy. Against that
+energy-matched control it \textbf{does not separate}: $-0.0100$ Top-1,
+place-clustered interval $[-0.041,+0.020]$, $p=0.52$ over 38 discordant pairs.
+At one seed that interval is wider than the $\pm0.01$ margin the other arms
+certify against, so this is a \emph{bounded null}, not a certified
+equivalence, and it is reported as such. Clearing the release took five
+obstacles, four found by reading and one only by running; they are recorded in
+the supplement as a reproducibility observation about that artefact. Because
+the release stubs its vision--language call to a constant caption, the arm
+measures \textbf{the released artefact, not the method as described}, and the
+manuscript, the provenance table and this row all say so in the same sentence
+so neither half travels alone. Not done: running it with a working
+vision--language component, which is N1. \\
 \addlinespace
 
 R4 & Geolocators excluded from the threat model & \done & The arm ran, and it
@@ -413,14 +419,16 @@ rediscover it. N1 is the largest remaining scientific gap.}
 \midrule
 \endhead
 
-N1 & A published mechanism reproduced end to end & \blocked & R3's strong
-form, and the largest remaining gap. \textbf{Blocked on the mechanism, not on
-us}: GeoShield's public release stubs the vision--language call its objective
-subtracts, so an end-to-end run needs a VLM API budget and would still be
-reproducing the authors' method only up to that substitution. The manuscript
-bounds its negative claim to the enumerated rules and prints their provenance,
-which is the review's stated alternative. Reopen if a public release with that
-component lands. \\
+N1 & A published mechanism run end to end \emph{with its vision--language
+component supplied} & \pending & Narrowed, not blocked. The public release now
+runs end to end here (R3); what remains is supplying the component it stubs,
+which would measure the method as described rather than the artefact as
+shipped. The runner already accepts a caption source and caches per target, so
+this is a budget decision rather than an engineering one --- scoped at roughly
+one further GPU day and deliberately not bought, because the released-artefact
+arm answers the review's question and the substituted-component arm answers a
+different one. Reopen if that distinction becomes load-bearing for a
+reviewer. \\
 \addlinespace
 
 N2 & A stronger geolocator than GeoCLIP & \pending & A PIGEON-class model

@@ -311,6 +311,51 @@ for bb, tag, cells in [
                   locator=None, source=SUPP)
 
 
+# --- the published-release arm (R3) ----------------------------------------
+# Registered because an audit that covers only the numbers someone remembered
+# to register is a guarantee about that subset, not about the paper. The
+# delivered MSE is registered alongside the scores: this arm's entire meaning
+# is "at matched distortion", and an earlier run of it produced tidy-looking
+# retrieval numbers from frames released at ~1e9 MSE, so the matching is
+# exactly the thing that must not be left unverified.
+def _gs(cond: str, stat: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load("r17_geoshield/per_query.csv")
+        if not rows:
+            return None
+        if stat == "mse":
+            vals = [float(r["effective_mse"]) for r in rows
+                    if r["condition"] == cond]
+            return statistics.fmean(vals) if vals else None
+        per: Dict[str, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(list))
+        for r in rows:
+            per[r["condition"]][r["query_id"]].append(
+                1.0 if int(r["correct_rank"]) == 1 else 0.0)
+        if cond not in per:
+            return None
+        cur = {q: statistics.fmean(v) for q, v in per[cond].items()}
+        if stat == "top1":
+            return statistics.fmean(cur.values())
+        ref = {q: statistics.fmean(v)
+               for q, v in per["isotropic"].items()}
+        qs = sorted(set(cur) & set(ref))
+        return statistics.fmean([cur[q] - ref[q] for q in qs]) if qs else None
+    return go
+
+
+GS = "geoshield_published_fullframe"
+for cond, printed in [("clean", "0.2100"), ("isotropic", "0.1900"),
+                      (GS, "0.1800")]:
+    claim(f"GS/{cond}/top1", "\\S A Published Mechanism", printed,
+          float(printed), 5e-5, "r17_geoshield", _gs(cond, "top1"),
+          source=SUPP)
+claim(f"GS/{GS}/delta", "\\S A Published Mechanism", "-0.0100", -0.0100,
+      5e-4, "r17_geoshield", _gs(GS, "delta"), locator=None, source=SUPP)
+claim("GS/mse", "\\S A Published Mechanism", "15.68", 15.68, 5e-3,
+      "r17_geoshield", _gs(GS, "mse"), locator=None, source=SUPP)
+
+
 # --- the reproduction gate the factorial section quotes --------------------
 def _reproduction_gap(backbone: str, cond: str) -> Callable[[], float]:
     published = {("mix", "isotropic"): 0.7800, ("mix", "direction"): 0.7317,
