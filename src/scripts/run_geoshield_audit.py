@@ -453,6 +453,11 @@ def main() -> int:
     ap.add_argument("--backbone", nargs="+", default=["B16", "B32", "Laion"])
     ap.add_argument("--input_res", type=int, default=640)
     ap.add_argument("--crop_scale", type=float, nargs=2, default=[0.5, 0.9])
+    ap.add_argument("--conditions", nargs="+",
+                    default=["clean", "isotropic", "geoshield"],
+                    choices=["clean", "isotropic", "geoshield"],
+                    help="controls are cheap next to the attack and make the "
+                         "arm readable on its own")
     ap.add_argument("--seeds", type=int, nargs="+", default=[1234])
     ap.add_argument("--height", type=int, default=192)
     ap.add_argument("--width", type=int, default=320)
@@ -491,6 +496,7 @@ def main() -> int:
                  if args.bbox_json and os.path.exists(args.bbox_json) else {})
     region = "grounded" if bbox_dict else "fullframe"
     condition = f"geoshield_{args.caption_source}_{region}"
+    conditions = set(args.conditions)
     print(f"[geoshield] {len(records)} queries, region={region}, "
           f"captions={args.caption_source}", flush=True)
 
@@ -592,8 +598,6 @@ def main() -> int:
             continue
         frame = load_image(rec["query_path"], resize_hw).unsqueeze(0).to(device) * 255.0
         for seed in args.seeds:
-            if (qid, condition, str(seed)) in done:
-                continue
             # crc32, not hash(): Python randomises string hashing per
             # process, which would make the target choice irreproducible.
             pick = zlib.crc32(f"{qid}|{seed}".encode()) % len(gallery_ids)
@@ -611,18 +615,40 @@ def main() -> int:
             # the cache key is the target's own gallery id, which collapses
             # repeats across queries that draw the same target.
             caption = captions(target, gallery_ids[pick])
-            adv = attack_one(gs, args, frame, target, caption, bbox_dict,
-                             os.path.basename(str(rec["query_path"])), qi,
-                             extractor, loss, source_crop, target_crop, device)
-            released = release_at_mse(frame, adv - frame, args.target_mse)
-            row = score(embedder, embed_size, released, frame, gal, gallery_ids,
-                        place_of, want)
-            row.update({"query_id": qid, "condition": condition, "seed": seed,
-                        "region_mode": region,
-                        "caption_source": args.caption_source,
-                        "steps": args.steps, "epsilon": args.epsilon})
-            writer.writerow(row)
-            stream.flush()
+
+            # Every arm in this protocol is read against its own controls on
+            # the same frames: a GeoShield Top-1 alone says nothing without
+            # the unperturbed score and an isotropic perturbation of equal
+            # delivered energy. Both are nearly free next to a 100-step
+            # attack, so they are produced here rather than borrowed from
+            # another run with a different query subset.
+            variants = {}
+            if "clean" in conditions:
+                variants["clean"] = frame
+            if "isotropic" in conditions:
+                g = torch.Generator(device="cpu").manual_seed(seed)
+                noise = torch.randn(frame.shape, generator=g).to(device)
+                variants["isotropic"] = release_at_mse(frame, noise,
+                                                       args.target_mse)
+            if "geoshield" in conditions:
+                adv = attack_one(gs, args, frame, target, caption, bbox_dict,
+                                 os.path.basename(str(rec["query_path"])), qi,
+                                 extractor, loss, source_crop, target_crop,
+                                 device)
+                variants[condition] = release_at_mse(frame, adv - frame,
+                                                     args.target_mse)
+
+            for cond_name, released in variants.items():
+                if (qid, cond_name, str(seed)) in done:
+                    continue
+                row = score(embedder, embed_size, released, frame, gal,
+                            gallery_ids, place_of, want)
+                row.update({"query_id": qid, "condition": cond_name,
+                            "seed": seed, "region_mode": region,
+                            "caption_source": args.caption_source,
+                            "steps": args.steps, "epsilon": args.epsilon})
+                writer.writerow(row)
+                stream.flush()
             os.fsync(stream.fileno())
             written += 1
         if qi % 25 == 0:
