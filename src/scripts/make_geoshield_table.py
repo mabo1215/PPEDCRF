@@ -150,6 +150,20 @@ def main() -> int:
                      f"[{ci[0]:+.3f},{ci[1]:+.3f}] & {pf}\\,({nz.size}) & "
                      f"{pt:.3f} & {verdict} \\\\")
 
+    # The seed count is stated in the caption, derived from the rows rather
+    # than remembered. This arm was run at a single seed while the placement
+    # and operator arms beside it use three; a reader comparing tables would
+    # otherwise reasonably assume the same design, and the difference is
+    # exactly the kind of thing that is obvious to whoever ran it and
+    # invisible to everyone else.
+    seeds = sorted({r["seed"] for r in rows})
+    if len(seeds) == 1:
+        seed_note = (r"a single seed (\emph{not} the three used by the "
+                     r"placement and operator arms in this supplement; the "
+                     r"contrast below is a bounded result at one seed)")
+    else:
+        seed_note = f"{len(seeds)} seeds averaged within a query before pairing"
+
     ens = ", ".join(meta["clip_ensemble"])
     caption = (
         r"The published-mechanism arm: a public geo-privacy release run end to "
@@ -157,7 +171,8 @@ def main() -> int:
         r"attacker over the same gallery at the same delivered distortion "
         f"(MSE {meta['target_mse']}, solved per frame by bisection through the "
         r"pixel clamp), on the primary place-labelled manifest --- "
-        f"{len(ref1)} query clusters over {n_places} places. $\\Delta$ is taken "
+        f"{len(ref1)} query clusters over {n_places} places, "
+        f"{seed_note}. $\\Delta$ is taken "
         r"against the \emph{isotropic} control rather than against clean "
         r"imagery, because lowering retrieval below clean only shows that "
         r"energy was added; the question this paper asks is whether spending "
