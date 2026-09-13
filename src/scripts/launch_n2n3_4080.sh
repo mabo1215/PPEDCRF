@@ -65,21 +65,32 @@ JOBS+=("n2_dir|1|$PY src/scripts/run_geolocator_study.py \
 # The exposure name is 'hardened_direction', not 'hardened' -- the earlier
 # launch failed on exactly that, because the preflight checked that flags
 # existed without checking that the values were in range.
-g=0
+# Card assignment alternates on the HEAVY jobs only. Alternating on every job
+# aliases with the two-valued mode loop and sends every 'stock' job to card 0
+# and every 'rebuilt' job to card 1 -- which is what the first launch did,
+# leaving card 0 at 12% while card 1 sat at 99%. 'rebuilt' re-embeds the
+# gallery at every validation and costs far more than 'stock', so the rebuilt
+# jobs are what has to be split evenly; the cheap ones then fill the gaps.
+heavy=0; light=0
+SEEDS="${SEEDS:-1234 1235}"
 for k in 5 1; do
-  for exposure in isotropic direction hardened_direction; do
-    for mode in stock rebuilt; do
-      flag=""
-      [ "$mode" = "rebuilt" ] && flag="--rebuild_gallery"
-      cache=""
-      [ "$exposure" != "isotropic" ] && cache="--direction_cache $DCACHE"
-      n="n3_k${k}_${exposure}_${mode}"
-      JOBS+=("$n|$g|$PY src/scripts/finetune_adaptive_attacker.py \
-        --manifest $MANIFEST --root $ROOT \
-        --train_perturbation $exposure --unfreeze_blocks $k $flag $cache \
-        --output $CKPT/${n}.pt \
-        --test_ids_output $OUT/${n}_testids.json")
-      g=$((1 - g))
+  for sd in $SEEDS; do
+    for exposure in isotropic direction hardened_direction; do
+      for mode in stock rebuilt; do
+        flag=""; cache=""
+        if [ "$mode" = "rebuilt" ]; then
+          flag="--rebuild_gallery"; g=$heavy; heavy=$((1 - heavy))
+        else
+          g=$light; light=$((1 - light))
+        fi
+        [ "$exposure" != "isotropic" ] && cache="--direction_cache $DCACHE"
+        n="n3_k${k}_s${sd}_${exposure}_${mode}"
+        JOBS+=("$n|$g|$PY src/scripts/finetune_adaptive_attacker.py \
+          --manifest $MANIFEST --root $ROOT --seed $sd \
+          --train_perturbation $exposure --unfreeze_blocks $k $flag $cache \
+          --output $CKPT/${n}.pt \
+          --test_ids_output $OUT/${n}_testids.json")
+      done
     done
   done
 done
