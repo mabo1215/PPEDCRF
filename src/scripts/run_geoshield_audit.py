@@ -596,7 +596,10 @@ def main() -> int:
         want = rec["place_id"]
         if not any(place_of[g] == want for g in gallery_ids):
             continue
-        frame = load_image(rec["query_path"], resize_hw).unsqueeze(0).to(device) * 255.0
+        # load_image already returns [0,255]; an extra *255 put frames
+        # in [0,65025] and produced a delivered MSE of 1e9 against a
+        # 15.68 target. Every other runner in this repo loads it plain.
+        frame = load_image(rec["query_path"], resize_hw).unsqueeze(0).to(device)
         for seed in args.seeds:
             # crc32, not hash(): Python randomises string hashing per
             # process, which would make the target choice irreproducible.
@@ -607,7 +610,7 @@ def main() -> int:
             while place_of[gallery_ids[pick]] == want:
                 pick = (pick + 1) % len(gallery_ids)
             target = load_image(gallery[gallery_ids[pick]]["path"],
-                                resize_hw).unsqueeze(0).to(device) * 255.0
+                                resize_hw).unsqueeze(0).to(device)
             torch.manual_seed(seed)
             np.random.seed(seed)
             # The release captions `image_tgt`, not the source frame, and
@@ -641,6 +644,16 @@ def main() -> int:
             for cond_name, released in variants.items():
                 if (qid, cond_name, str(seed)) in done:
                     continue
+                # Energy gate. The first pilot wrote 25 rows at a delivered
+                # MSE of 1e9 against a 15.68 target and reported a Top-1 for
+                # them, because nothing checked. A perturbed arm that misses
+                # its budget is not a weak result, it is a broken one, so it
+                # stops here rather than being averaged into a table.
+                got = float((released - frame).square().mean())
+                if cond_name != "clean" and abs(got - args.target_mse) > 0.05:
+                    raise SystemExit(
+                        f"energy gate failed on {qid}/{cond_name}: delivered "
+                        f"MSE {got:.4f} against target {args.target_mse}")
                 row = score(embedder, embed_size, released, frame, gal,
                             gallery_ids, place_of, want)
                 row.update({"query_id": qid, "condition": cond_name,
