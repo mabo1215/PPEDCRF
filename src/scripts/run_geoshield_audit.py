@@ -466,6 +466,15 @@ def main() -> int:
 
     gs = import_geoshield()
     assert_published_stub(gs)
+    # The release logs metrics to Weights & Biases from inside the attack
+    # loop, and its main() calls setup_wandb() first. This harness calls
+    # fgsm_attack_masked directly, so wandb is never initialised and the run
+    # dies on the final log_metrics call -- after doing all 100 steps of work.
+    # Initialising in disabled mode makes wandb.log a no-op with no account,
+    # no network and no files. This is a consequence of bypassing their
+    # main(), not a defect in the release.
+    import wandb
+    wandb.init(mode="disabled")
     print(f"[geoshield] released stub returns {PUBLISHED_CAPTION!r} for every "
           f"frame", flush=True)
     if args.smoke:
