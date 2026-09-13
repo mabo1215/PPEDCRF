@@ -50,3 +50,8 @@ src/third_party/*
 # Partial experiment pulls: the panel export is only complete when all nine
 # jobs have written 4,000 rows. A partial tree must never reach a table.
 src/exports/placement_panel/
+
+# Ad-hoc remote deploy/poll helpers for a single GPU run; the durable
+# launcher is src/scripts/launch_r17_geoshield_vgpu3090.sh.
+src/scripts/_remote_*.sh
+src/scripts/_await_*.sh
