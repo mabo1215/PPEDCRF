@@ -142,6 +142,56 @@ def import_geoshield():
     return gs
 
 
+def shim_clip_feature_api(models) -> int:
+    """Restore the tensor return shape the released extractors assume.
+
+    Every extractor does::
+
+        f = self.model.get_image_features(**inputs)
+        f = f / f.norm(dim=1, keepdim=True)
+
+    which requires a bare tensor. Under transformers 4.x it was one. Under
+    5.16.1 the signature is ``tuple | BaseModelOutputWithPooling`` and the
+    call returns the output object, so the release raises
+    ``AttributeError: 'BaseModelOutputWithPooling' object has no attribute
+    'norm'`` before a single frame is attacked. The release names a
+    requirements.txt that would have pinned this, and does not ship one.
+
+    The unwrap is exact rather than approximate: transformers assigns
+    ``vision_outputs.pooler_output = self.visual_projection(pooled_output)``
+    and returns that object, so ``.pooler_output`` *is* the projected
+    embedding the old API handed back. Nothing about the objective changes.
+
+    Patched per model instance rather than on CLIPModel, so this repository's
+    own CLIP attackers keep the stock behaviour.
+    """
+    def unwrap(fn):
+        def wrapped(*a, **kw):
+            out = fn(*a, **kw)
+            if torch.is_tensor(out):
+                return out
+            pooled = getattr(out, "pooler_output", None)
+            if pooled is not None:
+                return pooled
+            if isinstance(out, (tuple, list)) and out:
+                return out[0]
+            raise TypeError(
+                f"cannot unwrap CLIP features from {type(out).__name__}")
+        return wrapped
+
+    patched = 0
+    for extractor in models:
+        inner = getattr(extractor, "model", None)
+        if inner is None:
+            continue
+        for name in ("get_image_features", "get_text_features"):
+            fn = getattr(inner, name, None)
+            if fn is not None:
+                setattr(inner, name, unwrap(fn))
+                patched += 1
+    return patched
+
+
 def assert_published_stub(gs) -> None:
     caption = gs.describe_image_placeholder("")
     if caption != PUBLISHED_CAPTION:
@@ -462,6 +512,10 @@ def main() -> int:
                   "crop_scale": list(args.crop_scale)},
     })
     extractor, models = gs.get_models(args.cfg)
+    n = shim_clip_feature_api(models)
+    print(f"[geoshield] transformers {__import__('transformers').__version__}: "
+          f"restored tensor return shape on {n} CLIP feature methods "
+          f"(the release targets the 4.x API)", flush=True)
     loss = gs.get_ensemble_loss(args.cfg, models)
     import torchvision.transforms as T
     source_crop = T.RandomResizedCrop(args.input_res, scale=args.crop_scale)
@@ -477,6 +531,7 @@ def main() -> int:
         "clip_ensemble": list(args.backbone),
         "target_mse": args.target_mse,
         "third_party_commit": third_party_commit(),
+        "clip_feature_api_shim": "get_image_features/get_text_features unwrapped to .pooler_output for transformers>=5",
         "label": ("public release as published; geo-semantic term degenerate"
                   if args.caption_source == "published"
                   else f"GeoShield with {caption_model} filling the released "
