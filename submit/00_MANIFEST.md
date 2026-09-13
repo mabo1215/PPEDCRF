@@ -11,6 +11,8 @@ to the corresponding file in `paper/` (md5-verified at assembly).
 | `02_supplementary.pdf` | Supplementary material | 11 |
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
+| `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1). **Needs the TOMM manuscript ID filled in.** | — |
+| `06_tomm_reviews_verbatim.md` | The three ACM TOMM reviews, verbatim and unabridged | — |
 | `source/` | LaTeX sources, `ref.bib`, used figures, generated tables, build script | — |
 
 `source/figs/` carries only the four figures the documents reference, not the
@@ -105,20 +107,45 @@ records:
   Background-Based Location Privacy in Video Sequences" (differs from the
   current title)
 - **Decision, verbatim:** "The manuscript was not accepted for publication."
-- **Three reviewer reports**, quoted verbatim in that file
+- **Manuscripts ID**, TOMM-2026-0332
 
 Note the question covers manuscripts "related to", not only identical
 resubmissions, so the change of title and the substantial rework since do not
 by themselves make the answer No.
 
+**How much has changed, measured.** The reviewed version is recoverable exactly
+(manuscript repository commit `ca94244`, 2026-03-29, whose title matches the
+review letter verbatim). Comparing its body prose against the current
+manuscript, tables and figures excluded:
+
+| | ACM TOMM version | This submission |
+|---|---|---|
+| Title | *PPEDCRF: Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences* | *Allocation or Direction? A Matched-Distortion Audit of Visual Location-Privacy Mechanisms* |
+| Body words | 2,992 | 11,461 |
+| Contribution | **Proposes** a mechanism (DCRF + NCP + selective Gaussian noise) | **Audits** that family and reports a negative result |
+| Benchmark | 12 visually-mined synthetic pairs | MSLS place-labelled manifest (400 queries, 277 places) and KITTI-360 revisits |
+| Attackers | retrieval backbones | five retrieval backbones, two image-to-GPS geolocators, an adaptive fine-tuned attacker, a purifying denoiser |
+| PPEDCRF's role | the proposed method | **the object under audit** |
+
+- **94.6% of the current manuscript is new text.** Only 622 words of verbatim
+  word-runs are shared, and exactly one passage of 25 consecutive words
+  survives — 0.2% of the current body.
+- **20.8% of the old manuscript is retained** anywhere in the new one.
+- 8 of 21 current section headings also appeared among the old 16.
+
+The overlap that does remain is deliberate and visible: `PPEDCRF`, `DCRF` and
+`NCP` are named throughout, and the reviewed version's headline numbers
+(Top-1 0.833→0.722, 36.18 dB PSNR) still appear — because the mechanism that
+was proposed there is the mechanism being audited here. That continuity is the
+reason the honest answer to this question is Yes rather than No, and it is also
+why answering No would be detectable: three ACM TOMM reviewers have seen this
+work, and the reviewer pools of the two venues overlap.
+
 Two things the authors must supply, which are not in the repository:
 
-1. The **ACM TOMM manuscript ID** — no ID appears anywhere in the saved letter.
-2. The **supporting document**: verbatim quotations of all relevant parts of
-   all three reviews, plus how each has been addressed. `TOMM_Response_Letter.md`
-   already contains the verbatim reviews and can serve as its basis, but the
-   "how addressed" mapping must be written against the *current* manuscript,
-   which has changed substantially (fourteen internal review cycles since).
+1. The **ACM TOMM manuscript ID** — TOMM-2026-0332.
+2. Confirmation and sign-off on the supporting document, drafted as
+   `05_prior_review_disclosure.md` in this directory.
 
 ### Q2. Extended version of a conference publication?
 
@@ -257,6 +284,68 @@ adaptation arm is one of several attacks we bound rather than the whole claim.
 placed from *what direction* it points, holding delivered distortion fixed.
 That control is what this paper adds, and it is what turns "this mechanism
 protects" into "this component of the mechanism is, or is not, what protects".
+
+
+## Paste-ready answers (500-character fields)
+
+Each field on the TIFS form caps at 500 characters. The blocks below are
+verbatim paste text, with the character count measured. Q2-Q5 are one-word
+declarations that only the authors can confirm; the rest are answered from
+the manuscript.
+
+### Q1. Resubmission of / related to a previously rejected or withdrawn manuscript?
+
+> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted. A supporting document is uploaded quoting all three reviews verbatim and stating how each point was addressed. This manuscript continues that research line but inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 94.6% of the body text is new (2,992 to 11,461 words).
+
+*483/500 characters.*
+
+### Q2. Extended version of a conference publication?
+
+> No.
+
+*3/500 characters.*
+
+### Q3. Related to other papers by the authors not cited here?
+
+> No.
+
+*3/500 characters.*
+
+### Q4. Preprints identical to this submission?
+
+> No.
+
+*3/500 characters.*
+
+### Q5. Other posted preprints that should not be considered prior art?
+
+> No.
+
+*3/500 characters.*
+
+### Q6. Why is the contribution within the scope of IEEE TIFS?
+
+> The paper evaluates visual privacy-protection mechanisms and the attacks that defeat them. Background scene cues let an adversary infer where a released dashcam frame was recorded even after GPS metadata is stripped. We audit published image-sanitization defenses at matched delivered distortion against five retrieval attackers, two image-to-GPS geolocators, an adaptive fine-tuned attacker and a purifying denoiser. The machine learning is applied to that privacy problem, not studied alone.
+
+*493/500 characters.*
+
+### Q7. Why is the contribution significant (what impact will it have)?
+
+> Mechanisms in this family are designed by choosing where to spend a bounded distortion budget. At matched delivered distortion that choice buys nothing against four of five attackers, over nine placement rules, three published-model placements and four operators, every difference within 0.012 Top-1. The leverage is the perturbation's direction, which transfers to all five. We supply the protocol, its controls, and a diagnostic that caught a released checkpoint whose map is numerically constant.
+
+*499/500 characters.*
+
+### Q8. The three most closely related published papers
+
+> 1) X. Liu et al., GeoShield: Safeguarding Geolocation Privacy from Vision-Language Models via Adversarial Perturbations, AAAI 2026, 40:35653-35661, doi 10.1609/aaai.v40i42.40877. 2) T.-N. Le et al., Rethinking Adversarial Examples for Location Privacy Protection, IEEE WIFS 2022, 1-6, doi 10.1109/WIFS55849.2022.9975388. 3) E. Radiya-Dixit, S. Hong, N. Carlini, F. Tramer, Data Poisoning Won't Save You From Facial Recognition, ICLR 2022 (OpenReview, no DOI assigned).
+
+*468/500 characters.*
+
+### Q9. What is distinctive/new relative to those works?
+
+> None of the three separates where a bounded budget is placed from what direction it points at fixed delivered distortion; that control is what we add. We run GeoShield's public release end to end: it does not separate from isotropic noise of equal energy (-0.010 Top-1, [-0.041,+0.020]). Le et al.'s mask never beats no mask, costing up to +0.063 Top-1. Radiya-Dixit et al. show adaptation defeats face cloaking; we measure it, and find the binding resource is the attacker's index, not its capacity.
+
+*500/500 characters.*
 
 ## Still required from the authors before upload
 
