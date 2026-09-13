@@ -439,10 +439,27 @@ arm measures a movable benchmark rather than a floor. The finding is stated
 for the model tested. \\
 \addlinespace
 
-N3 & Adaptive attacker at a larger budget & \pending & A fully unfrozen
-encoder, data beyond this benchmark, or re-indexing at every step. The
-manuscript states the budget it could afford and confines its conclusion to
-it. \\
+N3 & Adaptive attacker at a larger budget & \done & Run, and it changed a
+conclusion. The published arm fine-tunes the last residual block against a
+fixed index; this runs the fully unfrozen encoder (every residual stage plus
+the stem) beside it, both budgets in one batch under one protocol over four
+seeds, each adapted model scored on the held-out split its own checkpoint was
+trained against and differenced against an unadapted baseline on that same
+split. \textbf{Against the direction release the larger budget helps, but only
+when the attacker also re-embeds the gallery}: 12 of 12 cells positive across
+three training exposures and four seeds, mean $+0.0625$ Top-1, sign-test
+$p=0.00024$. Held at the pretrained index the same budget does nothing --- 4
+of 12 positive, mean $-0.0050$, $p=0.93$. In level terms the unadapted
+attacker reaches $0.05$--$0.08$ and the unfrozen re-indexing one $0.07$--$0.17$,
+recovering roughly half of what the perturbation removed. The manuscript's
+adaptive-attacker section therefore needs qualifying rather than extending:
+its ``adaptation buys the attacker little'' holds for the budget it tested and
+not for the one the review asked about. Note the split that matters is not
+capacity but \emph{re-indexing} --- extra parameters are worth nothing to an
+attacker forced to keep the original index. Two seeds could not have
+established this: several cells flipped sign between seeds with non-overlapping
+intervals, so the two-seed run would have supported a false positive or a false
+null depending on which cells were read. \\
 \addlinespace
 
 N4 & Six segmenters re-scored on MSLS query frames & \pending & What it would
