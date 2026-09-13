@@ -146,22 +146,19 @@ def main() -> int:
         f"substitute recovers, not a test against a stronger attacker.")
 
     caption = (
-        r"A geolocator that is not a gallery retriever. The model named in the "
-        r"review has no public weights, so the attacker here is a frontier "
-        r"vision--language model prompted for a coordinate --- a different "
-        r"architecture, different training data, and no gallery --- read on the "
-        r"same released bytes the gallery-based geolocator read, so the two "
-        r"differ in the reader and in nothing else. " + gate_sentence +
-        r" Columns give the share of queries placed inside each threshold. "
-        r"The claim is carried by the ``localisable'' column, the queries "
-        r"the clean attacker already places inside " + f"{PRIMARY:g}~km" +
-        r": on a query the clean attacker already fails, a perturbation that "
-        r"moves the prediction earns credit it never earned. $\Delta$ is "
-        r"against that subset's clean rate, the interval is bootstrapped over "
-        r"places, and the figure beside $p$ counts discordant pairs. "
-        f"Refusals ({refused}) are counted and excluded, never scored: a "
-        r"refusal turned into a coordinate would land far from the truth and "
-        r"read as a defense working spectacularly. Attacker: "
+        r"A geolocator that is not a gallery retriever: a vision--language "
+        r"model prompted for a coordinate --- different architecture, "
+        r"different training data, no gallery --- read on the same released "
+        r"bytes the gallery-based geolocator read, so the two differ in the "
+        r"reader and nothing else. " + gate_sentence +
+        r" Columns give the share of queries inside each threshold. The claim "
+        r"is carried by the ``localisable'' column, the queries the clean "
+        r"attacker already places inside " + f"{PRIMARY:g}~km" +
+        r": where it already fails, a perturbation that moves the prediction "
+        r"earns credit it never earned. $\Delta$ is against that subset's "
+        r"clean rate, interval bootstrapped over places, the figure beside "
+        f"$p$ counting discordant pairs. Refusals ({refused}) are counted and "
+        r"excluded, never scored as a coordinate. Attacker: "
         f"\\texttt{{{args.model}}}.")
 
     out = [
