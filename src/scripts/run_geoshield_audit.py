@@ -183,10 +183,17 @@ def read_api_key(env_path: Path, label: str) -> str:
 
 
 class CaptionSource:
-    """Per-image captions, cached on disk so a resume pays no API cost."""
+    """Per-image captions, cached on disk so a resume pays no API cost.
+
+    `openai` is the default non-published source because the release's own
+    stub docstring names "OpenAI GPT-4V API" first among the models a user is
+    told to plug in, and `gpt-4o` is that model's successor -- supplying the
+    component the authors pointed at is a narrower substitution than picking
+    a different vendor's model.
+    """
 
     def __init__(self, mode: str, cache: Path, api_key: Optional[str] = None,
-                 model: str = "claude-opus-5"):
+                 model: str = "gpt-4o"):
         self.mode = mode
         self.cache_path = cache
         self.api_key = api_key
@@ -196,65 +203,79 @@ class CaptionSource:
         if cache.is_file():
             self.cache = json.loads(cache.read_text(encoding="utf-8"))
 
-    def __call__(self, frame: torch.Tensor, key: str) -> str:
+    def __call__(self, image: torch.Tensor, key: str) -> str:
         if self.mode == "published":
             return PUBLISHED_CAPTION
         if key in self.cache:
             return self.cache[key]
-        caption = self._describe(frame)
+        caption = self._describe(image)
         self.cache[key] = caption
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
         self.cache_path.write_text(json.dumps(self.cache, indent=1) + "\n",
                                    encoding="utf-8", newline="\n")
         return caption
 
-    def _client(self):
-        if self._sdk is None:
-            import anthropic
-            self._sdk = anthropic.Anthropic(api_key=self.api_key)
-        return self._sdk
-
-    def _describe(self, frame: torch.Tensor) -> str:
-        """One caption, through the official SDK.
-
-        `max_tokens` is a ceiling on thinking *plus* response text, and
-        thinking is on by default on this model family, so a caption-sized
-        budget would return an empty or truncated text block rather than an
-        error. Hence the generous ceiling and the low effort setting: the task
-        needs no deliberation, and only `text` blocks are read back.
-        """
+    @staticmethod
+    def _png_b64(image: torch.Tensor) -> str:
         from PIL import Image
-        arr = (frame.detach().clamp(0, 255).byte().cpu()
+        arr = (image.detach().clamp(0, 255).byte().cpu()
                .squeeze(0).permute(1, 2, 0).numpy())
         buf = io.BytesIO()
         Image.fromarray(arr).save(buf, format="PNG")
+        return base64.b64encode(buf.getvalue()).decode()
 
-        message = self._client().messages.create(
+    def _describe(self, image: torch.Tensor) -> str:
+        caption = (self._describe_openai(image) if self.mode == "openai"
+                   else self._describe_claude(image))
+        if not caption:
+            raise SystemExit(
+                "the caption model returned nothing; aborting rather than "
+                "falling back to the released constant caption, which would "
+                "silently mislabel this arm as the published one")
+        return caption
+
+    def _describe_openai(self, image: torch.Tensor) -> str:
+        if self._sdk is None:
+            from openai import OpenAI
+            self._sdk = OpenAI(api_key=self.api_key)
+        result = self._sdk.chat.completions.create(
+            model=self.model,
+            max_tokens=300,
+            messages=[{"role": "user", "content": [
+                {"type": "text", "text": CAPTION_PROMPT},
+                {"type": "image_url", "image_url": {
+                    "url": f"data:image/png;base64,{self._png_b64(image)}"}},
+            ]}],
+        )
+        return (result.choices[0].message.content or "").strip()
+
+    def _describe_claude(self, image: torch.Tensor) -> str:
+        """Kept as an alternative source; `max_tokens` covers thinking too.
+
+        Thinking is on by default on this model family and shares the
+        `max_tokens` ceiling with the response text, so a caption-sized budget
+        returns an empty or truncated text block rather than an error.
+        """
+        if self._sdk is None:
+            import anthropic
+            self._sdk = anthropic.Anthropic(api_key=self.api_key)
+        message = self._sdk.messages.create(
             model=self.model,
             max_tokens=1000,
             output_config={"effort": "low"},
             messages=[{"role": "user", "content": [
                 {"type": "image", "source": {
                     "type": "base64", "media_type": "image/png",
-                    "data": base64.b64encode(buf.getvalue()).decode()}},
+                    "data": self._png_b64(image)}},
                 {"type": "text", "text": CAPTION_PROMPT},
             ]}],
         )
-        # A safety decline returns a normal response with no usable text;
-        # falling back to the constant caption would silently mislabel this
-        # arm as the published one, so it stops instead.
         if message.stop_reason == "refusal":
             raise SystemExit(
                 "the caption model declined a frame; aborting rather than "
-                "falling back to the released constant caption, which would "
-                "mislabel the arm")
-        text = "".join(b.text for b in message.content
+                "falling back to the released constant caption")
+        return "".join(b.text for b in message.content
                        if b.type == "text").strip()
-        if not text:
-            raise SystemExit(
-                f"empty caption (stop_reason={message.stop_reason}); raise "
-                f"max_tokens rather than recording a blank caption")
-        return text
 
 
 # --------------------------------------------------------------------------
@@ -336,10 +357,15 @@ def main() -> int:
     ap.add_argument("--target_mse", type=float, default=15.68)
     ap.add_argument("--bbox_json", default="")
     ap.add_argument("--caption_source", default="published",
-                    choices=["published", "claude"])
-    ap.add_argument("--caption_model", default="claude-opus-5")
+                    choices=["published", "openai", "claude"])
+    ap.add_argument("--caption_model", default="",
+                    help="defaults to gpt-4o for openai, claude-opus-5 for "
+                         "claude; gpt-4o is the successor to the GPT-4V the "
+                         "release's own stub names first")
     ap.add_argument("--env", default="C:/source/.env")
-    ap.add_argument("--env_label", default="claude-code-api")
+    ap.add_argument("--env_label", default="",
+                    help="defaults to chatgpt-api / claude-code-api to match "
+                         "--caption_source")
     ap.add_argument("--steps", type=int, default=100)
     ap.add_argument("--epsilon", type=float, default=8.0)
     ap.add_argument("--alpha", type=float, default=1.0)
@@ -378,12 +404,17 @@ def main() -> int:
     print(f"[geoshield] {len(records)} queries, region={region}, "
           f"captions={args.caption_source}", flush=True)
 
-    key = (read_api_key(Path(args.env), args.env_label)
-           if args.caption_source == "claude" else None)
+    default_model = {"openai": "gpt-4o", "claude": "claude-opus-5"}
+    default_label = {"openai": "chatgpt-api", "claude": "claude-code-api"}
+    caption_model = args.caption_model or default_model.get(
+        args.caption_source, "")
+    env_label = args.env_label or default_label.get(args.caption_source, "")
+    key = (read_api_key(Path(args.env), env_label)
+           if args.caption_source != "published" else None)
     captions = CaptionSource(
         args.caption_source,
         Path(args.output).parent / f"captions_{args.caption_source}.json",
-        key, args.caption_model)
+        key, caption_model)
 
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -403,15 +434,19 @@ def main() -> int:
         stream.flush()
         os.fsync(stream.fileno())
 
+    # Two different sizes, which the first cut conflated: `resize_hw` is the
+    # frame geometry every arm loads at, while `cfg.input_size` is the square
+    # resolution the embedder resamples to internally.
     cfg = RetrievalConfig(backbone=args.eval_backbone)
-    size = default_input_size_for_backbone(args.eval_backbone,
-                                           (args.height, args.width))
+    cfg.input_size = default_input_size_for_backbone(args.eval_backbone)
+    resize_hw = (args.height, args.width)
+    embed_size = cfg.input_size
     embedder = make_default_embedder(cfg, device)
     gallery_ids = sorted(gallery)
     place_of = {g: gallery[g]["place_id"] for g in gallery_ids}
     gal = embed_gallery_batched(
         cfg, embedder,
-        torch.stack([load_image(gallery[g]["path"], size)
+        torch.stack([load_image(gallery[g]["path"], resize_hw)
                      for g in gallery_ids]),
         args.gallery_batch)
     gal = (gal / gal.norm(dim=-1, keepdim=True).clamp_min(1e-12)).to(device)
@@ -435,6 +470,7 @@ def main() -> int:
     (out_path.parent / "run_metadata.json").write_text(json.dumps({
         "released_caption": PUBLISHED_CAPTION,
         "caption_source": args.caption_source,
+        "caption_model": caption_model or None,
         "caption_is_constant_across_corpus": args.caption_source == "published",
         "region_mode": region,
         "steps": args.steps, "epsilon": args.epsilon,
@@ -443,8 +479,8 @@ def main() -> int:
         "third_party_commit": third_party_commit(),
         "label": ("public release as published; geo-semantic term degenerate"
                   if args.caption_source == "published"
-                  else "GeoShield with our VLM substitution; not the released "
-                       "implementation"),
+                  else f"GeoShield with {caption_model} filling the released "
+                       f"VLM stub; not the released implementation"),
     }, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     written = 0
@@ -453,7 +489,7 @@ def main() -> int:
         want = rec["place_id"]
         if not any(place_of[g] == want for g in gallery_ids):
             continue
-        frame = load_image(rec["query_path"], size).unsqueeze(0).to(device) * 255.0
+        frame = load_image(rec["query_path"], resize_hw).unsqueeze(0).to(device) * 255.0
         for seed in args.seeds:
             if (qid, condition, str(seed)) in done:
                 continue
@@ -466,15 +502,19 @@ def main() -> int:
             while place_of[gallery_ids[pick]] == want:
                 pick = (pick + 1) % len(gallery_ids)
             target = load_image(gallery[gallery_ids[pick]]["path"],
-                                size).unsqueeze(0).to(device) * 255.0
+                                resize_hw).unsqueeze(0).to(device) * 255.0
             torch.manual_seed(seed)
             np.random.seed(seed)
-            caption = captions(frame, f"{qid}|{seed}")
+            # The release captions `image_tgt`, not the source frame, and
+            # the target is a deterministic function of (query, seed) -- so
+            # the cache key is the target's own gallery id, which collapses
+            # repeats across queries that draw the same target.
+            caption = captions(target, gallery_ids[pick])
             adv = attack_one(gs, args, frame, target, caption, bbox_dict,
                              os.path.basename(str(rec["query_path"])), qi,
                              extractor, loss, source_crop, target_crop, device)
             released = release_at_mse(frame, adv - frame, args.target_mse)
-            row = score(embedder, size, released, frame, gal, gallery_ids,
+            row = score(embedder, embed_size, released, frame, gal, gallery_ids,
                         place_of, want)
             row.update({"query_id": qid, "condition": condition, "seed": seed,
                         "region_mode": region,

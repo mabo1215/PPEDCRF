@@ -52,8 +52,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--frames", nargs="+", required=True)
     ap.add_argument("--env", default="C:/source/.env")
-    ap.add_argument("--env_label", default="claude-code-api")
-    ap.add_argument("--model", default="claude-opus-5")
+    ap.add_argument("--env_label", default="chatgpt-api")
+    ap.add_argument("--model", default="gpt-4o")
     ap.add_argument("--cache", default=str(REPO / "src" / "tmp" /
                                            "geoshield_caption_smoke.json"))
     args = ap.parse_args()
@@ -65,7 +65,7 @@ def main() -> int:
     cache = Path(args.cache)
     if cache.is_file():
         cache.unlink()
-    src = CaptionSource("claude", cache, key, args.model)
+    src = CaptionSource("openai", cache, key, args.model)
 
     captions = {}
     for path in args.frames:
@@ -88,7 +88,7 @@ def main() -> int:
         if len(caption.split()) < 5:
             failures.append(f"{name}: caption is too short to carry content")
 
-    reloaded = CaptionSource("claude", cache, key, args.model)
+    reloaded = CaptionSource("openai", cache, key, args.model)
     if reloaded.cache != src.cache:
         failures.append("cache did not round-trip; a resume would re-pay")
     else:
