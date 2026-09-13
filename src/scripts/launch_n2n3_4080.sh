@@ -54,20 +54,33 @@ JOBS+=("n2_dir|1|$PY src/scripts/run_geolocator_study.py \
   --conditions direction --save_frames $FRAMES \
   --output $OUT/n2_dir.csv")
 
-# --- N3: the adaptive attacker, fully unfrozen (stem included) ---------------
+# --- N3: the adaptive attacker at two unfreeze budgets -----------------------
+# k=5 is the fully unfrozen encoder the review asks for. k=1 is the published
+# arm's setting, re-run here rather than quoted from the earlier run: claiming
+# "unfreezing the whole encoder does not change the conclusion" requires the
+# two budgets to differ in nothing but the budget, and the published k=1 numbers
+# come from a different run with its own split and seed. A control that has to
+# be compared across runs is not a control.
+#
+# The exposure name is 'hardened_direction', not 'hardened' -- the earlier
+# launch failed on exactly that, because the preflight checked that flags
+# existed without checking that the values were in range.
 g=0
-for exposure in isotropic direction hardened; do
-  for mode in stock rebuilt; do
-    flag=""
-    [ "$mode" = "rebuilt" ] && flag="--rebuild_gallery"
-    cache=""
-    [ "$exposure" != "isotropic" ] && cache="--direction_cache $DCACHE"
-    JOBS+=("n3_${exposure}_${mode}|$g|$PY src/scripts/finetune_adaptive_attacker.py \
-      --manifest $MANIFEST --root $ROOT \
-      --train_perturbation $exposure --unfreeze_blocks 5 $flag $cache \
-      --output $CKPT/n3_${exposure}_${mode}.pt \
-      --test_ids_output $OUT/n3_${exposure}_${mode}_testids.json")
-    g=$((1 - g))
+for k in 5 1; do
+  for exposure in isotropic direction hardened_direction; do
+    for mode in stock rebuilt; do
+      flag=""
+      [ "$mode" = "rebuilt" ] && flag="--rebuild_gallery"
+      cache=""
+      [ "$exposure" != "isotropic" ] && cache="--direction_cache $DCACHE"
+      n="n3_k${k}_${exposure}_${mode}"
+      JOBS+=("$n|$g|$PY src/scripts/finetune_adaptive_attacker.py \
+        --manifest $MANIFEST --root $ROOT \
+        --train_perturbation $exposure --unfreeze_blocks $k $flag $cache \
+        --output $CKPT/${n}.pt \
+        --test_ids_output $OUT/${n}_testids.json")
+      g=$((1 - g))
+    done
   done
 done
 
@@ -75,6 +88,11 @@ for entry in "${JOBS[@]}"; do
   IFS='|' read -r name gpu cmd <<< "$entry"
   if screen -list 2>/dev/null | grep -q "\.${name}[[:space:]]"; then
     echo "[skip] $name already running"; continue
+  fi
+  # A finished job leaves no screen, so without this a re-launch silently
+  # redoes completed work. Only exit=0 counts -- a failed job should re-run.
+  if grep -q "^DONE ${name} exit=0" "$LOGS/${name}.log" 2>/dev/null; then
+    echo "[skip] $name already finished"; continue
   fi
   script="$LOGS/${name}.sh"
   {
