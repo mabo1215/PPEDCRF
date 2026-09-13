@@ -52,6 +52,24 @@ def main() -> int:
         print(f"{name:14s} undefined={undef} overfull={over} "
               f"fontshape={fonts}{flag}")
         bad += undef + over + fonts
+
+    # No CJK anywhere in the manuscript sources. The repository is bilingual --
+    # notes and progress are Chinese, the paper is English -- so a stray
+    # character from an editing session compiles happily and ships. One did:
+    # "every run" became "每 run" during a compression pass and was caught by
+    # eye, which is not a method.
+    cjk = re.compile(r"[一-鿿　-〿＀-￯]")
+    for src in (PAPER / "main.tex", PAPER / "supplementary.tex"):
+        if not src.is_file():
+            continue
+        hits = []
+        for i, line in enumerate(src.read_text(encoding="utf8",
+                                               errors="replace").splitlines(), 1):
+            if cjk.search(line):
+                hits.append(f"{src.name}:{i}")
+        if hits:
+            print(f"{src.stem:14s} CJK in manuscript: {', '.join(hits[:5])}  <-- fix")
+            bad += len(hits)
     return 1 if bad else 0
 
 
