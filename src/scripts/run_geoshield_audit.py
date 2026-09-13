@@ -342,32 +342,63 @@ def attack_one(gs, args, frame: torch.Tensor, target: torch.Tensor,
     full-frame box, so a run with no detections reproduces the shipped
     default where the whole frame is the region.
     """
+    # Boxes are expressed in the coordinate space the attack runs in, which
+    # is the release's own square input_res (see the resampling note below).
+    # Detections arrive in the source frame's space, so they are scaled with
+    # it rather than silently pointing at the wrong pixels.
+    res = int(args.input_res)
     if img_name in bbox_dict:
-        img_size = bbox_dict[img_name]["size"]
-        boxes = list(bbox_dict[img_name]["boxes"])
+        det_h, det_w = bbox_dict[img_name]["size"]
+        sx, sy = res / float(det_w), res / float(det_h)
+        boxes = [[int(b[0] * sx), int(b[1] * sy), int(b[2] * sx), int(b[3] * sy)]
+                 for b in bbox_dict[img_name]["boxes"]]
     else:
-        img_size = (frame.shape[2], frame.shape[3])
         boxes = []
-    boxes.append([0, 0, img_size[1], img_size[0]])
+    img_size = (res, res)
+    boxes.append([0, 0, res, res])
 
     areas = torch.stack([
-        torch.sum(gs.bbox_to_mask(box, img_size, args.input_res,
+        torch.sum(gs.bbox_to_mask(box, img_size, res,
                                   str(device))).float()
         for box in boxes])
     total = areas.sum() + 1e-8
     probs = [(a / total) for a in areas]
 
+    # Run the mechanism at its own resolution, measure at the protocol's.
+    #
+    # The release hard-codes RandomCrop(224) inside the attack loop and its
+    # config resizes inputs to input_res (640) first; this protocol releases
+    # frames at 192x320, which is shorter than 224, so the released code
+    # cannot run on them at all. Feeding it 192x320 would not be "the release
+    # as published" either -- it would be the release denied its own
+    # preprocessing.
+    #
+    # So the attack runs on the frame resampled to its native square, and
+    # only the resulting *perturbation* is brought back to the protocol's
+    # geometry, where the usual bisection sets its energy. Shape comes from
+    # the mechanism; energy comes from the protocol, exactly as for every
+    # other arm.
+    hw = frame.shape[-2:]
+    up = lambda t: torch.nn.functional.interpolate(
+        t, size=(res, res), mode="bicubic", align_corners=False)
+    frame_hi, target_hi = up(frame), up(target)
+
     with torch.enable_grad():
-        adv = gs.fgsm_attack_masked(
+        adv_hi = gs.fgsm_attack_masked(
             cfg=args.cfg, ensemble_extractor=ensemble_extractor,
             ensemble_loss=ensemble_loss, source_crop=source_crop,
-            target_crop=target_crop, img_index=img_index, image_org=frame,
-            image_tgt=target, boxes=boxes, image_size=img_size, probs=probs,
-            description=caption)
-    adv = adv.detach()
-    # The released attack returns the frame divided by 255 and clamped to
-    # [0,1] on its final line; everything downstream here is in pixel units.
-    return adv * 255.0 if float(adv.max()) <= 1.0 else adv
+            target_crop=target_crop, img_index=img_index, image_org=frame_hi,
+            image_tgt=target_hi, boxes=boxes, image_size=(res, res),
+            probs=probs, description=caption)
+    adv_hi = adv_hi.detach()
+    # The released attack divides by 255 and clamps to [0,1] on its final
+    # line; everything downstream here is in pixel units.
+    if float(adv_hi.max()) <= 1.0:
+        adv_hi = adv_hi * 255.0
+
+    delta = torch.nn.functional.interpolate(
+        adv_hi - frame_hi, size=hw, mode="bicubic", align_corners=False)
+    return (frame + delta).clamp(0.0, 255.0)
 
 
 def score(embedder, size, released, frame, gallery_emb, gallery_ids, place_of,
@@ -531,6 +562,12 @@ def main() -> int:
         "clip_ensemble": list(args.backbone),
         "target_mse": args.target_mse,
         "third_party_commit": third_party_commit(),
+        "attack_resolution": args.input_res,
+        "release_geometry": [args.height, args.width],
+        "geometry_note": "attack runs at the release's square "
+                         "input_res; the perturbation is resampled "
+                         "to the protocol geometry before the "
+                         "delivered-MSE bisection",
         "clip_feature_api_shim": "get_image_features/get_text_features unwrapped to .pooler_output for transformers>=5",
         "label": ("public release as published; geo-semantic term degenerate"
                   if args.caption_source == "published"
