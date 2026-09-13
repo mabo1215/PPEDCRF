@@ -69,13 +69,18 @@ def main() -> int:
             for r in csv.DictReader(fh):
                 place_of[r["query_id"]] = r["correct_place"]
 
-    # Baselines, keyed by seed. The 1234 baseline was written under the name
-    # the launcher derived from its ids file rather than the seed.
+    # Baselines, keyed by seed, parsed rather than enumerated. An earlier
+    # version hard-coded 1234 and 1235; adding seeds would then have silently
+    # dropped every configuration that had no matching key, reporting fewer
+    # rows rather than failing. The 1234 baseline predates the seed-tagged
+    # naming and is matched on the absence of a tag.
     base: Dict[str, Path] = {}
     for p in root.glob("baseline_*.csv"):
-        base["1235" if "s1235" in p.stem else "1234"] = p
+        m = re.search(r"baseline_s(\d+)", p.stem)
+        base[m.group(1) if m else "1234"] = p
     if not base:
         raise SystemExit(f"no baseline_*.csv under {root}")
+    print(f"baselines: {', '.join(sorted(base))}")
 
     runs = []
     for p in sorted(root.glob("n3_*.csv")):

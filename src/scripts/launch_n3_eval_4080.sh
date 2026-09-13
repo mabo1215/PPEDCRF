@@ -46,12 +46,18 @@ for ck in "$CKPT"/n3_*.pt; do
 done
 
 # One unadapted baseline per distinct split, so every adapted row has a
-# same-split control. Splits differ by (seed), so one baseline per seed.
-for ids in "$OUT"/n3_k5_isotropic_stock_testids.json \
-           "$OUT"/n3_k5_s1235_isotropic_stock_testids.json; do
+# same-split control rather than being differenced against another split's.
+# The split depends only on --seed, so one baseline per seed; discovered from
+# the ids files rather than listed, so a new seed cannot be silently left
+# without its control -- which would not error, it would just quietly compare
+# across splits.
+for ids in "$OUT"/n3_k5_*isotropic_stock_testids.json; do
   [ -f "$ids" ] || continue
-  tag=$(basename "$ids" _testids.json | sed 's/n3_k5_//; s/_isotropic_stock//')
-  [ -z "$tag" ] && tag="s1234"
+  b=$(basename "$ids" _testids.json)
+  case "$b" in
+    n3_k5_s*) tag="${b#n3_k5_}"; tag="${tag%%_*}" ;;
+    *)        tag="s1234" ;;
+  esac
   g=$heavy; heavy=$((1 - heavy))
   JOBS+=("ev_baseline_${tag}|$g|$PY src/scripts/run_direction_transfer_study.py \
     --manifest $MANIFEST --root $ROOT --seeds 1234 \
