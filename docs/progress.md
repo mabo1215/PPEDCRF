@@ -835,16 +835,29 @@ Patch-NetVLAD 上分离），会回填论文并在此处新增记录。
 
 （上一版这里列的 R1 / R3 / R4「已阻挡」条目已全部作废：R1 与 R4 的实验在 9月12–13 日于 vGPU 3090 跑完并已写进论文，R3 的阻挡原因也已查明并改变了性质。详见 `# 已全部修改`。）
 
-## 【等你开卡即可跑】R3 强方案：代码已就绪，等 vGPU 3090（2026年9月13日）
+## 【进行中】R3 强方案：全量臂已在 vGPU 3090 上运行（2026年9月13日）
 
-你回答「照原样跑公开版，报告它退化」+「vGPU 3090」，据此已把不需要 GPU 的部分全部做完。
+你回答「照原样跑公开版，报告它退化」+「vGPU 3090」。不需要 GPU 的部分已全部做完；
+pilot 已跑完并验证了协议与能量闸门；**全量臂（400 query × 3 条件，seed 1234，约 4.5 小时）
+已于 11:35:53 起跑**，按 query 断点续跑，每 10 分钟巡检一次，能量闸门跳闸会立即报警而不等停滞计数。
 
-**把 GeoShield 重新 clone 下来逐行读完后，公开版的缺陷不止一处，而是四处**（全部由读代码确认，非推测）：
+**分阶段是有意的**：pilot 的 signed-rank 只有 2 个 discordant 对，任何效应量都分不开，
+所以先买一个 seed 的全量 manifest（约 400 个配对观测）看它是否真的与 isotropic 对照分离；
+余下两个 seed（再 9 小时）只在这一个 seed 显示出有东西可分辨时才值得买。
+
+**把 GeoShield 重新 clone 下来逐行读完后，公开版的缺陷不止一处，而是五处**（全部由读代码或实跑确认，非推测）：
 
 1. **VLM stub 返回的是常量，而且不报错。** `describe_image_placeholder()` 对**每一张图**返回同一句 `"A scenic outdoor photograph."`。它没有 guard、不抛异常，所以公开代码能一路跑完，只是 `set_geotext_truth()` 对全语料嵌入同一条文本——它目标函数里**减掉**的那个 geo-semantic 项不携带任何逐图语义信号。**这比「缺一块」严重：它是能跑但退化**，和本文 §IV-A 那个「support map 数值恒定却仍能画出漂亮 privacy–utility 曲线」的 released checkpoint 是同一类失效。
 2. **region 模块默认关闭。** `bbox_json_path` 默认为空 → `boxes=[]` → 代码随即 append 一个全画幅框，于是「定位泄露区域再扰动」这个命名模块在默认配置下是 no-op。但**它与 VLM 不同，是公开可恢复的**：README 写明用 GroundingDINO（权重公开、命令给全）。拿一个机制自己写了启用方法的模块去关掉它再审计，属于稻草人，所以 runner 提供 `--bbox_json` 打开它。
 3. **untargeted 模式的 target 集合没有定义。** README 说 target images 「for M-Attack only」，但 `geoshield.py` 第 421 行 `set_ground_truth(mask_crop(image_tgt, mask))` 确实在用它——即 untargeted 臂的结果依赖一个文档说「用不到」的输入。这是文档与代码矛盾，且是个会实质改变结果的自由参数。runner 里固定为「与 query 不同 place 的 gallery 帧、按 crc32(query|seed) 选取」并写进 metadata，而不是听任目录顺序。
 4. **`import geoshield` 本身就失败。** `config_schema.MainConfig` 把 `data/optim/model/wandb` 标注成非 Optional 却给默认值 `None`，`cs.store()` 在当前 omegaconf 下直接抛 `field 'data' is not Optional`，在任何攻击代码之前。README 让你装的 `requirements.txt` **仓库里并不存在**，所以也没有可回退的版本。这是打包缺陷而非目标函数缺陷，runner 在 import 期间临时停用 ConfigStore 注册（本 harness 自己构造 cfg，从不走 Hydra 解析），注释里写明了理由，攻击路径逐位未动。
+5. **公开版只能在 transformers 4.x 上跑，而它没有给出可钉版本的方式。** 在 transformers 5.16.1 下
+   `CLIPModel.get_image_features()` 返回 `BaseModelOutputWithPooling` 而非 tensor，公开代码对它直接调
+   `.norm()`，于是 `AttributeError` 在第一帧就抛出——**一帧都跑不完**。这条是实跑发现的，不是读代码猜的，
+   而能钉住旧版本的 `requirements.txt` 仓库里并不存在（与第 4 条同源）。
+   修法是精确的而非将就的：transformers 源码里 `vision_outputs.pooler_output = visual_projection(pooled_output)`，
+   所以 `.pooler_output` **就是**旧 API 返回的那个投影嵌入，取它不是近似。补丁按模型实例打、不动 `CLIPModel` 类，
+   因此本仓库自己的 CLIP 攻击者行为不受影响；已记进 run metadata。
 
 **已就绪（本机已验证，未用 GPU）**：
 - `src/scripts/run_geoshield_audit.py`——导入公开实现而**不修改**它，只在边界适配：喂帧进去，把出来的扰动按本协议的 per-frame 二分（穿过像素 clamp）压到 delivered MSE 15.68，再交给同一攻击者面板。启动时**断言 stub 仍返回那句常量**，一旦上游改了就拒绝继续，标签不会悄悄失效。逐行增量写入 + flush/fsync + 断点续跑（符合仓库铁律）。
@@ -852,7 +865,18 @@ Patch-NetVLAD 上分离），会回填论文并在此处新增记录。
 - `src/scripts/launch_r17_geoshield_vgpu3090.sh`——先跑 25 帧 pilot 再放全量（公开版每帧成本远高于本仓库其它任何臂：100 步 FGSM × 三模型 CLIP ensemble，含 LAION ViT-G/14，640px，batch 1；1,200 次攻击不先探成本是昂贵的错误）。worker 互斥用**原子 mkdir 锁**而不是上一轮出过事的 `pgrep` 判断。
 - 本机 smoke 已通过：import、stub 断言、helper 解析、脚本语法、runner 编译全绿；第三方 commit `5001a82` 已记录进 metadata 以便溯源。
 
-**还差的只有一件事：vGPU 3090 开机**（400-query manifest 与 MSLS 影像都在 `/root/autodl-tmp/…/data/msls/`，本机没有）。开机后我直接跑 pilot。
+**当前状态：全量臂运行中**。pilot 与全量臂都已确认 400-query manifest 与 MSLS 影像在
+`/root/autodl-tmp/…/data/msls/`（本机没有）。落地所需的下游件也已写好并用 pilot 数据实测通过：
+`src/scripts/analyze_geoshield_arm.py`（读数）与 `src/scripts/make_geoshield_table.py`
+（生成 `paper/generated/tab_geoshield.tex`，风格对齐 `tab:operators`）。
+
+两件在 pilot 数据上已经确定、与最终结论无关的事，先记下来免得重查：
+- **对照取 isotropic 而非 clean。** 比 clean 低只说明加了能量；本文到处在问的是「按机制指定的方式花这份能量，
+  是否强过随便花」，所以 $\Delta$、置信区间、等价检验全部对 isotropic 取。clean 行只用来定位攻击者。
+- **pilot 里三个条件的 Top-5 完全相同（0.4400），这不是卡死的列。** 已逐行核对：`top5_hit` 之和恰等于
+  `rank<=5` 的计数（11/11/11），`top10_hit` 恰等于 `rank<=10`（12/12/12）。真实含义是
+  **该能量下机制只在候选表内部重排、并未把正确地点挤出候选表**（clean 的 11 个 top-5 命中全在 rank 1，
+  公开版只有 8 个）。这条一致性检查已写进表格生成器，下一个看到相同列的人不必再手查一遍。
 
 ## 【评审的 bounded 方案已落地，作为下限保留】R3 的替代方案
 
@@ -968,11 +992,20 @@ AutoDL 每次开机会重新分配端口，请把控制台上**当前的 ssh 命
 **代码侧已全部就绪并通过本机验证**：import、stub 断言、helper 解析、脚本语法、两个脚本编译全绿。
 published 臂**不需要 API 余额**，只要主机能连上就能开跑。
 
-- 需要你做的两件事：
-  1. 给 Anthropic 账号充值（只为第二臂；不充值也可以先只跑 published 臂）
-     A:
-  2. 提供 vGPU 3090 当前的 ssh 端口
-     A:
+- ~~需要你做的两件事~~ **两条都已消解，不再需要你提供任何东西**：
+  1. ~~给 Anthropic 账号充值~~ → 你提供的 `chatgpt-api` key 可用，第二臂改用 OpenAI，
+     Anthropic 余额不再是阻塞项。runner 的 `--caption_source openai` 已就位，
+     caption 按目标图缓存到磁盘，续跑不重复付费。
+  2. ~~提供 ssh 端口~~ → 端口一直是通的；是我用 `/dev/tcp` 与 `nc <hostname>` 探测，
+     而该主机解析到 IPv4-mapped IPv6 地址（`::ffff:…`），这两个工具在该地址族下会失败而 `ssh` 不会。
+     是我的判断错误，不是主机问题。
+
+- **当前唯一待你决策的一条**（不阻塞正在跑的臂）：
+  这一个 seed（约 400 个配对观测）跑完后，若结果与 isotropic 对照**分离**，
+  是否再买余下两个 seed（约 9 小时）把 seed 数与论文其它臂对齐？
+  若结果是**有界的零效应**，我的建议是不买——那时该报告的是一个有界零结论，
+  多加两个 seed 只会把同一个零收窄一点，不改变结论。
+  A:
 
 ### 安全提醒
 
