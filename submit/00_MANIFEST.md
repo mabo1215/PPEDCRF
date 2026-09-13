@@ -379,16 +379,19 @@ These cannot be completed from the repository (tracked as S1, S2, S6 in
    guidance. The request and its justification are already written into
    `04_cover_letter.txt`, but it needs the Editor-in-Chief's approval. This is
    the one item that can stop the package at editorial screening.
-4. **The manuscript no longer names the code repository — must be fixed in
-   `paper/main.tex` before upload.** The author footnote used to carry
-   "Code and evaluation exports: `https://github.com/mabo1215/PPEDCRF`"; it was
-   removed from `paper/main.tex` shortly before the submitted PDFs were built,
-   so `01_manuscript.pdf` names no repository of the authors' own. The only
-   GitHub URL left in it is the Mapillary SLS dataset citation. Two places now
-   point at something that does not exist in the text: the manuscript itself
-   ("declared in the released repository") and `04_cover_letter.txt`, which
-   tells the Editor the artifacts "are in a public repository named in the
-   manuscript". Either restore the URL in `paper/main.tex` and rebuild, or
-   reword both the manuscript sentence and the cover letter. This was left
-   unfixed here because it has to be corrected in `paper/`, not in the
-   assembled package.
+4. ~~The manuscript no longer names the code repository~~ **RESOLVED.** The
+   author footnote's GitHub URL had been removed shortly before the submitted
+   PDFs were built, leaving the manuscript referring to a "released
+   repository" it never named and the cover letter telling the Editor that
+   repository was "named in the manuscript". The evidence was deposited at
+   IEEE DataPort instead, so all three places now agree: the footnote cites
+   `https://doi.org/10.21227/jnr0-jm15` (verified to render on page 1 of
+   `01_manuscript.pdf`), the margin declaration points at the deposited record
+   rather than a repository commit, and `04_cover_letter.txt` cites the
+   DataPort DOI. No author action remains on this item.
+
+**Data availability.** Per-query evaluation exports are deposited at IEEE
+DataPort, doi `10.21227/jnr0-jm15`. They are sufficient to recompute the
+reported numbers without the source imagery, which is not redistributable
+under the MSLS and KITTI-360 licences. A Code Ocean capsule
+(`capsule-8046996`) runs the verification against that deposit.
