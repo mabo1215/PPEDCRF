@@ -118,6 +118,15 @@ def trainable_submodule(embedder: torch.nn.Module, backbone: str,
     resnet18/resnet50: `features` is [conv1,bn1,relu,maxpool,layer1..4,avgpool]
     (see eval/retrieval_attack.py ImageEmbedder); layer4 is index 7, layer3 is
     index 6, so unfreeze_blocks=2 unfreezes layer3+layer4 together.
+
+    `unfreeze_blocks=5` additionally unfreezes the stem (conv1/bn1), which is
+    the only setting that makes ``fully unfrozen'' literally true. Levels 1--4
+    leave the stem frozen, so an arm run at 4 must be described as all four
+    residual stages rather than as a full fine-tune -- the distinction is small
+    in parameter count and large in what the arm is entitled to claim, since a
+    reviewer asking for an unconstrained adaptive attacker is asking about the
+    ceiling, not about a nearly-unconstrained one.
+
     mixvpr: `aggregator` sits on top of a frozen `backbone`; unfreeze_blocks
     is not meaningful there and must be 1.
     """
@@ -125,9 +134,12 @@ def trainable_submodule(embedder: torch.nn.Module, backbone: str,
         p.requires_grad_(False)
     b = backbone.lower()
     if b in ("resnet18", "resnet50"):
-        if not 1 <= unfreeze_blocks <= 4:
-            raise ValueError("unfreeze_blocks must be between 1 and 4 for resnet")
-        blocks = [embedder.features[7 - i] for i in range(unfreeze_blocks)]
+        if not 1 <= unfreeze_blocks <= 5:
+            raise ValueError("unfreeze_blocks must be between 1 and 5 for resnet")
+        blocks = [embedder.features[7 - i] for i in range(min(unfreeze_blocks, 4))]
+        if unfreeze_blocks == 5:
+            # conv1 and bn1; relu and maxpool hold no parameters.
+            blocks += [embedder.features[0], embedder.features[1]]
     elif b.startswith("mixvpr"):
         if unfreeze_blocks != 1:
             raise ValueError("unfreeze_blocks>1 not implemented for mixvpr")
@@ -363,7 +375,8 @@ def main() -> int:
                          "since gallery embeddings are precomputed")
     ap.add_argument("--unfreeze_blocks", type=int, default=1,
                     help="how many of the last resnet blocks to fine-tune "
-                         "(1 = layer4 only, 2 = layer3+layer4, ...); "
+                         "(1 = layer4 only, 2 = layer3+layer4, ...); 5 also "
+                         "unfreezes the stem, the only fully-unfrozen setting; "
                          "must be 1 for mixvpr")
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--batch_size", type=int, default=16)

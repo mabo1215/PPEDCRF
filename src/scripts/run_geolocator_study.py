@@ -117,6 +117,11 @@ def main() -> int:
                     default=["jpeg75", "jpeg50", "blur", "denoise"])
     ap.add_argument("--eot_samples", type=int, default=2)
     ap.add_argument("--output", required=True)
+    ap.add_argument("--save_frames", default="",
+                    help="directory to write the released frames to, as the "
+                         "exact bytes the geolocator reads; lets a stronger "
+                         "attacker be scored later without re-solving the "
+                         "defense")
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -143,16 +148,36 @@ def main() -> int:
     print(f"[geo] GeoCLIP loaded, {gps_gallery.shape[0]} gallery points",
           flush=True)
 
+    def to_uint8(frame: torch.Tensor):
+        """The bytes a recipient actually receives.
+
+        Factored out so scoring and saving cannot diverge: whatever is written
+        to disk is bit-for-bit what the geolocator read, which is the only way
+        a later attacker scored on the saved frames is measuring the same
+        release rather than a re-rendering of it.
+        """
+        return frame.squeeze(0).clamp(0, 255).byte().permute(1, 2, 0).cpu().numpy()
+
     @torch.no_grad()
     def predict(frame: torch.Tensor):
         """Top-1 coordinate for a released frame, without a file round trip."""
         from PIL import Image
-        arr = frame.squeeze(0).clamp(0, 255).byte().permute(1, 2, 0).cpu().numpy()
+        arr = to_uint8(frame)
         x = geo.image_encoder.preprocess_image(Image.fromarray(arr)).to(device)
         logits = geo.forward(x, gps_gallery)
         idx = int(torch.topk(logits.softmax(dim=-1), 1, dim=1).indices[0, 0])
         pt = gps_gallery[idx]
         return float(pt[0]), float(pt[1])
+
+    # Saving the released frames turns this arm from a single-geolocator
+    # measurement into a reusable one: the manuscript's own caveat is that
+    # GeoCLIP is "a movable benchmark rather than a floor", and a stronger
+    # attacker can only be tried later without re-running the defense if the
+    # exact released bytes survive.
+    frames_dir = Path(args.save_frames) if args.save_frames else None
+    if frames_dir is not None:
+        frames_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[geo] saving released frames to {frames_dir}", flush=True)
 
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -215,6 +240,10 @@ def main() -> int:
                         rel = release_at_mse(frame, delta, args.target_mse)
                     else:
                         raise SystemExit(f"unknown condition {cond!r}")
+                    if frames_dir is not None:
+                        from PIL import Image
+                        Image.fromarray(to_uint8(rel)).save(
+                            frames_dir / f"{rec['query_id']}__{cond}__s{seed}.png")
                     plat, plon = predict(rel)
                     writer.writerow({
                         "query_id": rec["query_id"],
