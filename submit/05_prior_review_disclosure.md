@@ -4,10 +4,9 @@ Submitted in support of a "Yes" answer to the question *"Is this manuscript a
 resubmission of, or related to, a previously rejected manuscript, or a
 previously reviewed and withdrawn manuscript?"*
 
-> **AUTHORS: two fields must be completed before upload.** The ACM TOMM
-> manuscript ID is marked `[TOMM MANUSCRIPT ID — TO BE SUPPLIED]` below and does
-> not appear in our saved correspondence. Please also confirm the submission and
-> decision dates, which we have not recorded.
+> **AUTHORS: one field remains to be completed before upload.** The ACM TOMM
+> manuscript ID is recorded below as `TOMM-2026-0332`. Please confirm the
+> submission and decision dates, which we have not recorded.
 
 ---
 
@@ -16,7 +15,7 @@ previously reviewed and withdrawn manuscript?"*
 | | |
 |---|---|
 | **Venue** | ACM Transactions on Multimedia Computing, Communications and Applications (ACM TOMM) |
-| **Manuscript ID** | `[TOMM MANUSCRIPT ID — TO BE SUPPLIED]` |
+| **Manuscript ID** | `TOMM-2026-0332` |
 | **Title then** | "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences" |
 | **Associate Editor** | Prof. Feifei Zhang |
 | **Decision** | Not accepted for publication |

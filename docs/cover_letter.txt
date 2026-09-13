@@ -128,7 +128,8 @@ references that belonged to an earlier framing of this work.
 This manuscript has not been published previously and is not under
 consideration elsewhere. All authors have approved the submission. The code,
 the benchmark manifests and the per-query exports behind every reported table
-are in a public repository named in the manuscript, together with the extended
+are deposited at IEEE DataPort (doi 10.21227/jnr0-jm15), cited in the manuscript,
+together with the extended
 evidence report the manuscript cites; no credentials are required, and the
 table verification runs without a GPU.
 

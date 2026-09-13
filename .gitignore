@@ -55,3 +55,7 @@ src/exports/placement_panel/
 # launcher is src/scripts/launch_r17_geoshield_vgpu3090.sh.
 src/scripts/_remote_*.sh
 src/scripts/_await_*.sh
+
+# Code Ocean data asset staging: ~357MB of per-query evidence that is
+# uploaded as a data asset, never committed.
+dataasset_ppedcrf_evidence/

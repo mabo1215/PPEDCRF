@@ -1,3 +1,6 @@
 [submodule "paper"]
 	path = paper
 	url = https://github.com/mabo1215/PPEDCRF_overleaf.git
+[submodule "codeocean"]
+	path = codeocean
+	url = https://git.codeocean.com/capsule-8046996.git

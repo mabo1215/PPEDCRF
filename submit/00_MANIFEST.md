@@ -1,7 +1,10 @@
 # Submission package — IEEE TIFS
 
 Assembled 2026-09-14 from the build at `paper/`. Every PDF here is byte-identical
-to the corresponding file in `paper/` (md5-verified at assembly).
+to the corresponding file in `paper/`, and every file in `source/` is
+byte-identical to its counterpart in `paper/` (both md5-verified; last
+re-verified 2026-09-14 after `source/main.tex` was refreshed and `build.bat`
+added). Page counts re-counted from the PDFs themselves: 13 / 11 / 1.
 
 ## What to upload
 
@@ -11,29 +14,37 @@ to the corresponding file in `paper/` (md5-verified at assembly).
 | `02_supplementary.pdf` | Supplementary material | 11 |
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
-| `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1). **Needs the TOMM manuscript ID filled in.** | — |
+| `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1). TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
 | `06_tomm_reviews_verbatim.md` | The three ACM TOMM reviews, verbatim and unabridged | — |
-| `source/` | LaTeX sources, `ref.bib`, used figures, generated tables, build script | — |
+| `source/` | LaTeX sources, `ref.bib`, used figures, generated tables, `build.bat` | — |
 
 `source/figs/` carries only the four figures the documents reference, not the
 whole 26 MB `paper/figs/` tree. `source/generated/` carries the table files the
 documents `\input`; they are generated from the released per-query exports and
-should not be hand-edited.
+should not be hand-edited. All 17 `\input{generated/...}` targets and all four
+`\includegraphics{figs/...}` targets resolve inside `source/`, and
+`\bibliography{ref}` resolves to `source/ref.bib`, so the directory compiles
+standalone. `source/generated/` also carries eight table files no longer
+referenced by either document; they are harmless and were left in place.
 
 ## NOT part of this submission
 
-`submit/` already contained these before the package was assembled. They are
-KITTI-360 **dataset download helpers**, unrelated to the paper, and were left in
-place rather than deleted:
+Everything that does not belong in the upload has been moved into
+`_not_submitted/`. Nothing was deleted. That directory now holds:
 
-- `README.md` (describes KITTI image downloads, *not* this submission)
-- `download_2d_perspective.sh`
-- `download_2d_perspective_unrectified.sh`
-- `download_2d_perspective.zip`
+- `README.md` — a KITTI-360 **dataset download helper**, unrelated to the
+  paper. It predates the package and would otherwise have reached an editor as
+  if it described the submission. (The `download_2d_perspective*.sh/.zip`
+  scripts it refers to are not present in `submit/`.)
+- `figs/`, `figs.zip` — a duplicate of `source/figs/`, staged for an upload
+  portal and superseded by `source/`.
+- `supplyment/`, `supplyment.zip` — a partial copy of the supplement sources.
+  Incomplete: it has no `generated/` directory, so it cannot compile.
+- `source.zip` — an archive of `source/` taken before `main.tex` was refreshed
+  and `build.bat` added, so it is stale. Re-zip `source/` at upload time if the
+  submission system wants an archive.
 
-**Do not zip this directory wholesale for upload** — move those four aside
-first, or upload the five numbered items individually. Note in particular that
-`README.md` would otherwise reach an editor as if it described the submission.
+`submit/` now contains exactly the seven items in the table above.
 
 ## Build state at assembly
 
@@ -107,7 +118,7 @@ records:
   Background-Based Location Privacy in Video Sequences" (differs from the
   current title)
 - **Decision, verbatim:** "The manuscript was not accepted for publication."
-- **Manuscripts ID**, TOMM-2026-0332
+- **Manuscript ID:** TOMM-2026-0332
 
 Note the question covers manuscripts "related to", not only identical
 resubmissions, so the change of title and the substantial rework since do not
@@ -141,9 +152,11 @@ reason the honest answer to this question is Yes rather than No, and it is also
 why answering No would be detectable: three ACM TOMM reviewers have seen this
 work, and the reviewer pools of the two venues overlap.
 
-Two things the authors must supply, which are not in the repository:
+Outstanding author actions:
 
-1. The **ACM TOMM manuscript ID** — TOMM-2026-0332.
+1. The **ACM TOMM manuscript ID** has been supplied — `TOMM-2026-0332` — and is
+   now filled into `05_prior_review_disclosure.md`. The submission and decision
+   **dates** are still unrecorded and need confirming.
 2. Confirmation and sign-off on the supporting document, drafted as
    `05_prior_review_disclosure.md` in this directory.
 
@@ -288,16 +301,18 @@ protects" into "this component of the mechanism is, or is not, what protects".
 
 ## Paste-ready answers (500-character fields)
 
-Each field on the TIFS form caps at 500 characters. The blocks below are
-verbatim paste text, with the character count measured. Q2-Q5 are one-word
-declarations that only the authors can confirm; the rest are answered from
-the manuscript.
+Each field on the TIFS form caps at **500 characters**, counted as characters
+rather than words and including spaces and punctuation. The blocks below are
+verbatim paste text, each measured and confirmed to fit. Q2-Q5 are one-word
+declarations that only the authors can confirm; the rest are answered from the
+manuscript. The longer Q1-Q9 sections above are supporting analysis for the
+authors, not form text — do not paste them into the 500-character fields.
 
 ### Q1. Resubmission of / related to a previously rejected or withdrawn manuscript?
 
-> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted. A supporting document is uploaded quoting all three reviews verbatim and stating how each point was addressed. This manuscript continues that research line but inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 94.6% of the body text is new (2,992 to 11,461 words).
+> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted. A supporting document is uploaded with all three reviews verbatim and how each point was addressed. This manuscript continues that research line but inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 94.6% of the body text is new (2,992 to 11,461 words).
 
-*483/500 characters.*
+*472/500 characters.*
 
 ### Q2. Extended version of a conference publication?
 
@@ -325,15 +340,15 @@ the manuscript.
 
 ### Q6. Why is the contribution within the scope of IEEE TIFS?
 
-> The paper evaluates visual privacy-protection mechanisms and the attacks that defeat them. Background scene cues let an adversary infer where a released dashcam frame was recorded even after GPS metadata is stripped. We audit published image-sanitization defenses at matched delivered distortion against five retrieval attackers, two image-to-GPS geolocators, an adaptive fine-tuned attacker and a purifying denoiser. The machine learning is applied to that privacy problem, not studied alone.
+> The paper evaluates visual privacy-protection mechanisms and the attacks defeating them. Background scene cues let an adversary infer where a released dashcam frame was recorded even after GPS metadata is stripped. We audit published image-sanitization defenses at matched delivered distortion against five retrieval attackers, two image-to-GPS geolocators, an adaptive attacker and a purifying denoiser. The machine learning is applied to that privacy problem, not studied alone.
 
-*493/500 characters.*
+*480/500 characters.*
 
 ### Q7. Why is the contribution significant (what impact will it have)?
 
-> Mechanisms in this family are designed by choosing where to spend a bounded distortion budget. At matched delivered distortion that choice buys nothing against four of five attackers, over nine placement rules, three published-model placements and four operators, every difference within 0.012 Top-1. The leverage is the perturbation's direction, which transfers to all five. We supply the protocol, its controls, and a diagnostic that caught a released checkpoint whose map is numerically constant.
+> This family is designed by choosing where to spend a bounded budget. At matched delivered distortion that choice buys nothing against four of five attackers, over nine placement rules, three published-model placements and four operators, every difference within 0.012 Top-1. The leverage is the perturbation's direction, which transfers to all five. We supply the protocol, its controls, and a diagnostic that caught a released checkpoint whose map is numerically constant.
 
-*499/500 characters.*
+*473/500 characters.*
 
 ### Q8. The three most closely related published papers
 
@@ -343,9 +358,9 @@ the manuscript.
 
 ### Q9. What is distinctive/new relative to those works?
 
-> None of the three separates where a bounded budget is placed from what direction it points at fixed delivered distortion; that control is what we add. We run GeoShield's public release end to end: it does not separate from isotropic noise of equal energy (-0.010 Top-1, [-0.041,+0.020]). Le et al.'s mask never beats no mask, costing up to +0.063 Top-1. Radiya-Dixit et al. show adaptation defeats face cloaking; we measure it, and find the binding resource is the attacker's index, not its capacity.
+> None separates where a bounded budget is placed from what direction it points at fixed delivered distortion; that control is what we add. We run GeoShield's release end to end: it does not separate from isotropic noise of equal energy (-0.010 Top-1, [-0.041,+0.020]). Le et al.'s mask never beats no mask, costing up to +0.063 Top-1. Radiya-Dixit et al. show adaptation defeats face cloaking; we measure it, finding the binding resource is the attacker's index, not its capacity.
 
-*500/500 characters.*
+*479/500 characters.*
 
 ## Still required from the authors before upload
 
@@ -354,10 +369,26 @@ These cannot be completed from the repository (tracked as S1, S2, S6 in
 
 1. **ORCIDs, EDICS categories and submission metadata** — entered in the
    submission system, not in the manuscript.
-2. **Prior-submission disclosure.** `docs/TOMM_Response_Letter.md` records an
-   earlier ACM TOMM review of a differently-titled version of this work. Whether
-   and how to disclose it is an author decision; it is not included here.
+2. **Prior-submission disclosure — drafted, needs sign-off.** The disclosure is
+   included in this package as `05_prior_review_disclosure.md`, with all three
+   reviews reproduced verbatim in `06_tomm_reviews_verbatim.md`. The manuscript
+   ID (`TOMM-2026-0332`) is filled in. Still outstanding: the authors' sign-off,
+   and the ACM TOMM submission and decision dates, which are not recorded in
+   the repository.
 3. **Supplementary over-length.** The supplement is 11 pages against the 6-page
    guidance. The request and its justification are already written into
    `04_cover_letter.txt`, but it needs the Editor-in-Chief's approval. This is
    the one item that can stop the package at editorial screening.
+4. **The manuscript no longer names the code repository — must be fixed in
+   `paper/main.tex` before upload.** The author footnote used to carry
+   "Code and evaluation exports: `https://github.com/mabo1215/PPEDCRF`"; it was
+   removed from `paper/main.tex` shortly before the submitted PDFs were built,
+   so `01_manuscript.pdf` names no repository of the authors' own. The only
+   GitHub URL left in it is the Mapillary SLS dataset citation. Two places now
+   point at something that does not exist in the text: the manuscript itself
+   ("declared in the released repository") and `04_cover_letter.txt`, which
+   tells the Editor the artifacts "are in a public repository named in the
+   manuscript". Either restore the URL in `paper/main.tex` and rebuild, or
+   reword both the manuscript sentence and the cover letter. This was left
+   unfixed here because it has to be corrected in `paper/`, not in the
+   assembled package.
