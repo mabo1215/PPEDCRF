@@ -441,7 +441,7 @@ def main() -> int:
     cfg.input_size = default_input_size_for_backbone(args.eval_backbone)
     resize_hw = (args.height, args.width)
     embed_size = cfg.input_size
-    embedder = make_default_embedder(cfg, device)
+    embedder = make_default_embedder(cfg).eval().to(device)
     gallery_ids = sorted(gallery)
     place_of = {g: gallery[g]["place_id"] for g in gallery_ids}
     gal = embed_gallery_batched(
