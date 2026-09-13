@@ -213,6 +213,25 @@ def main() -> int:
 
     # The gate. Reported whether or not it passes -- a failed gate is a result
     # about the substitute attacker, not a reason to quietly drop the arm.
+    #
+    # Read back from the output file rather than from the in-run accumulator.
+    # The accumulator holds only what this invocation scored, so on a resumed
+    # run the gate silently described a subset: a 400-frame gate resumed at
+    # 162 reported n=238 and never said so. It agreed on that occasion, which
+    # is exactly why it needed fixing -- a subset gate can pass or fail for
+    # reasons that have nothing to do with the attacker.
+    final: Dict[str, List[float]] = {}
+    with open(out, newline="", encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            if str(r.get("refused", "0")) == "1" or not r.get("error_km"):
+                continue
+            final.setdefault(r["condition"], []).append(float(r["error_km"]))
+    refusals = {}
+    with open(out, newline="", encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            if str(r.get("refused", "0")) == "1":
+                refusals[r["condition"]] = refusals.get(r["condition"], 0) + 1
+    errs = final
     clean = sorted(errs.get("clean", []))
     if clean:
         within = sum(1 for d in clean if d <= args.gate_within_km) / len(clean)
