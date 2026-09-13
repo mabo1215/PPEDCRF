@@ -356,6 +356,54 @@ claim("GS/mse", "\\S A Published Mechanism", "15.68", 15.68, 5e-3,
       "r17_geoshield", _gs(GS, "mse"), locator=None, source=SUPP)
 
 
+# --- N2: the vision-language geolocator ------------------------------------
+# The claim this arm carries is the direction-minus-isotropic contrast on the
+# localisable subset, so that is what is registered rather than the headline
+# rates: a reader checking whether the finding survives a stronger attacker is
+# checking that number, and the capability gate that licenses the arm at all.
+def _vlm(stat: str) -> Callable[[], Optional[float]]:
+    def go() -> Optional[float]:
+        rows = load("n2_vlm/per_query.csv")
+        if not rows:
+            return None
+        e: Dict[str, Dict[str, float]] = defaultdict(dict)
+        for r in rows:
+            if str(r.get("refused", "0")) == "1" or not r.get("error_km"):
+                continue
+            e[r["condition"]][r["query_id"]] = float(r["error_km"])
+        if "clean" not in e:
+            return None
+        loc = [q for q, v in e["clean"].items() if v <= 25.0]
+        if stat == "gate":
+            return statistics.fmean(
+                [1.0 if v <= 25.0 else 0.0 for v in e["clean"].values()])
+        if stat == "gate_median":
+            return statistics.median(list(e["clean"].values()))
+        qs = sorted(set(loc) & set(e.get("direction", {}))
+                    & set(e.get("isotropic", {})))
+        if not qs:
+            return None
+        d = [(1.0 if e["direction"][q] <= 25.0 else 0.0)
+             - (1.0 if e["isotropic"][q] <= 25.0 else 0.0) for q in qs]
+        if stat == "delta":
+            return statistics.fmean(d)
+        if stat == "dir_rate":
+            return statistics.fmean(
+                [1.0 if e["direction"][q] <= 25.0 else 0.0 for q in qs])
+        return None
+    return go
+
+
+claim("N2/gate/within25", "\\S A Geolocator That Is Not a Retriever", "65.0",
+      0.650, 5e-4, "n2_vlm", _vlm("gate"), locator=None, source=SUPP)
+claim("N2/gate/median", "\\S A Geolocator That Is Not a Retriever", "6.1",
+      6.1, 5e-2, "n2_vlm", _vlm("gate_median"), locator=None, source=SUPP)
+claim("N2/delta", "\\S A Geolocator That Is Not a Retriever", "-0.100",
+      -0.100, 5e-4, "n2_vlm", _vlm("delta"), locator=None, source=SUPP)
+claim("N2/dir_rate", "\\S A Geolocator That Is Not a Retriever", "70.8",
+      0.708, 5e-4, "n2_vlm", _vlm("dir_rate"), locator=None, source=SUPP)
+
+
 # --- the reproduction gate the factorial section quotes --------------------
 def _reproduction_gap(backbone: str, cond: str) -> Callable[[], float]:
     published = {("mix", "isotropic"): 0.7800, ("mix", "direction"): 0.7317,

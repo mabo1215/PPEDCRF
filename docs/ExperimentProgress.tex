@@ -431,12 +431,26 @@ different one. Reopen if that distinction becomes load-bearing for a
 reviewer. \\
 \addlinespace
 
-N2 & A stronger geolocator than GeoCLIP & \pending & A PIGEON-class model
-would test whether the direction result survives a better image-to-GPS
-attacker. GeoCLIP was chosen for public weights and modest memory, and it
-passes the capability gate ($54.5\%$ within 25\,km, median $18.4$\,km), so the
-arm measures a movable benchmark rather than a floor. The finding is stated
-for the model tested. \\
+N2 & A stronger geolocator than GeoCLIP & \done & Run, with a substitute,
+because the model the review names has no public weights: PIGEON is not
+released, so the strongest geolocator obtainable is the strongest
+\emph{public} one. We prompt a vision--language model for a coordinate --- a
+different architecture, different training data, no gallery --- which also
+tests whether the direction result is a property of the CLIP family that every
+other attacker here shares. It clears the capability gate on all 400 clean
+frames: $65.0\%$ within 25\,km at a median of $6.1$\,km against GeoCLIP's
+$54.5\%$ and $18.5$\,km, and nearly twice as accurate at street level, with no
+refusals. \textbf{The result is two-sided and both halves are in the paper.}
+The ordering survives: on the 260 queries it localises, the direction release
+costs it $0.100$ more than matched-energy isotropic ($[-0.156,-0.046]$,
+$p<0.001$), so the finding is not a CLIP artefact. The magnitude does not:
+GeoCLIP retains $55.5\%$ of its localisable queries under the release and this
+attacker retains $70.8\%$, with median error on that subset moving $3.4$ to
+$5.3$\,km against GeoCLIP's $5.4$ to $16.7$. Against the best geolocator we
+could obtain the release degrades city-level localisation without preventing
+it, and \S Limitations now says so. Reported as a bound on what is currently
+obtainable, not a ceiling: a stronger attacker may exist behind an interface
+we cannot audit. \\
 \addlinespace
 
 N3 & Adaptive attacker at a larger budget & \done & Run, and it changed a

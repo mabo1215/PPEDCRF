@@ -153,7 +153,7 @@ def main() -> int:
         r"same released bytes the gallery-based geolocator read, so the two "
         r"differ in the reader and in nothing else. " + gate_sentence +
         r" Columns give the share of queries placed inside each threshold. "
-        r"The claim is carried by the \emph{localisable} column, the queries "
+        r"The claim is carried by the ``localisable'' column, the queries "
         r"the clean attacker already places inside " + f"{PRIMARY:g}~km" +
         r": on a query the clean attacker already fails, a perturbation that "
         r"moves the prediction earns credit it never earned. $\Delta$ is "
