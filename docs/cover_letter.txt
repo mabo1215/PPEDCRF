@@ -119,6 +119,17 @@ enumerating every placement rule with its provenance, and the geolocator arm
 beside the text that reads it, and each recomputes from the released per-query
 rows without a GPU.
 
+One presentational note on the same material. The guidance asks that
+supplementary equations, tables and figures be numbered consecutively with the
+manuscript. We have instead numbered them with an S prefix --- Table S1
+onwards, Fig. S1 onwards, (S1) onwards --- because the two documents are
+compiled separately, so a continuous scheme would require the supplement to
+carry a hard-coded offset that silently goes wrong the moment a table is added
+to or removed from the main text. The S prefix achieves what the rule is for,
+which is that no number is ambiguous between the two documents, and it tells a
+reader at the point of citation which document to open. We are happy to
+renumber if you would prefer the literal form.
+
 The main text is within the thirteen-page limit for an initial regular-paper
 submission. Reaching it cost no result: the author biographies will be
 supplied at acceptance, the pipeline diagram and the search-budget curve are
