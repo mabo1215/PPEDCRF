@@ -17,17 +17,27 @@ PDFs with those same page counts.
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
 | `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
-| `source/manuscript/` | LaTeX source for the manuscript: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables, `build.bat` | — |
-| `source/supplementary/` | LaTeX source for the supplement: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables, `main.aux`, `build.bat` | — |
+| `06_source.zip` | **The source upload.** Both packages in one archive, 30 files, 3.0 MB | — |
+| `source/manuscript/` | Source for the manuscript, unzipped: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables, `build.bat` | — |
+| `source/supplementary/` | Source for the supplement, unzipped: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables, `main.aux`, `build.bat` | — |
+
+Upload `06_source.zip` where one archive is wanted. Where the two documents take
+separate source slots, `source/manuscript.zip` and `source/supplementary.zip`
+are the same content split the same way as the PDFs. None of the three carries
+the `build/` working directory, and all three store forward-slash paths, so they
+extract correctly on a Linux submission host.
 
 The two documents upload separately, so the sources are split the same way and
 each folder builds on its own. Membership was resolved from the documents
 themselves rather than assumed: each folder holds exactly the files its own
 `\input`, `\includegraphics` and `\bibliography` reach, so nothing is borrowed
 across the boundary and neither folder carries files it does not read. Each was
-deleted and rebuilt from scratch to confirm it, giving 13 and 11 pages with no
-undefined reference in either log. Only `ref.bib` is genuinely needed by both,
-and each package has its own copy.
+deleted and rebuilt from scratch to confirm it, and `06_source.zip` was then
+extracted into an empty directory and built from there, giving 13 and 11 pages
+with no undefined reference in either log. The supplement was additionally built
+by a bare `latexmk` with no `build.bat` involved, which is how a submission host
+would compile it, and its manuscript cross-references resolved there too. Only
+`ref.bib` is genuinely needed by both, and each package has its own copy.
 
 Two things are worth knowing before either folder is edited. The `generated/`
 tables are written from the released per-query exports and should not be
@@ -61,10 +71,6 @@ Everything that does not belong in the upload has been moved into
   `source/supplementary/` replaces it and does compile.
 - `source.zip` — an archive of the old flat `source/` layout, predating both the
   refreshed `main.tex` and the split. Stale on both counts.
-
-Fresh archives of the current packages are at `source/manuscript.zip` and
-`source/supplementary.zip`, each holding its folder without the `build/`
-working directory.
 
 `submit/` now contains exactly the items in the table above. The verbatim
 reviews were previously a separate `06_tomm_reviews_verbatim.md`; they are now
