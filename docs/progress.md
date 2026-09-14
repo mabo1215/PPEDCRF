@@ -22,6 +22,19 @@
 推送走的是工作 capsule `capsule-8046996` 的 `main` 分支（commit `25033f3`）——
 已发布的 9035965 是只读快照，git 推不进去。
 
+**同日第二轮：作者信息、删文件、投稿包只留该留的（2026年9月15日）**
+- 你改了 `main.tex` 的作者脚注（AUT 在前、Resideo 在后、一个地点行），`titlepage.tex` 已逐字同步——两处脚注必须一致，
+  重建后 13 / 11 / 1 页，两份 PDF 第 1 页都重新抽取确认。
+- 删除 `paper/popets_mandatory_sections.tex`：那是 PoPETs 2027 模板要求的三节，没有任何文档 `\input` 它，
+  build 也不碰它，目标venue 是 TIFS；将来真要投 PoPETs 可从 git 取回。
+- `submit/source/` 按你删完的状态重打：只剩 `.tex`、`.bib`、figs、generated（6 / 19 个文件，合并包 25 个）。
+  **实测一个代价**：`main.aux` 一并没了，投稿系统若单独编译 supplement，会有 **17 条指向正文的交叉引用变成 `??`，而且编译仍然 exit 0**。
+  上传的 `02_supplementary.pdf` 不受影响（审稿人读的是它）。要补只需放回那一个 13 KB 的 `main.aux`，不必放回 `.bat`。
+- `submit/07_code` 不再含任何论文内容（171 个文件，0.5 MB，zip 内 0 个 `.tex`/`.pdf`）。
+  单跑：**750 注册 / 750 通过 / 0 mismatch / exit 0**；把源码包里的两份文档并成一个目录、用新增的 `PPEDCRF_PAPER` 指过去：**804 / 804 / 0 mismatch**。
+  完整的 906 还需要 extended evidence report 及它专属的表，而那份不在投稿里。三个数都是从打好的 zip 实跑出来的。
+- verifier 新增 `PPEDCRF_PAPER` 环境变量作为文档根（默认仍是同级 `paper/`），改在仓库共用那份，capsule 与投稿包不分叉。
+
 **投稿包**：三个 PDF 重新复制并与 `paper/` md5 一致（495,171 / 744,286 / 30,471 字节）；
 两个源码包清空 `build/` 后原地从零重建；四个压缩包重打；
 `06_source.zip` 解到空目录从零编译仍是 13 / 11 页、0 undefined reference，且脚注 URL 在第 1 页；
@@ -959,6 +972,21 @@ pilot 已跑完并验证了协议与能量闸门；**全量臂（400 query × 3 
   A:  GPT 5.6
 
 # 遗留问题
+
+## extended evidence report 现在无处可取（2026年9月15日）
+
+正文与补充材料共 4 处提到 “the extended report”，但它既不在投稿包里（`07_code` 已清空论文内容），
+也不在 IEEE DataPort 存档里（存档只有 exports/artifact_results/scripts，没有任何 PDF），capsule 更没有。
+也就是说审稿人读到这 4 句时找不到那份文档。
+
+需要你提供/决策：
+1. 把 `supplementary_extended.pdf` 放进 DataPort 存档（最省事，正文不用动）？还是删掉正文里这 4 处引用？
+   我的建议是前者。
+   A:
+2. `submit/source/supplementary/` 要不要放回 `main.aux`（13 KB）？不放回的话，投稿系统单独编译补充材料会出现 17 个 `??`。
+   建议放回，它是 xr 的输入文件而不是编译产物。
+   A:
+
 
 ## capsule 刷新已推送，等你在 Code Ocean 界面发布 v1.1（2026年9月15日）
 

@@ -7,7 +7,9 @@ without the imagery**. This package is the half of that claim that is code; the
 other half is the per-query evidence, deposited separately at IEEE DataPort,
 DOI [10.21227/jnr0-jm15](https://doi.org/10.21227/jnr0-jm15). Neither is useful
 alone. The layout here is the one the code expects, so the only step between
-unzipping and recomputing is dropping the exports into place.
+unzipping and recomputing is dropping the exports into place. No manuscript
+text travels in this package; where the code needs the documents, it is pointed
+at them with `PPEDCRF_PAPER` (below).
 
 ## The one command that checks the paper
 
@@ -33,26 +35,40 @@ skipped, so a partial drop of the evidence produces a list of exactly which
 numbers went unchecked rather than a smaller denominator that reads like
 success.
 
-Against the complete evidence the current run reports:
+Against the complete evidence the run reports:
 
 ```
-906 claims: 906 verified, 0 mismatched, 0 unverifiable (export tree absent),
-15 no longer present in the source file.
-Exit status 1.
+750 claims: 750 verified, 0 mismatched, 0 unverifiable (export tree absent),
+0 no longer present in the source file.
+Exit status 0.
 ```
 
-**Every number checks. The exit status is still 1, and that is expected here** —
-it also trips when a claim's locator string is no longer found, which is a
-statement about the manuscript's wording rather than about any number. The 15
-are numbers the paper stopped printing when it was compressed to the page
-limit. Their claims keep verifying because the rows behind them are unaffected;
-what is gone is the sentence that quoted them. They are left registered rather
-than deleted, so the report doubles as the list of results the compression cost
-the paper, which is a thing worth being able to see.
+**Every number it can reach checks.** This package carries no manuscript text —
+the paper travels in the source upload, not here — and that costs part of the
+registry, which is worth stating rather than leaving to be discovered. Each
+claim carries two tests: recompute the number from the rows, and locate the
+string the paper prints in the document that prints it. The second needs the
+document, so it is inert here and the run reports `0 no longer present`. And 156
+claims are *registered* by parsing the paper's generated tables, so without them
+they are not registered at all.
 
-None of the 15 is a disagreement between a printed number and the rows behind
-it. That count is the `0 mismatched`, and it is the one to read. Run with
-`--verbose` to see all 906 individually.
+**To run the full registry, point the code at the manuscript you already have:**
+
+```bash
+# extract 06_source.zip, then put both documents and the union of their
+# generated/ directories in one folder, e.g. ./paper
+PPEDCRF_PAPER=./paper python3 src/scripts/audit_claim_consistency.py
+```
+
+That reports `804 claims: 804 verified, 0 mismatched, 15 no longer present`,
+and exits 1 — because the exit code also trips on those 15 locator misses,
+which are numbers the paper stopped printing when it was compressed to the page
+limit. Their rows are unaffected, which is why they keep verifying; what is gone
+is the sentence that quoted them. **None of the 15 is a disagreement between a
+printed number and its rows** — that count is `0 mismatched`, and it is the one
+to read. The remaining 102 of the paper's 906 are registered from the extended
+evidence report and the tables only it prints, which are not part of this
+submission. Run with `--verbose` to see every claim individually.
 
 ## Two ways to reproduce, and what each needs
 
@@ -87,13 +103,12 @@ log or metadata file.
 | `src/eval/`, `src/models/`, `src/privacy/`, `src/datasets/`, `src/utils/` | The mechanism and attacker implementations the drivers call |
 | `src/tests/` | Unit tests for the parts where a silent numerical error would not be visible in a plot |
 | `src/Docker/`, `src/requirements.txt` | Environment |
-| `paper/` | `main.tex`, the supplement, and the generated tables — the verifier parses these to find the printed strings it checks against |
 | `src/exports/` | **Empty on purpose.** This is where the deposited evidence goes |
 
-`paper/generated/` carries a few tables that neither document `\input` any more,
-left behind when the manuscript was compressed. They are not dead: the verifier
-still reads them, because the claims they support moved to the extended
-evidence report rather than disappearing.
+No manuscript file ships here in any form — no `.tex`, no figures, no tables.
+`PPEDCRF_PAPER` is how the verifier is pointed at them when you want the wider
+registry; it defaults to a sibling `paper/` directory, which is where they sit
+in the authoring repository.
 
 ## Two things that are true and worth saying plainly
 
@@ -107,9 +122,8 @@ A Code Ocean capsule is published for this project as well, at
 footnote names it. It runs this same verifier under one click against the
 deposited evidence, which is worth having. It is **not** this package, though.
 It carries the mechanism and the verifier, not the drivers that recompute a
-table from rows or re-run an arm from imagery, and it carries no manuscript text
-by design — so the locator half of each claim, which asks whether the paper
-still prints the number, is inert there, and the 156 claims enumerated from the
-generated tables cannot be registered at all. It reports 750 verified, 0
-mismatched; this package reports 906. Where the two disagree about what has been
-checked, this package is the one to believe.
+table from rows or re-run an arm from imagery. It carries no manuscript text
+either, so on its own it reports the same 750 verified, 0 mismatched that this
+package does. The difference is that you have the manuscript: with
+`PPEDCRF_PAPER` set, this package reaches 804. Where the two disagree about what
+has been checked, this package is the one to believe.

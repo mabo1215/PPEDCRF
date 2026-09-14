@@ -29,6 +29,7 @@ want of data and none mismatch, 0 if everything checks out.
 from __future__ import annotations
 
 import argparse
+import os
 import csv
 import glob as globmod
 import re
@@ -65,28 +66,37 @@ BUNDLE_ALIASES = {
     "tifs_a7_n2o8": "crosstime_new2old",
 }
 ROOTS = (OUT, EXPORTS, BUNDLE)
-MAIN = REPO / "paper" / "main.tex"
+# The manuscript files are read, never written, and they do not ship with every
+# copy of this code: the released capsule carries code only, and the submitted
+# code archive does the same. Where they are absent the locator half of each
+# claim is inert and the claims enumerated by parsing the generated tables are
+# not registered at all, so point PPEDCRF_PAPER at a directory holding
+# main.tex, supplementary.tex, backup/ and generated/ to get the full registry
+# back. It defaults to the sibling paper/ directory, which is where they sit in
+# the authoring repository.
+PAPER = Path(os.environ.get("PPEDCRF_PAPER") or (REPO / "paper"))
+MAIN = PAPER / "main.tex"
 # The factorial decomposition moved to the supplement to meet the page
 # limit, so the numbers it prints are located there rather than in MAIN.
-SUPP = REPO / "paper" / "supplementary.tex"
+SUPP = PAPER / "supplementary.tex"
 # Tables the page ceiling moved out of the six-page supplement still carry
 # claims; they are located in the extended evidence report instead, which is
 # released with the code.
-EXT = REPO / "paper" / "backup" / "supplementary_extended.tex"
-TAB_TRANSFER = REPO / "paper" / "generated" / "tab_transfer.tex"
+EXT = PAPER / "backup" / "supplementary_extended.tex"
+TAB_TRANSFER = PAPER / "generated" / "tab_transfer.tex"
 # The preprocessing table is generated as well, and it is the sole
 # support for the manuscript's held-out-transform sentence.
-TAB_SANITIZE = REPO / "paper" / "generated" / "tab_sanitize.tex"
+TAB_SANITIZE = PAPER / "generated" / "tab_sanitize.tex"
 # The two-axis figure emits a sidecar carrying every point it plots, so a
 # figure can be checked the way a table is. The sidecar said as much from the
 # day it was written and nothing read it, which is how the figure came to plot
 # a different reference pairing from the text beside it for a whole cycle.
-FIG_AXES = REPO / "paper" / "generated" / "fig_axes_values.tex"
+FIG_AXES = PAPER / "generated" / "fig_axes_values.tex"
 # The two E1 tables are generated from the exports as well, so their numbers are
 # located in the generated files rather than in the supplement's own source.
 E1_SOURCE = {
-    "wide8": REPO / "paper" / "generated" / "tab_e1_wide8.tex",
-    "two_city": REPO / "paper" / "generated" / "tab_e1_multibackbone.tex",
+    "wide8": PAPER / "generated" / "tab_e1_wide8.tex",
+    "two_city": PAPER / "generated" / "tab_e1_multibackbone.tex",
 }
 
 
@@ -819,7 +829,7 @@ for ser, value in [("png", 15.77), ("jpeg95", 16.88), ("jpeg75", 23.97)]:
 
 
 # --- A5/A8, the privacy-utility frontier (Table tab:frontier) -------------
-FRONTIER = REPO / "paper" / "generated" / "tab_frontier.tex"
+FRONTIER = PAPER / "generated" / "tab_frontier.tex"
 
 
 def _miou(budget: str, condition: str) -> Callable[[], Optional[float]]:
@@ -1518,7 +1528,7 @@ claim("E1/two_city/n_significant", "\\S Real-Place Retrieval Benchmark (E1)",
 # --- the strong attacker's per-placement table ------------------------------
 # The manuscript pointed here for these values before the table existed. They
 # are registered so the pointer and the numbers cannot drift apart again.
-MIXVPR_TAB = REPO / "paper" / "generated" / "tab_placement_mixvpr.tex"
+MIXVPR_TAB = PAPER / "generated" / "tab_placement_mixvpr.tex"
 
 
 def _mixvpr_placement(placement: str, stat: str):
@@ -1560,7 +1570,7 @@ for placement, top1, delta in [
 # so five of its seven cells were unregistered as well as unprinted. The
 # margin-gradient rules come from their own run against their own uniform arm,
 # which is why the tree is a parameter here rather than a constant.
-MSLS_PLACE_TAB = REPO / "paper" / "generated" / "tab_placement_msls.tex"
+MSLS_PLACE_TAB = PAPER / "generated" / "tab_placement_msls.tex"
 
 
 def _msls_placement(tree: str, placement: str, stat: str):
@@ -1628,7 +1638,7 @@ for cid, printed, value, fn, src in [
 # The second dataset. Registered from its own export so the manuscript's
 # statement that both contrasts survive a change of dataset is checked against
 # the rows that produced it, not against a remembered number.
-KITTI_TAB = REPO / "paper" / "generated" / "tab_kitti360.tex"
+KITTI_TAB = PAPER / "generated" / "tab_kitti360.tex"
 
 
 def _kitti(arm: str, column: str, value: str, stat: str):
@@ -2240,7 +2250,7 @@ for cid, printed, value, san in [
 # Table tab:alloc_curve is registered, plus the trajectory gate -- twenty is
 # measured by both runs and the two must agree, or the five points are not on
 # one curve and the table should not exist.
-CURVE_TAB = REPO / "paper" / "generated" / "tab_alloc_curve.tex"
+CURVE_TAB = PAPER / "generated" / "tab_alloc_curve.tex"
 for cid, stem, cond, printed, value in [
         ("Curve/r18/5", "r14_r18_s10", "opt_transfer_crossdraw", "+0.0000", 0.0000),
         ("Curve/r18/10", "r14_r18_s10", "opt_transfer_x2_crossdraw", "-0.0025", -0.0025),
@@ -2499,7 +2509,7 @@ for cid, printed, value, tol, key in [
 # The threat model releases one frame; the scenario uploads video. Every cell
 # of that table is registered, read out of the generated file so the registry
 # cannot drift from what is printed, and recomputed from the released rows.
-CLIP_TAB = REPO / "paper" / "generated" / "tab_clip_pooling.tex"
+CLIP_TAB = PAPER / "generated" / "tab_clip_pooling.tex"
 _CLIP: Dict[str, object] = {}
 
 
@@ -2604,7 +2614,7 @@ _register_clip_table(CLIP_TAB, _clip, "Clip", "tab:clip_pooling",
 # best-frame pair is only in the table now that the sentence quoting it has
 # been compressed. Sourcing all four at the table -- which one edit here did --
 # leaves the two in the manuscript unlocated and the check silently weaker.
-CLIP_TAB = REPO / "paper" / "generated" / "tab_clip_pooling.tex"
+CLIP_TAB = PAPER / "generated" / "tab_clip_pooling.tex"
 for cid, printed, value, cond, k, pooling, stat, src in [
         ("Clip/main/mean/delta", "$-0.177$", -0.177, "direction", 7, "mean",
          "delta", MAIN),
@@ -2621,7 +2631,7 @@ for cid, printed, value, cond, k, pooling, stat, src in [
 # The same study against the strong retriever. These rows carry their own
 # place labels, so the place-clustered interval does not have to borrow them
 # from another export the way the weak-attacker run does.
-CLIP_MIX_TAB = REPO / "paper" / "generated" / "tab_clip_pooling_mixvpr.tex"
+CLIP_MIX_TAB = PAPER / "generated" / "tab_clip_pooling_mixvpr.tex"
 _CLIP_MIX: Dict[str, object] = {}
 
 
@@ -2676,7 +2686,7 @@ for cid, printed, value, pooling in [
 # --- the purification attack ------------------------------------------------
 # Read out of the generated table so the registry cannot drift from what is
 # printed, and recomputed from the released rows.
-PURIFY_TAB = REPO / "paper" / "generated" / "tab_purification.tex"
+PURIFY_TAB = PAPER / "generated" / "tab_purification.tex"
 _PURIFY: Dict[str, object] = {}
 
 

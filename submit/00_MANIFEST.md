@@ -28,6 +28,24 @@ names. What that took, and what it caught:
   readable without an account, and it is still not a substitute for
   `07_code.zip`.
 
+A second pass the same day took the manuscript out of the two places it did not
+belong and trimmed the source upload to source:
+
+- The author footnote carries the revised affiliation (AUT first, Resideo
+  second, one location line), and the title page carries it verbatim, since the
+  two footnotes have to match. Both re-extracted from page 1 after the rebuild.
+- `paper/popets_mandatory_sections.tex` is deleted. It held the three sections
+  the PoPETs 2027 template requires; no document `\input`s it, nothing in the
+  build reaches it, and the target venue is TIFS. It is recoverable from git if
+  a PoPETs submission is ever made.
+- `07_code.zip` no longer carries `paper/`. It is code only: 171 files, 0.5 MB.
+- `source/manuscript/` and `source/supplementary/` hold source only — no build
+  scripts, no PDFs, no `main.aux`, no `build/`. All four archives were repacked
+  from exactly those files: 6, 19 and 25 files respectively.
+- Everything was re-measured afterwards rather than assumed; the numbers are in
+  "The code upload" and "Which archive goes in which slot" below, including the
+  one thing the trim costs.
+
 Carried over from the 2026-09-14 pack and re-confirmed here: the four archives
 store **forward-slash** paths, so a Linux submission host unpacks them as
 directories rather than as flat files literally named `manuscript\main.tex`
@@ -45,32 +63,46 @@ because `paper/main.tex` is its first input.
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
 | `05_prior_review_disclosure.zip` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. Uploaded as a zip: the document plus the prior version's PDF. | — |
-| `06_source.zip` | **The LaTeX source upload.** Both packages in one archive, 30 files, 3.0 MB | — |
-| `07_code.zip` | **The code upload.** The audit code, the manuscript files the verifier parses, and a README; 199 files, 0.6 MB. No data — the evidence is the DataPort deposit | — |
-| `source/manuscript/` | Source for the manuscript, unzipped: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables, `build.bat` | — |
-| `source/supplementary/` | Source for the supplement, unzipped: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables, `main.aux`, `build.bat` | — |
+| `06_source.zip` | **The LaTeX source upload.** Both packages in one archive, 25 files, 2.0 MB — source only: no PDFs, no build scripts, no build directories | — |
+| `07_code.zip` | **The code upload.** The audit code and a README; 171 files, 0.5 MB. No data and no manuscript text — the evidence is the DataPort deposit, the manuscript is the source upload | — |
+| `source/manuscript/` | Source for the manuscript, unzipped: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables | — |
+| `source/supplementary/` | Source for the supplement, unzipped: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables | — |
 
 ## The code upload
 
 The manuscript commits to releasing "the code and the per-query exports, so
 every number can be rechecked without a GPU or imagery". `07_code.zip` is the
 code half; the exports are deposited at IEEE DataPort, DOI
-[10.21227/jnr0-jm15](https://doi.org/10.21227/jnr0-jm15). It carries the 167
-code files that actually produce the paper's numbers — `analyze_*` recompute an
-arm from rows, `make_*_table.py` write the tables, `run_*` re-run an arm from
-imagery — plus the 28 manuscript files the verifier parses, arranged in the
-layout the code expects. No data, no imagery, 0.6 MB.
+[10.21227/jnr0-jm15](https://doi.org/10.21227/jnr0-jm15). It carries the 170
+code files that produce the paper's numbers — `analyze_*` recompute an arm from
+rows, `make_*_table.py` write the tables, `run_*` re-run an arm from imagery —
+and a README. No data, no imagery, **and no manuscript text**: the manuscript
+travels in the source upload, not here. 0.5 MB.
 
 Checked before packaging and after. No credential value appears anywhere in it:
 the two drivers that call a hosted model read their key at run time from a file
 the user supplies. It was then unzipped into an empty directory with only the
 evidence trees linked in, and `audit_claim_consistency.py` run from there:
-**906 claims, 906 verified, 0 mismatched, 0 unverifiable.**
+**750 claims, 750 verified, 0 mismatched, 0 unverifiable, exit 0.**
 
-That run exits 1 even so, and the README says why rather than leaving a reader
-to discover it: the exit code also trips on a claim whose locator string is no
-longer in the document it is registered against. Fifteen are in that state —
-numbers the paper stopped printing when it was compressed to the page limit.
+That is the registry minus what cannot be reached without the documents. Each
+claim is checked twice over — the number is recomputed from the rows, and the
+string the paper prints is located in the document that prints it — and the
+second check needs the manuscript. Registration needs it too: 156 claims are
+enumerated by parsing the generated tables. A reviewer holding both uploads gets
+most of them back in one step: extract `06_source.zip`, put `main.tex`,
+`supplementary.tex` and the union of the two `generated/` directories in one
+folder, and point `PPEDCRF_PAPER` at it. The same command then reports **804
+claims, 804 verified, 0 mismatched**. The remaining 102 are registered by
+parsing the extended evidence report and the tables only it prints, which are
+not part of this submission. All three runs were performed here from the packed
+archive, not inferred.
+
+With the documents supplied, that run exits 1, and the README says why rather
+than leaving a reader to discover it: the exit code also trips on a claim whose
+locator string is no longer in the document it is registered against. Fifteen
+are in that state — numbers the paper stopped printing when it was compressed
+to the page limit.
 Their claims still verify, because the rows behind them are unaffected; what is
 gone is the sentence that quoted them. They are left registered deliberately, so
 the report doubles as the list of results the compression cost the paper. None
@@ -98,59 +130,61 @@ evidence trees linked in; verifier run.
 It is **not** a substitute for `07_code.zip`, and two differences are worth
 stating plainly.
 
-1. **Coverage, and which half of the check runs.** Each claim is verified twice
-   over: the number is recomputed from the rows, and the string the paper prints
-   is located in the document that prints it. The second half needs the
-   manuscript, which the capsule deliberately does not carry, so it is inert
-   there. Registration is affected too: 156 claims are enumerated by parsing the
-   generated tables, so without them the capsule registers 750 and verifies all
-   750, 0 mismatched, exit 0 — against the 906 this package registers and
-   verifies with the documents in place. Measured by running both, not inferred.
-2. **Scope.** It carries the mechanism and the verifier, not the drivers that
+1. **Scope.** It carries the mechanism and the verifier, not the drivers that
    recompute a table from rows or re-run an arm from imagery. Those are in
    `07_code.zip`.
+2. **Audience.** It is public, so it is the copy a reader who is not a reviewer
+   will find. `07_code.zip` reaches the editor with the manuscript beside it,
+   which is what lets a reviewer raise the registry from 750 to 804 by pointing
+   `PPEDCRF_PAPER` at the source upload.
 
-The verifier is the same file in both, and stays that way: one read of the
-extended evidence report was unguarded, so a run without the manuscript files
-died there instead of registering fewer claims. It is guarded now in this
-package's copy as well, which changes nothing when the documents are present —
-906 registered, 906 verified, 0 mismatched, re-run after the change.
+Both artifacts now carry code only, and both report the same thing on their own
+— 750 claims, 750 verified, 0 mismatched, exit 0 — because they run the same
+verifier. Keeping it one file took two changes, made in this repository's copy
+so the two cannot drift apart: a read of the extended evidence report was
+unguarded, so a run without the documents died there instead of registering
+fewer claims; and the manuscript root is now `PPEDCRF_PAPER` when that variable
+is set, so the documents can be supplied from outside the package instead of
+shipped inside it. With the authoring tree supplied it still reports 906
+registered, 906 verified, 0 mismatched.
 
 ## Which archive goes in which slot
 
 Upload `06_source.zip` where one archive is wanted. Where the two documents take
 separate source slots, `source/manuscript.zip` and `source/supplementary.zip`
-are the same content split the same way as the PDFs. None of the three carries
-the `build/` working directory, and all three store forward-slash paths, so they
-extract correctly on a Linux submission host.
+are the same content split the same way as the PDFs. All three are source only —
+no PDFs, no build scripts, no `build/` working directory — and all three store
+forward-slash paths, so they extract correctly on a Linux submission host.
 
-The two documents upload separately, so the sources are split the same way and
-each folder builds on its own. Membership was resolved from the documents
-themselves rather than assumed: each folder holds exactly the files its own
-`\input`, `\includegraphics` and `\bibliography` reach, so nothing is borrowed
-across the boundary and neither folder carries files it does not read. Each was
-deleted and rebuilt from scratch to confirm it, and `06_source.zip` was then
-extracted into an empty directory and built from there, giving 13 and 11 pages
-with no undefined reference in either log. The supplement was additionally built
-by a bare `latexmk` with no `build.bat` involved, which is how a submission host
-would compile it, and its manuscript cross-references resolved there too. Only
-`ref.bib` is genuinely needed by both, and each package has its own copy.
+Membership was resolved from the documents themselves rather than assumed: each
+folder holds exactly the files its own `\input`, `\includegraphics` and
+`\bibliography` reach, so nothing is borrowed across the boundary and neither
+folder carries files it does not read. `06_source.zip` was extracted into an
+empty directory and built there with a bare `latexmk`, which is how a submission
+host compiles it: 13 and 11 pages, no undefined reference in the manuscript's
+log. Only `ref.bib` is genuinely needed by both, and each package has its own
+copy.
 
-Two things are worth knowing before either folder is edited. The `generated/`
-tables are written from the released per-query exports and should not be
-hand-edited. And `supplementary/main.aux` is a build input, not a stray file:
-the supplement cites the manuscript's section numbers through
-`\externaldocument[M-]{main}`, and xr reads them out of the manuscript's
-`.aux`. Without it every such reference renders as `??` **and the build still
-exits 0**, so `supplementary/build.bat` regenerates it from
-`source/manuscript/` when that folder is beside it, falls back to the shipped
-copy when the folder travels alone, and fails loudly if any of those references
-did not resolve.
+**One consequence of shipping source only, measured rather than assumed.** The
+supplement cites the manuscript's section numbers through
+`\externaldocument[M-]{main}`, and xr reads those numbers out of the
+manuscript's `.aux`. The package previously carried `supplementary/main.aux` as
+a build input for exactly that reason. Without it, a host that compiles the
+supplement on its own leaves **17 references to the manuscript unresolved** —
+they print as `??` — **and the build still exits 0**, so nothing announces it.
+The PDFs uploaded here are unaffected: `02_supplementary.pdf` was built with
+those numbers resolved, and it is the file a reviewer reads. If a host-compiled
+supplement matters, the fix is one 13 KB file — put `main.aux` back beside
+`supplementary.tex` — not the build scripts.
 
-Ten files are read by neither document — eight generated tables,
+The `generated/` tables are written from the released per-query exports and
+should not be hand-edited.
+
+Nine files are read by neither document — seven generated tables,
 `generated/fig_axes_values.tex`, and `titlepage.tex`. They remain in `paper/`
-and are carried by neither package. The figures likewise:
-4 of the 26 MB `paper/figs/` tree, split 2 and 2.
+and are carried by neither package. Seven of those tables are read by the
+extended evidence report, which is not part of this submission. The figures
+likewise: 4 of the 26 MB `paper/figs/` tree, split 2 and 2.
 
 ## NOT part of this submission
 
@@ -178,8 +212,10 @@ single upload. The superseded file is in `_not_submitted/`, not deleted.
 
 - 13 / 11 / 1 pages; 0 undefined references, 0 overfull boxes, 0 font warnings
 - 906 registered claims, 906 verified against the released per-query data,
-  0 mismatched, 0 unverifiable (the registry was 911 before five duplicate
-  claims were retired; see "The code upload" above)
+  0 mismatched, 0 unverifiable, run from the authoring tree (the registry was
+  911 before five duplicate claims were retired). From `07_code.zip` alone it is
+  750 of 750, and 804 of 804 with the source upload supplied; see "The code
+  upload" above
 - Bibliography: 39 cited references, none uncited
 - Re-confirmed 2026-09-15 from the rebuilt packages and from `07_code.zip`
   extracted into an empty directory with only the evidence trees linked in
@@ -314,7 +350,18 @@ material, it belongs here.
 **Recommended answer: No — to be confirmed by the authors.** No arXiv,
 TechRxiv or institutional-repository posting of this manuscript appears
 anywhere in the repository, and the manuscript cites no preprint of itself.
-Only the authors can confirm nothing was posted outside it.
+Checked, not assumed: `github.com/mabo1215/PPEDCRF` is public but reaches the
+manuscript only through a submodule pointer into a private repository, so no
+`.tex` or PDF of this paper is readable there.
+
+Two things are worth stating so the answer stays true. First, arXiv:2603.01593
+is the authors' **earlier** PPEDCRF paper — a different manuscript, the one this
+paper audits — so it is not a preprint of this submission and does not belong in
+this answer; it belongs to Q1's account of the prior work. Second, the published
+Code Ocean capsule carried `main.tex` and the supplement in its v1.0 release.
+They have been removed and pushed, but **the public v1.0 still shows them until
+a new version is published**, which is the one place a copy of this manuscript
+is currently public. Publishing v1.1 closes it.
 
 ### Q5. Other posted preprints that should not be considered prior art?
 
