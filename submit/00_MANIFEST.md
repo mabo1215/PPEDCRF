@@ -1,10 +1,12 @@
 # Submission package — IEEE TIFS
 
 Assembled 2026-09-14 from the build at `paper/`. Every PDF here is byte-identical
-to the corresponding file in `paper/`, and every file in `source/` is
-byte-identical to its counterpart in `paper/` (both md5-verified; last
-re-verified 2026-09-14 after `source/main.tex` was refreshed and `build.bat`
-added). Page counts re-counted from the PDFs themselves: 13 / 11 / 1.
+to the corresponding file in `paper/`, and every source file is byte-identical to
+its counterpart in `paper/` (both md5-verified; last re-verified 2026-09-14, when
+`source/` was split into the two packages the submission system uploads
+separately). Page counts re-counted from the PDFs themselves: 13 / 11 / 1 —
+and both packages were rebuilt from scratch in their own directories, producing
+PDFs with those same page counts.
 
 ## What to upload
 
@@ -15,16 +17,32 @@ added). Page counts re-counted from the PDFs themselves: 13 / 11 / 1.
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
 | `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
-| `source/` | LaTeX sources, `ref.bib`, used figures, generated tables, `build.bat` | — |
+| `source/manuscript/` | LaTeX source for the manuscript: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables, `build.bat` | — |
+| `source/supplementary/` | LaTeX source for the supplement: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables, `main.aux`, `build.bat` | — |
 
-`source/figs/` carries only the four figures the documents reference, not the
-whole 26 MB `paper/figs/` tree. `source/generated/` carries the table files the
-documents `\input`; they are generated from the released per-query exports and
-should not be hand-edited. All 17 `\input{generated/...}` targets and all four
-`\includegraphics{figs/...}` targets resolve inside `source/`, and
-`\bibliography{ref}` resolves to `source/ref.bib`, so the directory compiles
-standalone. `source/generated/` also carries eight table files no longer
-referenced by either document; they are harmless and were left in place.
+The two documents upload separately, so the sources are split the same way and
+each folder builds on its own. Membership was resolved from the documents
+themselves rather than assumed: each folder holds exactly the files its own
+`\input`, `\includegraphics` and `\bibliography` reach, so nothing is borrowed
+across the boundary and neither folder carries files it does not read. Each was
+deleted and rebuilt from scratch to confirm it, giving 13 and 11 pages with no
+undefined reference in either log. Only `ref.bib` is genuinely needed by both,
+and each package has its own copy.
+
+Two things are worth knowing before either folder is edited. The `generated/`
+tables are written from the released per-query exports and should not be
+hand-edited. And `supplementary/main.aux` is a build input, not a stray file:
+the supplement cites the manuscript's section numbers through
+`\externaldocument[M-]{main}`, and xr reads them out of the manuscript's
+`.aux`. Without it every such reference renders as `??` **and the build still
+exits 0**, so `supplementary/build.bat` regenerates it from
+`source/manuscript/` when that folder is beside it, falls back to the shipped
+copy when the folder travels alone, and fails loudly if any of those references
+did not resolve.
+
+Eight generated tables and `titlepage.tex` are read by neither document; they
+are in `paper/` and are not carried by either package. The figures likewise:
+4 of the 26 MB `paper/figs/` tree, split 2 and 2.
 
 ## NOT part of this submission
 
@@ -35,15 +53,19 @@ Everything that does not belong in the upload has been moved into
   paper. It predates the package and would otherwise have reached an editor as
   if it described the submission. (The `download_2d_perspective*.sh/.zip`
   scripts it refers to are not present in `submit/`.)
-- `figs/`, `figs.zip` — a duplicate of `source/figs/`, staged for an upload
-  portal and superseded by `source/`.
-- `supplyment/`, `supplyment.zip` — a partial copy of the supplement sources.
-  Incomplete: it has no `generated/` directory, so it cannot compile.
-- `source.zip` — an archive of `source/` taken before `main.tex` was refreshed
-  and `build.bat` added, so it is stale. Re-zip `source/` at upload time if the
-  submission system wants an archive.
+- `figs/`, `figs.zip` — a duplicate of the figure set, staged for an upload
+  portal and superseded by the two source packages.
+- `supplyment/`, `supplyment.zip` — an earlier partial copy of the supplement
+  sources. Incomplete: it has no `generated/` directory, so it cannot compile.
+  `source/supplementary/` replaces it and does compile.
+- `source.zip` — an archive of the old flat `source/` layout, predating both the
+  refreshed `main.tex` and the split. Stale on both counts.
 
-`submit/` now contains exactly the six items in the table above. The verbatim
+Fresh archives of the current packages are at `source/manuscript.zip` and
+`source/supplementary.zip`, each holding its folder without the `build/`
+working directory.
+
+`submit/` now contains exactly the items in the table above. The verbatim
 reviews were previously a separate `06_tomm_reviews_verbatim.md`; they are now
 §4 of `05_prior_review_disclosure.md`, so the form's supporting document is a
 single upload. The superseded file is in `_not_submitted/`, not deleted.
