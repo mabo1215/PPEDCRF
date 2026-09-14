@@ -1,5 +1,26 @@
 # 已全部修改
 
+- 【源码发布写入论文并同步投稿包，2026年9月15日】已发布的 Code Ocean capsule 9035965 现在由稿件、标题页与投稿包三处一致地指向。
+
+**论文**：`main.tex` 与 `titlepage.tex` 的作者脚注同时给出两个发布指针——可执行 capsule
+`https://codeocean.com/capsule/9035965/tree` 与 IEEE DataPort 存档 `10.21227/jnr0-jm15`。
+这两个脚注此前已经分叉（标题页仍写着正文上一轮就删掉的 GitHub 地址），现在按文件自带注释的要求重新一致。
+§Ethics 的可得性句同步改写为「the code as an executable capsule and the per-query exports as a citable deposit」。
+重建后仍是 13 / 11 / 1 页，0 undefined reference、0 overfull box、0 font warning，
+两个 URL 都经抽取确认渲染在正文与标题页的第 1 页上；改完重跑断言核验：906 条、906 通过、0 mismatch、15 条定位漂移（与改动前同数）。
+
+**capsule 是核对过的，不是照标签相信的。** 匿名 clone 成功（说明无需账号即可读），挂上证据树后跑它自带的 verifier：
+783 条注册、783 条通过、0 mismatch。差的那批不是数据而是 `paper/generated/`——
+注册表要靠解析这些生成表来枚举其余断言；把该目录放进去后升到 911 注册、911 通过、0 mismatch，这是实测不是推断。
+它另有两处落后：`main.tex` 比投稿版旧几处编辑，verifier 是 claim 退役前的 911 制而非 906 制。
+结论：capsule 是这篇论文的真实构件，但不能替代 `07_code.zip`——重算表格与重跑实验的 driver 只在后者里。
+
+**投稿包**：三个 PDF 重新复制并与 `paper/` md5 一致（495,171 / 744,286 / 30,471 字节）；
+两个源码包清空 `build/` 后原地从零重建；四个压缩包重打；
+`06_source.zip` 解到空目录从零编译仍是 13 / 11 页、0 undefined reference，且脚注 URL 在第 1 页；
+`07_code.zip` 解到空目录、只挂存档证据树跑 verifier：906 条、906 通过、0 mismatch。
+`00_MANIFEST.md` 新增「The published capsule」一节并更新数据可得性段，`04_cover_letter.txt` 与 `07_code_README.md` 同步。
+
 - 【N2 与 N3 补齐，2026年9月14日，2c 4080 双卡】评审「未排期」清单里的两项已经做完（N3）或已定性（N2）。
 
 **N3：结论变了，而且对我们不利。** 已发表那条臂只微调最后一个残差块并声称「适配对攻击者收益很小」。
@@ -931,6 +952,27 @@ pilot 已跑完并验证了协议与能量闸门；**全量臂（400 query × 3 
   A:  GPT 5.6
 
 # 遗留问题
+
+## capsule 的 README 还在描述上一篇论文（2026年9月15日）
+
+已发布的 capsule 9035965 内容是对的，但它的 `code/README.md` 开头仍写着
+「PPEDCRF — Research Codebase … Paper: arXiv:2603.01593」并附该篇的 BibTeX，
+`data/driving/README.md` 是中文，`.gitmodules` 还声明了一个指向私有仓库
+`ppedcrf-core-private` 的 `doc` 子模块（树里并不存在）。
+审稿人打开 capsule 第一眼读到的就是这个标签，而「正确标签下放错代码」正是上一轮特意避开的失误。
+
+需要你提供/决策：
+1. 是否要我把 capsule 刷新成与投稿版一致（重写 README 为本文、`paper/main.tex` 换成投稿版、补 `paper/generated/`、
+   verifier 换成 906 制、中文 data README 译成英文、移除 `doc` 子模块声明），推一个 v1.1？
+   推送会改动已发布构件，属于对外操作，所以等你明确同意再做。
+   A:
+2. capsule 是否已挂上 `ppedcrf-evidence` 数据资产？我这边只能读到代码仓库，看不到数据资产的挂载状态；
+   没挂的话它的一键运行只跑合成自检，不会核验任何断言。
+   A:
+3. Code Ocean 发布是否给了 DOI（`10.24433/CO.*`）？若有，稿件脚注应改用 DOI 而不是 capsule 链接；
+   DataCite 现在查不到这条记录。
+   A:
+
 
 ## 三问已答，下面是答复与执行状态（2026年9月13日）
 

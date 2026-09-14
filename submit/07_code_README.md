@@ -102,8 +102,13 @@ hosts the experiments actually ran on. They are kept as run records rather than
 rewritten into something tidier that never executed; nothing else in the
 package depends on them.
 
-A Code Ocean capsule also exists for this project. It is **not** this code: it
-holds the perturbation mechanism from our earlier work plus a reduced verifier,
-covering fewer of these claims because only part of the evidence tree is
-bundled there. Where the two disagree about what has been checked, this package
-is the one to believe.
+A Code Ocean capsule is published for this project as well, at
+<https://codeocean.com/capsule/9035965/tree>, and the manuscript's first-page
+footnote names it. It runs this same verifier under one click against the
+deposited evidence, which is worth having. It is **not** this package, though:
+it carries the perturbation mechanism and the verifier, not the drivers that
+recompute a table from rows or re-run an arm from imagery, and as published its
+registry resolves 783 of these claims rather than 906 — it does not ship the
+generated tables the registry parses to enumerate the rest, and its run states
+that coverage rather than implying more. Where the two disagree about what has
+been checked, this package is the one to believe.

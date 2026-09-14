@@ -1,31 +1,40 @@
 # Submission package — IEEE TIFS
 
-Assembled 2026-09-14 from the build at `paper/`. Every PDF here is byte-identical
+Assembled 2026-09-15 from the build at `paper/`. Every PDF here is byte-identical
 to the corresponding file in `paper/`, and every source file is byte-identical to
 its counterpart in `paper/` (both md5-verified). Page counts re-counted from the
 PDFs themselves: 13 / 11 / 1 — and both packages were rebuilt from scratch in
 their own directories, producing PDFs with those same page counts.
 
-Re-synced 2026-09-14 against the manuscript's rewritten generative-AI-use
-declaration, which is the only source change since the previous pack. What that
-took, and what it caught:
+Re-synced 2026-09-15 against the released code capsule, which the manuscript now
+names. What that took, and what it caught:
 
-- The three numbered PDFs were re-copied from `paper/`; all three are
-  md5-identical to it again (`02_supplementary.pdf` was one build behind).
-- Both source packages had their `build/` working directories cleared and were
-  then rebuilt from scratch in place: 13 and 11 pages, 494,599 and 744,286
-  bytes — the same byte counts as `paper/`'s own PDFs — with 0 undefined
-  references, 0 overfull boxes and 0 font warnings in either log.
-- The four source and code archives were repacked with **forward-slash** paths
-  (`05_prior_review_disclosure.zip` holds two root files and has no paths).
-  The previous ones stored Windows backslash paths, so a Linux submission host
-  would have unpacked them as flat files literally named `manuscript\main.tex`,
-  not as directories. Re-verified by extracting on Linux and building from that.
-- `07_code.zip` had lost its `paper/` subtree — the 28 manuscript files the
-  verifier parses — and shipped 171 files instead of 199. Without them
-  `audit_claim_consistency.py` cannot start, because `paper/main.tex` is its
-  first input. Restored from `paper/` and re-verified: 906 claims, 906 verified,
-  0 mismatched, 0 unverifiable.
+- The author footnote on page 1 of the manuscript, and the one on the title
+  page, now carry both release pointers: the capsule at
+  `https://codeocean.com/capsule/9035965/tree` and the DataPort deposit. The two
+  footnotes had drifted apart — the title page still named a GitHub URL the
+  manuscript dropped in the previous pack — and are identical again, which is
+  what their own comment asks for.
+- Everything was rebuilt and re-copied: 13 / 11 / 1 pages, 495,171 / 744,286 /
+  30,471 bytes, all three md5-identical to `paper/`. Both source packages had
+  their `build/` working directories cleared and were rebuilt from scratch in
+  place, giving the same 13 and 11 pages with 0 undefined references, 0 overfull
+  boxes and 0 font warnings in either log.
+- Re-verified after the edit rather than assumed: 906 claims, 906 verified, 0
+  mismatched, 0 unverifiable. The new sentences print no number, and the 15
+  locator drifts are the same 15 as before.
+- The capsule itself was checked rather than taken on its label — see "The
+  published capsule" below. It is a genuine artifact for this paper, it is
+  readable without an account, and it is still not a substitute for
+  `07_code.zip`.
+
+Carried over from the 2026-09-14 pack and re-confirmed here: the four archives
+store **forward-slash** paths, so a Linux submission host unpacks them as
+directories rather than as flat files literally named `manuscript\main.tex`
+(`05_prior_review_disclosure.zip` holds two root files and has no paths); and
+`07_code.zip` carries the `paper/` subtree — the 28 manuscript files the
+verifier parses — without which `audit_claim_consistency.py` cannot start,
+because `paper/main.tex` is its first input.
 
 ## What to upload
 
@@ -76,10 +85,38 @@ than re-pointed, which would only have added an exact copy of a check that
 already runs. That is where 911 became 906. The last had no table-sourced twin
 and was re-homed to the table instead.
 
-The Code Ocean capsule at `codeocean/` is a different artifact and is **not**
-what is submitted here. It is in sync with its remote, but it holds the
-perturbation mechanism from the earlier work plus a reduced verifier covering
-783 of these 911 claims, and its README describes a different paper.
+## The published capsule
+
+The manuscript's footnote now points at a published Code Ocean capsule,
+`https://codeocean.com/capsule/9035965/tree`. It is a genuine artifact for this
+paper: its capsule metadata carries this title, it ships this manuscript's
+`main.tex` and supplement, and its one-click run drives the perturbation path on
+a synthetic clip and then runs this same verifier against the deposited
+evidence. Checked from its own remote rather than taken on its label — cloned
+anonymously, so it is readable without an account; evidence trees linked in;
+verifier run.
+
+It is **not** a substitute for `07_code.zip`, and three differences are worth
+stating plainly.
+
+1. **Coverage.** As published it registers 783 of these claims and verifies all
+   783, and its run prints that coverage rather than implying more. The claims
+   it does not register are the ones the registry enumerates by parsing
+   `paper/generated/`, which the capsule does not ship; dropping that directory
+   in raises it to 911 registered, 911 verified, 0 mismatched — confirmed here,
+   not inferred.
+2. **Scope.** It carries the mechanism and the verifier, not the drivers that
+   recompute a table from rows or re-run an arm from imagery. Those are in
+   `07_code.zip`.
+3. **Vintage.** Its `main.tex` is a few edits behind the submitted one and its
+   verifier predates the claim-retirement pass, so it reports the 911-claim
+   registry with 24 locator drifts where this package reports 906 with 15.
+
+One item needs the authors before a reviewer opens it: the capsule's
+`code/README.md` still describes the earlier PPEDCRF paper (arXiv:2603.01593),
+citation block included, and `data/driving/README.md` is in Chinese. Refreshing
+`paper/main.tex`, adding `paper/generated/`, updating the verifier and rewriting
+that README would make the capsule agree with this package on all three counts.
 
 ## Which archive goes in which slot
 
@@ -146,8 +183,10 @@ single upload. The superseded file is in `_not_submitted/`, not deleted.
   0 mismatched, 0 unverifiable (the registry was 911 before five duplicate
   claims were retired; see "The code upload" above)
 - Bibliography: 39 cited references, none uncited
-- Re-confirmed 2026-09-14 from the rebuilt packages and from `07_code.zip`
+- Re-confirmed 2026-09-15 from the rebuilt packages and from `07_code.zip`
   extracted into an empty directory with only the evidence trees linked in
+- The published capsule verifies 783 of the 906 on its own; what it is missing
+  and why is under "The published capsule" above
 
 ## EDICS
 
@@ -480,14 +519,19 @@ These cannot be completed from the repository (tracked as S1, S2, S6 in
    PDFs were built, leaving the manuscript referring to a "released
    repository" it never named and the cover letter telling the Editor that
    repository was "named in the manuscript". The evidence was deposited at
-   IEEE DataPort instead, so all three places now agree: the footnote cites
-   `https://doi.org/10.21227/jnr0-jm15` (verified to render on page 1 of
-   `01_manuscript.pdf`), the margin declaration points at the deposited record
-   rather than a repository commit, and `04_cover_letter.txt` cites the
-   DataPort DOI. No author action remains on this item.
+   IEEE DataPort instead, and the code has since been published as a Code Ocean
+   capsule, so all three places now agree: the footnote cites both
+   `https://codeocean.com/capsule/9035965/tree` and
+   `https://doi.org/10.21227/jnr0-jm15` (both verified to render on page 1 of
+   `01_manuscript.pdf`, and on `03_titlepage.pdf`, whose footnote is identical
+   to it again), the margin declaration points at the deposited record rather
+   than a repository commit, and `04_cover_letter.txt` cites both. No author
+   action remains on this item for the manuscript; the capsule's own README is
+   listed under "The published capsule" above.
 
 **Data availability.** Per-query evaluation exports are deposited at IEEE
 DataPort, doi `10.21227/jnr0-jm15`. They are sufficient to recompute the
 reported numbers without the source imagery, which is not redistributable
-under the MSLS and KITTI-360 licences. A Code Ocean capsule
-(`capsule-8046996`) runs the verification against that deposit.
+under the MSLS and KITTI-360 licences. The published Code Ocean capsule
+(`https://codeocean.com/capsule/9035965/tree`) runs the verification against
+that deposit; the manuscript's first-page footnote names both.
