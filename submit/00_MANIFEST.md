@@ -17,9 +17,43 @@ PDFs with those same page counts.
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
 | `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
-| `06_source.zip` | **The source upload.** Both packages in one archive, 30 files, 3.0 MB | — |
+| `06_source.zip` | **The LaTeX source upload.** Both packages in one archive, 30 files, 3.0 MB | — |
+| `07_code.zip` | **The code upload.** The audit code, the manuscript files the verifier parses, and a README; 199 files, 0.6 MB. No data — the evidence is the DataPort deposit | — |
 | `source/manuscript/` | Source for the manuscript, unzipped: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables, `build.bat` | — |
 | `source/supplementary/` | Source for the supplement, unzipped: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables, `main.aux`, `build.bat` | — |
+
+## The code upload
+
+The manuscript commits to releasing "the code and the per-query exports, so
+every number can be rechecked without a GPU or imagery". `07_code.zip` is the
+code half; the exports are deposited at IEEE DataPort, DOI
+[10.21227/jnr0-jm15](https://doi.org/10.21227/jnr0-jm15). It carries the 167
+code files that actually produce the paper's numbers — `analyze_*` recompute an
+arm from rows, `make_*_table.py` write the tables, `run_*` re-run an arm from
+imagery — plus the 28 manuscript files the verifier parses, arranged in the
+layout the code expects. No data, no imagery, 0.6 MB.
+
+Checked before packaging and after. No credential value appears anywhere in it:
+the two drivers that call a hosted model read their key at run time from a file
+the user supplies. It was then unzipped into an empty directory with only the
+evidence trees linked in, and `audit_claim_consistency.py` run from there:
+**911 claims, 911 verified, 0 mismatched, 0 unverifiable.**
+
+That run exits 1 even so, and the README says why rather than leaving a reader
+to discover it: the exit code also trips on a claim whose locator string is no
+longer in the document it is registered against. Twenty-four are in that state —
+9 whose numbers moved from the main text to the supplement during compression
+and are still printed, 15 the compressed paper stopped printing at all. None is
+a disagreement between a printed number and the rows behind it. **Open item for
+the author:** re-point the 9 and decide whether to retire the 15, which would
+make the headline command exit 0.
+
+The Code Ocean capsule at `codeocean/` is a different artifact and is **not**
+what is submitted here. It is in sync with its remote, but it holds the
+perturbation mechanism from the earlier work plus a reduced verifier covering
+783 of these 911 claims, and its README describes a different paper.
+
+## Which archive goes in which slot
 
 Upload `06_source.zip` where one archive is wanted. Where the two documents take
 separate source slots, `source/manuscript.zip` and `source/supplementary.zip`
