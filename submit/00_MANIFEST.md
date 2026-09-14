@@ -2,11 +2,30 @@
 
 Assembled 2026-09-14 from the build at `paper/`. Every PDF here is byte-identical
 to the corresponding file in `paper/`, and every source file is byte-identical to
-its counterpart in `paper/` (both md5-verified; last re-verified 2026-09-14, when
-`source/` was split into the two packages the submission system uploads
-separately). Page counts re-counted from the PDFs themselves: 13 / 11 / 1 —
-and both packages were rebuilt from scratch in their own directories, producing
-PDFs with those same page counts.
+its counterpart in `paper/` (both md5-verified). Page counts re-counted from the
+PDFs themselves: 13 / 11 / 1 — and both packages were rebuilt from scratch in
+their own directories, producing PDFs with those same page counts.
+
+Re-synced 2026-09-14 against the manuscript's rewritten generative-AI-use
+declaration, which is the only source change since the previous pack. What that
+took, and what it caught:
+
+- The three numbered PDFs were re-copied from `paper/`; all three are
+  md5-identical to it again (`02_supplementary.pdf` was one build behind).
+- Both source packages had their `build/` working directories cleared and were
+  then rebuilt from scratch in place: 13 and 11 pages, 494,599 and 744,286
+  bytes — the same byte counts as `paper/`'s own PDFs — with 0 undefined
+  references, 0 overfull boxes and 0 font warnings in either log.
+- The four source and code archives were repacked with **forward-slash** paths
+  (`05_prior_review_disclosure.zip` holds two root files and has no paths).
+  The previous ones stored Windows backslash paths, so a Linux submission host
+  would have unpacked them as flat files literally named `manuscript\main.tex`,
+  not as directories. Re-verified by extracting on Linux and building from that.
+- `07_code.zip` had lost its `paper/` subtree — the 28 manuscript files the
+  verifier parses — and shipped 171 files instead of 199. Without them
+  `audit_claim_consistency.py` cannot start, because `paper/main.tex` is its
+  first input. Restored from `paper/` and re-verified: 906 claims, 906 verified,
+  0 mismatched, 0 unverifiable.
 
 ## What to upload
 
@@ -16,7 +35,7 @@ PDFs with those same page counts.
 | `02_supplementary.pdf` | Supplementary material | 11 |
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
-| `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
+| `05_prior_review_disclosure.zip` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. Uploaded as a zip: the document plus the prior version's PDF. | — |
 | `06_source.zip` | **The LaTeX source upload.** Both packages in one archive, 30 files, 3.0 MB | — |
 | `07_code.zip` | **The code upload.** The audit code, the manuscript files the verifier parses, and a README; 199 files, 0.6 MB. No data — the evidence is the DataPort deposit | — |
 | `source/manuscript/` | Source for the manuscript, unzipped: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables, `build.bat` | — |
@@ -123,9 +142,12 @@ single upload. The superseded file is in `_not_submitted/`, not deleted.
 ## Build state at assembly
 
 - 13 / 11 / 1 pages; 0 undefined references, 0 overfull boxes, 0 font warnings
-- 911 registered claims, 911 verified against the released per-query data,
-  0 mismatched
+- 906 registered claims, 906 verified against the released per-query data,
+  0 mismatched, 0 unverifiable (the registry was 911 before five duplicate
+  claims were retired; see "The code upload" above)
 - Bibliography: 39 cited references, none uncited
+- Re-confirmed 2026-09-14 from the rebuilt packages and from `07_code.zip`
+  extracted into an empty directory with only the evidence trees linked in
 
 ## EDICS
 
