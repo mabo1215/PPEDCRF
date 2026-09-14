@@ -137,12 +137,13 @@ in the supplement, and the rest came from compression and from retiring
 references that belonged to an earlier framing of this work.
 
 This manuscript has not been published previously and is not under
-consideration elsewhere. All authors have approved the submission. The code,
-the benchmark manifests and the per-query exports behind every reported table
-are deposited at IEEE DataPort (doi 10.21227/jnr0-jm15), cited in the manuscript,
-together with the extended
-evidence report the manuscript cites; no credentials are required, and the
-table verification runs without a GPU.
+consideration elsewhere. All authors have approved the submission. The code is
+published as an executable capsule (https://codeocean.com/capsule/9035965/tree),
+and is uploaded here in full as the code archive; the benchmark manifests and
+the per-query exports behind every reported table are deposited at IEEE
+DataPort (doi 10.21227/jnr0-jm15). Both pointers are in the manuscript's
+first-page footnote; no credentials are required, and the table verification
+runs without a GPU.
 
 Thank you for your time and consideration.
 

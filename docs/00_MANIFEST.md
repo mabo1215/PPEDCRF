@@ -1,5 +1,9 @@
 # Submission package — IEEE TIFS
 
+This file and the cover letter live in `docs/`; `submit/` holds only what is
+uploaded. The numbering in the table below is the payload's own, which is why
+it skips the cover letter's old slot.
+
 Assembled 2026-09-15 from the build at `paper/`. Every PDF here is byte-identical
 to the corresponding file in `paper/`, and every source file is byte-identical to
 its counterpart in `paper/` (both md5-verified). Page counts re-counted from the
@@ -61,7 +65,7 @@ because `paper/main.tex` is its first input.
 | `01_manuscript.pdf` | Main manuscript | 13 |
 | `02_supplementary.pdf` | Supplementary material | 11 |
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
-| `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
+| Cover letter | `docs/cover_letter.txt`, incl. the over-length request. It is entered in the submission system rather than uploaded from `submit/`, so it lives with this file instead of in the payload | — |
 | `05_prior_review_disclosure.zip` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. Uploaded as a zip: the document plus the prior version's PDF. | — |
 | `06_source.zip` | **The LaTeX source upload.** Both packages in one archive, 25 files, 2.0 MB — source only: no PDFs, no build scripts, no build directories | — |
 | `07_code.zip` | **The code upload.** The audit code and a README; 171 files, 0.5 MB. No data and no manuscript text — the evidence is the DataPort deposit, the manuscript is the source upload | — |
@@ -331,25 +335,35 @@ Outstanding author actions:
 
 ### Q2. Extended version of a conference publication?
 
-**Cannot be answered from the repository — authors must answer.** No
-conference version of this work is cited in the manuscript, and no draft,
-submission record or correspondence for one exists in the repository. If the
-answer is Yes, the manuscript must cite it and explain the additional
-contribution; nothing of that kind is currently in the text.
+**Answer: No — confirmed by the authors, 2026-09-15.** No conference version of
+this work is cited in the manuscript, and no draft, submission record or
+correspondence for one exists in the repository, which is consistent with that
+answer.
 
 ### Q3. Related to other papers by the authors, published, accepted, or under review, not cited here?
 
-**Cannot be answered from the repository — authors must answer.** The
-repository contains no record of the authors' other work. Note that the ACM
-TOMM submission in Q1 is a prior version of *this* work rather than a separate
-paper, so it belongs under Q1; if any genuinely separate paper shares
-material, it belongs here.
+**Answer: No — confirmed by the authors, 2026-09-15.** The ACM TOMM submission
+is a prior version of *this* work rather than a separate paper, so it is
+declared under Q1, and the repository records no other work by the authors.
+
+One thing to be aware of behind that answer. arXiv:2603.01593, "PPEDCRF:
+Privacy-Preserving Enhanced Dynamic CRF for Location-Privacy Protection for
+Sequence Videos with Minimal Detection Degradation", is a public posting by
+these authors of the mechanism this paper audits, and the manuscript does not
+cite it — it introduces PPEDCRF as "a CRF-guided selective mechanism we
+implement as a testbed". The form asks about papers *published, accepted, or
+under review*, and a posted preprint whose journal submission was not accepted
+(declared in Q1) is none of those, so No is the right answer to the question as
+asked. The exposure is a reviewer who knows that preprint and reads the testbed
+sentence as understating where the mechanism came from. Citing it at that
+sentence would close the gap; it is a one-line change and does not alter a
+result.
 
 ### Q4. Preprints identical to this submission?
 
-**Recommended answer: No — to be confirmed by the authors.** No arXiv,
-TechRxiv or institutional-repository posting of this manuscript appears
-anywhere in the repository, and the manuscript cites no preprint of itself.
+**Answer: No — confirmed by the authors, 2026-09-15.** No arXiv, TechRxiv or
+institutional-repository posting of this manuscript appears anywhere in the
+repository, and the manuscript cites no preprint of itself.
 Checked, not assumed: `github.com/mabo1215/PPEDCRF` is public but reaches the
 manuscript only through a submodule pointer into a private repository, so no
 `.tex` or PDF of this paper is readable there.
@@ -365,8 +379,10 @@ is currently public. Publishing v1.1 closes it.
 
 ### Q5. Other posted preprints that should not be considered prior art?
 
-**Recommended answer: No — to be confirmed by the authors.** This follows
-from Q4; if the answer to Q4 changes, revisit this.
+**Answer: No — confirmed by the authors, 2026-09-15.** This follows from Q4.
+The one posted preprint in the authors' history, arXiv:2603.01593, is the
+earlier PPEDCRF paper rather than a version of this submission; it is prior work
+this paper audits, so it is not something to be excluded from prior art. See Q3.
 
 ### Q6. Why is this contribution within the scope of IEEE TIFS?
 
@@ -557,7 +573,7 @@ These cannot be completed from the repository (tracked as S1, S2, S6 in
    the repository.
 3. **Supplementary over-length.** The supplement is 11 pages against the 6-page
    guidance. The request and its justification are already written into
-   `04_cover_letter.txt`, but it needs the Editor-in-Chief's approval. This is
+   `docs/cover_letter.txt`, but it needs the Editor-in-Chief's approval. This is
    the one item that can stop the package at editorial screening.
 4. ~~The manuscript no longer names the code repository~~ **RESOLVED.** The
    author footnote's GitHub URL had been removed shortly before the submitted
@@ -570,7 +586,7 @@ These cannot be completed from the repository (tracked as S1, S2, S6 in
    `https://doi.org/10.21227/jnr0-jm15` (both verified to render on page 1 of
    `01_manuscript.pdf`, and on `03_titlepage.pdf`, whose footnote is identical
    to it again), the margin declaration points at the deposited record rather
-   than a repository commit, and `04_cover_letter.txt` cites both. No author
+   than a repository commit, and `docs/cover_letter.txt` cites both. No author
    action remains on this item for the manuscript; the capsule's own README is
    listed under "The published capsule" above.
 
