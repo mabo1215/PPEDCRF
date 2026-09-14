@@ -36,21 +36,23 @@ success.
 Against the complete evidence the current run reports:
 
 ```
-911 claims: 911 verified, 0 mismatched, 0 unverifiable (export tree absent),
-24 no longer present in the source file.
+906 claims: 906 verified, 0 mismatched, 0 unverifiable (export tree absent),
+15 no longer present in the source file.
 Exit status 1.
 ```
 
 **Every number checks. The exit status is still 1, and that is expected here** —
 it also trips when a claim's locator string is no longer found, which is a
-statement about the manuscript's wording rather than about any number. The 24
-divide cleanly: 9 are numbers that moved from the main text into the supplement
-when the paper was compressed to the page limit, and each is still printed,
-just in the other document; the remaining 15 are numbers the compressed paper
-stopped printing at all, whose claims keep verifying against the data because
-the data is unaffected. Neither group contains a disagreement between a printed
-number and the rows behind it — that count is the `0 mismatched`, and it is the
-number to read. Run with `--verbose` to see all 911 individually.
+statement about the manuscript's wording rather than about any number. The 15
+are numbers the paper stopped printing when it was compressed to the page
+limit. Their claims keep verifying because the rows behind them are unaffected;
+what is gone is the sentence that quoted them. They are left registered rather
+than deleted, so the report doubles as the list of results the compression cost
+the paper, which is a thing worth being able to see.
+
+None of the 15 is a disagreement between a printed number and the rows behind
+it. That count is the `0 mismatched`, and it is the one to read. Run with
+`--verbose` to see all 906 individually.
 
 ## Two ways to reproduce, and what each needs
 
@@ -101,7 +103,7 @@ rewritten into something tidier that never executed; nothing else in the
 package depends on them.
 
 A Code Ocean capsule also exists for this project. It is **not** this code: it
-holds the perturbation mechanism from our earlier work plus a reduced verifier
-whose coverage is 783 of these 911 claims, because only part of the evidence
-tree is bundled there. Where the two disagree about what has been checked, this
-package is the one to believe.
+holds the perturbation mechanism from our earlier work plus a reduced verifier,
+covering fewer of these claims because only part of the evidence tree is
+bundled there. Where the two disagree about what has been checked, this package
+is the one to believe.

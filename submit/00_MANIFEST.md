@@ -37,16 +37,25 @@ Checked before packaging and after. No credential value appears anywhere in it:
 the two drivers that call a hosted model read their key at run time from a file
 the user supplies. It was then unzipped into an empty directory with only the
 evidence trees linked in, and `audit_claim_consistency.py` run from there:
-**911 claims, 911 verified, 0 mismatched, 0 unverifiable.**
+**906 claims, 906 verified, 0 mismatched, 0 unverifiable.**
 
 That run exits 1 even so, and the README says why rather than leaving a reader
 to discover it: the exit code also trips on a claim whose locator string is no
-longer in the document it is registered against. Twenty-four are in that state —
-9 whose numbers moved from the main text to the supplement during compression
-and are still printed, 15 the compressed paper stopped printing at all. None is
-a disagreement between a printed number and the rows behind it. **Open item for
-the author:** re-point the 9 and decide whether to retire the 15, which would
-make the headline command exit 0.
+longer in the document it is registered against. Fifteen are in that state —
+numbers the paper stopped printing when it was compressed to the page limit.
+Their claims still verify, because the rows behind them are unaffected; what is
+gone is the sentence that quoted them. They are left registered deliberately, so
+the report doubles as the list of results the compression cost the paper. None
+is a disagreement between a printed number and its rows.
+
+Nine others were in that state and have been resolved. Three were sentences that
+moved rather than disappeared — one into the supplement, two into the extended
+evidence report — and are now sourced to the document that prints them. Five
+were duplicate claims asserting that the main text also printed a number the
+table prints; compression removed those sentences, so they were retired rather
+than re-pointed, which would only have added an exact copy of a check that
+already runs. That is where 911 became 906. The last had no table-sourced twin
+and was re-homed to the table instead.
 
 The Code Ocean capsule at `codeocean/` is a different artifact and is **not**
 what is submitted here. It is in sync with its remote, but it holds the

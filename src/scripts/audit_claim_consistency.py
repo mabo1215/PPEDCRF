@@ -798,15 +798,19 @@ for tree, mse, cond, gain, amp in [
           _a8(tree, cond, "float", "max_abs_delta_float"),
           locator=f"{amp}")
 
-for cond, ser, value in [
-        ("direction", "float", 0.0350), ("direction", "jpeg95", 0.0450),
-        ("direction", "jpeg75", 0.1050), ("direction_eot", "float", 0.0150),
-        ("direction_eot", "jpeg75", 0.0250), ("isotropic", "float", 0.2050),
-        ("isotropic", "jpeg75", 0.1950)]:
+# Compressing the paper to its page limit moved three of these sentences out
+# of the main text: one into the supplement, two into the extended evidence
+# report. Each is sourced to the document that prints it now, so the locator
+# check keeps testing something rather than being dropped.
+for cond, ser, value, src in [
+        ("direction", "float", 0.0350, MAIN), ("direction", "jpeg95", 0.0450, SUPP),
+        ("direction", "jpeg75", 0.1050, MAIN), ("direction_eot", "float", 0.0150, MAIN),
+        ("direction_eot", "jpeg75", 0.0250, MAIN), ("isotropic", "float", 0.2050, EXT),
+        ("isotropic", "jpeg75", 0.1950, EXT)]:
     claim(f"A8/serialisation/{cond}/{ser}", "\\S What Is Actually Released",
           f"${value:.4f}$".rstrip("0").rstrip(".") if False else f"{value}",
           value, 5e-4, "tifs_a8", _a8("tifs_a8", cond, ser, "top1"),
-          locator=f"{value:.4f}")
+          locator=f"{value:.4f}", source=src)
 
 for ser, value in [("png", 15.77), ("jpeg95", 16.88), ("jpeg75", 23.97)]:
     claim(f"A8/mse/{ser}", "\\S What Is Actually Released",
@@ -1664,13 +1668,16 @@ for name, top1, delta in [
               f"${delta:+.4f}$", delta, 5e-5, "kitti360_rows",
               _kitti("placement", "placement", name, "delta"), source=KITTI_TAB)
 
+# The /main duplicates are retired rather than re-homed. Their point was that
+# the main text's prose printed the number too; compression removed those
+# sentences, and the number now reaches the page only through the table below,
+# which the first three entries already check. Re-pointing them at the table
+# would have kept the claim count up by adding an exact copy of a check that
+# already runs.
 for cid, printed, value, stat, src in [
         ("KITTI/dir/isotropic", "0.1483", 0.1483, "top1", KITTI_TAB),
         ("KITTI/dir/transfer_3", "0.0940", 0.0940, "top1", KITTI_TAB),
-        ("KITTI/dir/delta", "$-0.0543$", -0.0543, "delta", KITTI_TAB),
-        ("KITTI/dir/isotropic/main", "0.1483", 0.1483, "top1", MAIN),
-        ("KITTI/dir/transfer_3/main", "0.0940", 0.0940, "top1", MAIN),
-        ("KITTI/dir/delta/main", "$-0.0543$", -0.0543, "delta", MAIN)]:
+        ("KITTI/dir/delta", "$-0.0543$", -0.0543, "delta", KITTI_TAB)]:
     cond = "isotropic" if "isotropic" in cid else "transfer_3"
     claim(cid, "\\S A second dataset", printed, value, 5e-5, "kitti360_rows",
           _kitti("direction", "condition", cond, stat), source=src)
@@ -1714,9 +1721,9 @@ def _kitti_clustered(side: int):
 
 for cid, printed, value, side, src in [
         ("KITTI/dir/clustered_lo", "$[-0.137,+0.021]$", -0.137, 0, KITTI_TAB),
-        ("KITTI/dir/clustered_hi", "$[-0.137,+0.021]$", 0.021, 1, KITTI_TAB),
-        ("KITTI/dir/clustered_lo/main", "$[-0.137,+0.021]$", -0.137, 0, MAIN),
-        ("KITTI/dir/clustered_hi/main", "$[-0.137,+0.021]$", 0.021, 1, MAIN)]:
+        ("KITTI/dir/clustered_hi", "$[-0.137,+0.021]$", 0.021, 1, KITTI_TAB)]:
+    # The /main duplicates of these two are retired for the same reason as the
+    # direction rows above: the interval is no longer written out in prose.
     claim(cid, "\\S A second dataset (clustered unit)", printed, value, 1e-3,
           "kitti360_rows", _kitti_clustered(side), source=src)
 
@@ -1762,8 +1769,10 @@ for cid, printed, value, variant, stat, src in [
         ("KITTI/ref/clean/main", "$0.1498$", 0.1498, "raw", "top1", MAIN),
         ("KITTI/ref/mechanism/main", "$0.1512$", 0.1512, "full", "top1", MAIN),
         ("KITTI/ref/whitebox/main", "$0.0000$", 0.0000, "attacker_aware", "top1", MAIN),
+        # Unlike the rows above, this one has no table-sourced twin, so it is
+        # re-homed to the table that prints it rather than retired.
         ("KITTI/ref/whitebox/delta", "$-0.1498$", -0.1498, "attacker_aware",
-         "delta", MAIN)]:
+         "delta", KITTI_TAB)]:
     claim(cid, "\\S A second dataset (reference levels)", printed, value, 5e-5,
           "kitti360_rows", _kitti_base(variant, stat), source=src)
 
