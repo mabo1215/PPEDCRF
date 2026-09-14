@@ -40,8 +40,9 @@ exits 0**, so `supplementary/build.bat` regenerates it from
 copy when the folder travels alone, and fails loudly if any of those references
 did not resolve.
 
-Eight generated tables and `titlepage.tex` are read by neither document; they
-are in `paper/` and are not carried by either package. The figures likewise:
+Ten files are read by neither document — eight generated tables,
+`generated/fig_axes_values.tex`, and `titlepage.tex`. They remain in `paper/`
+and are carried by neither package. The figures likewise:
 4 of the 26 MB `paper/figs/` tree, split 2 and 2.
 
 ## NOT part of this submission
