@@ -14,8 +14,7 @@ added). Page counts re-counted from the PDFs themselves: 13 / 11 / 1.
 | `02_supplementary.pdf` | Supplementary material | 11 |
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | `04_cover_letter.txt` | Cover letter, incl. the over-length request | — |
-| `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1). TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
-| `06_tomm_reviews_verbatim.md` | The three ACM TOMM reviews, verbatim and unabridged | — |
+| `05_prior_review_disclosure.md` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. | — |
 | `source/` | LaTeX sources, `ref.bib`, used figures, generated tables, `build.bat` | — |
 
 `source/figs/` carries only the four figures the documents reference, not the
@@ -44,7 +43,10 @@ Everything that does not belong in the upload has been moved into
   and `build.bat` added, so it is stale. Re-zip `source/` at upload time if the
   submission system wants an archive.
 
-`submit/` now contains exactly the seven items in the table above.
+`submit/` now contains exactly the six items in the table above. The verbatim
+reviews were previously a separate `06_tomm_reviews_verbatim.md`; they are now
+§4 of `05_prior_review_disclosure.md`, so the form's supporting document is a
+single upload. The superseded file is in `_not_submitted/`, not deleted.
 
 ## Build state at assembly
 
@@ -370,8 +372,8 @@ These cannot be completed from the repository (tracked as S1, S2, S6 in
 1. **ORCIDs, EDICS categories and submission metadata** — entered in the
    submission system, not in the manuscript.
 2. **Prior-submission disclosure — drafted, needs sign-off.** The disclosure is
-   included in this package as `05_prior_review_disclosure.md`, with all three
-   reviews reproduced verbatim in `06_tomm_reviews_verbatim.md`. The manuscript
+   included in this package as `05_prior_review_disclosure.md`, which now carries
+   all three reviews verbatim in its §4. The manuscript
    ID (`TOMM-2026-0332`) is filled in. Still outstanding: the authors' sign-off,
    and the ACM TOMM submission and decision dates, which are not recorded in
    the repository.
