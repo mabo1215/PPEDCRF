@@ -9,11 +9,18 @@
 重建后仍是 13 / 11 / 1 页，0 undefined reference、0 overfull box、0 font warning，
 两个 URL 都经抽取确认渲染在正文与标题页的第 1 页上；改完重跑断言核验：906 条、906 通过、0 mismatch、15 条定位漂移（与改动前同数）。
 
-**capsule 是核对过的，不是照标签相信的。** 匿名 clone 成功（说明无需账号即可读），挂上证据树后跑它自带的 verifier：
-783 条注册、783 条通过、0 mismatch。差的那批不是数据而是 `paper/generated/`——
-注册表要靠解析这些生成表来枚举其余断言；把该目录放进去后升到 911 注册、911 通过、0 mismatch，这是实测不是推断。
-它另有两处落后：`main.tex` 比投稿版旧几处编辑，verifier 是 claim 退役前的 911 制而非 906 制。
-结论：capsule 是这篇论文的真实构件，但不能替代 `07_code.zip`——重算表格与重跑实验的 driver 只在后者里。
+**capsule 已按「只带代码、不带任何论文内容」刷新并推送。** 原来它带着 `main.tex`、supplementary 与 extended report，
+现已全部删除，且不补任何 `.tex`、图或表；README 原本还在描述上一篇 PPEDCRF 论文（含 arXiv 链接与 BibTeX），已按本文重写；
+中文的 data README 译成英文；指向私有仓库 `ppedcrf-core-private` 的 `doc` 子模块声明删除。
+**代价是实测过的，不是猜的**：每条断言本来查两件事——从行重算数值、以及印出的字符串是否还在印它的那份文档里。
+第二件需要文档，capsule 现在没有文档，所以那一半在那边失效（每次运行都报 `0 no longer present`）；
+再加上有 156 条断言要靠解析生成表来枚举，也就无法注册。于是 capsule 侧为 **750 注册、750 通过、0 mismatch、exit 0**，
+投稿包侧仍是 **906 注册、906 通过**。
+为此 verifier 修了一处：读 extended report 那一行没有 `is_file()` 保护，缺文档时会直接崩而不是少注册；
+**修在仓库自己的 `src/scripts/audit_claim_consistency.py` 里**（capsule 与投稿包共用同一份，不分叉），
+文档在场时行为不变，改完重跑仍是 906 / 906 / 0 mismatch。
+推送走的是工作 capsule `capsule-8046996` 的 `main` 分支（commit `25033f3`）——
+已发布的 9035965 是只读快照，git 推不进去。
 
 **投稿包**：三个 PDF 重新复制并与 `paper/` md5 一致（495,171 / 744,286 / 30,471 字节）；
 两个源码包清空 `build/` 后原地从零重建；四个压缩包重打；
@@ -953,26 +960,23 @@ pilot 已跑完并验证了协议与能量闸门；**全量臂（400 query × 3 
 
 # 遗留问题
 
-## capsule 的 README 还在描述上一篇论文（2026年9月15日）
+## capsule 刷新已推送，等你在 Code Ocean 界面发布 v1.1（2026年9月15日）
 
-已发布的 capsule 9035965 内容是对的，但它的 `code/README.md` 开头仍写着
-「PPEDCRF — Research Codebase … Paper: arXiv:2603.01593」并附该篇的 BibTeX，
-`data/driving/README.md` 是中文，`.gitmodules` 还声明了一个指向私有仓库
-`ppedcrf-core-private` 的 `doc` 子模块（树里并不存在）。
-审稿人打开 capsule 第一眼读到的就是这个标签，而「正确标签下放错代码」正是上一轮特意避开的失误。
+工作 capsule `capsule-8046996` 的 `main` 已收到刷新（commit `25033f3`）：删掉全部论文内容、README 重写为本文、
+data README 译英、删除私有子模块声明、verifier 与仓库同版。
+但**公开地址 `https://codeocean.com/capsule/9035965/tree` 现在仍然是 v1.0**——
+它是发布快照，git 推送被拒（unauthorized），只能在 Code Ocean 界面上从工作 capsule 发布新版本。
 
 需要你提供/决策：
-1. 是否要我把 capsule 刷新成与投稿版一致（重写 README 为本文、`paper/main.tex` 换成投稿版、补 `paper/generated/`、
-   verifier 换成 906 制、中文 data README 译成英文、移除 `doc` 子模块声明），推一个 v1.1？
-   推送会改动已发布构件，属于对外操作，所以等你明确同意再做。
+1. 请在 Code Ocean 界面对该 capsule 执行一次 Publish / Release，发成 v1.1。
+   发完告诉我，我复核公开版内容是否与推送一致（尤其是确认 `.tex` 确实不在公开版里）。
    A:
-2. capsule 是否已挂上 `ppedcrf-evidence` 数据资产？我这边只能读到代码仓库，看不到数据资产的挂载状态；
-   没挂的话它的一键运行只跑合成自检，不会核验任何断言。
+2. capsule 是否已挂上 `ppedcrf-evidence` 数据资产？我只能读到代码仓库，看不到数据资产挂载状态；
+   没挂的话一键运行只跑合成自检，不会重算任何数值。
    A:
 3. Code Ocean 发布是否给了 DOI（`10.24433/CO.*`）？若有，稿件脚注应改用 DOI 而不是 capsule 链接；
    DataCite 现在查不到这条记录。
    A:
-
 
 ## 三问已答，下面是答复与执行状态（2026年9月13日）
 

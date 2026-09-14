@@ -87,36 +87,34 @@ and was re-homed to the table instead.
 
 ## The published capsule
 
-The manuscript's footnote now points at a published Code Ocean capsule,
-`https://codeocean.com/capsule/9035965/tree`. It is a genuine artifact for this
-paper: its capsule metadata carries this title, it ships this manuscript's
-`main.tex` and supplement, and its one-click run drives the perturbation path on
-a synthetic clip and then runs this same verifier against the deposited
-evidence. Checked from its own remote rather than taken on its label — cloned
-anonymously, so it is readable without an account; evidence trees linked in;
-verifier run.
+The manuscript's footnote points at a published Code Ocean capsule,
+`https://codeocean.com/capsule/9035965/tree`. It is a code capsule and carries
+no manuscript text at all — no `.tex`, no figures, no tables. Its one-click run
+drives the perturbation path on a synthetic clip and then recomputes the paper's
+numbers from the deposited per-query rows. Checked from its own remote rather
+than taken on its label: cloned anonymously, so it reads without an account;
+evidence trees linked in; verifier run.
 
-It is **not** a substitute for `07_code.zip`, and three differences are worth
+It is **not** a substitute for `07_code.zip`, and two differences are worth
 stating plainly.
 
-1. **Coverage.** As published it registers 783 of these claims and verifies all
-   783, and its run prints that coverage rather than implying more. The claims
-   it does not register are the ones the registry enumerates by parsing
-   `paper/generated/`, which the capsule does not ship; dropping that directory
-   in raises it to 911 registered, 911 verified, 0 mismatched — confirmed here,
-   not inferred.
+1. **Coverage, and which half of the check runs.** Each claim is verified twice
+   over: the number is recomputed from the rows, and the string the paper prints
+   is located in the document that prints it. The second half needs the
+   manuscript, which the capsule deliberately does not carry, so it is inert
+   there. Registration is affected too: 156 claims are enumerated by parsing the
+   generated tables, so without them the capsule registers 750 and verifies all
+   750, 0 mismatched, exit 0 — against the 906 this package registers and
+   verifies with the documents in place. Measured by running both, not inferred.
 2. **Scope.** It carries the mechanism and the verifier, not the drivers that
    recompute a table from rows or re-run an arm from imagery. Those are in
    `07_code.zip`.
-3. **Vintage.** Its `main.tex` is a few edits behind the submitted one and its
-   verifier predates the claim-retirement pass, so it reports the 911-claim
-   registry with 24 locator drifts where this package reports 906 with 15.
 
-One item needs the authors before a reviewer opens it: the capsule's
-`code/README.md` still describes the earlier PPEDCRF paper (arXiv:2603.01593),
-citation block included, and `data/driving/README.md` is in Chinese. Refreshing
-`paper/main.tex`, adding `paper/generated/`, updating the verifier and rewriting
-that README would make the capsule agree with this package on all three counts.
+The verifier is the same file in both, and stays that way: one read of the
+extended evidence report was unguarded, so a run without the manuscript files
+died there instead of registering fewer claims. It is guarded now in this
+package's copy as well, which changes nothing when the documents are present —
+906 registered, 906 verified, 0 mismatched, re-run after the change.
 
 ## Which archive goes in which slot
 

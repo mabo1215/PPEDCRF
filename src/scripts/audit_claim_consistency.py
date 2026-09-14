@@ -1916,8 +1916,12 @@ for name, constant, selective in [
 
 
 # The printed interval endpoints, read back out of the generated column so the
-# registry cannot drift from the table by a rounding.
-for line in (EXT.read_text(encoding="utf-8").splitlines()):
+# registry cannot drift from the table by a rounding. Every other read of a
+# manuscript file is guarded by is_file(), so that a run with the documents
+# absent registers fewer claims instead of dying; this one was not, and a run
+# without them died here on line one of the loop. Guarded to match, which
+# changes nothing when the documents are present.
+for line in (EXT.read_text(encoding="utf-8").splitlines() if EXT.is_file() else []):
     if not line.startswith(("anti-score-grad.", "learned support",
                             "score-gradient", "saliency", "centre bias",
                             "fixed random", "edge magnitude")):

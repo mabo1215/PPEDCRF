@@ -105,10 +105,11 @@ package depends on them.
 A Code Ocean capsule is published for this project as well, at
 <https://codeocean.com/capsule/9035965/tree>, and the manuscript's first-page
 footnote names it. It runs this same verifier under one click against the
-deposited evidence, which is worth having. It is **not** this package, though:
-it carries the perturbation mechanism and the verifier, not the drivers that
-recompute a table from rows or re-run an arm from imagery, and as published its
-registry resolves 783 of these claims rather than 906 — it does not ship the
-generated tables the registry parses to enumerate the rest, and its run states
-that coverage rather than implying more. Where the two disagree about what has
-been checked, this package is the one to believe.
+deposited evidence, which is worth having. It is **not** this package, though.
+It carries the mechanism and the verifier, not the drivers that recompute a
+table from rows or re-run an arm from imagery, and it carries no manuscript text
+by design — so the locator half of each claim, which asks whether the paper
+still prints the number, is inert there, and the 156 claims enumerated from the
+generated tables cannot be registered at all. It reports 750 verified, 0
+mismatched; this package reports 906. Where the two disagree about what has been
+checked, this package is the one to believe.
