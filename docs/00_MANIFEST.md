@@ -67,7 +67,8 @@ because `paper/main.tex` is its first input.
 | `03_titlepage.pdf` | Title page (authors, affiliations) | 1 |
 | Cover letter | `docs/cover_letter.txt`, incl. the over-length request. It is entered in the submission system rather than uploaded from `submit/`, so it lives with this file instead of in the payload | — |
 | `05_prior_review_disclosure.zip` | Supporting document for the prior-review question (Q1), self-contained: the relationship to the reviewed version, the point-by-point response, **and** all three ACM TOMM reviews verbatim in §4. TOMM manuscript ID filled in (`TOMM-2026-0332`); submission/decision dates still unconfirmed. Uploaded as a zip: the document plus the prior version's PDF. | — |
-| `06_source.zip` | **The LaTeX source upload.** Both packages in one archive, 25 files, 2.0 MB — source only: no PDFs, no build scripts, no build directories | — |
+| `source/manuscript.zip` | **The manuscript's LaTeX source.** 6 files, 1.6 MB — source only: no PDF, no build script, no build directory | — |
+| `source/supplementary.zip` | **The supplement's LaTeX source.** 19 files, 0.4 MB, same rule | — |
 | `07_code.zip` | **The code upload.** The audit code and a README; 171 files, 0.5 MB. No data and no manuscript text — the evidence is the DataPort deposit, the manuscript is the source upload | — |
 | `source/manuscript/` | Source for the manuscript, unzipped: `main.tex`, `ref.bib`, its 2 figures, its 2 generated tables | — |
 | `source/supplementary/` | Source for the supplement, unzipped: `supplementary.tex`, `ref.bib`, its 2 figures, its 15 generated tables | — |
@@ -94,7 +95,7 @@ claim is checked twice over — the number is recomputed from the rows, and the
 string the paper prints is located in the document that prints it — and the
 second check needs the manuscript. Registration needs it too: 156 claims are
 enumerated by parsing the generated tables. A reviewer holding both uploads gets
-most of them back in one step: extract `06_source.zip`, put `main.tex`,
+most of them back in one step: extract the two source archives, put `main.tex`,
 `supplementary.tex` and the union of the two `generated/` directories in one
 folder, and point `PPEDCRF_PAPER` at it. The same command then reports **804
 claims, 804 verified, 0 mismatched**. The remaining 102 are registered by
@@ -154,18 +155,19 @@ registered, 906 verified, 0 mismatched.
 
 ## Which archive goes in which slot
 
-Upload `06_source.zip` where one archive is wanted. Where the two documents take
-separate source slots, `source/manuscript.zip` and `source/supplementary.zip`
-are the same content split the same way as the PDFs. All three are source only —
-no PDFs, no build scripts, no `build/` working directory — and all three store
-forward-slash paths, so they extract correctly on a Linux submission host.
+`source/manuscript.zip` and `source/supplementary.zip` split the sources the way
+the PDFs are split, one archive per document. Both are source only — no PDFs, no
+build scripts, no `build/` working directory — and both store forward-slash
+paths, so they extract correctly on a Linux submission host. A combined archive
+was carried here earlier and has been removed from the payload; if a slot wants
+one, it packs from `source/` in a single command.
 
 Membership was resolved from the documents themselves rather than assumed: each
 folder holds exactly the files its own `\input`, `\includegraphics` and
 `\bibliography` reach, so nothing is borrowed across the boundary and neither
-folder carries files it does not read. `06_source.zip` was extracted into an
-empty directory and built there with a bare `latexmk`, which is how a submission
-host compiles it: 13 and 11 pages, no undefined reference in the manuscript's
+folder carries files it does not read. Both were extracted into an empty
+directory and built there with a bare `latexmk`, which is how a submission host
+compiles them: 13 and 11 pages, no undefined reference in the manuscript's
 log. Only `ref.bib` is genuinely needed by both, and each package has its own
 copy.
 

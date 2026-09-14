@@ -55,7 +55,7 @@ they are not registered at all.
 **To run the full registry, point the code at the manuscript you already have:**
 
 ```bash
-# extract 06_source.zip, then put both documents and the union of their
+# extract the two source archives, then put both documents and the union of their
 # generated/ directories in one folder, e.g. ./paper
 PPEDCRF_PAPER=./paper python3 src/scripts/audit_claim_consistency.py
 ```
