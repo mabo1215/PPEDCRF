@@ -102,7 +102,7 @@ untested.
 One request about length, which we would rather put to you explicitly than
 resolve by omission. The SPS guidance recommends that supplementary
 material not exceed six double-column pages without Editor-in-Chief approval,
-and ours is ten. We are asking for that approval. The reason is specific to a
+and ours is eleven. We are asking for that approval. The reason is specific to a
 paper of this kind: the submission reports a negative result against an
 assumption the field designs around, and the TIFS guidance for deep-learning
 submissions holds such a paper to a higher standard of reproducibility than an
