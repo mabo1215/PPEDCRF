@@ -9,14 +9,16 @@ in `docs/progress.md`.
 
 Each field on the TIFS form caps at **500 characters**, counted as characters
 rather than words and including spaces and punctuation. Every block below is
-verbatim paste text, measured and confirmed to fit. Q2-Q5 are the authors'
+verbatim paste text, measured and confirmed to fit. Q2-Q4 are the authors'
 confirmed declarations (2026-09-15); the rest are answered from the manuscript.
+Q5 was a No until the two arXiv postings were identified on 2026-09-15 — see
+the item on them under the next section.
 
 ### Q1. Resubmission of / related to a previously rejected or withdrawn manuscript?
 
-> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted. A supporting document is uploaded with all three reviews verbatim and how each point was addressed. This manuscript continues that research line but inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 94.6% of the body text is new (2,992 to 11,461 words).
+> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted, and posted as arXiv:2604.17163. A supporting document is uploaded with all three reviews verbatim and the response to each. This manuscript continues that line but inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 94.6% of the body text is new (2,992 to 11,461 words).
 
-*472/500 characters.*
+*487/500 characters.*
 
 ### Q2. Extended version of a conference publication?
 
@@ -34,13 +36,18 @@ confirmed declarations (2026-09-15); the rest are answered from the manuscript.
 
 > No.
 
-*3/500 characters.*
+*3/500 characters.* The question asks for preprints "identical to the submitted
+manuscript, except for minor differences". arXiv:2604.17163 is not one: it is
+the pre-audit version, different title, 2,992 body words against 11,461, and the
+opposite contribution. It is declared in Q1 and listed again in Q5, so nothing
+about it is withheld by this No.
 
 ### Q5. Other posted preprints that should not be considered prior art?
 
-> No.
+> Yes, two, neither identical to this submission. arXiv:2604.17163 (18 Apr 2026) is the earlier version of this work, the one ACM TOMM reviewed, declared under Q1; this submission inverts its contribution and 94.6% of its body text is new. arXiv:2603.01593 (2 Mar 2026, five authors) is the earlier paper proposing the PPEDCRF mechanism that this submission audits. Neither should be read as a preprint of the manuscript submitted here.
 
-*3/500 characters.*
+*434/500 characters.* If this field turns out to be a Yes/No box with no room
+to list, answer Yes and paste the text into the covering comments field.
 
 ### Q6. Why is the contribution within the scope of IEEE TIFS?
 
@@ -107,24 +114,46 @@ confirmed declarations (2026-09-15); the rest are answered from the manuscript.
    scripts, no documents), and it is not in the capsule. Recommended: add
    `supplementary_extended.pdf` to the deposit, which leaves the manuscript
    untouched. The alternative is removing those four references.
-6. **Whether to put `main.aux` back in `submit/source/supplementary/`.** The
-   supplement reads the manuscript's section numbers through
-   `\externaldocument[M-]{main}`, and xr takes them from that file. Without it a
-   host that compiles the supplement on its own leaves **17 references
-   unresolved — printed as `??` — and the build still exits 0**, so nothing
-   announces it. The uploaded `02_supplementary.pdf` is unaffected.
-   Recommended: put back that one 13 KB file, which is a build input rather
-   than a build artifact, and leave the build scripts and PDFs out.
-7. **Whether to cite arXiv:2603.01593.** It is the authors' public posting of
-   the mechanism this paper audits, and the manuscript introduces that
-   mechanism as one "we implement as a testbed" without citing it. The form
-   asks about papers published, accepted, or under review, so the confirmed No
-   to Q3 and Q5 is correct as asked. The exposure is a reviewer who knows the
-   preprint and reads that sentence as understating where the mechanism came
-   from. Citing it there is a one-line change that alters no result.
-8. **Two facts about the capsule this repository cannot see.** Whether the
-   `ppedcrf-evidence` data asset is attached to it — without the asset its
-   one-click run only exercises the synthetic self-check and verifies nothing —
-   and whether the publication minted a DOI (`10.24433/CO.*`). If it did, the
-   footnote should cite the DOI rather than the capsule URL; DataCite has no
-   record of one yet.
+6. **The supplement's cross-references to the manuscript, left as they are.**
+   The supplement names the manuscript's sections through
+   `\externaldocument[M-]{main}`, and the xr package reads those numbers out of
+   the manuscript's `.aux`. Compiled on its own, without that file beside it,
+   the supplement leaves **17 references unresolved — printed as `??` — and the
+   build still exits 0**, so nothing announces it. They are 6 distinct sections
+   (`causality` 7 times, `operator` and `msls_placement` 3 each, `direction` 2,
+   `mechanism` and `nonadaptive_preprocessing` once).
+
+   Recommended: leave it. `main.aux` is an input to xr rather than a source
+   file, and the packages are source only by decision. The uploaded
+   `02_supplementary.pdf` was built with every number resolved, and that is the
+   file reviewers read; a submission system that makes its review proof from the
+   uploaded PDFs never compiles the sources at all. The exposure is production
+   at acceptance, when IEEE does compile — and that is a conversation with
+   production, not a reason to ship a build input now. If a self-contained
+   source tree is wanted later, the clean fix is to drop xr and write those six
+   section numbers into the supplement's text.
+7. **The two arXiv postings: what to cite, and one answer that depends on a
+   fact only the authors hold.**
+
+   - **arXiv:2604.17163** (18 Apr 2026, Ma, Yan, Wu) carries the ACM TOMM title
+     verbatim: it is the reviewed prior version of this work. Now declared in Q1
+     and listed in Q5. Q4 stays No because the question asks for a preprint
+     *identical* to this submission and that one is the opposite contribution.
+   - **arXiv:2603.01593** (2 Mar 2026, Ma, Wu, Yan, Shi, Nguyen) is the earlier
+     paper proposing PPEDCRF, the mechanism this submission audits. **Q3 turns
+     on whether that paper is published, accepted, or under review anywhere
+     right now.** If it is, Q3 becomes Yes and it must be listed there; if it
+     exists only as a posting, the confirmed No stands and Q5 already covers it.
+     Only the authors can settle that.
+   - **Whether to cite either in the manuscript.** The text introduces PPEDCRF
+     as a mechanism "we implement as a testbed" and cites neither. The exposure
+     is a reviewer who knows the postings and reads that sentence as
+     understating where the mechanism came from. A citation at that sentence is
+     a one-line change that alters no result, and it is the cheapest way to
+     close the gap.
+**Answered 2026-09-15, recorded so it is not asked again.** The
+`ppedcrf-evidence` data asset is attached to the capsule, so its one-click run
+recomputes claims rather than only exercising the synthetic self-check. There is
+no separate Code Ocean DOI: the project's DOI is the IEEE DataPort deposit,
+`https://doi.org/10.21227/jnr0-jm15`, which the manuscript's first-page footnote
+already cites beside the capsule URL. Nothing in the manuscript changes.

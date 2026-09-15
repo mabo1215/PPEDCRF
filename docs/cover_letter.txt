@@ -137,7 +137,9 @@ in the supplement, and the rest came from compression and from retiring
 references that belonged to an earlier framing of this work.
 
 This manuscript has not been published previously and is not under
-consideration elsewhere. All authors have approved the submission. The code is
+consideration elsewhere. Its earlier version, reviewed by ACM TOMM and declared
+on the submission form, is posted as arXiv:2604.17163; the present manuscript
+audits the mechanism that version proposed, and 94.6% of its body text is new. All authors have approved the submission. The code is
 published as an executable capsule (https://codeocean.com/capsule/9035965/tree),
 and is uploaded here in full as the code archive; the benchmark manifests and
 the per-query exports behind every reported table are deposited at IEEE
