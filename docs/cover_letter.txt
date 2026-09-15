@@ -6,6 +6,26 @@ We submit our manuscript entitled "Allocation or Direction? A
 Matched-Distortion Audit of Visual Location-Privacy Mechanisms" for
 consideration as a Regular Paper in IEEE Transactions on Information Forensics and Security.
 
+Before the substance, one request about length, which we would rather put to
+you explicitly than resolve by omission. The SPS guidance recommends that
+supplementary material not exceed six double-column pages without
+Editor-in-Chief approval, and ours is eleven. We are asking for that approval.
+The reason is specific to a paper of this kind: the submission reports a
+negative result against an assumption the field designs around, and the TIFS
+guidance for deep-learning submissions holds such a paper to a higher standard
+of reproducibility than an ordinary one. A referee testing a negative result
+needs to see the cells it was pooled from, not a summary of them. Those extra
+pages are what let us bring inside the submission the per-rule placement study
+the central null is pooled from, the same nine rules extended to the three
+attackers that break the null, the solved-allocation arm the manuscript's
+positive allocation result rests on, the operator arm, the purification result
+across all four attackers, the head-to-head against the closest published
+method, the two paired per-image utility tables, the adaptive attacker's
+per-condition breakdown, a table enumerating every placement rule with its
+provenance, and the geolocator arm --- the one attacker class that does not
+rank a gallery at all. Each sits beside the text that reads it, and each
+recomputes from the released per-query rows without a GPU.
+
 Street-level imagery is routinely released after geographic metadata are
 stripped, yet the pixels themselves remain matchable against geo-tagged
 reference databases. Visual location-privacy mechanisms answer this by
@@ -99,27 +119,7 @@ controls. We believe the negative result is the useful part, and that
 publishing it is preferable to leaving the field's central design assumption
 untested.
 
-One request about length, which we would rather put to you explicitly than
-resolve by omission. The SPS guidance recommends that supplementary
-material not exceed six double-column pages without Editor-in-Chief approval,
-and ours is eleven. We are asking for that approval. The reason is specific to a
-paper of this kind: the submission reports a negative result against an
-assumption the field designs around, and the TIFS guidance for deep-learning
-submissions holds such a paper to a higher standard of reproducibility than an
-ordinary one. A referee testing a negative result needs to see the cells it was
-pooled from, not a summary of them. Those extra pages are what let us bring
-inside the submission the per-rule placement study the central null is pooled
-from, the same nine rules extended to the three attackers that break the null,
-the solved-allocation arm the manuscript's positive allocation result rests
-on, the operator arm, the purification result across all four attackers, the
-head-to-head against the closest published method, the two paired per-image
-utility tables, the adaptive attacker's per-condition breakdown, a table
-enumerating every placement rule with its provenance, and the geolocator arm
---- the one attacker class that does not rank a gallery at all. Each sits
-beside the text that reads it, and each recomputes from the released per-query
-rows without a GPU.
-
-One presentational note on the same material. The guidance asks that
+One presentational note on the supplementary material. The guidance asks that
 supplementary equations, tables and figures be numbered consecutively with the
 manuscript. We have instead numbered them with an S prefix --- Table S1
 onwards, Fig. S1 onwards, (S1) onwards --- because the two documents are

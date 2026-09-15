@@ -991,6 +991,14 @@ pilot 已跑完并验证了协议与能量闸门；**全量臂（400 query × 3 
    A:
 
 
+## 投稿信把超页申请提到第二段（2026年9月15日）
+
+11 页补充材料的批准是编辑初筛阶段唯一能卡住这篇稿子的事项，原来那段排在信的后半部分。
+现已移到「We submit our manuscript…」之后，作为第二段，开头加了 “Before the substance,” 作为过渡；
+原位置后面那段的开头由 “One presentational note on the same material” 改为 “…on the supplementary material”，
+因为它不再紧跟着超页那段，「same material」已经没有指代对象。内容一字未改。
+**信已经提交过，所以要重新贴一次系统里的 cover letter 字段。**
+
 ## 两处 arXiv 预印本已写进表单答案（2026年9月15日）
 
 你给的 `arXiv:2604.17163`（2026-04-18，Ma/Yan/Wu）标题与 ACM TOMM 那版**逐字相同**，也就是本文的前一版；
