@@ -39,14 +39,15 @@ the item on them under the next section.
 *3/500 characters.* The question asks for preprints "identical to the submitted
 manuscript, except for minor differences". arXiv:2604.17163 is not one: it is
 the pre-audit version, different title, 2,992 body words against 11,461, and the
-opposite contribution. It is declared in Q1 and listed again in Q5, so nothing
-about it is withheld by this No.
+opposite contribution. It is named in the prior-submission answer and listed in
+the other-preprints answer, so nothing about it is withheld by this No.
 
 ### Q5. Other posted preprints that should not be considered prior art?
 
-> Yes, two, neither identical to this submission. arXiv:2604.17163 (18 Apr 2026) is the earlier version of this work, the one ACM TOMM reviewed, declared under Q1; this submission inverts its contribution and 94.6% of its body text is new. arXiv:2603.01593 (2 Mar 2026, five authors) is the earlier paper proposing the PPEDCRF mechanism that this submission audits. Neither should be read as a preprint of the manuscript submitted here.
+> Yes, two, neither identical to this submission. arXiv:2604.17163 (18 Apr 2026) is the earlier version of this work: the ACM TOMM manuscript declared elsewhere on this form as previously rejected. This submission inverts its contribution and 94.6% of its body text is new. arXiv:2603.01593 (2 Mar 2026, five authors) is the earlier paper proposing the PPEDCRF mechanism that this submission audits. Neither should be read as a preprint of the manuscript submitted here.
 
-*434/500 characters.* If this field turns out to be a Yes/No box with no room
+*468/500 characters.* The Q-numbers used in this file are our own labels for
+the form's questions, so no pasted answer refers to another one by number. If this field turns out to be a Yes/No box with no room
 to list, answer Yes and paste the text into the covering comments field.
 
 ### Q6. Why is the contribution within the scope of IEEE TIFS?
