@@ -98,34 +98,34 @@ to list, answer Yes and paste the text into the covering comments field.
    but it needs the Editor-in-Chief's approval. This is the one item that can
    stop the package at editorial screening.
 
-**From the system proof (`submit/6e98b5a0-…​.pdf`, 28 pages, checked 2026-09-15).**
-The conversion itself is clean: 4 system pages, the manuscript on pages 5-17
-(13), the supplement on 18-28 (11), no `??` anywhere, figures and reference list
-identical to our own PDFs, and the author footnote carrying the revised
-affiliation with both links. Four things about what was uploaded, not about how
-it rendered.
+**From the system proof (`submit/6e98b5a0-…​.pdf`, 28 pages, re-checked against
+the 19:24 EST regeneration).** The conversion is clean: 4 system pages, the
+manuscript on pages 5-17 (13), the supplement on 18-28 (11), no `??` anywhere,
+figures and reference list identical to our own PDFs, and the author footnote
+carrying the revised affiliation with both links.
 
-A. **The manuscript's LaTeX source was not uploaded.** The file list carries
-   `supplementary.zip` (complete — `.tex`, `.bib`, figures, generated tables)
-   and `figs.zip`, but no manuscript source. `submit/source/manuscript.zip` is
-   packed and ready; upload it in the same slot as the supplement's source, or
-   the main document is the one document with no source on file.
+Two items from the first proof are now fixed on the form: the EDICS list leads
+with `IF-PRV-PROT` (privacy protection) followed by `IF-PRV-ATTC`,
+`IF-ML-ADVE` and `IF-SUR-PRIV`, and the prior-submission answer carries "posted
+as arXiv:2604.17163". Two remain.
+
+A. **The manuscript's LaTeX source is still not in "Files for peer review".**
+   That list has six entries — `01_manuscript.pdf`, `figs.zip`,
+   `02_supplementary.pdf`, `supplementary.zip`,
+   `05_prior_review_disclosure.zip`, `07_code.zip` — and none is
+   `manuscript.zip` (1,615,935 bytes, ≈1.54 MB; the only 1.9 MB entry is
+   `figs.zip`). Either the upload did not take, or it landed in a slot the
+   peer-review list does not print. Worth checking in the submission UI: the
+   supplement's source is on file and the main document's is not.
 B. **`figs.zip` came from `_not_submitted/`.** It is 4 PNGs already embedded in
-   both PDFs and already inside both source archives. Harmless, and pure
-   duplication once A is done.
-C. **EDICS as submitted: `IF-PRV-ATTC`, `IF-ML-ADVE`, `IF-SUR-PRIV`.**
-   `IF-PRV-PROT` (privacy protection) is not among them, and it is the one that
-   should lead: the object under study is a family of protection mechanisms, and
-   heading the list with *Privacy attacks* routes the paper to reviewers of the
-   attack side. Add it if the list offers it.
-D. **The Q1 answer on the form is the older text**, without "posted as
-   arXiv:2604.17163". The other-preprints answer does list that posting and ties
-   it to the ACM TOMM manuscript, so nothing is withheld; paste the 487-character
-   version if the form is still editable.
+   both PDFs and already inside both source archives — harmless, and pure
+   duplication once A is settled.
 
-Also worth confirming: the cover letter is not part of the peer-review PDF, so
-the proof cannot show whether it was entered. The 11-page supplement needs the
-Editor-in-Chief's approval and the request exists only there.
+The cover letter appears nowhere in the proof — no "Dear", no
+"Editor-in-Chief", no "six double-column" — which is what a system that keeps
+the letter editor-only looks like, so the proof can neither confirm nor deny it
+was entered. Confirm it in the submission UI rather than from this file: the
+11-page supplement's approval exists only in that letter.
 
 **Decisions that change what a reviewer sees.**
 
