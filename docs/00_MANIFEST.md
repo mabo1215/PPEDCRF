@@ -98,6 +98,35 @@ to list, answer Yes and paste the text into the covering comments field.
    but it needs the Editor-in-Chief's approval. This is the one item that can
    stop the package at editorial screening.
 
+**From the system proof (`submit/6e98b5a0-…​.pdf`, 28 pages, checked 2026-09-15).**
+The conversion itself is clean: 4 system pages, the manuscript on pages 5-17
+(13), the supplement on 18-28 (11), no `??` anywhere, figures and reference list
+identical to our own PDFs, and the author footnote carrying the revised
+affiliation with both links. Four things about what was uploaded, not about how
+it rendered.
+
+A. **The manuscript's LaTeX source was not uploaded.** The file list carries
+   `supplementary.zip` (complete — `.tex`, `.bib`, figures, generated tables)
+   and `figs.zip`, but no manuscript source. `submit/source/manuscript.zip` is
+   packed and ready; upload it in the same slot as the supplement's source, or
+   the main document is the one document with no source on file.
+B. **`figs.zip` came from `_not_submitted/`.** It is 4 PNGs already embedded in
+   both PDFs and already inside both source archives. Harmless, and pure
+   duplication once A is done.
+C. **EDICS as submitted: `IF-PRV-ATTC`, `IF-ML-ADVE`, `IF-SUR-PRIV`.**
+   `IF-PRV-PROT` (privacy protection) is not among them, and it is the one that
+   should lead: the object under study is a family of protection mechanisms, and
+   heading the list with *Privacy attacks* routes the paper to reviewers of the
+   attack side. Add it if the list offers it.
+D. **The Q1 answer on the form is the older text**, without "posted as
+   arXiv:2604.17163". The other-preprints answer does list that posting and ties
+   it to the ACM TOMM manuscript, so nothing is withheld; paste the 487-character
+   version if the form is still editable.
+
+Also worth confirming: the cover letter is not part of the peer-review PDF, so
+the proof cannot show whether it was entered. The 11-page supplement needs the
+Editor-in-Chief's approval and the request exists only there.
+
 **Decisions that change what a reviewer sees.**
 
 4. **Publish v1.1 of the Code Ocean capsule.** The manuscript's first-page
@@ -109,8 +138,9 @@ to list, answer Yes and paste the text into the covering comments field.
    side. **Until then the public v1.0 still carries `main.tex` and the
    supplement**, which is the only place a copy of this manuscript is public;
    it is also the one fact that sits behind the No to the preprint questions.
-5. **Where the extended evidence report lives.** The two documents cite "the
-   extended report" four times. It is no longer in any submitted archive, it is
+5. **Where the extended evidence report lives — now live in a real submission.**
+   The supplement in the proof refers to it three times, so reviewers reading
+   pages 18-28 will look for it. It is no longer in any submitted archive, it is
    not in the DataPort deposit (which holds exports, artifact results and
    scripts, no documents), and it is not in the capsule. Recommended: add
    `supplementary_extended.pdf` to the deposit, which leaves the manuscript
