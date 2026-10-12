@@ -114,16 +114,12 @@ def main() -> int:
         "% src/exports/purification. Do not edit by hand.",
         r"\begin{table}[t]", r"\centering",
         r"\caption{What a trained inverse takes back, on every attacker it was "
-        r"run against. A residual denoiser is trained on released/clean pairs "
-        r"from a place-disjoint split and applied before the attacker embeds. "
-        r"Each row is the release's advantage over the isotropic control at "
-        r"identical delivered distortion: first with neither side purified, "
-        r"then with the attacker purifying both, which is the comparison that "
-        r"decides whether the defense survives. ``Kept'' is the share of the "
-        r"unpurified advantage that remains, and is what the manuscript's "
-        r"``between half and all'' quantifies. Intervals are place-clustered "
-        r"over the held-out split; $p$ is a signed-rank test on the purified "
-        r"contrast. Negative is better privacy.}",
+        r"run against. Each row is the release's advantage over the isotropic "
+        r"control at identical delivered distortion, with neither side "
+        r"purified and with the attacker purifying both; ``kept'' is the share "
+        r"of the unpurified advantage that remains. Intervals are "
+        r"place-clustered over the held-out split; $p$ is a signed-rank test "
+        r"on the purified contrast. Negative is better privacy.}",
         r"\label{tab:purification_summary}",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{2.5pt}",

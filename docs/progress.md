@@ -1,5 +1,51 @@
 # 已全部修改
 
+- 【按编辑部退稿意见修改，2026年10月13日】TIFS 编辑部把 T-IFS-29083-2026 退回草稿，指出两项：
+  (1) 缺少 response 文件——要求「原稿副本 + 逐条回复审稿意见」，以 PDF 作为 Supporting Document 上传，不能放在 cover letter 栏；
+  (2) 补充材料超长和/或格式不对——上限 6 页双栏 10pt。两项都已在仓库内处理完，**另有两件只能由作者做的事见本条末尾**。
+
+**补充材料：11 页 → 6 页，编号改为与正文连续。** IEEE SPS 作者须知原文要求补充材料的公式、表、图
+「numbered consecutively to those in the manuscript」，之前的 S 前缀正是「not formatted properly」最可能的所指。
+现在表从 Table III、公式从 (8) 接着正文往下编；偏移量不手写，而是 `main.tex` 末尾写三个计数 label，
+补充材料经 xr + refcount 读取，正文加表时自动顺延；缺 `main.aux` 时会给出明确警告而不是悄悄从 I 开始（已实测）。
+节号改为字母 A–K，罗马数字一律指正文。压缩方式：
+三张逐攻击者 placement 表（约 1.3 页）合成一张五攻击者紧凑表（新脚本 `src/scripts/make_placement_compact_table.py`，
+直接解析三张生成表，因此不可能与它们不一致）；删去三张图（协议图、架构图、预算曲线图）和 E1、clip pooling、
+proxy placement、solved-map、两张 utility、旧 fine-tune 共 7 张表，**全部原样移入 extended evidence report 末尾新增的
+「Moved From the Supplement」一节**；7 张保留表的过长 caption 在生成脚本里缩短后重新生成——
+先实测每个生成脚本不改动时能逐字节复现现有表（只差换行符），改后 diff 确认只有 caption 变。
+新增一句把 extended report 里已有的 matched-PSNR 模块消融（四个模块消融 vs 全局噪声，六个 backbone，90 次比较 89 次零不一致对）
+带进补充材料，这正面回应了 TOMM R3.3。正文只改三处：删两句指向已删图的话、extended report 处注明存放位置，
+并把 VLM 一句里 GeoCLIP 的中位误差 18.5 km 改为 18.4 km（同一正文前文写 18.4，数据实算 18.42，原先自相矛盾）。
+结果：正文 13 页、补充 6 页（末栏余约 7 行）、0 undefined、0 overfull、0 字体警告，`check_cross_document_refs` 0 处断链。
+断言核验 906 条：900 通过、6 不符、15 条定位漂移——**与改动前完全相同**；搬走文字的 4 条断言（ClipMix ×3、E1 显著格数）已改到
+extended report 定位。那 6 条不符都不是论文错误：5 条 A2 是 gitignore 的 `src/outputs/tifs_a2` 里一份 146 query 的
+旧半截结果遮住了已提交的 150 query 完整导出（完整导出与论文逐位一致），1 条是正文并未印出的 p 值。
+
+**Response 文件：`paper/response.pdf`（36 页），新加入 `build.bat`。** 四部分：前次投稿信息；逐条回复（每条意见原文引用、
+标明状态、用 xr 自动给出正文节号与页码）；三份审稿意见全文；TOMM 审稿时的原稿（匿名审稿版，正文 18 页 + 附录 4 页）。
+**两处更正此前记录**：(a) 审稿版是 paper 仓库 `d097f57`（2026-04-03），不是笔记里的 `ca94244`——后者没有 MixVPR、
+没有 6 dB、没有 Table 6/7，与审稿意见对不上；原稿 PDF 与出处说明在 `paper/original_tomm/`（已在 .gitignore 里放行）。
+(b) 旧 disclosure 草稿里有若干不实之处，逐条核对后在新文件里如实写明：R3.7 的定性图在现稿中**已删除**（草稿却说已补检索证据）；
+R3.6 的 margin 只定义并用于翻转概率分析，没有前后对照表；R3.1 的权重未随投稿分发；R2.1 的视角/光照/季节/天气未覆盖；
+R2.2 的 placement 是按 Σw² 匹配而非逐帧二分 MSE；KITTI-360 上 direction 在 place 聚类区间上不显著。
+状态表里 13 项（R1 不计）：已解决或已解释 5、部分解决 5（均写明缺什么）、撤回或被取代 3（6 dB 主张、代理基准披露、定性图）。
+
+**cover letter 与清单**：`docs/cover_letter.txt` 删去超长豁免申请和 S 前缀说明，改为开头逐条回应编辑部两项；
+`docs/00_MANIFEST.md` 相应更新并重新编号。
+
+**仍需作者亲自做（重新提交前）：**
+1. ~~把 `paper/backup/supplementary_extended.pdf` 上传到 IEEE DataPort~~ **已完成（2026年10月13日）**：
+   DOI 解析到的数据集页面已列出该文件，未登录即可下载（数据文件本身仍需登录）；
+   下载件与本地文件 MD5 完全一致（`07cf560a…`，17 页）。以后若重编该文件且内容变化，需重新上传。
+2. 在系统里：把 `response.pdf` 作为 Supporting Document 上传；换上新的 `main.pdf` / `supplementary.pdf`；重新粘贴 cover letter；
+   **Q1 与 Q5 表单答案要重新粘贴**：新文字比例按审稿版（`d097f57` 正文 + 附录）重算为 **92.6%**（6,487 → 11,460 词），
+   不是原来对着 `ca94244` 算的 94.6%。原脚本从未保存，这次按原数字反推出方法（3 词连续片段），对 ca94244 复现到 94.4% / 25 词最长段，
+   脚本存为 `src/scripts/measure_prior_version_overlap.py`。唯一完整保留的 25 词片段是 DCRF 更新公式本身。
+3. 可选但建议：把已发布 checkpoint `sensnet_final.pt` 一并放进 DataPort，R3.1 就能从「除权重外已解决」改成「已解决」。
+4. 留意：TOMM 原稿的标题页列了四位作者（多一位 Hongjiang Wei，Hikvision），现稿三位。response 里附的是匿名审稿版，不显示作者；
+   如何向编辑说明作者变化由你们决定。
+
 - 【源码发布写入论文并同步投稿包，2026年9月15日】已发布的 Code Ocean capsule 9035965 现在由稿件、标题页与投稿包三处一致地指向。
 
 **论文**：`main.tex` 与 `titlepage.tex` 的作者脚注同时给出两个发布指针——可执行 capsule

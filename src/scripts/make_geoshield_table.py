@@ -158,30 +158,26 @@ def main() -> int:
     # invisible to everyone else.
     seeds = sorted({r["seed"] for r in rows})
     if len(seeds) == 1:
-        seed_note = (r"a single seed (not the three used by the "
-                     r"placement and operator arms in this supplement, so the "
-                     r"contrast below is a bounded result at one seed)")
+        seed_note = (r"a single seed (the placement and operator arms use "
+                     r"three)")
     else:
         seed_note = f"{len(seeds)} seeds averaged within a query before pairing"
 
+    # Shortened to fit the six-page supplement: the resampling and the
+    # obstacles the release posed are described in the text beside it.
     ens = ", ".join(meta["clip_ensemble"])
     caption = (
-        r"The published-mechanism arm: a public geo-privacy release run end to "
-        r"end under this paper's protocol, every row read by the same attacker "
-        r"over the same gallery at delivered MSE "
-        f"{meta['target_mse']} (per-frame bisection through the pixel clamp), "
-        f"on {len(ref1)} query clusters over {n_places} places, {seed_note}. "
-        r"$\Delta$ is against the isotropic control, not clean: lowering "
-        r"retrieval below clean shows only that energy was added. Interval "
+        r"A public geo-privacy release run end to end under this paper's "
+        r"protocol: same attacker and gallery, delivered MSE "
+        f"{meta['target_mse']}, {len(ref1)} query clusters over {n_places} "
+        f"places, {seed_note}. "
+        r"$\Delta$ is against the isotropic control, not clean. Interval "
         r"bootstrapped over places; the figure beside $p$ counts discordant "
         r"pairs; $p_{\mathrm{TOST}}$ is the equivalence test at "
         f"$\\pm{args.margin:g}$. The release's vision--language component "
         f"returns the constant caption ``{meta['released_caption']}'' for "
         r"every image, so this measures the released artefact, not the method "
-        r"as described. The attack is solved at the release's own "
-        f"{meta['attack_resolution']}px input, only the perturbation resampled "
-        r"to the protocol geometry, so its shape is the mechanism's and its "
-        f"energy the protocol's. Surrogates: {ens}."
+        f"as described. Surrogates: {ens}."
     )
 
     out = [

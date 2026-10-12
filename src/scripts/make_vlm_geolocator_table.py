@@ -133,11 +133,11 @@ def main() -> int:
         print(f"  {label:24s} localisable {loc_share:.3f}  "
               f"delta {d.mean():+.3f} [{ci[0]:+.3f},{ci[1]:+.3f}] p={fmt_p(p)} ({nz.size})")
 
+    # A passed gate is reported in the supplement's text beside the table,
+    # which the six-page limit leaves no room to repeat here; a failed one
+    # still has to be stated where nobody can read the table without it.
     gate_sentence = (
-        f"The substitute clears the gate: on clean frames it places "
-        f"{gate_v*100:.1f}\\% of queries inside {PRIMARY:g}~km at a median error of "
-        f"{med_v:.1f}~km, against {gate_g*100:.1f}\\% and {med_g:.1f}~km for the "
-        f"gallery-based geolocator on the identical released bytes."
+        ""
         if passed else
         f"The substitute does \\emph{{not}} clear the gate: on clean frames it "
         f"places {gate_v*100:.1f}\\% of queries inside {PRIMARY:g}~km at a median of "
@@ -147,18 +147,15 @@ def main() -> int:
 
     caption = (
         r"A geolocator that is not a gallery retriever: a vision--language "
-        r"model prompted for a coordinate --- different architecture, "
-        r"different training data, no gallery --- read on the same released "
-        r"bytes the gallery-based geolocator read, so the two differ in the "
-        r"reader and nothing else. " + gate_sentence +
-        r" Columns give the share of queries inside each threshold. The claim "
+        r"model prompted for a coordinate, read on the same released bytes as "
+        r"GeoCLIP. " + (gate_sentence + " " if gate_sentence else "") +
+        r"Columns give the share of queries inside each threshold; the claim "
         r"is carried by the ``localisable'' column, the queries the clean "
         r"attacker already places inside " + f"{PRIMARY:g}~km" +
-        r": where it already fails, a perturbation that moves the prediction "
-        r"earns credit it never earned. $\Delta$ is against that subset's "
-        r"clean rate, interval bootstrapped over places, the figure beside "
-        f"$p$ counting discordant pairs. Refusals ({refused}) are counted and "
-        r"excluded, never scored as a coordinate. Attacker: "
+        r". $\Delta$ is against that subset's clean rate, interval "
+        r"bootstrapped over places, the figure beside "
+        f"$p$ counting discordant pairs. Refusals ({refused}) are excluded, "
+        r"never scored as a coordinate. Attacker: "
         f"\\texttt{{{args.model}}}.")
 
     out = [

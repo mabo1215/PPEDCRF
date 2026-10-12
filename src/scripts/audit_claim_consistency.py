@@ -1520,9 +1520,11 @@ for scale, negative in (("wide8", 15.0), ("two_city", 14.0)):
           source=E1_SOURCE[scale])
 
 
+# The E1 note moved from the supplement to the extended report when the
+# supplement was cut to six pages, so the sentence is located there now.
 claim("E1/two_city/n_significant", "\\S Real-Place Retrieval Benchmark (E1)",
       "5 of those 18 cells", 5.0, 0.5, "e1_msls_rows", _e1_significant,
-      source=SUPP)
+      source=EXT)
 
 
 # --- the strong attacker's per-placement table ------------------------------
@@ -2670,17 +2672,19 @@ for cid, printed, value, pooling in [
           "clip_pooling_mixvpr", _clip_mix("direction", 7, pooling, "delta"),
           source=MAIN)
 
-# The supplement prints the same three deltas at full precision; registering
-# them there as well is what stops the rounded range in the manuscript and the
-# supplement's numbers from drifting apart from the table they both read.
+# The clip-pooling arm prints the same three deltas at full precision;
+# registering them as well is what stops the rounded range in the manuscript
+# and these numbers from drifting apart from the table they both read. The arm
+# moved from the supplement to the extended report when the supplement was cut
+# to six pages, so that is where they are located.
 for cid, printed, value, pooling in [
         ("ClipMix/supp/mean", "$-0.0391$", -0.0391, "mean"),
         ("ClipMix/supp/max", "$-0.0859$", -0.0859, "max"),
         ("ClipMix/supp/best", "$-0.0347$", -0.0347, "best_frame")]:
-    claim(cid, "\\S An Attacker Holding the Clip (supplement)", printed, value,
-          6e-5, "clip_pooling_mixvpr",
+    claim(cid, "\\S An Attacker Holding the Clip (extended report)", printed,
+          value, 6e-5, "clip_pooling_mixvpr",
           _clip_mix("direction", 7, pooling, "delta"), locator=printed,
-          source=SUPP)
+          source=EXT)
 
 
 # --- the purification attack ------------------------------------------------

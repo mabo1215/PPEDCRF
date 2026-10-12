@@ -16,9 +16,12 @@ the item on them under the next section.
 
 ### Q1. Resubmission of / related to a previously rejected or withdrawn manuscript?
 
-> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted, and posted as arXiv:2604.17163. A supporting document is uploaded with all three reviews verbatim and the response to each. This manuscript continues that line but inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 94.6% of the body text is new (2,992 to 11,461 words).
+> Yes. ACM TOMM, manuscript TOMM-2026-0332, "Dynamic-CRF-Guided Selective Perturbation for Background-Based Location Privacy in Video Sequences"; not accepted, and posted as arXiv:2604.17163. The supporting document gives the reviews verbatim, a response to each and the original paper. This manuscript inverts its contribution: the mechanism reviewed there (PPEDCRF) is here the object audited, not the proposal. 92.6% of the body text is new (6,487 to 11,460 words).
 
-*487/500 characters.*
+*466/500 characters.* **Changed 2026-10-13 — re-paste into the form.** The old
+94.6% (2,992 to 11,461 words) was measured against `ca94244`, an earlier draft;
+the reviewed version is `d097f57`, main text and appendix together.
+Recomputed with `src/scripts/measure_prior_version_overlap.py`.
 
 ### Q2. Extended version of a conference publication?
 
@@ -38,13 +41,14 @@ the item on them under the next section.
 
 *3/500 characters.* The question asks for preprints "identical to the submitted
 manuscript, except for minor differences". arXiv:2604.17163 is not one: it is
-the pre-audit version, different title, 2,992 body words against 11,461, and the
+the pre-audit version, different title, 6,487 body words (main text and
+appendix) against 11,460, and the
 opposite contribution. It is named in the prior-submission answer and listed in
 the other-preprints answer, so nothing about it is withheld by this No.
 
 ### Q5. Other posted preprints that should not be considered prior art?
 
-> Yes, two, neither identical to this submission. arXiv:2604.17163 (18 Apr 2026) is the earlier version of this work: the ACM TOMM manuscript declared elsewhere on this form as previously rejected. This submission inverts its contribution and 94.6% of its body text is new. arXiv:2603.01593 (2 Mar 2026, five authors) is the earlier paper proposing the PPEDCRF mechanism that this submission audits. Neither should be read as a preprint of the manuscript submitted here.
+> Yes, two, neither identical to this submission. arXiv:2604.17163 (18 Apr 2026) is the earlier version of this work: the ACM TOMM manuscript declared elsewhere on this form as previously rejected. This submission inverts its contribution and 92.6% of its body text is new. arXiv:2603.01593 (2 Mar 2026, five authors) is the earlier paper proposing the PPEDCRF mechanism that this submission audits. Neither should be read as a preprint of the manuscript submitted here.
 
 *468/500 characters.* The Q-numbers used in this file are our own labels for
 the form's questions, so no pasted answer refers to another one by number. If this field turns out to be a Yes/No box with no room
@@ -87,16 +91,33 @@ to list, answer Yes and paste the text into the covering comments field.
    Security* and *Surveillance*. Avoid *Biometrics* — that literature is
    foreground-centric and no experiment here touches a person, so it would
    route the paper to reviewers whose expertise does not bear on the claim.
-2. **Prior-submission disclosure — drafted, needs sign-off.** Uploaded as
-   `05_prior_review_disclosure.zip`, which carries all three ACM TOMM reviews
-   verbatim in its §4 and the manuscript ID (`TOMM-2026-0332`). Still
-   outstanding: the authors' sign-off, and the ACM TOMM **submission and
-   decision dates**, which are not recorded in this repository. This answers
-   Q1, so it is required whatever the preprint answers are.
-3. **Supplementary over-length.** The supplement is 11 pages against the 6-page
-   guidance. The request and its justification are in `docs/cover_letter.txt`,
-   but it needs the Editor-in-Chief's approval. This is the one item that can
-   stop the package at editorial screening.
+2. **Response file — now `paper/response.pdf`, upload as a Supporting
+   Document (PDF).** The editorial office returned T-IFS-29083-2026 to draft
+   on 2026-10-13 because this file was missing: the earlier
+   `05_prior_review_disclosure.zip` was a zip of Markdown, carried no copy of
+   the original paper, and is not what the office asked for. The new PDF has
+   four parts: the previous submission, a point-by-point response quoting
+   every comment verbatim, the full reviews verbatim, and the original paper
+   exactly as reviewed (`paper/original_tomm/`, built from paper commit
+   `d097f57`, **not** `ca94244` as recorded earlier — see the README there).
+   Upload it in the manuscript-files area, **not** in the cover-letter field,
+   which the AE and reviewers cannot see. Still outstanding: the authors'
+   sign-off, and the ACM TOMM submission and decision dates, which are not
+   recorded here and are not printed in the file.
+3. **Supplementary over-length — resolved.** Cut from 11 to 6 pages
+   (2026-10-13), and its tables and equations renumbered consecutively with
+   the manuscript, which the SPS guidance requires and which the office's
+   "not formatted properly" most likely referred to. The cover letter no
+   longer asks for approval.
+4. **Extended evidence report deposited at IEEE DataPort — done 2026-10-13.**
+   The supplement, the manuscript (§III-A), the response file and the cover
+   letter all say it is deposited with the per-query exports at
+   `doi:10.21227/jnr0-jm15`. Verified: the DOI resolves to the dataset page,
+   which lists `supplementary_extended.pdf` among its documents with a
+   download link served without logging in (the data files of this Standard
+   Dataset still need a login), and the downloaded file is byte-identical to
+   `paper/backup/supplementary_extended.pdf` (MD5 `07cf560a…`, 17 pages). If
+   that file is rebuilt with changed content, re-upload it.
 
 **From the system proof (`submit/6e98b5a0-…​.pdf`, 28 pages, re-checked against
 the 19:24 EST regeneration).** The conversion is clean: 4 system pages, the
@@ -124,12 +145,14 @@ B. **`figs.zip` came from `_not_submitted/`.** It is 4 PNGs already embedded in
 The cover letter appears nowhere in the proof — no "Dear", no
 "Editor-in-Chief", no "six double-column" — which is what a system that keeps
 the letter editor-only looks like, so the proof can neither confirm nor deny it
-was entered. Confirm it in the submission UI rather than from this file: the
-11-page supplement's approval exists only in that letter.
+was entered. Confirm it in the submission UI rather than from this file. (This
+proof is the first submission's; the supplement is now 6 pages and the letter
+no longer asks for length approval, so re-paste the letter from
+`docs/cover_letter.txt`.)
 
 **Decisions that change what a reviewer sees.**
 
-4. **Publish v1.1 of the Code Ocean capsule.** The manuscript's first-page
+5. **Publish v1.1 of the Code Ocean capsule.** The manuscript's first-page
    footnote points at `https://codeocean.com/capsule/9035965/tree`. The refresh
    — manuscript text removed, README rewritten for this paper, Chinese data
    README translated, private submodule declaration dropped — is pushed to the
@@ -138,14 +161,11 @@ was entered. Confirm it in the submission UI rather than from this file: the
    side. **Until then the public v1.0 still carries `main.tex` and the
    supplement**, which is the only place a copy of this manuscript is public;
    it is also the one fact that sits behind the No to the preprint questions.
-5. **Where the extended evidence report lives — now live in a real submission.**
-   The supplement in the proof refers to it three times, so reviewers reading
-   pages 18-28 will look for it. It is no longer in any submitted archive, it is
-   not in the DataPort deposit (which holds exports, artifact results and
-   scripts, no documents), and it is not in the capsule. Recommended: add
-   `supplementary_extended.pdf` to the deposit, which leaves the manuscript
-   untouched. The alternative is removing those four references.
-6. **The supplement's cross-references to the manuscript, left as they are.**
+6. **Where the extended evidence report lives — decided 2026-10-13: DataPort.**
+   Cutting the supplement to six pages moved more tables into the report, so
+   it can no longer be dropped; the documents now name the DataPort deposit as
+   its home. Action in item 4 above.
+7. **The supplement's cross-references to the manuscript, left as they are.**
    The supplement names the manuscript's sections through
    `\externaldocument[M-]{main}`, and the xr package reads those numbers out of
    the manuscript's `.aux`. Compiled on its own, without that file beside it,
@@ -163,7 +183,16 @@ was entered. Confirm it in the submission UI rather than from this file: the
    production, not a reason to ship a build input now. If a self-contained
    source tree is wanted later, the clean fix is to drop xr and write those six
    section numbers into the supplement's text.
-7. **The two arXiv postings: what to cite, and one answer that depends on a
+
+   **Changed 2026-10-13: now recommend shipping `main.aux`.** The supplement's
+   table and equation numbers continue the manuscript's, and they are read from
+   `main.aux` too. Without it the build warns
+   (`main.aux not read: ... restart at one`) and prints Table I where Table III
+   belongs, colliding with the manuscript's own Table I, in addition to the
+   `??` above. A 13 KB build input is now cheaper than either failure. The
+   response file reads `main.aux` and `supplementary.aux` the same way, but it
+   is uploaded as a PDF only.
+8. **The two arXiv postings: what to cite, and one answer that depends on a
    fact only the authors hold.**
 
    - **arXiv:2604.17163** (18 Apr 2026, Ma, Yan, Wu) carries the ACM TOMM title

@@ -6,25 +6,23 @@ We submit our manuscript entitled "Allocation or Direction? A
 Matched-Distortion Audit of Visual Location-Privacy Mechanisms" for
 consideration as a Regular Paper in IEEE Transactions on Information Forensics and Security.
 
-Before the substance, one request about length, which we would rather put to
-you explicitly than resolve by omission. The SPS guidance recommends that
-supplementary material not exceed six double-column pages without
-Editor-in-Chief approval, and ours is eleven. We are asking for that approval.
-The reason is specific to a paper of this kind: the submission reports a
-negative result against an assumption the field designs around, and the TIFS
-guidance for deep-learning submissions holds such a paper to a higher standard
-of reproducibility than an ordinary one. A referee testing a negative result
-needs to see the cells it was pooled from, not a summary of them. Those extra
-pages are what let us bring inside the submission the per-rule placement study
-the central null is pooled from, the same nine rules extended to the three
-attackers that break the null, the solved-allocation arm the manuscript's
-positive allocation result rests on, the operator arm, the purification result
-across all four attackers, the head-to-head against the closest published
-method, the two paired per-image utility tables, the adaptive attacker's
-per-condition breakdown, a table enumerating every placement rule with its
-provenance, and the geolocator arm --- the one attacker class that does not
-rank a gallery at all. Each sits beside the text that reads it, and each
-recomputes from the released per-query rows without a GPU.
+This resubmission of T-IFS-29083-2026 addresses the two items the editorial
+office raised when it returned the manuscript to draft:
+
+1. The response file. A point-by-point response to the reviews of the earlier
+   version of this work, quoting every comment verbatim, followed by the
+   complete review reports and a copy of the original paper as reviewed, is
+   uploaded with the manuscript files as a Supporting Document (PDF).
+
+2. The supplementary material. It has been shortened from eleven to six
+   double-column pages in 10-point type, and its tables and equations are now
+   numbered consecutively with the manuscript's (Table III onwards, Eq. (8)
+   onwards). Nothing was removed from the manuscript itself. The tables that
+   no longer fit -- among them the per-attacker placement tables, now folded
+   into one table covering all five attackers, and the utility tables of both
+   axes -- are in the extended evidence report deposited with the per-query
+   exports at IEEE DataPort; no claim in the abstract or conclusion depends on
+   it.
 
 Street-level imagery is routinely released after geographic metadata are
 stripped, yet the pixels themselves remain matchable against geo-tagged
@@ -119,27 +117,20 @@ controls. We believe the negative result is the useful part, and that
 publishing it is preferable to leaving the field's central design assumption
 untested.
 
-One presentational note on the supplementary material. The guidance asks that
-supplementary equations, tables and figures be numbered consecutively with the
-manuscript. We have instead numbered them with an S prefix --- Table S1
-onwards, Fig. S1 onwards, (S1) onwards --- because the two documents are
-compiled separately, so a continuous scheme would require the supplement to
-carry a hard-coded offset that silently goes wrong the moment a table is added
-to or removed from the main text. The S prefix achieves what the rule is for,
-which is that no number is ambiguous between the two documents, and it tells a
-reader at the point of citation which document to open. We are happy to
-renumber if you would prefer the literal form.
-
 The main text is within the thirteen-page limit for an initial regular-paper
 submission. Reaching it cost no result: the author biographies will be
-supplied at acceptance, the pipeline diagram and the search-budget curve are
-in the supplement, and the rest came from compression and from retiring
-references that belonged to an earlier framing of this work.
+supplied at acceptance, the search-budget curve is in the supplement and the
+pipeline diagram in the extended evidence report, and the rest came from
+compression and from retiring references that belonged to an earlier framing
+of this work.
 
 This manuscript has not been published previously and is not under
 consideration elsewhere. Its earlier version, reviewed by ACM TOMM and declared
 on the submission form, is posted as arXiv:2604.17163; the present manuscript
-audits the mechanism that version proposed, and 94.6% of its body text is new. All authors have approved the submission. The code is
+audits the mechanism that version proposed, and 92.6% of its body text is new
+against the reviewed version. A point-by-point response to those reviews, with
+the reviews verbatim and a copy of the original paper, is uploaded as a
+Supporting Document. All authors have approved the submission. The code is
 published as an executable capsule (https://codeocean.com/capsule/9035965/tree),
 and is uploaded here in full as the code archive; the benchmark manifests and
 the per-query exports behind every reported table are deposited at IEEE
