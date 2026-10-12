@@ -120,6 +120,14 @@ apart from the line numbers the system adds, form answers current, no `??`.
 The response had gone up as `05_prior_review_disclosure.zip` ("Not converted
 to PDF"); it must be the PDF.
 
+Third proof (2026-10-13, 59 pages) — correct and ready to resubmit. Files for
+peer review: `01_manuscript.pdf` (p. 5), `figs.zip` (the new 119 KB one),
+`02_supplementary.pdf` (p. 18), `supplementary.zip`,
+`05_prior_review_disclosure.pdf` as Supporting Documents (p. 24), `07_code.zip`.
+All three converted documents are page-for-page identical in text to the
+files in `submit/` apart from the system's line numbers, the original paper
+renders correctly on pp. 37-59, and there is no `??` anywhere.
+
 ## Still required from the authors before upload
 
 **Before the form.**
