@@ -20,7 +20,20 @@ proxy placement、solved-map、两张 utility、旧 fine-tune 共 7 张表，**�
 结果：正文 13 页、补充 6 页（末栏余约 7 行）、0 undefined、0 overfull、0 字体警告，`check_cross_document_refs` 0 处断链。
 断言核验 906 条：900 通过、6 不符、15 条定位漂移——**与改动前完全相同**；搬走文字的 4 条断言（ClipMix ×3、E1 显著格数）已改到
 extended report 定位。那 6 条不符都不是论文错误：5 条 A2 是 gitignore 的 `src/outputs/tifs_a2` 里一份 146 query 的
-旧半截结果遮住了已提交的 150 query 完整导出（完整导出与论文逐位一致），1 条是正文并未印出的 p 值。
+旧半截结果遮住了已提交的 150 query 完整导出（完整导出与论文逐位一致）；**第 6 条（跨时子任务 MixVPR 的 p 值，正文未印）
+后来查明是 SciPy 版本差异**：系统 Python 3.9 的 SciPy 1.13 算出 3.8e-7，项目 `.venv`（Python 3.12、SciPy 1.17）算出与登记一致。
+用 `.venv` 跑整库为 901 / 906，只剩那 5 条 A2。
+
+**投稿包（同日）**：新增 `src/scripts/build_submission_package.py`，一条命令在 `submit/` 生成
+`01_manuscript.pdf`、`02_supplementary.pdf`、`03_titlepage.pdf`、`05_prior_review_disclosure.pdf`（即 response，**要上传的是这个 PDF**）、
+`cover_letter.txt`，以及 `main`、`supplementary`、`05_prior_review_disclosure`、`07_code` 四个文件夹和同名 zip。
+LaTeX 文件夹的成员从文档自身的 `\input`/`\includegraphics`/`\bibliography` 解析，依赖别的文档编号的会带上对应 `.aux`
+（补充材料带 `main.aux`，否则从 Table I 开始编）。三个 LaTeX zip 各自解到空目录、裸 `latexmk` 编译：13 / 6 / 36 页，0 未定义引用。
+`07_code`（154 个文件，只含 git 跟踪的代码）打包前做凭据扫描：5 处 `sshpass -p` 命中经查都是运行时从本机 `.env` 读入的 `"$PW"` 变量，
+已把规则收紧为只拦字面值。解到空目录、挂上证据：750 / 750 通过、exit 0（SciPy 1.17）；再把两个 LaTeX zip 通过 `PPEDCRF_PAPER`
+提供：750 通过、15 条定位漂移。新增 `src/requirements-verify.txt`（旧 README 引用了它，但它只存在于旧包里），因上述 p 值差异要求 SciPy ≥ 1.17。
+`submit/07_code_README.md` 的数字按实测更新（原 804 变为 750：那些从生成表解析的断言所用的表已移到 extended report）。
+上传对应关系写在 `docs/00_MANIFEST.md` 新增的表里。
 
 **Response 文件：`paper/response.pdf`（36 页），新加入 `build.bat`。** 四部分：前次投稿信息；逐条回复（每条意见原文引用、
 标明状态、用 xr 自动给出正文节号与页码）；三份审稿意见全文；TOMM 审稿时的原稿（匿名审稿版，正文 18 页 + 附录 4 页）。

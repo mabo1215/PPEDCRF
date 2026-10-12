@@ -1,0 +1,13 @@
+# Enough to recompute every reported number from the deposited per-query rows:
+# src/scripts/audit_claim_consistency.py and every make_*_table.py generator.
+# No torch and no GPU; src/requirements.txt is needed only to re-run an
+# experiment from imagery.
+#
+# Verified with Python 3.12.3, numpy 2.4.4 and scipy 1.17.1: 750 of 750
+# claims from the code upload against the deposited evidence. scipy 1.13
+# computes one registered Wilcoxon p-value differently (the new-to-old
+# cross-time contrast on MixVPR, which the manuscript does not print: 3.8e-7
+# against 3e-6) and so reports one mismatch; hence the floor. scipy 1.17
+# needs Python 3.11 or later.
+numpy>=2.0
+scipy>=1.17

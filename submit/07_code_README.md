@@ -18,6 +18,10 @@ pip install -r src/requirements-verify.txt   # numpy + scipy; no torch, no GPU
 python src/scripts/audit_claim_consistency.py
 ```
 
+Use Python 3.11 or later with scipy 1.17 or later, as the requirements file
+pins: scipy 1.13 computes one registered Wilcoxon p-value differently (one the
+manuscript does not print) and reports it as a mismatch.
+
 (`src/requirements.txt` is the other one — it pulls torch and the retrieval
 backbones, and is needed only to re-run an experiment from imagery.)
 
@@ -60,15 +64,18 @@ they are not registered at all.
 PPEDCRF_PAPER=./paper python3 src/scripts/audit_claim_consistency.py
 ```
 
-That reports `804 claims: 804 verified, 0 mismatched, 15 no longer present`,
+That reports `750 claims: 750 verified, 0 mismatched, 15 no longer present`,
 and exits 1 — because the exit code also trips on those 15 locator misses,
 which are numbers the paper stopped printing when it was compressed to the page
 limit. Their rows are unaffected, which is why they keep verifying; what is gone
 is the sentence that quoted them. **None of the 15 is a disagreement between a
 printed number and its rows** — that count is `0 mismatched`, and it is the one
-to read. The remaining 102 of the paper's 906 are registered from the extended
-evidence report and the tables only it prints, which are not part of this
-submission. Run with `--verbose` to see every claim individually.
+to read. Supplying the manuscript turns on the locator half of each check but
+registers no further claims: the generated tables the remaining 156 of the
+paper's 906 are parsed from now sit in the extended evidence report, which the
+six-page supplement left them for. That report is deposited at IEEE DataPort as
+a PDF, and its source is not part of this submission. Run with `--verbose` to
+see every claim individually.
 
 ## Two ways to reproduce, and what each needs
 
@@ -102,8 +109,9 @@ log or metadata file.
 | `src/scripts/` | The audit. `analyze_*` recompute an arm from rows, `make_*_table.py` write the manuscript's tables, `run_*` re-run an arm from imagery, `audit_*`/`check_*` are the consistency gates |
 | `src/eval/`, `src/models/`, `src/privacy/`, `src/datasets/`, `src/utils/` | The mechanism and attacker implementations the drivers call |
 | `src/tests/` | Unit tests for the parts where a silent numerical error would not be visible in a plot |
-| `src/Docker/`, `src/requirements.txt` | Environment |
-| `src/exports/` | **Empty on purpose.** This is where the deposited evidence goes |
+| `src/config/` | The mechanism's run configuration |
+| `src/Docker/`, `src/requirements.txt`, `src/requirements-verify.txt` | Environment: the full one for re-running experiments, the two-package one for checking the numbers |
+| `src/exports/` | **Empty on purpose** apart from a one-line note. This is where the deposited evidence goes |
 
 No manuscript file ships here in any form — no `.tex`, no figures, no tables.
 `PPEDCRF_PAPER` is how the verifier is pointed at them when you want the wider
@@ -113,9 +121,13 @@ in the authoring repository.
 ## Two things that are true and worth saying plainly
 
 The `src/scripts/launch_*.sh` files carry the absolute paths of the rented
-hosts the experiments actually ran on. They are kept as run records rather than
-rewritten into something tidier that never executed; nothing else in the
-package depends on them.
+hosts the experiments actually ran on, and `_watch_*.sh` and
+`collect_remote_run.sh` the ports they were reached on. They are kept as run
+records rather than rewritten into something tidier that never executed;
+nothing else in the package depends on them. Where they log in, they read the
+password at run time from a file on the author's machine outside this package;
+no password, key or token is in any file here, and the package build fails if
+one is.
 
 A Code Ocean capsule is published for this project as well, at
 <https://codeocean.com/capsule/9035965/tree>, and the manuscript's first-page
@@ -123,7 +135,8 @@ footnote names it. It runs this same verifier under one click against the
 deposited evidence, which is worth having. It is **not** this package, though.
 It carries the mechanism and the verifier, not the drivers that recompute a
 table from rows or re-run an arm from imagery. It carries no manuscript text
-either, so on its own it reports the same 750 verified, 0 mismatched that this
-package does. The difference is that you have the manuscript: with
-`PPEDCRF_PAPER` set, this package reaches 804. Where the two disagree about what
-has been checked, this package is the one to believe.
+either, so it reports the same 750 verified, 0 mismatched that this package
+does; what this package adds is that you have the manuscript, so with
+`PPEDCRF_PAPER` set it also checks that each number is still printed where it
+is registered. Where the two disagree about what has been checked, this package
+is the one to believe.

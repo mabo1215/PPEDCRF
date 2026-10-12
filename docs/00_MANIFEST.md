@@ -78,6 +78,40 @@ to list, answer Yes and paste the text into the covering comments field.
 
 *479/500 characters.*
 
+## The package in `submit/` and where each file goes
+
+Built by `python src/scripts/build_submission_package.py` after
+`paper\build.bat` (it refuses PDFs older than their source). Each zip has a
+folder of the same name beside it with identical contents. Rebuilt and checked
+2026-10-13.
+
+| File | Upload as | Contents |
+|---|---|---|
+| `01_manuscript.pdf` | Main document | 13 pages |
+| `02_supplementary.pdf` | Supplementary material for review | 6 pages, Table III and Eq. (8) onwards |
+| `03_titlepage.pdf` | Title page, if the form has a slot | 1 page |
+| `05_prior_review_disclosure.pdf` | **Supporting Document — the file the office asked for** | the response, the reviews verbatim, the original paper (36 pages) |
+| `05_prior_review_disclosure.zip` | Not required; do not upload in place of the PDF | the same PDF plus its LaTeX source |
+| `main.zip` | Manuscript LaTeX source | 5 files |
+| `supplementary.zip` | Supplement LaTeX source | 13 files, including `main.aux` |
+| `07_code.zip` | Code | 154 files, no manuscript text, no data |
+| `cover_letter.txt` | Paste into the cover-letter field | |
+
+Checks, each from the packed archive extracted into an empty directory:
+`main.zip`, `supplementary.zip` and `05_prior_review_disclosure.zip` each
+compile with a bare `latexmk` to 13, 6 and 36 pages with no undefined
+reference, the supplement starting at Table III. `07_code.zip` with the
+deposited evidence linked in reports `750 claims: 750 verified, 0 mismatched`,
+exit 0, under Python 3.12 and scipy 1.17; with the two LaTeX zips supplied
+through `PPEDCRF_PAPER`, 750 verified and 15 locator drifts, exit 1. The
+earlier 804 is now 750 because the tables those claims are parsed from moved
+to the extended report. No zip has a backslash in an entry name, and the code
+build screens every file for credentials (the remote-run helpers read the host
+password from a file outside the package at run time).
+
+`figs.zip` from the first submission is not rebuilt: its four PNGs are already
+inside both PDFs and both source zips.
+
 ## Still required from the authors before upload
 
 **Before the form.**
