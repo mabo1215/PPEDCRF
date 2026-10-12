@@ -13,6 +13,9 @@ except by reading commit messages. This script is that record. It writes:
       its LaTeX source for completeness only
   main/, supplementary/, 05_prior_review_disclosure/, 07_code/
       one folder per upload, each with a .zip of the same name beside it
+  figs/
+      every image the manuscript and the supplement include, flat, with
+      figs.zip beside it for the system's figure slot
   cover_letter.txt
       docs/cover_letter.txt, for pasting into the submission form
 
@@ -172,6 +175,28 @@ def latex_folder(name: str, doc: str, extra: Iterable[str] = ()) -> Path:
     return folder
 
 
+IMAGE = {".png", ".jpg", ".jpeg", ".pdf", ".eps"}
+
+
+def figs_folder() -> Path:
+    """The images the two reviewed documents include, and nothing else.
+
+    The first submission's figs.zip carried four images, three of which the
+    documents had stopped using; reading the closure keeps this to what is
+    actually printed. Commented-out figures are not included.
+    """
+    folder = fresh_dir(SUBMIT / "figs")
+    images = sorted({rel for doc in ("main", "supplementary")
+                     for rel in tex_closure(PAPER / f"{doc}.tex")
+                     if rel.suffix.lower() in IMAGE})
+    names = [rel.name for rel in images]
+    if len(names) != len(set(names)):
+        raise SystemExit(f"two figures share a file name: {names}")
+    for rel in images:
+        shutil.copy2(PAPER / rel, folder / rel.name)
+    return folder
+
+
 def code_folder() -> Path:
     folder = fresh_dir(SUBMIT / "07_code")
     files = tracked(CODE_DIRS) + [f for f in CODE_FILES if (REPO / f).is_file()]
@@ -221,7 +246,7 @@ def main() -> int:
     disclosure = latex_folder("05_prior_review_disclosure", "response")
     shutil.copy2(PAPER / "response.pdf",
                  disclosure / "05_prior_review_disclosure.pdf")
-    folders += [disclosure, code_folder()]
+    folders += [disclosure, code_folder(), figs_folder()]
 
     print(f"submit/ at {SUBMIT}")
     for _, name in PDFS:

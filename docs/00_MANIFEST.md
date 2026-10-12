@@ -94,7 +94,8 @@ folder of the same name beside it with identical contents. Rebuilt and checked
 | `05_prior_review_disclosure.zip` | Not required; do not upload in place of the PDF | the same PDF plus its LaTeX source |
 | `main.zip` | Manuscript LaTeX source | 5 files |
 | `supplementary.zip` | Supplement LaTeX source | 13 files, including `main.aux` |
-| `07_code.zip` | Code | 154 files, no manuscript text, no data |
+| `07_code.zip` | Code | 155 files, no manuscript text, no data |
+| `figs.zip` | Figures (Image) | `fig_axes.png`, the only figure the manuscript and supplement now include |
 | `cover_letter.txt` | Paste into the cover-letter field | |
 
 Checks, each from the packed archive extracted into an empty directory:
@@ -109,8 +110,15 @@ to the extended report. No zip has a backslash in an entry name, and the code
 build screens every file for credentials (the remote-run helpers read the host
 password from a file outside the package at run time).
 
-`figs.zip` from the first submission is not rebuilt: its four PNGs are already
-inside both PDFs and both source zips.
+`figs.zip` is rebuilt from what the two documents include (2026-10-13). The
+first submission's 4.7 MB copy carried four images, three of which the
+documents no longer use; replace it rather than keep both.
+
+From the regenerated system proof (2026-10-13, 23 pages): manuscript and
+supplement text identical to `01_manuscript.pdf` and `02_supplementary.pdf`
+apart from the line numbers the system adds, form answers current, no `??`.
+The response had gone up as `05_prior_review_disclosure.zip` ("Not converted
+to PDF"); it must be the PDF.
 
 ## Still required from the authors before upload
 
