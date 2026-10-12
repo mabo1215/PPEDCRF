@@ -55,7 +55,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--monitoring_root",
         type=str,
-        default=r"c:\source\PPEDCRF\synthetic_monitoring\images",
+        # Repo-relative like the other defaults here; the frames moved out of
+        # the repository root into src/data/ beside the driving clips.
+        default="src/data/synthetic_monitoring/images",
     )
     parser.add_argument("--config", type=str, default="src/config/config.yaml")
     parser.add_argument("--clip_len", type=int, default=6,
